@@ -10,7 +10,9 @@ import {
   canonicalStringify,
   executeBackupImport,
   executePersistedStateChange,
+  selectWinningCandidate,
 } from './storage';
+import type { CandidateSnapshot } from './storage';
 import { AppState } from '../types';
 
 describe('Stored Record Preservation', () => {
@@ -610,6 +612,62 @@ describe('Canonicalization & areAppStatesEqual Semantic Comparison', () => {
 
     expect(areAppStatesEqual(state1, state2)).toBe(true);
     expect(state1).toEqual(state2);
+  });
+});
+
+describe('Storage Candidate Freshness Selection', () => {
+  const stateWithGoal = (monthlyGoal: number): AppState => ({
+    components: [],
+    builds: [],
+    transactions: [],
+    monthlyGoal,
+  });
+
+  const candidate = (
+    source: CandidateSnapshot['source'],
+    revision: number,
+    monthlyGoal: number,
+    isEnvelope = true
+  ): CandidateSnapshot => ({
+    source,
+    revision,
+    state: stateWithGoal(monthlyGoal),
+    isEnvelope,
+  });
+
+  it('always selects the higher revision even when it comes from IndexedDB', () => {
+    const indexedDb = candidate('indexeddb', 12, 12000);
+    const localStorage = candidate('localstorage', 11, 11000);
+
+    expect(selectWinningCandidate(indexedDb, localStorage)).toBe(indexedDb);
+  });
+
+  it('always selects the higher revision even when it comes from localStorage', () => {
+    const indexedDb = candidate('indexeddb', 20, 20000);
+    const localStorage = candidate('localstorage', 21, 21000);
+
+    expect(selectWinningCandidate(indexedDb, localStorage)).toBe(localStorage);
+  });
+
+  it('uses IndexedDB deterministically for equal versioned revisions', () => {
+    const indexedDb = candidate('indexeddb', 30, 30000);
+    const localStorage = candidate('localstorage', 30, 99999);
+
+    expect(selectWinningCandidate(indexedDb, localStorage)).toBe(indexedDb);
+  });
+
+  it('uses the final local mirror when divergent legacy revision-zero snapshots compete', () => {
+    const indexedDb = candidate('indexeddb', 0, 1000, false);
+    const localStorage = candidate('localstorage', 0, 2000, false);
+
+    expect(selectWinningCandidate(indexedDb, localStorage)).toBe(localStorage);
+  });
+
+  it('returns the only available candidate and handles an empty store', () => {
+    const localStorage = candidate('localstorage', 4, 4000);
+
+    expect(selectWinningCandidate(null, localStorage)).toBe(localStorage);
+    expect(selectWinningCandidate(null, null)).toBeNull();
   });
 });
 
