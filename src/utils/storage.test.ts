@@ -9,6 +9,7 @@ import {
   canonicalizeJSON,
   canonicalStringify,
   executeBackupImport,
+  executePersistedStateChange,
 } from './storage';
 import { AppState } from '../types';
 
@@ -774,5 +775,83 @@ describe('executeBackupImport durable commit boundary', () => {
     });
     expect(result.nextState).toBe(currentState);
     expect(persistState).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('executePersistedStateChange durable commit boundary', () => {
+  const currentState: AppState = {
+    components: [],
+    builds: [],
+    transactions: [],
+    monthlyGoal: 10000,
+    sheetStats: {
+      monthly: [],
+      yearly: { revenue: 0, profit: 0, pcsSold: 0 },
+    },
+  };
+
+  it('skips persistence and preserves the current reference for an identical reset', async () => {
+    const persistState = vi.fn(async () => undefined);
+
+    const result = await executePersistedStateChange(
+      currentState,
+      { ...currentState },
+      'Reset failed.',
+      persistState
+    );
+
+    expect(result).toEqual({ success: true, changed: false, nextState: currentState });
+    expect(result.nextState).toBe(currentState);
+    expect(persistState).not.toHaveBeenCalled();
+  });
+
+  it('waits for persistence before returning a changed reset state', async () => {
+    const candidateState = { ...currentState, monthlyGoal: 1 };
+    let finishPersist: (() => void) | undefined;
+    const persistState = vi.fn(
+      () => new Promise<void>((resolve) => {
+        finishPersist = resolve;
+      })
+    );
+
+    let settled = false;
+    const execution = executePersistedStateChange(
+      currentState,
+      candidateState,
+      'Reset failed.',
+      persistState
+    ).then((result) => {
+      settled = true;
+      return result;
+    });
+
+    await Promise.resolve();
+    expect(persistState).toHaveBeenCalledWith(candidateState);
+    expect(settled).toBe(false);
+
+    finishPersist?.();
+    const result = await execution;
+    expect(result).toEqual({ success: true, changed: true, nextState: candidateState });
+  });
+
+  it('returns the original reference and supplied error when persistence fails', async () => {
+    const persistState = vi.fn(async () => {
+      throw new Error('storage unavailable');
+    });
+
+    const result = await executePersistedStateChange(
+      currentState,
+      { ...currentState, monthlyGoal: 1 },
+      'Reset failed.',
+      persistState
+    );
+
+    expect(result).toEqual({
+      success: false,
+      changed: false,
+      nextState: currentState,
+      error: 'Reset failed.',
+    });
+    expect(result.nextState).toBe(currentState);
   });
 });
