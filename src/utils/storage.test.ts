@@ -13,8 +13,8 @@ import {
 } from './storage';
 import { AppState } from '../types';
 
-describe('Storage Warranty Sanitization', () => {
-  it('preserves valid warranty values and falls back safely for invalid ones', () => {
+describe('Stored Record Preservation', () => {
+  it('preserves warranty values exactly instead of repairing them during load', () => {
     const raw = {
       builds: [
         { id: 'b1', name: 'Valid', warrantyDays: 60, createdDate: '2026-07-23' },
@@ -34,13 +34,86 @@ describe('Storage Warranty Sanitization', () => {
     const sanitized = sanitizeAppState(raw);
 
     expect(sanitized.builds[0].warrantyDays).toBe(60);
-    expect(sanitized.builds[1].warrantyDays).toBeUndefined();
-    expect(sanitized.builds[2].warrantyDays).toBe(90);
+    expect(sanitized.builds[1].warrantyDays).toBe(1.5);
+    expect(sanitized.builds[2].warrantyDays).toBe('90');
     expect(sanitized.builds[3].warrantyDays).toBeUndefined();
 
     expect(sanitized.transactions[0].warrantyDaysAtSale).toBe(120);
-    expect(sanitized.transactions[1].warrantyDaysAtSale).toBeUndefined();
+    expect(sanitized.transactions[1].warrantyDaysAtSale).toBe(0);
     expect(sanitized.transactions[2].warrantyDaysAtSale).toBeUndefined();
+  });
+
+  it('preserves record values, unknown fields, nested order, and missing batch links exactly', () => {
+    const raw = {
+      components: [
+        {
+          id: 'component-2',
+          name: 'White Case',
+          category: 'Case',
+          specifications: { legacy: true },
+          assignedCount: 1,
+          purchaseHistory: [
+            {
+              id: 'batch-2',
+              quantity: 1,
+              unitPrice: 0,
+              condition: 'USED',
+            },
+          ],
+          unresolvedLegacyReservationByPurchaseEntryId: {
+            'batch-2': '1',
+            untouched: -4,
+          },
+        },
+        {
+          id: 'component-1',
+          name: 'Second record stays second',
+          category: '',
+          assignedCount: 0,
+        },
+      ],
+      builds: [
+        {
+          id: 'build-1',
+          name: 'Legacy Build',
+          status: 'In Progress',
+          createdDate: '8/22/2026',
+          notes: 'Keep this. Sheet Status: Listed',
+          platformFees: 12.5,
+          parts: [
+            {
+              id: 'part-1',
+              componentId: 'component-2',
+              quantity: 1,
+              unitCostAtAssignment: 0,
+            },
+          ],
+        },
+      ],
+      transactions: [
+        {
+          id: 'tx-1',
+          type: 'SALE',
+          timestamp: 'Aug 22, 2026 5:30 PM',
+          dateSortable: '08/22/2026',
+          platformFees: 7,
+          totalAmount: 0,
+        },
+      ],
+      monthlyGoal: 5000,
+    };
+    const original = structuredClone(raw);
+
+    const restored = sanitizeAppState(raw);
+
+    expect(restored.components).toEqual(original.components);
+    expect(restored.builds).toEqual(original.builds);
+    expect(restored.transactions).toEqual(original.transactions);
+    expect(restored.builds[0].parts[0]).not.toHaveProperty('purchaseEntryId');
+    expect(restored).not.toBe(raw);
+    expect(restored.components).not.toBe(raw.components);
+    expect(restored.components[0]).not.toBe(raw.components[0]);
+    expect(raw).toEqual(original);
   });
 });
 
@@ -351,7 +424,7 @@ describe('AppState Top-Level Field Passthrough & Sanitization Overrides', () => 
     expect(sanitized.userNote).toBe('Special workspace');
   });
 
-  it('ensures known sanitized fields still replace their raw values', () => {
+  it('only repairs the AppState container and preserves record-level fields', () => {
     const raw = {
       components: [
         {
@@ -370,16 +443,16 @@ describe('AppState Top-Level Field Passthrough & Sanitization Overrides', () => 
           status: 'In Progress',
           parts: [],
           createdDate: '2026-08-01',
-          platformFees: 50, // Should be stripped by sanitization
+          platformFees: 50,
         },
       ],
       transactions: [],
-      monthlyGoal: -100, // Invalid -> should be sanitized to 10000 fallback
+      monthlyGoal: -100,
     };
 
     const sanitized = sanitizeAppState(raw);
     expect(sanitized.monthlyGoal).toBe(10000);
-    expect((sanitized.builds[0] as unknown as Record<string, unknown>).platformFees).toBeUndefined();
+    expect((sanitized.builds[0] as unknown as Record<string, unknown>).platformFees).toBe(50);
   });
 });
 

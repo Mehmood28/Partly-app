@@ -1,6 +1,5 @@
 import localforage from 'localforage';
-import { AppState, Condition, InventoryComponent, PCBuild, PurchaseEntry, TransactionLogItem } from '../types';
-import { normalizeDateString, normalizeTimestampString, autoTagComponent } from './helpers';
+import { AppState, InventoryComponent, PCBuild, TransactionLogItem } from '../types';
 
 export const STORAGE_KEY = 'pc_inventory_tracker_v2';
 export const DB_NAME = 'PartlyPCInventoryDB';
@@ -13,26 +12,26 @@ localforage.config({
   description: 'Partly PC Inventory Tracker IndexedDB Store',
 });
 
-const mapCondition = (cond: unknown): Condition => {
-  if (!cond) return 'Used No Box';
-  if (typeof cond !== 'string') return 'Used No Box';
-  const upper = cond.toUpperCase();
-  if (upper === 'NEW') return 'Sealed';
-  if (upper === 'USED' || upper === 'REFURB') return 'Used No Box';
-  if (
-    cond === 'Sealed' ||
-    cond === 'New Open Box' ||
-    cond === 'New No Box' ||
-    cond === 'Used Open Box' ||
-    cond === 'Used No Box'
-  )
-    return cond;
-  if (cond === 'Used') return 'Used No Box';
-  return 'Used No Box';
+const cloneStoredValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map((item) => cloneStoredValue(item));
+  }
+
+  if (value && typeof value === 'object') {
+    const clone: Record<string, unknown> = {};
+    for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+      clone[key] = cloneStoredValue(nestedValue);
+    }
+    return clone;
+  }
+
+  return value;
 };
 
 /**
- * Sanitizes and normalizes loaded AppState to ensure data integrity
+ * Restores the AppState container without silently repairing or rewriting records.
+ * Domain validation belongs at mutation boundaries, while historical/imported data
+ * must retain its exact IDs, values, fields, and collection ordering.
  */
 export const sanitizeAppState = (parsed: unknown): AppState => {
   if (!parsed || typeof parsed !== 'object') {
@@ -41,182 +40,15 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
 
   const parsedObj = parsed as Record<string, unknown>;
   const { sheetStats: _obsoleteSheetStats, ...parsedWithoutSheetStats } = parsedObj;
-  const rawBuilds = Array.isArray(parsedObj.builds) ? (parsedObj.builds as PCBuild[]) : [];
-  const rawTransactions = Array.isArray(parsedObj.transactions) ? (parsedObj.transactions as TransactionLogItem[]) : [];
-  const rawComponents = Array.isArray(parsedObj.components) ? (parsedObj.components as InventoryComponent[]) : [];
-
-  // 1. Normalize dates in builds and strip obsolete platformFees
-  const dateCleanedBuilds: PCBuild[] = rawBuilds.map((b: PCBuild) => {
-    const rawB = b as unknown as Record<string, unknown>;
-    const { platformFees: _obsoleteFees, ...restB } = rawB;
-    const newB: PCBuild = {
-      ...(restB as unknown as PCBuild),
-      notes: b.notes ? b.notes.replace(/Sheet Status: [^\n;]*/gi, '').trim() || undefined : undefined,
-    };
-    if ('warrantyDays' in newB) {
-      if (newB.warrantyDays !== undefined && newB.warrantyDays !== null) {
-        const parsed = Number(newB.warrantyDays);
-        if (!Number.isFinite(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
-          delete newB.warrantyDays;
-        } else {
-          newB.warrantyDays = parsed;
-        }
-      } else {
-        delete newB.warrantyDays;
-      }
-    }
-    if (newB.createdDate) {
-      newB.createdDate = normalizeDateString(newB.createdDate);
-    }
-    if (newB.saleDate) {
-      newB.saleDate = normalizeDateString(newB.saleDate);
-    }
-    return newB;
-  });
-
-  // 2. Normalize dates in transactions and strip obsolete platformFees
-  const cleanedTransactions: TransactionLogItem[] = rawTransactions.map((tx: TransactionLogItem) => {
-    const rawTx = tx as unknown as Record<string, unknown>;
-    const { platformFees: _obsoleteFees, ...restTx } = rawTx;
-    const newTx: TransactionLogItem = { ...(restTx as unknown as TransactionLogItem) };
-    if ('warrantyDaysAtSale' in newTx) {
-      if (newTx.warrantyDaysAtSale !== undefined && newTx.warrantyDaysAtSale !== null) {
-        const parsed = Number(newTx.warrantyDaysAtSale);
-        if (!Number.isFinite(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
-          delete newTx.warrantyDaysAtSale;
-        } else {
-          newTx.warrantyDaysAtSale = parsed;
-        }
-      } else {
-        delete newTx.warrantyDaysAtSale;
-      }
-    }
-    if (tx.timestamp) {
-      newTx.timestamp = normalizeTimestampString(tx.timestamp);
-    }
-    if (tx.dateSortable) {
-      newTx.dateSortable = normalizeDateString(tx.dateSortable);
-    }
-    return newTx;
-  });
-
-  // 3. Clean & tag components
-  const cleanedComponents: InventoryComponent[] = rawComponents.map((comp: InventoryComponent) => {
-    const specsStr = typeof comp.specifications === 'string' ? comp.specifications : (comp.specifications ? String(comp.specifications) : '');
-    const nameStr = typeof comp.name === 'string' ? comp.name : (comp.name ? String(comp.name) : '');
-    const catStr = typeof comp.category === 'string' ? comp.category : (comp.category ? String(comp.category) : 'Other');
-
-    const tags: string[] = Array.isArray(comp.tags)
-      ? [...comp.tags]
-      : autoTagComponent(nameStr, specsStr, catStr);
-
-    const catUpper = catStr.toUpperCase();
-    if (catUpper === 'CASE' || catUpper === 'PSU') {
-      const title = nameStr;
-      if (/\bwhite\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'WHITE')) {
-        tags.push('WHITE');
-      }
-      if (/\bblack\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'BLACK')) {
-        tags.push('BLACK');
-      }
-    }
-
-    let sanitizedReservation: Record<string, number> | undefined = undefined;
-    if (comp.unresolvedLegacyReservationByPurchaseEntryId && typeof comp.unresolvedLegacyReservationByPurchaseEntryId === 'object') {
-      const resMap: Record<string, number> = {};
-      for (const [k, v] of Object.entries(comp.unresolvedLegacyReservationByPurchaseEntryId)) {
-        const num = Number(v);
-        if (Number.isFinite(num) && num > 0) {
-          resMap[k] = num;
-        }
-      }
-      if (Object.keys(resMap).length > 0) {
-        sanitizedReservation = resMap;
-      }
-    }
-
-    return {
-      ...comp,
-      name: nameStr,
-      specifications: specsStr,
-      category: comp.category || 'Other',
-      tags,
-      unresolvedLegacyReservationByPurchaseEntryId: sanitizedReservation,
-      purchaseHistory: Array.isArray(comp.purchaseHistory)
-        ? comp.purchaseHistory.map((entry: PurchaseEntry) => ({
-            ...entry,
-            condition: mapCondition(entry.condition),
-          }))
-        : [],
-    };
-  });
-
-  // 4. Safe legacy backfill for build parts lacking purchaseEntryId
-  const componentMap = new Map<string, InventoryComponent>();
-  cleanedComponents.forEach((c) => {
-    if (c && c.id) {
-      componentMap.set(c.id, c);
-    }
-  });
-
-  // Track aggregate build allocations for components that have exactly one purchase batch
-  const compAllocations = new Map<
-    string,
-    { totalRequired: number; unlinkedCount: number; soleEntryId: string | null }
-  >();
-
-  cleanedComponents.forEach((c) => {
-    if (c.purchaseHistory && c.purchaseHistory.length === 1) {
-      const soleEntry = c.purchaseHistory[0];
-      compAllocations.set(c.id, {
-        totalRequired: 0,
-        unlinkedCount: 0,
-        soleEntryId: soleEntry.id,
-      });
-    }
-  });
-
-  dateCleanedBuilds.forEach((b) => {
-    (b.parts || []).forEach((p) => {
-      if (p.componentId && compAllocations.has(p.componentId)) {
-        const alloc = compAllocations.get(p.componentId)!;
-        const qty = Number(p.quantity) || 0;
-        alloc.totalRequired += qty;
-        if (!p.purchaseEntryId) {
-          alloc.unlinkedCount += qty;
-        }
-      }
-    });
-  });
-
-  const eligibleSoleEntries = new Map<string, string>(); // componentId -> soleEntryId
-  compAllocations.forEach((alloc, compId) => {
-    const comp = componentMap.get(compId);
-    if (comp && comp.purchaseHistory && comp.purchaseHistory.length === 1 && alloc.soleEntryId) {
-      const soleEntryCapacity = Number(comp.purchaseHistory[0].quantity) || 0;
-      const assignedCount = Number(comp.assignedCount) || 0;
-      const requiredCapacity = Math.max(alloc.totalRequired, assignedCount);
-      if (alloc.unlinkedCount > 0 && requiredCapacity <= soleEntryCapacity) {
-        eligibleSoleEntries.set(compId, alloc.soleEntryId);
-      }
-    }
-  });
-
-  const cleanedBuilds: PCBuild[] = dateCleanedBuilds.map((b) => {
-    if (!b.parts || b.parts.length === 0) return b;
-    let hasChanges = false;
-    const newParts = b.parts.map((p) => {
-      if (!p.purchaseEntryId && p.componentId && eligibleSoleEntries.has(p.componentId)) {
-        hasChanges = true;
-        return {
-          ...p,
-          purchaseEntryId: eligibleSoleEntries.get(p.componentId)!,
-        };
-      }
-      return p;
-    });
-    return hasChanges ? { ...b, parts: newParts } : b;
-  });
+  const components = Array.isArray(parsedObj.components)
+    ? (cloneStoredValue(parsedObj.components) as InventoryComponent[])
+    : [];
+  const builds = Array.isArray(parsedObj.builds)
+    ? (cloneStoredValue(parsedObj.builds) as PCBuild[])
+    : [];
+  const transactions = Array.isArray(parsedObj.transactions)
+    ? (cloneStoredValue(parsedObj.transactions) as TransactionLogItem[])
+    : [];
 
   let resolvedGoal = 10000;
   if (isValidMonthlyGoal(parsedObj.monthlyGoal)) {
@@ -224,10 +56,10 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
   }
 
   return {
-    ...parsedWithoutSheetStats,
-    components: cleanedComponents,
-    builds: cleanedBuilds,
-    transactions: cleanedTransactions,
+    ...(cloneStoredValue(parsedWithoutSheetStats) as Record<string, unknown>),
+    components,
+    builds,
+    transactions,
     monthlyGoal: resolvedGoal,
   };
 };
