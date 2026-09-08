@@ -2,6 +2,7 @@
 import { AppState } from "../types";
 import { InventoryComponent, PCBuild } from '../types';
 import { classifyTransaction } from './transactionClassification';
+import { getMonthlyBaseline } from './baselineStats';
 
 export function precomputeAssignedBatches(
   builds: PCBuild[],
@@ -800,9 +801,10 @@ export function calculateInventoryMetrics(state: AppState) {
 }
 
 export function calculateMonthlyMetrics(state: AppState, year: number, monthIndex: number) {
-  let pcRevenue = 0;
-  let pcCost = 0;
-  let pcsSold = 0;
+  const baseline = getMonthlyBaseline(state.sheetStats, year, monthIndex);
+  let pcRevenue = baseline.revenue;
+  let pcCost = baseline.revenue - baseline.profit;
+  let pcsSold = baseline.pcsSold;
 
   let partRevenue = 0;
   let partCost = 0;

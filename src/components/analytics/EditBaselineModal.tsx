@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, X } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
+import { useToast } from '../../context/ToastContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
+import { parseBaselineInputs } from '../../utils/baselineStats';
 
 const MONTH_NAMES = [
   'January',
@@ -29,7 +31,8 @@ interface EditBaselineModalProps {
 }
 
 export const EditBaselineModal: React.FC<EditBaselineModalProps> = ({ isOpen, onClose, selectedMonthIdx, selectedYear, initialRev, initialProf, initialPcs }) => {
-  const { state, updateSheetStats } = useInventory();
+  const { updateMonthlyBaseline } = useInventory();
+  const { showToast } = useToast();
   
   const [editRev, setEditRev] = useState('');
   const [editProf, setEditProf] = useState('');
@@ -43,49 +46,24 @@ export const EditBaselineModal: React.FC<EditBaselineModalProps> = ({ isOpen, on
       setEditProf(String(initialProf));
       setEditPcs(String(initialPcs));
     }
-  }, [isOpen]);
+  }, [isOpen, initialRev, initialProf, initialPcs]);
 
   
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const revNum = parseFloat(editRev) || 0;
-    const profNum = parseFloat(editProf) || 0;
-    const pcsNum = parseInt(editPcs, 10) || 0;
-
-    const currentMonthly = state.sheetStats?.monthly || [];
-    const updatedMonthly = [...currentMonthly];
-
-    const existingIdx = updatedMonthly.findIndex(
-      (m) => String(m.month || "").toLowerCase() === String(selectedMonthName || "").toLowerCase()
-    );
-
-    if (existingIdx >= 0) {
-      updatedMonthly[existingIdx] = {
-        month: selectedMonthName,
-        revenue: revNum,
-        profit: profNum,
-        pcsSold: pcsNum,
-      };
-    } else {
-      updatedMonthly.push({
-        month: selectedMonthName,
-        revenue: revNum,
-        profit: profNum,
-        pcsSold: pcsNum,
-      });
+    const parsed = parseBaselineInputs(editRev, editProf, editPcs);
+    if (!parsed.success) {
+      showToast(parsed.error, 'error');
+      return;
     }
 
-    const newYearly = {
-      revenue: updatedMonthly.reduce((sum, m) => sum + m.revenue, 0),
-      profit: updatedMonthly.reduce((sum, m) => sum + m.profit, 0),
-      pcsSold: updatedMonthly.reduce((sum, m) => sum + m.pcsSold, 0),
-    };
+    const result = updateMonthlyBaseline(selectedYear, selectedMonthIdx, parsed.values);
+    if (!result.success) {
+      showToast(result.error || 'Unable to save baseline stats.', 'error');
+      return;
+    }
 
-    updateSheetStats({
-      monthly: updatedMonthly,
-      yearly: newYearly,
-    });
     onClose();
   };
 
@@ -104,13 +82,15 @@ export const EditBaselineModal: React.FC<EditBaselineModalProps> = ({ isOpen, on
           </button>
         </div>
         <p className="text-[11px] text-zinc-400">
-          Set or override baseline spreadsheet figures for {selectedMonthName} {selectedYear}. Live transactions/builds will automatically merge into these totals.
+          Enter only figures not already recorded in Partly for {selectedMonthName} {selectedYear}. Live activity recorded in Partly will be added automatically.
         </p>
         <form onSubmit={handleSubmit} className="space-y-2.5 text-xs">
           <div>
             <label className="block text-zinc-400 mb-1 font-medium text-[11px]">PCs Sold</label>
             <input
-              type="number" inputMode="decimal"
+              type="number" inputMode="numeric"
+              min="0"
+              step="1"
               required
               value={editPcs}
               onChange={(e) => setEditPcs(e.target.value)}
@@ -125,6 +105,7 @@ export const EditBaselineModal: React.FC<EditBaselineModalProps> = ({ isOpen, on
               <input
               type="number" inputMode="decimal"
               step="0.01"
+              min="0"
               required
               value={editRev}
               onChange={(e) => setEditRev(e.target.value)}
