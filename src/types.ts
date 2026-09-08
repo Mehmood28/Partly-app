@@ -163,26 +163,10 @@ export interface TransactionLogItem {
   buildActivityKind?: 'DISMANTLE' | 'TRADE_IN_PART_OUT';
 }
 
-export interface SheetStats {
-  monthly: {
-    year?: number;
-    month: string;
-    revenue: number;
-    profit: number;
-    pcsSold: number;
-  }[];
-  yearly: {
-    revenue: number;
-    profit: number;
-    pcsSold: number;
-  };
-}
-
 export interface AppState {
   components: InventoryComponent[];
   builds: PCBuild[];
   transactions: TransactionLogItem[];
-  sheetStats?: SheetStats;
   monthlyGoal?: number;
 }
 

@@ -18,7 +18,6 @@ describe('componentActions', () => {
     components: [],
     builds: [],
     transactions: [],
-    sheetStats: null,
     monthlyGoal: 0,
   };
 

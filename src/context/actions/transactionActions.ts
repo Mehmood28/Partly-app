@@ -1,7 +1,6 @@
 import { AppState, ComponentCategory, TransactionLogItem, InventoryComponent, PurchaseEntry, PCBuild } from '../../types';
 import { autoTagComponent } from '../../utils/helpers';
 import { classifyTransaction } from '../../utils/transactionClassification';
-import { MonthlyBaselineValues, parseBaselineInputs, upsertMonthlyBaseline } from '../../utils/baselineStats';
 
 const inferCategory = (name: string): ComponentCategory => {
   const n = (name || '').toLowerCase();
@@ -414,32 +413,6 @@ export const handleRelistBulkPartSale = (
   };
 };
 
-export const handleUpdateMonthlyBaseline = (
-  prev: AppState,
-  year: number,
-  monthIndex: number,
-  values: MonthlyBaselineValues
-): { nextState: AppState; success: boolean; error?: string } => {
-  if (!Number.isInteger(year) || year < 2000 || year > 9999) {
-    return { nextState: prev, success: false, error: 'Baseline year is invalid.' };
-  }
-  if (!Number.isInteger(monthIndex) || monthIndex < 0 || monthIndex > 11) {
-    return { nextState: prev, success: false, error: 'Baseline month is invalid.' };
-  }
-
-  const parsed = parseBaselineInputs(values.revenue, values.profit, values.pcsSold);
-  if (!parsed.success) {
-    return { nextState: prev, success: false, error: parsed.error };
-  }
-
-  const sheetStats = upsertMonthlyBaseline(prev.sheetStats, year, monthIndex, parsed.values);
-  if (JSON.stringify(sheetStats) === JSON.stringify(prev.sheetStats)) {
-    return { nextState: prev, success: true };
-  }
-
-  return { nextState: { ...prev, sheetStats }, success: true };
-};
-
 export const handleUpdateMonthlyGoal = (
   prev: AppState,
   goal: number
@@ -465,8 +438,4 @@ export const getResetState = (): AppState => ({
   builds: [],
   transactions: [],
   monthlyGoal: 10000,
-  sheetStats: {
-    monthly: [],
-    yearly: { revenue: 0, profit: 0, pcsSold: 0 },
-  },
 });

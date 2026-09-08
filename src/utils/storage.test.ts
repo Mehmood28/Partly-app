@@ -78,7 +78,7 @@ describe('JSON Backup Parsing & Recognition', () => {
     expect(res.counts).toEqual({ components: 0, builds: 0, transactions: 1 });
   });
 
-  it('preserves monthlyGoal and sheetStats in payload when supplied', () => {
+  it('preserves monthlyGoal and ignores retired sheetStats when supplied', () => {
     const backup = {
       components: [{ id: 'c1', name: 'RAM' }],
       builds: [],
@@ -92,7 +92,7 @@ describe('JSON Backup Parsing & Recognition', () => {
     const res = parseBackupObject(backup);
     expect(res.success).toBe(true);
     expect(res.payload?.monthlyGoal).toBe(7500.5);
-    expect(res.payload?.sheetStats?.monthly).toHaveLength(1);
+    expect(res.payload).not.toHaveProperty('sheetStats');
   });
 
   it('rejects JSON with none of the three arrays', () => {
@@ -226,10 +226,6 @@ describe('prepareBackupImportState & Field Preservation', () => {
     builds: [],
     transactions: [],
     monthlyGoal: 8000,
-    sheetStats: {
-      monthly: [{ month: '2026-01', revenue: 500, profit: 200, pcsSold: 1 }],
-      yearly: { revenue: 500, profit: 200, pcsSold: 1 },
-    },
   };
 
   it('restores monthlyGoal from a valid backup', () => {
@@ -242,36 +238,17 @@ describe('prepareBackupImportState & Field Preservation', () => {
     expect(candidate.monthlyGoal).toBe(5000);
   });
 
-  it('retains current sheetStats when backup does not supply sheetStats', () => {
-    const candidate = prepareBackupImportState(baseCurrentState, {
-      components: [],
-      builds: [],
-      transactions: [],
-    });
-    expect(candidate.sheetStats?.monthly).toEqual([
-      { year: 2026, month: 'January', revenue: 500, profit: 200, pcsSold: 1 },
-    ]);
-    expect(candidate.sheetStats?.yearly).toEqual(baseCurrentState.sheetStats?.yearly);
-  });
-
-  it('imports and sanitizes supplied valid sheetStats', () => {
+  it('strips retired sheetStats from imported backups', () => {
     const candidate = prepareBackupImportState(baseCurrentState, {
       components: [],
       builds: [],
       transactions: [],
       sheetStats: {
         monthly: [{ month: '2026-05', revenue: 3000, profit: 1200, pcsSold: 3 }],
-        yearly: { revenue: 0, profit: 0, pcsSold: 0 }, // Should be recalculated
+        yearly: { revenue: 3000, profit: 1200, pcsSold: 3 },
       },
-    });
-    expect(candidate.sheetStats?.monthly).toEqual([
-      { year: 2026, month: 'May', revenue: 3000, profit: 1200, pcsSold: 3 },
-    ]);
-    expect(candidate.sheetStats?.yearly).toEqual({
-      revenue: 3000,
-      profit: 1200,
-      pcsSold: 3,
-    });
+    } as Partial<AppState>);
+    expect(candidate).not.toHaveProperty('sheetStats');
   });
 
   it('replaces all three primary collections with sanitized versions', () => {
@@ -332,10 +309,6 @@ describe('prepareBackupImportState & Field Preservation', () => {
       builds: Object.freeze([]),
       transactions: Object.freeze([]),
       monthlyGoal: 6000,
-      sheetStats: Object.freeze({
-        monthly: Object.freeze([]),
-        yearly: Object.freeze({ revenue: 0, profit: 0, pcsSold: 0 }),
-      }),
     });
     const rawBackup = {
       components: [
@@ -426,19 +399,11 @@ describe('Canonicalization & areAppStatesEqual Semantic Comparison', () => {
       builds: [],
       transactions: [],
       monthlyGoal: 10000,
-      sheetStats: {
-        monthly: [{ month: '2026-01', revenue: 100, profit: 50, pcsSold: 1 }],
-        yearly: { revenue: 100, profit: 50, pcsSold: 1 },
-      },
     };
 
     // Construct stateB with scrambled property order at all levels
     const stateB: AppState = {
       monthlyGoal: 10000,
-      sheetStats: {
-        yearly: { pcsSold: 1, profit: 50, revenue: 100 },
-        monthly: [{ pcsSold: 1, profit: 50, revenue: 100, month: '2026-01' }],
-      },
       transactions: [],
       builds: [],
       components: [
@@ -611,10 +576,6 @@ describe('Semantic No-Op & Import Handling Logic', () => {
         },
       ],
       monthlyGoal: 10000,
-      sheetStats: {
-        monthly: [],
-        yearly: { revenue: 0, profit: 0, pcsSold: 0 },
-      },
     });
 
     const sanitizedCandidate = prepareBackupImportState(currentState, {
@@ -622,7 +583,6 @@ describe('Semantic No-Op & Import Handling Logic', () => {
       builds: currentState.builds,
       transactions: currentState.transactions,
       monthlyGoal: currentState.monthlyGoal,
-      sheetStats: currentState.sheetStats,
     });
 
     const isIdentical = areAppStatesEqual(currentState, sanitizedCandidate);
@@ -657,10 +617,6 @@ describe('Semantic No-Op & Import Handling Logic', () => {
       builds: [],
       transactions: [],
       monthlyGoal: 10000,
-      sheetStats: {
-        monthly: [],
-        yearly: { revenue: 0, profit: 0, pcsSold: 0 },
-      },
     };
 
     const saveHistory = vi.fn();
@@ -705,10 +661,6 @@ describe('executeBackupImport durable commit boundary', () => {
     builds: [],
     transactions: [],
     monthlyGoal: 10000,
-    sheetStats: {
-      monthly: [],
-      yearly: { revenue: 0, profit: 0, pcsSold: 0 },
-    },
   };
 
   it('skips persistence and preserves the exact state reference for a semantic no-op', async () => {
@@ -786,10 +738,6 @@ describe('executePersistedStateChange durable commit boundary', () => {
     builds: [],
     transactions: [],
     monthlyGoal: 10000,
-    sheetStats: {
-      monthly: [],
-      yearly: { revenue: 0, profit: 0, pcsSold: 0 },
-    },
   };
 
   it('skips persistence and preserves the current reference for an identical reset', async () => {

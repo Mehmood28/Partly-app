@@ -17,7 +17,6 @@ import {
 } from './types';
 import { useUndoRedo } from './useUndoRedo';
 import { getAllBatchesWithRemaining } from '../utils/helpers';
-import { BASELINE_MONTH_NAMES, MonthlyBaselineValues } from '../utils/baselineStats';
 import {
   handleSaveComponent,
   handleAddComponent,
@@ -54,7 +53,6 @@ import {
   isEligibleBulkPartSaleTransaction,
   handleRelistPartSale,
   handleRelistBulkPartSale,
-  handleUpdateMonthlyBaseline,
   handleUpdateMonthlyGoal,
   getResetState,
   getValidatedRelistQuantity,
@@ -153,20 +151,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       saveStateToHistory('Import backup');
       setState(result.nextState);
       return { success: true, changed: true };
-    },
-    [saveStateToHistory, stateRef]
-  );
-
-  const updateMonthlyBaseline = useCallback(
-    (year: number, monthIndex: number, values: MonthlyBaselineValues) => {
-      const current = stateRef.current;
-      const result = handleUpdateMonthlyBaseline(current, year, monthIndex, values);
-      if (!result.success) return { success: false, error: result.error };
-      if (result.nextState === current) return { success: true };
-
-      saveStateToHistory(`Update baseline: ${BASELINE_MONTH_NAMES[monthIndex]} ${year}`);
-      setState(result.nextState);
-      return { success: true };
     },
     [saveStateToHistory, stateRef]
   );
@@ -813,7 +797,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       relistPartSale,
       relistBulkPartSale,
       importData,
-      updateMonthlyBaseline,
       updateMonthlyGoal,
       lastBackupTimestamp,
       actionsSinceBackup,
@@ -859,7 +842,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       relistPartSale,
       relistBulkPartSale,
       importData,
-      updateMonthlyBaseline,
       updateMonthlyGoal,
       lastBackupTimestamp,
       actionsSinceBackup,

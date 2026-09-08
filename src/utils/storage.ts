@@ -1,7 +1,6 @@
 import localforage from 'localforage';
 import { AppState, Condition, InventoryComponent, PCBuild, PurchaseEntry, TransactionLogItem } from '../types';
 import { normalizeDateString, normalizeTimestampString, autoTagComponent } from './helpers';
-import { normalizeSheetStats } from './baselineStats';
 
 export const STORAGE_KEY = 'pc_inventory_tracker_v2';
 export const DB_NAME = 'PartlyPCInventoryDB';
@@ -41,6 +40,7 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
   }
 
   const parsedObj = parsed as Record<string, unknown>;
+  const { sheetStats: _obsoleteSheetStats, ...parsedWithoutSheetStats } = parsedObj;
   const rawBuilds = Array.isArray(parsedObj.builds) ? (parsedObj.builds as PCBuild[]) : [];
   const rawTransactions = Array.isArray(parsedObj.transactions) ? (parsedObj.transactions as TransactionLogItem[]) : [];
   const rawComponents = Array.isArray(parsedObj.components) ? (parsedObj.components as InventoryComponent[]) : [];
@@ -218,20 +218,16 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
     return hasChanges ? { ...b, parts: newParts } : b;
   });
 
-  // 5. User sheetStats
-  const sheetStats = normalizeSheetStats(parsedObj.sheetStats);
-
   let resolvedGoal = 10000;
   if (isValidMonthlyGoal(parsedObj.monthlyGoal)) {
     resolvedGoal = parsedObj.monthlyGoal;
   }
 
   return {
-    ...parsedObj,
+    ...parsedWithoutSheetStats,
     components: cleanedComponents,
     builds: cleanedBuilds,
     transactions: cleanedTransactions,
-    sheetStats,
     monthlyGoal: resolvedGoal,
   };
 };
@@ -242,10 +238,6 @@ export const getDefaultAppState = (): AppState => {
     builds: [],
     transactions: [],
     monthlyGoal: 10000,
-    sheetStats: {
-      monthly: [],
-      yearly: { revenue: 0, profit: 0, pcsSold: 0 },
-    },
   };
 };
 
@@ -294,7 +286,6 @@ export const isValidLegacyAppState = (raw: unknown): raw is Record<string, unkno
     Array.isArray(obj.components) ||
     Array.isArray(obj.builds) ||
     Array.isArray(obj.transactions) ||
-    (typeof obj.sheetStats === 'object' && obj.sheetStats !== null) ||
     typeof obj.monthlyGoal === 'number'
   );
 };
@@ -374,7 +365,6 @@ export interface ParsedBackupPayload {
   components: InventoryComponent[];
   builds: PCBuild[];
   transactions: TransactionLogItem[];
-  sheetStats?: AppState['sheetStats'];
   monthlyGoal?: number;
 }
 
@@ -419,10 +409,6 @@ export const parseBackupObject = (json: unknown): ParseBackupResult => {
       components,
       builds,
       transactions,
-      sheetStats:
-        candidate.sheetStats && typeof candidate.sheetStats === 'object'
-          ? (candidate.sheetStats as AppState['sheetStats'])
-          : undefined,
       monthlyGoal:
         typeof candidate.monthlyGoal === 'number'
           ? candidate.monthlyGoal
@@ -464,10 +450,6 @@ export const prepareBackupImportState = (
     components: Array.isArray(backup.components) ? backup.components : [],
     builds: Array.isArray(backup.builds) ? backup.builds : [],
     transactions: Array.isArray(backup.transactions) ? backup.transactions : [],
-    sheetStats:
-      backup.sheetStats !== undefined && backup.sheetStats !== null
-        ? backup.sheetStats
-        : currentState.sheetStats,
     monthlyGoal: resolvedGoal,
   };
 
