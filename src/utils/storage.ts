@@ -578,37 +578,25 @@ export const persistAppState = async (
   return currentWrite;
 };
 
-export interface BackupImportExecutionResult {
+export interface PersistedStateChangeResult {
   success: boolean;
   changed: boolean;
   nextState: AppState;
   error?: string;
 }
 
-type BackupStatePersister = (state: AppState) => Promise<unknown>;
+type AppStatePersister = (state: AppState) => Promise<unknown>;
 
 /**
- * Prepares and durably persists a backup before the caller commits it to React state.
- * A failed persistence attempt leaves the current in-memory state untouched.
+ * Durably persists a candidate state before the caller commits it to React state.
+ * Semantic no-ops skip storage, while failures preserve the exact current reference.
  */
-export const executeBackupImport = async (
+export const executePersistedStateChange = async (
   currentState: AppState,
-  backup: Partial<AppState>,
-  persistState: BackupStatePersister = persistAppState
-): Promise<BackupImportExecutionResult> => {
-  let candidateState: AppState;
-
-  try {
-    candidateState = prepareBackupImportState(currentState, backup);
-  } catch (err: unknown) {
-    return {
-      success: false,
-      changed: false,
-      nextState: currentState,
-      error: err instanceof Error ? err.message : 'Unable to prepare the imported backup.',
-    };
-  }
-
+  candidateState: AppState,
+  persistenceError: string,
+  persistState: AppStatePersister = persistAppState
+): Promise<PersistedStateChangeResult> => {
   if (areAppStatesEqual(currentState, candidateState)) {
     return {
       success: true,
@@ -624,7 +612,7 @@ export const executeBackupImport = async (
       success: false,
       changed: false,
       nextState: currentState,
-      error: 'Unable to save the imported backup. Your current data was left unchanged.',
+      error: persistenceError,
     };
   }
 
@@ -633,6 +621,36 @@ export const executeBackupImport = async (
     changed: true,
     nextState: candidateState,
   };
+};
+
+/**
+ * Prepares and durably persists a backup before the caller commits it to React state.
+ * A failed persistence attempt leaves the current in-memory state untouched.
+ */
+export const executeBackupImport = async (
+  currentState: AppState,
+  backup: Partial<AppState>,
+  persistState: AppStatePersister = persistAppState
+): Promise<PersistedStateChangeResult> => {
+  let candidateState: AppState;
+
+  try {
+    candidateState = prepareBackupImportState(currentState, backup);
+  } catch (err: unknown) {
+    return {
+      success: false,
+      changed: false,
+      nextState: currentState,
+      error: err instanceof Error ? err.message : 'Unable to prepare the imported backup.',
+    };
+  }
+
+  return executePersistedStateChange(
+    currentState,
+    candidateState,
+    'Unable to save the imported backup. Your current data was left unchanged.',
+    persistState
+  );
 };
 
 /**

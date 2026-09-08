@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { InventoryProvider, useInventory } from './context/InventoryContext';
-import { ToastProvider } from './context/ToastContext';
+import { ToastProvider, useToast } from './context/ToastContext';
 import { PrivacyProvider } from './context/PrivacyContext';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
@@ -18,6 +18,7 @@ import { BulkStockEntryModal, ParsedBulkStockItem } from './components/BulkStock
 import { InventoryComponent, PCBuild, PurchaseEntry } from './types';
 
 function AppContent() {
+  const { showToast } = useToast();
   const {
     state,
     saveComponent,
@@ -79,6 +80,7 @@ function AppContent() {
   }, []);
 
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleSaveBulkItems = (parsedItems: ParsedBulkStockItem[]) => {
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
@@ -155,10 +157,21 @@ function AppContent() {
     setConfirmModal({
       isOpen: true,
       title: 'Reset & Clear All Data',
-      message: 'Are you sure you want to clear all inventory components, builds, activity logs, and monthly stats? This will give you a clean, empty state for testing.',
-      onConfirm: () => {
-        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
-        resetToDefault();
+      message: 'This permanently clears all inventory, builds, transactions, and statistics on this device. Export a backup first if you may need to restore it.',
+      onConfirm: async () => {
+        setIsResetting(true);
+        try {
+          const result = await resetToDefault();
+          if (!result.success) {
+            showToast(result.error || 'Unable to clear the data.', 'error');
+            return;
+          }
+
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+          showToast(result.changed ? 'All data was cleared.' : 'The app data is already empty.', result.changed ? 'success' : 'info');
+        } finally {
+          setIsResetting(false);
+        }
       },
     });
   };
@@ -314,6 +327,9 @@ function AppContent() {
               message={confirmModal.message}
               onConfirm={confirmModal.onConfirm}
               onCancel={handleCloseConfirmModal}
+              confirmText="Clear All Data"
+              isBusy={isResetting}
+              busyText="Clearing..."
             />
           </div>
         </React.Suspense>

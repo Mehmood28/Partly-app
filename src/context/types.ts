@@ -100,8 +100,7 @@ export interface InventoryContextType {
   redo: () => void;
   undoHistory: SessionHistoryItem[];
   redoHistory: SessionHistoryItem[];
-  resetToDefault: () => void;
-  loadSampleData: () => void;
+  resetToDefault: () => Promise<ImportDataResult>;
 
   // Component Actions
   saveComponent: (options: SaveComponentOptions) => { success: boolean; error?: string };

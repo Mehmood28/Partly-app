@@ -3,9 +3,9 @@ import { AppState, ComponentCategory, InventoryComponent, PCBuild, PurchaseEntry
 import {
   getSyncInitialAppState,
   persistAppState,
-  sanitizeAppState,
   resolveInitialAppState,
   executeBackupImport,
+  executePersistedStateChange,
 } from '../utils/storage';
 import {
   InventoryContextType,
@@ -115,43 +115,26 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   } = useUndoRedo(state, setState);
 
   // General & Sync Actions
-  const resetToDefault = useCallback(() => {
-    saveStateToHistory('Reset all app data');
-    const emptyState = getResetState();
-    persistAppState(emptyState).catch(() => {});
-    setState(emptyState);
-  }, [saveStateToHistory]);
+  const resetToDefault = useCallback(async (): Promise<ImportDataResult> => {
+    const currentState = stateRef.current;
+    const result = await executePersistedStateChange(
+      currentState,
+      getResetState(),
+      'Unable to clear the data because it could not be saved. Your current data was left unchanged.'
+    );
 
-  const loadSampleData = useCallback(async () => {
-    saveStateToHistory('Load sample data');
-
-    try {
-      const res = await fetch('/api/load-sample-data');
-      if (res.ok) {
-        const data = await res.json();
-        const isPositiveFinite = (val: unknown): val is number =>
-          typeof val === 'number' && Number.isFinite(val) && !Number.isNaN(val) && val > 0;
-        const sampleGoal = isPositiveFinite(data.monthlyGoal) ? data.monthlyGoal : 10000;
-
-        const sampleState: AppState = sanitizeAppState({
-          components: data.components || [],
-          builds: data.builds || [],
-          transactions: data.transactions || [],
-          sheetStats: data.sheetStats || undefined,
-          monthlyGoal: sampleGoal,
-        });
-        persistAppState(sampleState).catch(() => {});
-        setState(sampleState);
-        return;
-      }
-    } catch (e) {
-      console.error('Failed to load sample data from API, falling back to static', e);
+    if (!result.success || !result.changed) {
+      return {
+        success: result.success,
+        changed: result.changed,
+        error: result.error,
+      };
     }
 
-    const fallbackSampleState = getResetState();
-    persistAppState(fallbackSampleState).catch(() => {});
-    setState(fallbackSampleState);
-  }, [saveStateToHistory]);
+    saveStateToHistory('Reset all app data');
+    setState(result.nextState);
+    return { success: true, changed: true };
+  }, [saveStateToHistory, stateRef]);
 
   const importData = useCallback(
     async (data: Partial<AppState>): Promise<ImportDataResult> => {
@@ -819,7 +802,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       relistPartSale,
       relistBulkPartSale,
       importData,
-      loadSampleData,
       updateSheetStats,
       updateMonthlyGoal,
       lastBackupTimestamp,
@@ -866,7 +848,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       relistPartSale,
       relistBulkPartSale,
       importData,
-      loadSampleData,
       updateSheetStats,
       updateMonthlyGoal,
       lastBackupTimestamp,
