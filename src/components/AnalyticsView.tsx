@@ -128,8 +128,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     totalYearlyProfit,
     totalYearlyCost,
     totalYearlyPcsSold,
-    totalYearlyPcRevenue,
-    totalYearlyPcProfit,
     avgYearlyProfitPerBuild,
     avgYearlyMargin,
   } = React.useMemo(() => {
@@ -147,8 +145,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       totalYearlyProfit: prof,
       totalYearlyCost: cost,
       totalYearlyPcsSold: pcs,
-      totalYearlyPcRevenue: pcRev,
-      totalYearlyPcProfit: pcProf,
       avgYearlyProfitPerBuild: avgProf,
       avgYearlyMargin: avgMarg,
     };
@@ -336,15 +332,15 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
       </div>
 
-      {/* PC Sales Tracking Spreadsheet Table */}
+      {/* Monthly Sales Tracking Spreadsheet Table */}
       <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl overflow-hidden shadow-sm">
         <div className="bg-[#121722] px-3.5 py-2.5 border-b border-white/[0.08] flex items-center justify-between">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-              <PackageCheck className="w-3.5 h-3.5 text-[#7C6CF2]" /> PC Sales Tracking — {selectedYear}
+              <PackageCheck className="w-3.5 h-3.5 text-[#7C6CF2]" /> Sales Tracking — {selectedYear}
             </h3>
             <p className="text-[10px] sm:text-[11px] text-zinc-400 mt-0.5">
-              Click any month row below to inspect its performance stats above.
+              Revenue and profit include PC and loose-part sales. PCs Sold counts PC sales only.
             </p>
           </div>
         </div>
@@ -393,12 +389,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
                     {/* Revenue Cell */}
                     <td className="py-2 px-3 text-[#9D91FA] border-r border-white/[0.06] font-mono font-medium">
-                      {formatCurrency(row.pcRevenue)}
+                      {formatCurrency(row.revenue)}
                     </td>
 
                     {/* Profit Cell */}
-                    <td className={`py-2 px-3 border-r border-white/[0.06] font-mono font-medium ${getProfitTextColor(row.pcProfit)}`}>
-                      {formatCurrency(row.pcProfit)}
+                    <td className={`py-2 px-3 border-r border-white/[0.06] font-mono font-medium ${getProfitTextColor(row.profit)}`}>
+                      {formatCurrency(row.profit)}
                     </td>
 
                     {/* PCs Sold Cell */}
@@ -416,10 +412,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   TOTAL
                 </td>
                 <td className="py-2.5 px-3 text-[#9D91FA] border-r border-white/[0.06]">
-                  {formatCurrency(totalYearlyPcRevenue)}
+                  {formatCurrency(totalYearlyRevenue)}
                 </td>
-                <td className={`py-2.5 px-3 border-r border-white/[0.06] ${getProfitTextColor(totalYearlyPcProfit)}`}>
-                  {formatSignedCurrency(totalYearlyPcProfit)}
+                <td className={`py-2.5 px-3 border-r border-white/[0.06] ${getProfitTextColor(totalYearlyProfit)}`}>
+                  {formatSignedCurrency(totalYearlyProfit)}
                 </td>
                 <td className="py-2.5 px-3 text-blue-400 text-center sm:text-left">
                   {totalYearlyPcsSold}
