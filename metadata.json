@@ -1,0 +1,8 @@
+{
+  "name": "Partly Stable",
+  "description": "Dark mode PC component inventory and PC build sales tracker with unit costs, platform sales, purchase history, and profit margin analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

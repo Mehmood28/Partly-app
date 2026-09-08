@@ -1,0 +1,169 @@
+import React from 'react';
+import { Home, Package, Cpu, BarChart3, Hammer, FolderSync, LucideIcon, History, ArrowUp } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useInventory } from '../context/InventoryContext';
+import { SessionHistoryPopover } from './SessionHistoryPopover';
+
+interface SidebarProps {
+  activeTab: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data';
+  setActiveTab: (tab: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data') => void;
+  isSessionHistoryOpen: boolean;
+  onToggleSessionHistory: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = React.memo(({
+  activeTab,
+  setActiveTab,
+  isSessionHistoryOpen,
+  onToggleSessionHistory,
+}) => {
+  const { undoCount, redoCount, actionsSinceBackup } = useInventory();
+  const totalHistoryCount = undoCount + redoCount;
+
+  const scrollToTop = () => { 
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+    const activeContainer = document.querySelector('main > div:not(.hidden) .overflow-y-auto, main > div:not(.hidden) [data-scroll-container]');
+    if (activeContainer) {
+      activeContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleTabClick = (tabId: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data') => {
+    if (activeTab === tabId) {
+      scrollToTop();
+    } else {
+      setActiveTab(tabId);
+    }
+  };
+
+  const tabs: Array<{ id: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data'; label: string; icon: LucideIcon; hasBadge?: boolean }> = [
+    { id: 'launchpad', label: 'Home', icon: Home },
+    { id: 'inventory', label: 'Stock', icon: Package },
+    { id: 'builds', label: 'Builds', icon: Hammer },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'data', label: 'Data', icon: FolderSync, hasBadge: actionsSinceBackup > 5 },
+  ];
+
+  return (
+    <>
+      {/* Desktop Sidebar (hidden on phone) */}
+      <aside className="hidden md:flex flex-col w-64 h-dvh fixed top-0 left-0 bg-[#0D1118] border-r border-white/[0.08] p-4 z-[250]">
+        <div className="flex items-center gap-3 mb-6 px-2">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C6CF2] to-[#5B4AE4] text-white flex items-center justify-center font-medium shadow-md shadow-[#7C6CF2]/20">
+            <Cpu className="w-5 h-5 stroke-[2.2]" />
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-white tracking-tight leading-none font-display">Partly</h1>
+            <span className="text-[10px] text-zinc-400 font-mono tracking-wider">INVENTORY & SALES</span>
+          </div>
+        </div>
+
+        <nav className="flex-1 space-y-1.5">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all relative min-h-[40px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
+                activeTab === tab.id
+                  ? 'text-white'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+              }`}
+            >
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="activeTabDesktop"
+                  className="absolute inset-0 bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 rounded-xl"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <tab.icon className={`w-4 h-4 relative z-10 ${activeTab === tab.id ? 'text-[#7C6CF2]' : 'text-zinc-400'}`} />
+              <span className="relative z-10 flex-1 text-left">{tab.label}</span>
+              {tab.hasBadge && (
+                <div className="w-2 h-2 rounded-full bg-[#7C6CF2] relative z-10 shadow-sm shadow-[#7C6CF2]/30" />
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* Desktop History & Scroll-to-Top */}
+        <div className="mt-auto space-y-1.5">
+          <div className="relative">
+            <button
+              type="button"
+              id="desktop-history-button"
+              onClick={onToggleSessionHistory}
+              aria-expanded={isSessionHistoryOpen}
+              aria-controls="session-history-popover-desktop"
+              aria-label={`Session history: ${undoCount} undo actions and ${redoCount} redo actions.`}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] cursor-pointer ${
+                isSessionHistoryOpen
+                  ? 'bg-[#7C6CF2]/20 text-white border-[#7C6CF2]/40'
+                  : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border-white/[0.06]'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <History className="w-4 h-4 text-[#7C6CF2]" />
+                <span>History</span>
+              </div>
+              {totalHistoryCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-md bg-[#7C6CF2]/20 border border-[#7C6CF2]/40 text-[#C4BCFC] font-mono text-[10px] font-semibold">
+                  {totalHistoryCount}
+                </span>
+              )}
+            </button>
+            {isSessionHistoryOpen && (
+              <div className="absolute left-[calc(100%+1.5rem)] bottom-0 w-80 sm:w-96 max-w-[calc(100vw-18rem)] z-[300]">
+                <SessionHistoryPopover
+                  id="session-history-popover-desktop"
+                  className="max-h-[min(520px,calc(100dvh-5rem))]"
+                />
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={scrollToTop}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+          >
+            <ArrowUp className="w-3.5 h-3.5" /> Scroll to Top
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile Bottom Bar (5 equal items, re-tap to scroll to top) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0D1118]/95 backdrop-blur-xl z-[250] isolation px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-between border-t border-white/[0.08] shadow-[0_-8px_30px_rgba(0,0,0,0.6)]">
+        <div className="flex w-full items-center justify-between gap-1">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabClick(tab.id)}
+                aria-label={tab.label}
+                className={`relative flex flex-col items-center justify-center flex-1 h-11 transition-colors touch-manipulation rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${isActive ? 'text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTabMobile"
+                    className="absolute inset-0 bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 rounded-xl"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <div className="relative z-10 mb-0.5">
+                  <tab.icon className={`w-4 h-4 transition-colors ${isActive ? 'text-[#7C6CF2]' : 'text-zinc-400'}`} />
+                  {tab.hasBadge && (
+                    <div className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-[#7C6CF2] shadow-sm shadow-[#7C6CF2]/30" />
+                  )}
+                </div>
+                <span className={`text-[10px] font-medium relative z-10 transition-colors ${isActive ? 'text-white font-semibold' : ''}`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </>
+  );
+});

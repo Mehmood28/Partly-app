@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #090B10;
+  --color-surface-1: #0D1118;
+  --color-surface-2: #121722;
+  --color-surface-3: #161C2A;
+  
+  --color-violet-primary: #7C6CF2;
+  --color-violet-hover: #8D7FF5;
+  --color-violet-muted: rgba(124, 108, 242, 0.15);
+
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Manrope', sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: #090B10;
+    color: #F1F3F9;
+    font-family: var(--font-sans);
+  }
+  
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bg-app-canvas {
+    background-color: #090B10;
+  }
+
+  .bg-app-surface {
+    background-color: #0D1118;
+  }
+
+  .bg-app-card {
+    background-color: #121722;
+  }
+
+  .border-app-subtle {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .border-app-violet {
+    border-color: rgba(124, 108, 242, 0.35);
+  }
+
+  .glass-panel {
+    background: rgba(13, 17, 24, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+  
+  .glass-button {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  
+  .card-dopamine {
+    background-color: #0D1118;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-dopamine:hover {
+    border-color: rgba(124, 108, 242, 0.3);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  }
+  
+  .active-scale:active {
+    transform: scale(0.97);
+  }
+}

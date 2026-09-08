@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Dark rounded-square icon background matching Partly aesthetic -->
+  <rect width="512" height="512" rx="108" fill="#0a0a0d"/>
+
+  <!-- 1. AMBER UPPER-RIGHT COMPONENT -->
+  <path d="M 252 82 L 356 82 C 368 82 378 87 386 95 L 420 129 C 428 137 430 148 426 158 L 382 248 C 378 256 368 261 359 259 L 302 247 C 294 245 288 239 285 231 L 244 116 C 240 104 245 91 252 82 Z" fill="#ff9900"/>
+  <!-- Amber plate mounting dot (top right) -->
+  <circle cx="370" cy="110" r="9" fill="#0a0a0d"/>
+
+  <!-- 2. CYAN UPPER-LEFT COMPONENT -->
+  <path d="M 120 152 C 120 144 125 137 132 133 L 232 86 C 242 81 254 87 258 97 L 278 148 C 281 156 280 165 275 172 L 235 228 C 230 235 230 245 235 252 L 268 296 C 274 304 272 316 264 322 L 222 352 C 216 356 208 357 202 354 L 132 324 C 125 321 120 314 120 306 Z" fill="#00c2ff"/>
+  <!-- Cyan mounting dots -->
+  <circle cx="148" cy="162" r="9" fill="#0a0a0d"/>
+  <circle cx="148" cy="298" r="9" fill="#0a0a0d"/>
+
+  <!-- Cyan Fan Black Circular Housing -->
+  <circle cx="196" cy="230" r="48" fill="#0a0a0d"/>
+
+  <!-- 5 Cyan Aerodynamic Fan Blades -->
+  <g fill="#00c2ff" transform="translate(196, 230)">
+    <!-- Blade 1: Top -->
+    <path d="M 0 0 L -6 -44 C 4 -46 16 -43 22 -36 L 6 -12 Z"/>
+    <!-- Blade 2: Top Right -->
+    <path d="M 0 0 L 38 -20 C 44 -12 45 0 40 8 L 12 6 Z"/>
+    <!-- Blade 3: Bottom Right -->
+    <path d="M 0 0 L 26 34 C 18 40 6 42 -2 39 L -4 13 Z"/>
+    <!-- Blade 4: Bottom Left -->
+    <path d="M 0 0 L -28 32 C -36 26 -40 14 -38 6 L -13 0 Z"/>
+    <!-- Blade 5: Top Left -->
+    <path d="M 0 0 L -40 -16 C -42 -26 -34 -36 -26 -40 L -6 -12 Z"/>
+  </g>
+  <!-- Fan Amber Central Hub -->
+  <circle cx="196" cy="230" r="13" fill="#ff9900"/>
+
+  <!-- 3. WHITE MID-RIGHT CONNECTOR COMPONENT -->
+  <path d="M 288 274 C 294 268 304 266 312 270 L 414 316 C 424 321 428 333 423 343 L 392 405 C 387 415 375 419 365 414 L 263 368 C 253 363 249 351 254 341 L 280 288 C 282 283 285 278 288 274 Z" fill="#f1f3f7"/>
+  <!-- White plate mounting dot (near upper right corner) -->
+  <circle cx="396" cy="336" r="9" fill="#0a0a0d"/>
+
+  <!-- 4. EMERALD LOWER-LEFT COMPONENT -->
+  <path d="M 120 350 C 120 342 126 336 134 336 L 222 336 C 231 336 238 343 238 352 L 238 418 C 238 426 232 433 224 435 L 136 454 C 127 456 120 449 120 440 Z" fill="#00d084"/>
+  <!-- Emerald Plate Rectangular Cutout Slots -->
+  <rect x="144" y="354" width="70" height="24" rx="5" fill="#0a0a0d"/>
+  <rect x="144" y="392" width="70" height="24" rx="5" fill="#0a0a0d"/>
+  <!-- Emerald plate mounting dot (bottom left) -->
+  <circle cx="138" cy="434" r="7.5" fill="#0a0a0d"/>
+</svg>

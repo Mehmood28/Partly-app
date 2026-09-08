@@ -1,0 +1,259 @@
+import React, { useState, useDeferredValue } from 'react';
+import { PCBuild, ComponentCategory } from '../../types';
+import {
+  calculateUnassignedQuantityStrict,
+  getAllBatchesWithRemaining,
+  filterAndSortComponents,
+  getConditionColor,
+  formatCurrency,
+} from '../../utils/helpers';
+import { X, Box, ChevronDown, ChevronUp, Monitor, Cpu, HardDrive, Database, CircuitBoard, Zap, Fan, Package } from 'lucide-react';
+import { useInventory } from '../../context/InventoryContext';
+import { usePrivacy } from '../../context/PrivacyContext';
+import { BottomSheetModal } from '../ui/BottomSheetModal';
+import { InventoryFilterBar } from '../InventoryFilterBar';
+import { ConfirmModal } from '../ConfirmModal';
+import { useToast } from '../../context/ToastContext';
+
+interface AllocatePartModalProps {
+  build: PCBuild | null;
+  onClose: () => void;
+}
+
+export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onClose }) => {
+  const { state, allocatePartToBuild } = useInventory();
+  const { showToast } = useToast();
+  const { hideSupplierNames } = usePrivacy();
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const [expandedPartId, setExpandedPartId] = useState<string | null>(null);
+  const [pendingAllocation, setPendingAllocation] = useState<{
+    componentId: string;
+    componentName: string;
+    entryId: string;
+    condition: string;
+    date: string;
+    unitCost: number;
+    quantity: number;
+  } | null>(null);
+
+  const renderCategoryIcon = (category: string) => {
+    const className = 'w-4 h-4 text-[#7C6CF2]';
+    switch (category) {
+      case 'GPU': return <Monitor className={className} />;
+      case 'CPU': return <Cpu className={className} />;
+      case 'RAM': return <HardDrive className={className} />;
+      case 'Storage': return <Database className={className} />;
+      case 'Motherboard': return <CircuitBoard className={className} />;
+      case 'PSU': return <Zap className={className} />;
+      case 'Cooling': return <Fan className={className} />;
+      case 'Case': return <Package className={className} />;
+      default: return <Cpu className={className} />;
+    }
+  };
+
+  const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'All'>('All');
+  const [activeSubCategory, setActiveSubCategory] = useState<string>('');
+
+  const filteredComponents = filterAndSortComponents(state.components, {
+    searchQuery: deferredSearchQuery,
+    category: activeCategoryTab === 'All' ? undefined : activeCategoryTab,
+    subCategory: activeSubCategory,
+    onlyAvailable: true,
+    builds: state.builds,
+  });
+
+  if (!build) return null;
+
+  return (
+    <BottomSheetModal isOpen={true} onClose={onClose} className="max-w-lg">
+      <div className="space-y-3.5 w-full">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+          <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
+            <Box className="w-4 h-4 text-[#7C6CF2]" /> Allocate Inventory Component
+          </h3>
+          <button
+            onClick={onClose}
+            aria-label="Close modal"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-xs text-zinc-400 font-sans">
+          Select an available component from inventory to assign to{' '}
+          <strong className="text-zinc-200">{build.name}</strong>.
+        </p>
+
+        <InventoryFilterBar
+          components={state.components}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeCategory={activeCategoryTab}
+          onCategoryChange={(c) => { setActiveCategoryTab(c as ComponentCategory | 'All'); setActiveSubCategory(''); }}
+          onlyAvailable={true}
+          activeSubCategory={activeSubCategory}
+          onSubCategoryChange={setActiveSubCategory}
+        />
+
+        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+          {filteredComponents.length === 0 ? (
+            <div className="text-center py-8 px-4 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/[0.08] rounded-xl bg-[#121722]/50 mt-2">
+              <Box className="w-7 h-7 mb-2 text-zinc-500" />
+              <p className="text-xs font-medium text-zinc-400">No compatible parts found</p>
+            </div>
+          ) : filteredComponents.map((comp) => {
+            const batches = getAllBatchesWithRemaining(comp, state.builds);
+            if (batches.length === 0) return null;
+            const unassignedQty = calculateUnassignedQuantityStrict(comp, state.builds);
+            const availableBatches = batches.filter((b) => b.availableQuantity > 0);
+            const totalAvailable = availableBatches.reduce((sum, b) => sum + b.availableQuantity, 0);
+            const avgPrice =
+              totalAvailable > 0
+                ? availableBatches.reduce((sum, b) => sum + b.unitCost * b.availableQuantity, 0) / totalAvailable
+                : 0;
+            const isExpanded = expandedPartId === comp.id;
+
+            return (
+              <div 
+                key={comp.id} 
+                className="bg-[#121722] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl mb-2 transition-all overflow-hidden"
+              >
+                <div 
+                  onClick={() => setExpandedPartId(isExpanded ? null : comp.id)}
+                  className="p-3 cursor-pointer flex items-start gap-2.5 group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0 mt-0.5">
+                    {renderCategoryIcon(comp.category)}
+                  </div>
+                  <div className="flex flex-col gap-1 min-w-0 flex-1">
+                    <h4 className="text-xs sm:text-sm font-bold text-zinc-100 break-words leading-snug transition-colors font-sans">{comp.name}</h4>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {comp.tags && comp.tags[0] && (
+                        <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
+                          {comp.tags[0]}
+                        </span>
+                      )}
+                      <span className="bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 text-[#9D91FA] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
+                        {unassignedQty} in stock
+                      </span>
+                      <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
+                        Avg: {formatCurrency(avgPrice)}/ea
+                      </span>
+                    </div>
+                  </div>
+                  <div className="shrink-0 ml-1.5 self-center">
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+                  </div>
+                </div>
+                
+                {isExpanded && (
+                  <div className="border-t border-white/[0.08] bg-[#0D1118] p-3 space-y-2">
+                    {batches.map(({ entry, availableQuantity, unitCost }) => {
+                      const isFullyAssigned = availableQuantity <= 0;
+                      return (
+                        <div
+                          key={entry.id}
+                          className={`bg-[#121722] border rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2 transition-all ${
+                            isFullyAssigned
+                              ? 'border-white/[0.04] opacity-50'
+                              : 'border-white/[0.08] hover:border-[#7C6CF2]/40'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 flex-wrap flex-1">
+                            <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px] font-mono">
+                              {entry.date}
+                            </span>
+                            <span className={`shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-medium leading-none inline-flex items-center justify-center ${getConditionColor(entry.condition)}`}>
+                              {entry.condition}
+                            </span>
+                            <span
+                              className={`shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center ${
+                                isFullyAssigned
+                                  ? 'bg-white/[0.04] text-zinc-500 border border-white/[0.06]'
+                                  : 'bg-white/[0.06] text-zinc-200 border border-white/[0.08]'
+                              }`}
+                            >
+                              {isFullyAssigned
+                                ? `0 of ${entry.quantity} available`
+                                : `${availableQuantity} of ${entry.quantity} avail @ ${formatCurrency(unitCost)}`}
+                            </span>
+                            {!hideSupplierNames && entry.platform && (
+                              <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px]">
+                                {entry.platform}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                            {isFullyAssigned ? (
+                              <button
+                                type="button"
+                                disabled
+                                className="bg-white/[0.04] text-zinc-500 border border-white/[0.06] cursor-not-allowed opacity-50 shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium"
+                              >
+                                Assigned
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPendingAllocation({
+                                    componentId: comp.id,
+                                    componentName: comp.name,
+                                    entryId: entry.id,
+                                    condition: entry.condition,
+                                    date: entry.date,
+                                    unitCost,
+                                    quantity: Math.min(1, availableQuantity),
+                                  });
+                                }}
+                                className="bg-[#7C6CF2] hover:bg-[#8D7FF5] text-white shadow-sm shadow-[#7C6CF2]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+                              >
+                                Assign
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {pendingAllocation && (
+        <ConfirmModal
+          isOpen={!!pendingAllocation}
+          title="Assign Component to Build?"
+          message={`Assign ${pendingAllocation.quantity}x "${pendingAllocation.componentName}" (${pendingAllocation.condition}, purchased on ${pendingAllocation.date} @ ${formatCurrency(pendingAllocation.unitCost)}) to "${build.name}"?`}
+          confirmText="Assign Part"
+          variant="violet"
+          onConfirm={() => {
+            const result = allocatePartToBuild(
+              build.id,
+              pendingAllocation.componentId,
+              pendingAllocation.entryId,
+              pendingAllocation.quantity
+            );
+            if (!result.success) {
+              showToast(result.error || 'Failed to allocate part to build.', 'error');
+              setPendingAllocation(null);
+              return;
+            }
+            showToast(
+              `Successfully assigned ${pendingAllocation.quantity}x "${pendingAllocation.componentName}" to "${build.name}".`,
+              'success'
+            );
+            setPendingAllocation(null);
+            onClose();
+          }}
+          onCancel={() => setPendingAllocation(null)}
+        />
+      )}
+    </BottomSheetModal>
+  );
+};
