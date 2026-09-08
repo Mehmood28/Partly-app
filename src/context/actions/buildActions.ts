@@ -69,10 +69,13 @@ export const handleAddBuild = (
 export const handleAddImportedBuilds = (
   prev: AppState,
   builds: PCBuild[]
-): AppState => ({
-  ...prev,
-  builds: [...builds, ...prev.builds],
-});
+): AppState => {
+  if (builds.length === 0) return prev;
+  return {
+    ...prev,
+    builds: [...builds, ...prev.builds],
+  };
+};
 
 export const handleUpdateBuildStatus = (
   prev: AppState,
@@ -104,27 +107,31 @@ export const handleUpdateBuildStatus = (
       ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
       : targetBuild.completionDate || undefined;
 
+  const updatedTarget: PCBuild = {
+    ...targetBuild,
+    status,
+    completionDate: newCompletionDate,
+    sourceSaleTransactionId: newSourceSaleTransactionId,
+    ...(status !== 'Sold'
+      ? {
+          saleDate: undefined,
+          platformSoldOn: undefined,
+          paymentMethod: undefined,
+          buyerName: undefined,
+          buyerPhone: undefined,
+          daysOnMarket: undefined,
+        }
+      : {}),
+  };
+
+  if (JSON.stringify(updatedTarget) === JSON.stringify(targetBuild)) {
+    return prev;
+  }
+
   return {
     ...prev,
     builds: prev.builds.map((b) =>
-      b.id === buildId
-        ? {
-            ...b,
-            status,
-            completionDate: newCompletionDate,
-            sourceSaleTransactionId: newSourceSaleTransactionId,
-            ...(status !== 'Sold'
-              ? {
-                  saleDate: undefined,
-                  platformSoldOn: undefined,
-                  paymentMethod: undefined,
-                  buyerName: undefined,
-                  buyerPhone: undefined,
-                  daysOnMarket: undefined,
-                }
-              : {}),
-          }
-        : b
+      b.id === buildId ? updatedTarget : b
     ),
   };
 };
@@ -1901,4 +1908,3 @@ export const handleSaveTradeInComponentBreakdown = (
     success: true,
   };
 };
-

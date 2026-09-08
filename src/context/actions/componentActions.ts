@@ -781,23 +781,29 @@ export const handleUpdateComponent = (
   prev: AppState,
   id: string,
   updates: Partial<InventoryComponent>
-): AppState => ({
-  ...prev,
-  components: prev.components.map((c) => {
-    if (c.id === id) {
-      const { purchaseHistory: updatesPh, tags: updatesTags, ...otherUpdates } = updates;
-      return {
-        ...c,
-        ...otherUpdates,
-        tags: updatesTags ? [...updatesTags] : c.tags ? [...c.tags] : undefined,
-        purchaseHistory: updatesPh
-          ? updatesPh.map((pe) => ({ ...pe }))
-          : (c.purchaseHistory || []).map((pe) => ({ ...pe })),
-      };
-    }
-    return c;
-  }),
-});
+): AppState => {
+  const targetIndex = prev.components.findIndex((c) => c.id === id);
+  if (targetIndex < 0) return prev;
+
+  const target = prev.components[targetIndex];
+  const { purchaseHistory: updatesPh, tags: updatesTags, ...otherUpdates } = updates;
+  const updatedComponent: InventoryComponent = {
+    ...target,
+    ...otherUpdates,
+    tags: updatesTags ? [...updatesTags] : target.tags ? [...target.tags] : undefined,
+    purchaseHistory: updatesPh
+      ? updatesPh.map((pe) => ({ ...pe }))
+      : (target.purchaseHistory || []).map((pe) => ({ ...pe })),
+  };
+
+  if (JSON.stringify(updatedComponent) === JSON.stringify(target)) {
+    return prev;
+  }
+
+  const components = [...prev.components];
+  components[targetIndex] = updatedComponent;
+  return { ...prev, components };
+};
 
 export const handleDeleteComponent = (
   prev: AppState, 
@@ -1083,12 +1089,20 @@ export const handleUpdateMarketValue = (
   prev: AppState,
   componentId: string,
   value: number
-): AppState => ({
-  ...prev,
-  components: prev.components.map((c) =>
-    c.id === componentId ? { ...c, targetMarketValuePerUnit: value } : c
-  ),
-});
+): AppState => {
+  if (!Number.isFinite(value) || value < 0) return prev;
+  const targetIndex = prev.components.findIndex((c) => c.id === componentId);
+  if (targetIndex < 0 || prev.components[targetIndex].targetMarketValuePerUnit === value) {
+    return prev;
+  }
+
+  const components = [...prev.components];
+  components[targetIndex] = {
+    ...components[targetIndex],
+    targetMarketValuePerUnit: value,
+  };
+  return { ...prev, components };
+};
 
 export const handleSellComponentPart = (
   prev: AppState,

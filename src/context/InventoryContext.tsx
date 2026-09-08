@@ -246,10 +246,14 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateComponent = useCallback(
     (id: string, updates: Partial<InventoryComponent>) => {
-      const existing = stateRef.current.components.find((c) => c.id === id);
+      const current = stateRef.current;
+      const existing = current.components.find((c) => c.id === id);
       const compName = updates.name || (existing ? existing.name : 'Component');
-      saveStateToHistory(`Edit component: ${compName}`);
-      setState((prev) => handleUpdateComponent(prev, id, updates));
+      const nextState = handleUpdateComponent(current, id, updates);
+      if (nextState !== current) {
+        saveStateToHistory(`Edit component: ${compName}`);
+        setState(nextState);
+      }
     },
     [saveStateToHistory, stateRef]
   );
@@ -327,10 +331,14 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateMarketValue = useCallback(
     (componentId: string, value: number) => {
-      const comp = stateRef.current.components.find((c) => c.id === componentId);
+      const current = stateRef.current;
+      const comp = current.components.find((c) => c.id === componentId);
       const compName = comp ? comp.name : 'Component';
-      saveStateToHistory(`Update market value: ${compName}`);
-      setState((prev) => handleUpdateMarketValue(prev, componentId, value));
+      const nextState = handleUpdateMarketValue(current, componentId, value);
+      if (nextState !== current) {
+        saveStateToHistory(`Update market value: ${compName}`);
+        setState(nextState);
+      }
     },
     [saveStateToHistory, stateRef]
   );
@@ -410,12 +418,15 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addImportedBuilds = useCallback(
     (builds: PCBuild[]) => {
+      const current = stateRef.current;
+      const nextState = handleAddImportedBuilds(current, builds);
+      if (nextState === current) return;
       const count = builds.length;
       const label = count === 1 ? `Import 1 build` : `Import ${count} builds`;
       saveStateToHistory(label);
-      setState((prev) => handleAddImportedBuilds(prev, builds));
+      setState(nextState);
     },
-    [saveStateToHistory]
+    [saveStateToHistory, stateRef]
   );
 
   const updateBuildStatus = useCallback(
@@ -582,7 +593,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deleteBuild = useCallback(
     (buildId: string) => {
-      const build = stateRef.current.builds.find((b) => b.id === buildId);
+      const current = stateRef.current;
+      const build = current.builds.find((b) => b.id === buildId);
       if (
         !build ||
         build.status === 'Sold' ||
@@ -591,9 +603,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ) {
         return;
       }
+      const nextState = handleDeleteBuild(current, buildId);
+      if (nextState === current) return;
       const buildName = build.name;
       saveStateToHistory(`Delete build draft: ${buildName}`);
-      setState((prev) => handleDeleteBuild(prev, buildId));
+      setState(nextState);
     },
     [saveStateToHistory, stateRef]
   );
@@ -711,26 +725,32 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const deleteBulkPartSale = useCallback(
     (bulkSaleGroupId: string) => {
       if (!bulkSaleGroupId) return;
-      const hasEligible = stateRef.current.transactions.some((t) =>
-        isEligibleBulkPartSaleTransaction(t, bulkSaleGroupId, stateRef.current.builds)
+      const current = stateRef.current;
+      const hasEligible = current.transactions.some((t) =>
+        isEligibleBulkPartSaleTransaction(t, bulkSaleGroupId, current.builds)
       );
       if (!hasEligible) return;
+      const nextState = handleDeleteBulkPartSale(current, bulkSaleGroupId);
+      if (nextState === current) return;
       saveStateToHistory('Delete bulk part sale record');
-      setState((prev) => handleDeleteBulkPartSale(prev, bulkSaleGroupId));
+      setState(nextState);
     },
     [saveStateToHistory, stateRef]
   );
 
   const relistPartSale = useCallback(
     (transactionId: string) => {
-      const tx = stateRef.current.transactions.find((t) => t.id === transactionId);
+      const current = stateRef.current;
+      const tx = current.transactions.find((t) => t.id === transactionId);
       if (!tx || tx.type !== 'SALE') return;
       const relistQty = getValidatedRelistQuantity(tx);
       if (relistQty === null) return;
 
+      const nextState = handleRelistPartSale(current, transactionId);
+      if (nextState === current) return;
       const summary = tx.title || 'sale';
       saveStateToHistory(`Relist part sale: ${summary}`);
-      setState((prev) => handleRelistPartSale(prev, transactionId));
+      setState(nextState);
     },
     [saveStateToHistory, stateRef]
   );
@@ -738,7 +758,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const relistBulkPartSale = useCallback(
     (bulkSaleGroupId: string) => {
       if (!bulkSaleGroupId) return;
-      const groupTxs = stateRef.current.transactions.filter(
+      const current = stateRef.current;
+      const groupTxs = current.transactions.filter(
         (t) => t.type === 'SALE' && t.bulkSaleGroupId === bulkSaleGroupId
       );
       if (groupTxs.length === 0) return;
@@ -748,8 +769,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (relistQty === null) return;
       }
 
+      const nextState = handleRelistBulkPartSale(current, bulkSaleGroupId);
+      if (nextState === current) return;
       saveStateToHistory('Relist bulk part sale');
-      setState((prev) => handleRelistBulkPartSale(prev, bulkSaleGroupId));
+      setState(nextState);
     },
     [saveStateToHistory, stateRef]
   );
