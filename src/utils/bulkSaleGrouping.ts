@@ -1,6 +1,7 @@
 import { TransactionLogItem, PCBuild } from '../types';
 import { classifyTransaction } from './transactionClassification';
 import { parseDateLocal, formatCurrency } from './helpers';
+import { formatSignedCurrency } from './financialDisplay';
 
 export interface SinglePartSaleDisplayItem {
   type: 'single';
@@ -59,13 +60,7 @@ export function getSafeDisplayQuantity(tx: TransactionLogItem): number {
 }
 
 export function formatSignedProfit(profit: number): string {
-  if (!Number.isFinite(profit) || profit === 0) {
-    return formatCurrency(0);
-  }
-  if (profit > 0) {
-    return `+${formatCurrency(profit)}`;
-  }
-  return `-${formatCurrency(Math.abs(profit))}`;
+  return formatSignedCurrency(profit);
 }
 
 export interface ResolvedTransactionDate {

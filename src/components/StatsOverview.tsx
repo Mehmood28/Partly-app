@@ -5,6 +5,7 @@ import {
   calculateInventoryMetrics,
   calculateMonthlyMetrics
 } from '../utils/helpers';
+import { formatSignedCurrency, getProfitSummaryClasses } from '../utils/financialDisplay';
 
 export const StatsOverview: React.FC = React.memo(() => {
   const { state } = useInventory();
@@ -79,8 +80,8 @@ export const StatsOverview: React.FC = React.memo(() => {
       </div>
 
       {/* Current Month Net Profit */}
-      <div className="gap-1.5 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-1 rounded-lg text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-        <span>PROFIT: {monthProfit >= 0 ? '+' : ''}{formatCurrency(monthProfit)}</span>
+      <div className={`gap-1.5 ${getProfitSummaryClasses(monthProfit)} border px-2 py-1 rounded-lg text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+        <span>PROFIT: {formatSignedCurrency(monthProfit)}</span>
       </div>
     </div>
   );

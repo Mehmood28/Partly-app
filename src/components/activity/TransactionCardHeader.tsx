@@ -20,6 +20,7 @@ import {
 } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { usePrivacy } from '../../context/PrivacyContext';
+import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
 
 interface TransactionCardHeaderProps {
   tx: TransactionLogItem;
@@ -182,8 +183,8 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
               <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                 SOLD: {formatCurrency(salePrice)}
               </span>
-              <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                PROFIT: +{formatCurrency(netProfit)} {roi > 0 ? `(${roi.toFixed(0)}%)` : ''}
+              <span className={`${getProfitBadgeClasses(netProfit)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+                PROFIT: {formatSignedCurrency(netProfit)} {roi !== 0 ? `(${roi.toFixed(0)}%)` : ''}
               </span>
               {/* Meta */}
               {platform && (
@@ -225,8 +226,8 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
               <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                 SOLD: {formatCurrency(salePrice)}
               </span>
-              <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                PROFIT: +{formatCurrency(netProfit)} {roi > 0 ? `(${roi.toFixed(0)}%)` : ''}
+              <span className={`${getProfitBadgeClasses(netProfit)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+                PROFIT: {formatSignedCurrency(netProfit)} {roi !== 0 ? `(${roi.toFixed(0)}%)` : ''}
               </span>
               {/* Category */}
               {matchedComp?.category && (

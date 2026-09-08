@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Plus, Minus as Dash, Trash2 } from 'lucide-react';
 import { InventoryComponent, PCBuildPart } from '../../../types';
 import { formatCurrency } from '../../../utils/helpers';
+import { formatSignedCurrency, getProfitBadgeClasses } from '../../../utils/financialDisplay';
 
 interface BuildSelectedPartsListProps {
   selectedParts: PCBuildPart[];
@@ -37,15 +38,9 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
             <span className="bg-white/[0.06] border border-white/[0.08] text-zinc-300 whitespace-nowrap px-2 py-0.5 rounded-lg text-xs font-mono font-medium leading-none inline-flex items-center justify-center">
               Cost: {formatCurrency(totalBuildCost)}
             </span>
-            {profit > 0 && targetPrice > 0 ? (
-              <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 whitespace-nowrap px-2 py-0.5 rounded-lg text-xs font-mono font-semibold leading-none inline-flex items-center justify-center">
-                Est Profit: +{formatCurrency(profit)} ({Math.round(margin)}%)
-              </span>
-            ) : (
-              <span className="bg-white/[0.04] text-zinc-400 border border-white/[0.06] whitespace-nowrap px-2 py-0.5 rounded-lg text-xs font-mono font-medium leading-none inline-flex items-center justify-center">
-                Est Profit: {profit > 0 ? '+' : ''}{formatCurrency(profit)} {targetPrice > 0 ? `(${Math.round(margin)}%)` : ''}
-              </span>
-            )}
+            <span className={`${getProfitBadgeClasses(targetPrice > 0 ? profit : 0)} border whitespace-nowrap px-2 py-0.5 rounded-lg text-xs font-mono font-semibold leading-none inline-flex items-center justify-center`}>
+              Est Profit: {formatSignedCurrency(targetPrice > 0 ? profit : 0)} {targetPrice > 0 ? `(${Math.round(margin)}%)` : ''}
+            </span>
           </div>
         </div>
         <div className="flex flex-wrap gap-1">

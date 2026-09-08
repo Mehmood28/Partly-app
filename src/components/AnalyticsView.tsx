@@ -10,6 +10,7 @@ import {
   calculateMonthlyMetrics,
   parseDateLocal,
 } from '../utils/helpers';
+import { formatSignedCurrency, getProfitTextColor } from '../utils/financialDisplay';
 import {
   BarChart,
   Bar,
@@ -44,12 +45,6 @@ const MONTH_NAMES = [
   'November',
   'December',
 ];
-
-const formatSignedCurrency = (amount: number): string =>
-  `${amount >= 0 ? '+' : ''}${formatCurrency(amount)}`;
-
-const getProfitTextColor = (amount: number): string =>
-  amount >= 0 ? 'text-emerald-400' : 'text-rose-400';
 
 interface AnalyticsViewProps {
   isActive?: boolean;

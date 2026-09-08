@@ -19,6 +19,7 @@ import { normalizePlatform } from '../../utils/platformDisplay';
 import { ConfirmModal } from '../ConfirmModal';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { canDeleteBuildDraft, canDismantleBuild, canPartOutTradeInBuild, canMoveToTradeIns } from '../../utils/buildEligibility';
+import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
 
 interface BuildCardProps {
   isExpanded?: boolean;
@@ -261,13 +262,13 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     ) : null
                   )}
                   {isSold ? (
-                    <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                      PROFIT: +{formatCurrency(profit)}
+                    <span className={`${getProfitBadgeClasses(profit)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+                      PROFIT: {formatSignedCurrency(profit)}
                     </span>
                   ) : (
                     build.salePrice ? (
-                      <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                        EST PROFIT: +{formatCurrency(build.salePrice - partsCost)}
+                      <span className={`${getProfitBadgeClasses(build.salePrice - partsCost)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+                        EST PROFIT: {formatSignedCurrency(build.salePrice - partsCost)}
                       </span>
                     ) : null
                   )}
@@ -680,8 +681,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   </span>
                 )}
                 {build.salePrice && (
-                  <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                    EST PROFIT: +{formatCurrency(build.salePrice - partsCost)}
+                  <span className={`${getProfitBadgeClasses(build.salePrice - partsCost)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+                    EST PROFIT: {formatSignedCurrency(build.salePrice - partsCost)}
                   </span>
                 )}
               </div>
