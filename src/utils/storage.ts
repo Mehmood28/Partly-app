@@ -1,6 +1,7 @@
 import localforage from 'localforage';
 import { AppState, Condition, InventoryComponent, PCBuild, PurchaseEntry, TransactionLogItem } from '../types';
 import { normalizeDateString, normalizeTimestampString, autoTagComponent } from './helpers';
+import { normalizeSheetStats } from './baselineStats';
 
 export const STORAGE_KEY = 'pc_inventory_tracker_v2';
 export const DB_NAME = 'PartlyPCInventoryDB';
@@ -218,13 +219,7 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
   });
 
   // 5. User sheetStats
-  const rawSheetStats = typeof parsedObj.sheetStats === 'object' && parsedObj.sheetStats !== null ? (parsedObj.sheetStats as Record<string, unknown>) : null;
-  const savedMonthly = rawSheetStats && Array.isArray(rawSheetStats.monthly) ? (rawSheetStats.monthly as { month: string; revenue: number; profit: number; pcsSold: number }[]) : [];
-  const yearlyStats = {
-    revenue: savedMonthly.reduce((sum: number, m: { revenue?: number }) => sum + (Number(m.revenue) || 0), 0),
-    profit: savedMonthly.reduce((sum: number, m: { profit?: number }) => sum + (Number(m.profit) || 0), 0),
-    pcsSold: savedMonthly.reduce((sum: number, m: { pcsSold?: number }) => sum + (Number(m.pcsSold) || 0), 0),
-  };
+  const sheetStats = normalizeSheetStats(parsedObj.sheetStats);
 
   let resolvedGoal = 10000;
   if (isValidMonthlyGoal(parsedObj.monthlyGoal)) {
@@ -236,10 +231,7 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
     components: cleanedComponents,
     builds: cleanedBuilds,
     transactions: cleanedTransactions,
-    sheetStats: {
-      monthly: savedMonthly,
-      yearly: yearlyStats,
-    },
+    sheetStats,
     monthlyGoal: resolvedGoal,
   };
 };

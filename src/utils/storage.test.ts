@@ -248,7 +248,9 @@ describe('prepareBackupImportState & Field Preservation', () => {
       builds: [],
       transactions: [],
     });
-    expect(candidate.sheetStats?.monthly).toEqual(baseCurrentState.sheetStats?.monthly);
+    expect(candidate.sheetStats?.monthly).toEqual([
+      { year: 2026, month: 'January', revenue: 500, profit: 200, pcsSold: 1 },
+    ]);
     expect(candidate.sheetStats?.yearly).toEqual(baseCurrentState.sheetStats?.yearly);
   });
 
@@ -263,7 +265,7 @@ describe('prepareBackupImportState & Field Preservation', () => {
       },
     });
     expect(candidate.sheetStats?.monthly).toEqual([
-      { month: '2026-05', revenue: 3000, profit: 1200, pcsSold: 3 },
+      { year: 2026, month: 'May', revenue: 3000, profit: 1200, pcsSold: 3 },
     ]);
     expect(candidate.sheetStats?.yearly).toEqual({
       revenue: 3000,

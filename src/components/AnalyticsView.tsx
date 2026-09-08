@@ -9,7 +9,9 @@ import {
   precomputeAssignedBatches,
   formatCurrency, 
   calculateMonthlyMetrics,
+  parseDateLocal,
 } from '../utils/helpers';
+import { getBaselineYears, getMonthlyBaseline } from '../utils/baselineStats';
 import {
   BarChart,
   Bar,
@@ -46,6 +48,12 @@ const MONTH_NAMES = [
   'December',
 ];
 
+const formatSignedCurrency = (amount: number): string =>
+  `${amount >= 0 ? '+' : ''}${formatCurrency(amount)}`;
+
+const getProfitTextColor = (amount: number): string =>
+  amount >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
 interface AnalyticsViewProps {
   isActive?: boolean;
 }
@@ -70,19 +78,20 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     state.builds.forEach((b) => {
       const d = b.saleDate || b.createdDate;
       if (d) {
-        const yr = new Date(d).getFullYear();
-        if (!isNaN(yr) && yr > 0) yearsSet.add(yr);
+        const parsed = parseDateLocal(d);
+        if (parsed) yearsSet.add(parsed.year);
       }
     });
     state.transactions.forEach((tx) => {
       const d = tx.dateSortable || tx.timestamp;
       if (d) {
-        const yr = new Date(d).getFullYear();
-        if (!isNaN(yr) && yr > 0) yearsSet.add(yr);
+        const parsed = parseDateLocal(d);
+        if (parsed) yearsSet.add(parsed.year);
       }
     });
+    getBaselineYears(state.sheetStats).forEach((year) => yearsSet.add(year));
     return Array.from(yearsSet).filter((yr) => yr > 0).sort((a, b) => b - a);
-  }, [state.builds, state.transactions, currentYearNum]);
+  }, [state.builds, state.transactions, state.sheetStats, currentYearNum]);
 
   // Compute monthly stats for selectedYear
   const monthlyData = React.useMemo(() => MONTH_NAMES.map((monthName, idx) => {
@@ -162,6 +171,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const selectedMonthProfit = selectedMonthData.profit;
   const selectedMonthCost = selectedMonthData.cost;
   const selectedMonthPcsSold = selectedMonthData.pcsSold;
+  const selectedMonthBaseline = React.useMemo(
+    () => getMonthlyBaseline(state.sheetStats, selectedYear, selectedMonthIdx),
+    [state.sheetStats, selectedYear, selectedMonthIdx]
+  );
   const selectedMonthPcRevenue = selectedMonthData.pcRevenue;
   const selectedMonthPcProfit = selectedMonthData.pcProfit;
 
@@ -284,7 +297,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Net Profit</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-emerald-400 mt-0.5 leading-tight">+{formatCurrency(selectedMonthProfit)}</p>
+              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(selectedMonthProfit)}`}>{formatSignedCurrency(selectedMonthProfit)}</p>
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">PCs Sold</p>
@@ -296,7 +309,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">PC Margin</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-emerald-400 mt-0.5 leading-tight">{selectedMonthAvgMargin.toFixed(1)}%</p>
+              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(selectedMonthAvgMargin)}`}>{selectedMonthAvgMargin.toFixed(1)}%</p>
             </div>
           </div>
         </div>
@@ -323,7 +336,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Net Profit</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-emerald-400 mt-0.5 leading-tight">+{formatCurrency(totalYearlyProfit)}</p>
+              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(totalYearlyProfit)}`}>{formatSignedCurrency(totalYearlyProfit)}</p>
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total PCs Sold</p>
@@ -335,7 +348,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">PC Margin</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-emerald-400 mt-0.5 leading-tight">{avgYearlyMargin.toFixed(1)}%</p>
+              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(avgYearlyMargin)}`}>{avgYearlyMargin.toFixed(1)}%</p>
             </div>
           </div>
         </div>
@@ -402,7 +415,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                     </td>
 
                     {/* Profit Cell */}
-                    <td className="py-2 px-3 text-emerald-400 border-r border-white/[0.06] font-mono font-medium">
+                    <td className={`py-2 px-3 border-r border-white/[0.06] font-mono font-medium ${getProfitTextColor(row.pcProfit)}`}>
                       {formatCurrency(row.pcProfit)}
                     </td>
 
@@ -423,8 +436,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <td className="py-2.5 px-3 text-[#9D91FA] border-r border-white/[0.06]">
                   {formatCurrency(totalYearlyPcRevenue)}
                 </td>
-                <td className="py-2.5 px-3 text-emerald-400 border-r border-white/[0.06]">
-                  +{formatCurrency(totalYearlyPcProfit)}
+                <td className={`py-2.5 px-3 border-r border-white/[0.06] ${getProfitTextColor(totalYearlyPcProfit)}`}>
+                  {formatSignedCurrency(totalYearlyPcProfit)}
                 </td>
                 <td className="py-2.5 px-3 text-blue-400 text-center sm:text-left">
                   {totalYearlyPcsSold}
@@ -584,9 +597,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         onClose={() => setIsEditingBaseline(false)}
         selectedMonthIdx={selectedMonthIdx}
         selectedYear={selectedYear}
-        initialRev={selectedMonthRevenue}
-        initialProf={selectedMonthProfit}
-        initialPcs={selectedMonthPcsSold}
+        initialRev={selectedMonthBaseline.revenue}
+        initialProf={selectedMonthBaseline.profit}
+        initialPcs={selectedMonthBaseline.pcsSold}
       />
     </div>
   );

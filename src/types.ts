@@ -165,6 +165,7 @@ export interface TransactionLogItem {
 
 export interface SheetStats {
   monthly: {
+    year?: number;
     month: string;
     revenue: number;
     profit: number;
