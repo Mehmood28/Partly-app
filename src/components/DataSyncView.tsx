@@ -7,6 +7,7 @@ import {
   generateFinancialCsv,
 } from '../utils/financialCsv';
 import { parseBackupJSON } from '../utils/storage';
+import { inspectDataHealth } from '../utils/dataHealth';
 import {
   FolderSync,
   FileJson,
@@ -19,6 +20,10 @@ import {
   Info,
   HardDriveUpload,
   ArrowRight,
+  ShieldCheck,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface DataSyncViewProps {
@@ -41,6 +46,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
   const [isExportJsonConfirmOpen, setIsExportJsonConfirmOpen] = useState(false);
   const [isExportFinancialConfirmOpen, setIsExportFinancialConfirmOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isDataHealthOpen, setIsDataHealthOpen] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const importInFlightRef = useRef(false);
   const [pendingImport, setPendingImport] = useState<{
@@ -54,6 +60,14 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
   const { yearTransactions, invalidDateCount } = useMemo(
     () => filterTransactionsByYear(state.transactions, selectedYear),
     [state.transactions, selectedYear]
+  );
+  const dataHealth = useMemo(() => inspectDataHealth(state), [state]);
+  const visibleHealthIssues = useMemo(
+    () => [
+      ...dataHealth.issues.filter((issue) => issue.severity === 'warning'),
+      ...dataHealth.issues.filter((issue) => issue.severity === 'info'),
+    ].slice(0, 20),
+    [dataHealth]
   );
 
   const getBackupStatus = () => {
@@ -387,6 +401,102 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
             <FileDown className="w-4 h-4 text-[#7C6CF2] group-hover:scale-110 transition-transform shrink-0 ml-2" />
           </button>
         </div>
+      </div>
+
+      {/* Read-only data relationship diagnostics */}
+      <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 shadow-sm">
+        <button
+          type="button"
+          aria-expanded={isDataHealthOpen}
+          aria-controls="data-health-details"
+          onClick={() => setIsDataHealthOpen((open) => !open)}
+          className="w-full flex items-center justify-between gap-3 text-left"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${
+              dataHealth.warningCount > 0
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+            }`}>
+              {dataHealth.warningCount > 0 ? (
+                <AlertTriangle className="w-3.5 h-3.5" />
+              ) : (
+                <ShieldCheck className="w-3.5 h-3.5" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-100">Data Health</h3>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                Read-only relationship check. Partly never repairs or relinks records automatically.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-medium border ${
+              dataHealth.warningCount > 0
+                ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+            }`}>
+              {dataHealth.warningCount > 0
+                ? `${dataHealth.warningCount} warning${dataHealth.warningCount === 1 ? '' : 's'}`
+                : 'No warnings'}
+            </span>
+            {isDataHealthOpen ? (
+              <ChevronUp className="w-4 h-4 text-zinc-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-zinc-400" />
+            )}
+          </div>
+        </button>
+
+        {isDataHealthOpen && (
+          <div id="data-health-details" className="mt-3 pt-3 border-t border-white/[0.08] space-y-2">
+            {dataHealth.issues.length === 0 ? (
+              <div className="text-xs text-emerald-300 bg-emerald-500/[0.06] border border-emerald-500/20 rounded-xl p-3">
+                No broken IDs or unresolved build-part relationships were found.
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 text-[10px] font-medium">
+                  <span className="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                    {dataHealth.warningCount} warning{dataHealth.warningCount === 1 ? '' : 's'}
+                  </span>
+                  <span className="px-2 py-1 rounded-lg bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                    {dataHealth.infoCount} historical note{dataHealth.infoCount === 1 ? '' : 's'}
+                  </span>
+                </div>
+
+                {visibleHealthIssues.map((issue, index) => (
+                  <div
+                    key={`${issue.code}-${issue.recordId}-${index}`}
+                    className={`rounded-xl border p-3 ${
+                      issue.severity === 'warning'
+                        ? 'bg-amber-500/[0.05] border-amber-500/20'
+                        : 'bg-sky-500/[0.04] border-sky-500/15'
+                    }`}
+                  >
+                    <div className={`text-xs font-semibold ${
+                      issue.severity === 'warning' ? 'text-amber-200' : 'text-sky-200'
+                    }`}>
+                      {issue.title}
+                    </div>
+                    <div className="text-[11px] text-zinc-400 mt-1 leading-relaxed">{issue.detail}</div>
+                    <div className="text-[10px] text-zinc-500 font-mono mt-1.5 break-all">{issue.recordId}</div>
+                  </div>
+                ))}
+
+                {dataHealth.issues.length > visibleHealthIssues.length && (
+                  <div className="text-[11px] text-zinc-500 text-center pt-1">
+                    {dataHealth.issues.length - visibleHealthIssues.length} additional historical note{
+                      dataHealth.issues.length - visibleHealthIssues.length === 1 ? '' : 's'
+                    } hidden to keep this list manageable.
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Reset & Maintenance */}
