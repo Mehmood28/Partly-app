@@ -1,8 +1,8 @@
 import React from 'react';
-import { Home, Package, Cpu, BarChart3, Hammer, FolderSync, LucideIcon, History, ArrowUp } from 'lucide-react';
+import { Home, Package, Cpu, BarChart3, Hammer, FolderSync, LucideIcon, ArrowUp } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useInventory } from '../context/InventoryContext';
-import { SessionHistoryPopover } from './SessionHistoryPopover';
+import { SessionHistoryControls } from './SessionHistoryControls';
 
 interface SidebarProps {
   activeTab: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data';
@@ -17,8 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   isSessionHistoryOpen,
   onToggleSessionHistory,
 }) => {
-  const { undoCount, redoCount, actionsSinceBackup } = useInventory();
-  const totalHistoryCount = undoCount + redoCount;
+  const { actionsSinceBackup } = useInventory();
 
   const scrollToTop = () => { 
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
@@ -87,39 +86,11 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
 
         {/* Desktop History & Scroll-to-Top */}
         <div className="mt-auto space-y-1.5">
-          <div className="relative">
-            <button
-              type="button"
-              id="desktop-history-button"
-              onClick={onToggleSessionHistory}
-              aria-expanded={isSessionHistoryOpen}
-              aria-controls="session-history-popover-desktop"
-              aria-label={`Session history: ${undoCount} undo actions and ${redoCount} redo actions.`}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] cursor-pointer ${
-                isSessionHistoryOpen
-                  ? 'bg-[#7C6CF2]/20 text-white border-[#7C6CF2]/40'
-                  : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border-white/[0.06]'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <History className="w-4 h-4 text-[#7C6CF2]" />
-                <span>History</span>
-              </div>
-              {totalHistoryCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-md bg-[#7C6CF2]/20 border border-[#7C6CF2]/40 text-[#C4BCFC] font-mono text-[10px] font-semibold">
-                  {totalHistoryCount}
-                </span>
-              )}
-            </button>
-            {isSessionHistoryOpen && (
-              <div className="absolute left-[calc(100%+1.5rem)] bottom-0 w-80 sm:w-96 max-w-[calc(100vw-18rem)] z-[300]">
-                <SessionHistoryPopover
-                  id="session-history-popover-desktop"
-                  className="max-h-[min(520px,calc(100dvh-5rem))]"
-                />
-              </div>
-            )}
-          </div>
+          <SessionHistoryControls
+            isSessionHistoryOpen={isSessionHistoryOpen}
+            onToggleSessionHistory={onToggleSessionHistory}
+            placement="desktop"
+          />
           <button
             type="button"
             onClick={scrollToTop}

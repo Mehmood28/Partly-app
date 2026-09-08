@@ -51,7 +51,12 @@ export const handleUpdateTransaction = (
     return prev;
   }
 
-  const updatedTxs = prev.transactions.map((t) => (t.id === id ? { ...t, ...updates } : t));
+  const updatedTarget = { ...targetTx, ...updates };
+  if (JSON.stringify(updatedTarget) === JSON.stringify(targetTx)) {
+    return prev;
+  }
+
+  const updatedTxs = prev.transactions.map((t) => (t.id === id ? updatedTarget : t));
   let updatedBuilds = prev.builds;
 
   if (targetTx.type === 'SALE' && targetTx.relatedComponentId) {
