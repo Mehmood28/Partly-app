@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { TransactionLogItem, Platform, PaymentMethod } from '../../types';
+import { TransactionLogItem } from '../../types';
 import { X, Pencil } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
+import { useToast } from '../../context/ToastContext';
+import { prepareTransactionEdit } from './transactionEditParsers';
 
 interface EditTransactionModalProps {
   tx: TransactionLogItem | null;
@@ -12,6 +14,7 @@ interface EditTransactionModalProps {
 
 export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, onClose }) => {
   const { updateTransaction } = useInventory();
+  const { showToast } = useToast();
   const { hideSupplierNames } = usePrivacy();
   const isPurchase = tx?.type === 'PURCHASE';
   const isMasked = !!(isPurchase && hideSupplierNames);
@@ -63,8 +66,8 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       setEditItemSummary(tx.itemNameOrSummary);
       setTitleEdited(false);
       setSummaryEdited(false);
-      setEditAmount(String(tx.totalAmount || 0));
-      setEditProfit(String(tx.profitMargin || 0));
+      setEditAmount(String(tx.totalAmount ?? 0));
+      setEditProfit(String(tx.profitMargin ?? 0));
       setEditPlatform(tx.platform || '');
       setEditPaymentMethod(tx.paymentMethod || '');
       setEditDate(tx.dateSortable || '');
@@ -77,17 +80,28 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     e.preventDefault();
     const finalTitle = isMasked && !titleEdited ? tx.title : editTitle.trim();
     const finalSummary = isMasked && !summaryEdited ? tx.itemNameOrSummary : editItemSummary.trim();
-    updateTransaction(tx.id, {
+    const prepared = prepareTransactionEdit({
+      type: tx.type,
       title: finalTitle,
       itemNameOrSummary: finalSummary,
-      totalAmount: parseFloat(editAmount) || 0,
-      profitMargin: tx.type === 'SALE' ? (parseFloat(editProfit) || 0) : undefined,
-      platform: editPlatform.trim() as Platform,
-      paymentMethod: editPaymentMethod.trim() as PaymentMethod,
-      dateSortable: editDate || tx.dateSortable,
-      cashPortion: tx.cashPortion,
-      tradeInCredit: tx.tradeInCredit,
+      totalAmount: editAmount,
+      profitMargin: editProfit,
+      platform: editPlatform,
+      paymentMethod: editPaymentMethod,
+      dateSortable: editDate,
     });
+
+    if (!prepared.success) {
+      showToast('error' in prepared ? prepared.error : 'Invalid transaction values.', 'error');
+      return;
+    }
+
+    const result = updateTransaction(tx.id, prepared.value);
+    if (!result.success) {
+      showToast(result.error || 'Failed to update transaction.', 'error');
+      return;
+    }
+
     onClose();
   };
 
@@ -148,6 +162,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                   type="number"
                   inputMode="decimal"
                   step="0.01"
+                  min="0"
                   required
                   value={editAmount}
                   onChange={(e) => setEditAmount(e.target.value)}
@@ -165,6 +180,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                     type="number"
                     inputMode="decimal"
                     step="0.01"
+                    required
                     value={editProfit}
                     onChange={(e) => setEditProfit(e.target.value)}
                     className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-mono"

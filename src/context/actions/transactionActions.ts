@@ -1,5 +1,5 @@
-import { AppState, ComponentCategory, TransactionLogItem, InventoryComponent, PurchaseEntry, PCBuild } from '../../types';
-import { autoTagComponent } from '../../utils/helpers';
+import { AppState, ComponentCategory, TransactionLogItem, InventoryComponent, PurchaseEntry, PCBuild, PaymentMethod } from '../../types';
+import { autoTagComponent, parseDateLocal } from '../../utils/helpers';
 import { classifyTransaction } from '../../utils/transactionClassification';
 
 const inferCategory = (name: string): ComponentCategory => {
@@ -42,42 +42,154 @@ export const handleUpdateTransaction = (
   prev: AppState,
   id: string,
   updates: Partial<TransactionLogItem>
-): AppState => {
-  const targetTx = prev.transactions.find((t) => t.id === id);
-  if (!targetTx) return prev;
+): { nextState: AppState; success: boolean; error?: string } => {
+  if (typeof id !== 'string' || !id.trim()) {
+    return { nextState: prev, success: false, error: 'Transaction ID is required.' };
+  }
+
+  const matches = prev.transactions.filter((t) => t.id === id);
+  if (matches.length === 0) {
+    return { nextState: prev, success: false, error: 'Transaction not found.' };
+  }
+  if (matches.length !== 1) {
+    return { nextState: prev, success: false, error: 'Transaction ID is ambiguous.' };
+  }
+  const targetTx = matches[0];
 
   // Guard: PC sale tied to an existing live build cannot be edited through generic transaction controls
   if (isLinkedPCSale(targetTx, prev.builds)) {
-    return prev;
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Linked PC sales must be edited from the Builds tab.',
+    };
   }
 
-  const updatedTarget = { ...targetTx, ...updates };
-  if (JSON.stringify(updatedTarget) === JSON.stringify(targetTx)) {
-    return prev;
+  if (updates.id !== undefined && updates.id !== targetTx.id) {
+    return { nextState: prev, success: false, error: 'Transaction ID cannot be changed.' };
+  }
+  if (updates.type !== undefined && updates.type !== targetTx.type) {
+    return { nextState: prev, success: false, error: 'Transaction type cannot be changed.' };
   }
 
-  const updatedTxs = prev.transactions.map((t) => (t.id === id ? updatedTarget : t));
-  let updatedBuilds = prev.builds;
+  if (updates.title !== undefined && typeof updates.title !== 'string') {
+    return { nextState: prev, success: false, error: 'Transaction title must be text.' };
+  }
+  const title = updates.title !== undefined ? updates.title.trim() : targetTx.title;
+  if (!title) {
+    return { nextState: prev, success: false, error: 'Transaction title is required.' };
+  }
 
-  if (targetTx.type === 'SALE' && targetTx.relatedComponentId) {
-    updatedBuilds = prev.builds.map((b) => {
-      if (b.id === targetTx.relatedComponentId) {
-        return {
-          ...b,
-          salePrice: updates.totalAmount !== undefined ? updates.totalAmount : b.salePrice,
-          saleDate: updates.dateSortable !== undefined ? updates.dateSortable : b.saleDate,
-          platformSoldOn: updates.platform !== undefined ? updates.platform : b.platformSoldOn,
-          paymentMethod: updates.paymentMethod !== undefined ? updates.paymentMethod : b.paymentMethod,
-        };
-      }
-      return b;
-    });
+  if (
+    updates.itemNameOrSummary !== undefined &&
+    typeof updates.itemNameOrSummary !== 'string'
+  ) {
+    return { nextState: prev, success: false, error: 'Transaction item or summary must be text.' };
+  }
+  const itemNameOrSummary = updates.itemNameOrSummary !== undefined
+    ? updates.itemNameOrSummary.trim()
+    : targetTx.itemNameOrSummary;
+  if (!itemNameOrSummary) {
+    return { nextState: prev, success: false, error: 'Transaction item or summary is required.' };
+  }
+
+  const totalAmount = updates.totalAmount !== undefined
+    ? updates.totalAmount
+    : targetTx.totalAmount;
+  if (
+    typeof totalAmount !== 'number' ||
+    !Number.isFinite(totalAmount) ||
+    totalAmount < 0
+  ) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Transaction total amount must be a finite non-negative number.',
+    };
+  }
+
+  const profitMargin = updates.profitMargin !== undefined
+    ? updates.profitMargin
+    : targetTx.profitMargin;
+  if (
+    profitMargin !== undefined &&
+    (typeof profitMargin !== 'number' || !Number.isFinite(profitMargin))
+  ) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Transaction profit must be a finite number.',
+    };
+  }
+
+  if (updates.dateSortable !== undefined && typeof updates.dateSortable !== 'string') {
+    return { nextState: prev, success: false, error: 'Transaction date must be text.' };
+  }
+  const dateSortable = updates.dateSortable !== undefined
+    ? updates.dateSortable.trim()
+    : targetTx.dateSortable;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateSortable) || !parseDateLocal(dateSortable)) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Transaction date must be a valid calendar date in exact YYYY-MM-DD format.',
+    };
+  }
+
+  const hasPlatformUpdate = Object.prototype.hasOwnProperty.call(updates, 'platform');
+  if (hasPlatformUpdate && updates.platform !== undefined && typeof updates.platform !== 'string') {
+    return { nextState: prev, success: false, error: 'Transaction platform must be text.' };
+  }
+  const platform = hasPlatformUpdate
+    ? updates.platform?.trim() || undefined
+    : targetTx.platform;
+
+  const validPaymentMethods: readonly PaymentMethod[] = [
+    'E-Transfer',
+    'Cash',
+    'PayPal',
+    'Credit Card',
+    'Debit',
+    'Crypto',
+    'Trade-In',
+  ];
+  const hasPaymentMethodUpdate = Object.prototype.hasOwnProperty.call(updates, 'paymentMethod');
+  const paymentMethod = hasPaymentMethodUpdate
+    ? updates.paymentMethod || undefined
+    : targetTx.paymentMethod;
+  if (paymentMethod !== undefined && !validPaymentMethods.includes(paymentMethod)) {
+    return { nextState: prev, success: false, error: 'Invalid payment method.' };
+  }
+
+  const updatedTarget: TransactionLogItem = {
+    ...targetTx,
+    title,
+    itemNameOrSummary,
+    totalAmount,
+    profitMargin,
+    platform,
+    paymentMethod,
+    dateSortable,
+  };
+
+  const isNoOp =
+    updatedTarget.title === targetTx.title &&
+    updatedTarget.itemNameOrSummary === targetTx.itemNameOrSummary &&
+    Object.is(updatedTarget.totalAmount, targetTx.totalAmount) &&
+    Object.is(updatedTarget.profitMargin, targetTx.profitMargin) &&
+    updatedTarget.platform === targetTx.platform &&
+    updatedTarget.paymentMethod === targetTx.paymentMethod &&
+    updatedTarget.dateSortable === targetTx.dateSortable;
+  if (isNoOp) {
+    return { nextState: prev, success: true };
   }
 
   return {
-    ...prev,
-    transactions: updatedTxs,
-    builds: updatedBuilds,
+    nextState: {
+      ...prev,
+      transactions: prev.transactions.map((t) => (t.id === id ? updatedTarget : t)),
+    },
+    success: true,
   };
 };
 

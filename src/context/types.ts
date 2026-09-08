@@ -168,7 +168,7 @@ export interface InventoryContextType {
 
   // Transaction Actions
   addTransaction: (tx: Omit<TransactionLogItem, 'id'>) => void;
-  updateTransaction: (id: string, updates: Partial<TransactionLogItem>) => void;
+  updateTransaction: (id: string, updates: Partial<TransactionLogItem>) => { success: boolean; error?: string };
   deleteTransaction: (id: string) => void;
   deleteBulkPartSale: (bulkSaleGroupId: string) => void;
   relistPartSale: (transactionId: string) => void;
