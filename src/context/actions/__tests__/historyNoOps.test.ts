@@ -107,15 +107,17 @@ describe('history-sensitive action no-ops', () => {
   });
 
   it('returns the original state for a semantic transaction no-op', () => {
-    expect(
-      handleUpdateTransaction(state, transaction.id, {
+    const result = handleUpdateTransaction(state, transaction.id, {
         title: transaction.title,
         totalAmount: transaction.totalAmount,
-      })
-    ).toBe(state);
+      });
+    expect(result.success).toBe(true);
+    expect(result.nextState).toBe(state);
   });
 
   it('returns the original state for a missing transaction update', () => {
-    expect(handleUpdateTransaction(state, 'missing', { title: 'Changed' })).toBe(state);
+    const result = handleUpdateTransaction(state, 'missing', { title: 'Changed' });
+    expect(result.success).toBe(false);
+    expect(result.nextState).toBe(state);
   });
 });

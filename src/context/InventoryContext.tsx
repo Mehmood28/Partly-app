@@ -646,18 +646,22 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateTransaction = useCallback(
     (id: string, updates: Partial<TransactionLogItem>) => {
       const existing = stateRef.current.transactions.find((t) => t.id === id);
-      if (!existing) return;
+      if (!existing) return { success: false, error: 'Transaction not found.' };
       const effectiveType = updates.type ?? existing.type;
       const isPurchase = effectiveType === 'PURCHASE';
       const summary = updates.title || existing.title || 'Transaction';
       
-      const nextState = handleUpdateTransaction(stateRef.current, id, updates);
-      if (nextState !== stateRef.current) {
+      const result = handleUpdateTransaction(stateRef.current, id, updates);
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
+      if (result.nextState !== stateRef.current) {
         const rawLabel = `Edit transaction: ${summary}`;
         const privacySafeLabel = isPurchase ? 'Edit purchase transaction' : undefined;
         saveStateToHistory(rawLabel, privacySafeLabel);
-        setState(() => nextState);
+        setState(() => result.nextState);
       }
+      return { success: true };
     },
     [saveStateToHistory, stateRef]
   );
