@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { GoalBar } from './GoalBar';
 import { CustomSelect } from './ui/CustomSelect';
-import { EditBaselineModal } from './analytics/EditBaselineModal';
 import { useInventory } from '../context/InventoryContext';
 import {
   calculateUnassignedValueStrict,
@@ -11,7 +10,6 @@ import {
   calculateMonthlyMetrics,
   parseDateLocal,
 } from '../utils/helpers';
-import { getBaselineYears, getMonthlyBaseline } from '../utils/baselineStats';
 import {
   BarChart,
   Bar,
@@ -30,7 +28,6 @@ import {
   BarChart2,
   CheckCircle2,
   PackageCheck,
-  Pencil,
 } from 'lucide-react';
 
 const MONTH_NAMES = [
@@ -69,10 +66,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const [selectedYear, setSelectedYear] = useState<number>(currentYearNum);
   const [selectedMonthIdx, setSelectedMonthIdx] = useState<number>(currentMonthIdx);
 
-  // Edit monthly baseline modal state
-  const [isEditingBaseline, setIsEditingBaseline] = useState(false);
-
-  // Collect available years from builds & transactions (starting from 2026)
+  // Collect available years from builds & transactions
   const availableYears = React.useMemo(() => {
     const yearsSet = new Set<number>([currentYearNum]);
     state.builds.forEach((b) => {
@@ -89,9 +83,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         if (parsed) yearsSet.add(parsed.year);
       }
     });
-    getBaselineYears(state.sheetStats).forEach((year) => yearsSet.add(year));
     return Array.from(yearsSet).filter((yr) => yr > 0).sort((a, b) => b - a);
-  }, [state.builds, state.transactions, state.sheetStats, currentYearNum]);
+  }, [state.builds, state.transactions, currentYearNum]);
 
   // Compute monthly stats for selectedYear
   const monthlyData = React.useMemo(() => MONTH_NAMES.map((monthName, idx) => {
@@ -171,10 +164,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const selectedMonthProfit = selectedMonthData.profit;
   const selectedMonthCost = selectedMonthData.cost;
   const selectedMonthPcsSold = selectedMonthData.pcsSold;
-  const selectedMonthBaseline = React.useMemo(
-    () => getMonthlyBaseline(state.sheetStats, selectedYear, selectedMonthIdx),
-    [state.sheetStats, selectedYear, selectedMonthIdx]
-  );
   const selectedMonthPcRevenue = selectedMonthData.pcRevenue;
   const selectedMonthPcProfit = selectedMonthData.pcProfit;
 
@@ -271,13 +260,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <Calendar className="w-3.5 h-3.5 text-[#7C6CF2]" /> {selectedMonthName} {selectedYear} Performance
             </h3>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsEditingBaseline(true)}
-                className="px-2.5 py-1 bg-[#121722] hover:bg-white/[0.04] border border-white/[0.08] hover:border-[#7C6CF2]/40 text-zinc-300 hover:text-white rounded-lg text-[10px] sm:text-[11px] font-medium flex items-center gap-1.5 transition-colors"
-                title="Override baseline figures for this month"
-              >
-                <Pencil className="w-3 h-3 text-[#7C6CF2]" /> Edit Baseline
-              </button>
               {selectedMonthIdx === currentMonthIdx && selectedYear === currentYearNum && (
                 <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30">
                   Current Month
@@ -592,15 +574,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
       </div>
 
-      <EditBaselineModal
-        isOpen={isEditingBaseline}
-        onClose={() => setIsEditingBaseline(false)}
-        selectedMonthIdx={selectedMonthIdx}
-        selectedYear={selectedYear}
-        initialRev={selectedMonthBaseline.revenue}
-        initialProf={selectedMonthBaseline.profit}
-        initialPcs={selectedMonthBaseline.pcsSold}
-      />
     </div>
   );
 };

@@ -6,7 +6,6 @@ import {
   PurchaseEntry,
   TransactionLogItem,
 } from '../types';
-import { MonthlyBaselineValues } from '../utils/baselineStats';
 
 export interface BulkSaleLine {
   componentId: string;
@@ -177,11 +176,6 @@ export interface InventoryContextType {
 
   // Sync & Analytics Actions
   importData: (data: Partial<AppState>) => Promise<ImportDataResult>;
-  updateMonthlyBaseline: (
-    year: number,
-    monthIndex: number,
-    values: MonthlyBaselineValues
-  ) => { success: boolean; error?: string };
   updateMonthlyGoal: (goal: number) => void;
 
   // Backup state
