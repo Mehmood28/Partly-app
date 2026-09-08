@@ -8,6 +8,7 @@ import {
   calculateInventoryMetrics,
   calculateMonthlyMetrics
 } from '../utils/helpers';
+import { formatSignedCurrency, getProfitSummaryClasses } from '../utils/financialDisplay';
 
 interface TopBarProps {
   isSessionHistoryOpen: boolean;
@@ -59,8 +60,8 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({ isSessionHistoryOpen,
             </div>
 
             {/* Current Month Net Profit */}
-            <div className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-              <span>PROFIT: {monthProfit >= 0 ? '+' : ''}{formatCurrency(monthProfit)}</span>
+            <div className={`${getProfitSummaryClasses(monthProfit)} border px-1.5 sm:px-2 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+              <span>PROFIT: {formatSignedCurrency(monthProfit)}</span>
             </div>
           </div>
 

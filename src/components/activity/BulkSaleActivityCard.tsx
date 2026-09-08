@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { 
+import {
   Layers, 
   ChevronUp, 
   ChevronDown, 
@@ -16,6 +16,7 @@ import {
   formatSignedProfit,
   toFiniteNumber
 } from '../../utils/bulkSaleGrouping';
+import { getProfitTextColor } from '../../utils/financialDisplay';
 import { TransactionLogItem } from '../../types';
 import { 
   formatCurrency, 
@@ -203,7 +204,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
             </div>
             <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/70">
               <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Markup</div>
-              <div className="text-sm sm:text-base font-bold font-mono text-teal-400">{group.profitPercentage.toFixed(1)}%</div>
+              <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(group.profitPercentage)}`}>{group.profitPercentage.toFixed(1)}%</div>
             </div>
           </div>
 

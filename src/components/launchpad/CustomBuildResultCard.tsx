@@ -3,6 +3,7 @@ import { Sparkles, X, Hammer } from 'lucide-react';
 import { RecommendedBuild } from './launchpadTypes';
 import { sortByCategory } from '../../utils/sorting';
 import { formatCurrency } from '../../utils/helpers';
+import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
 import { getCategoryIcon } from './launchpadHelpers';
 
 interface CustomBuildResultCardProps {
@@ -70,8 +71,8 @@ export const CustomBuildResultCard: React.FC<CustomBuildResultCardProps> = ({
             <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 gap-1 shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
               Value: {formatCurrency(customBuild.estimatedPrice)}
             </span>
-            <span className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 gap-1 shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-              Profit: +{formatCurrency(customBuild.projectedProfit)} ({Math.round(customBuild.margin)}%)
+            <span className={`${getProfitBadgeClasses(customBuild.projectedProfit)} border gap-1 shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+              Profit: {formatSignedCurrency(customBuild.projectedProfit)} ({Math.round(customBuild.margin)}%)
             </span>
           </div>
           <button

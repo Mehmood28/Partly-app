@@ -147,14 +147,14 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
 
   // Financial Calculations
   let partsCost = 0;
-  let salePrice = tx.totalAmount || 0;
-  let netProfit = tx.profitMargin || 0;
+  let salePrice = tx.totalAmount ?? 0;
+  let netProfit = tx.profitMargin ?? 0;
   let roi = 0;
 
   if (isPCSale) {
     if (matchedBuild) {
       partsCost = calculateBuildPartsCost(matchedBuild);
-      salePrice = tx.totalAmount || matchedBuild.salePrice || 0;
+      salePrice = tx.totalAmount ?? matchedBuild.salePrice ?? 0;
       netProfit = tx.profitMargin !== undefined ? tx.profitMargin : (salePrice - partsCost);
     } else {
       if (tx.detailsList && tx.detailsList.length > 0) {
@@ -169,15 +169,15 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
             sum += unit * q;
           }
         });
-        partsCost = sum > 0 ? sum : Math.max(0, salePrice - (tx.profitMargin || 0));
+        partsCost = sum > 0 ? sum : Math.max(0, salePrice - (tx.profitMargin ?? 0));
       } else {
-        partsCost = Math.max(0, salePrice - (tx.profitMargin || 0));
+        partsCost = Math.max(0, salePrice - (tx.profitMargin ?? 0));
       }
-      netProfit = tx.profitMargin || (salePrice - partsCost);
+      netProfit = tx.profitMargin ?? (salePrice - partsCost);
     }
     roi = partsCost > 0 ? (netProfit / partsCost) * 100 : 0;
   } else if (isPartSale) {
-    netProfit = tx.profitMargin || 0;
+    netProfit = tx.profitMargin ?? 0;
     partsCost = Math.max(0, salePrice - netProfit);
     roi = partsCost > 0 ? (netProfit / partsCost) * 100 : 0;
   }

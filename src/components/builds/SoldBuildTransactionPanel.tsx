@@ -4,6 +4,7 @@ import { Store, CreditCard, User, Calendar, Shield, Phone, DollarSign, Clock, Re
 import { formatCurrency } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { formatWarrantyLabel, getBuildWarrantyInfo } from '../../utils/warranty';
+import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 
 interface SoldBuildTransactionPanelProps {
   build: PCBuild;
@@ -52,11 +53,11 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
         </div>
         <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Net Profit</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-emerald-400 mt-0.5 leading-tight">+{formatCurrency(profit)}</div>
+          <div className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(profit)}`}>{formatSignedCurrency(profit)}</div>
         </div>
         <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">ROI Margin</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-emerald-400 mt-0.5 leading-tight">{roi.toFixed(1)}%</div>
+          <div className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(roi)}`}>{roi.toFixed(1)}%</div>
         </div>
       </div>
 

@@ -14,6 +14,7 @@ import { getBuildPresentation } from '../../utils/buildPresentation';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { formatWarrantyLabel, getBuildWarrantyInfo } from '../../utils/warranty';
 import { renderCategoryIcon, parseBatchItem } from './activityHelpers';
+import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 
 interface PCSaleExpandedViewProps {
   tx: TransactionLogItem;
@@ -59,11 +60,11 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
         </div>
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
           <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Net Profit</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-emerald-400">+{formatCurrency(netProfit)}</div>
+          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(netProfit)}`}>{formatSignedCurrency(netProfit)}</div>
         </div>
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
           <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">ROI Margin</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-emerald-400">{roi.toFixed(1)}%</div>
+          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(roi)}`}>{roi.toFixed(1)}%</div>
         </div>
       </div>
 

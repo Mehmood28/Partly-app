@@ -5,6 +5,7 @@ import {
   getCategoryBadgeColor, 
   getTagBadgeColor 
 } from '../../utils/helpers';
+import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 
 interface PartSaleExpandedViewProps {
   tx?: TransactionLogItem;
@@ -36,11 +37,11 @@ export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
         </div>
         <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/70">
           <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Net Profit</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-emerald-400">+{formatCurrency(netProfit)}</div>
+          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(netProfit)}`}>{formatSignedCurrency(netProfit)}</div>
         </div>
         <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/70">
           <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Profit Margin</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-teal-400">{roi.toFixed(1)}%</div>
+          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(roi)}`}>{roi.toFixed(1)}%</div>
         </div>
       </div>
 
