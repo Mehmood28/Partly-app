@@ -40,6 +40,9 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
   const [isExportJsonConfirmOpen, setIsExportJsonConfirmOpen] = useState(false);
   const [isExportFinancialConfirmOpen, setIsExportFinancialConfirmOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const importInFlightRef = useRef(false);
   const [pendingImport, setPendingImport] = useState<{
     payload: Parameters<typeof importData>[0];
     counts: { components: number; builds: number; transactions: number };
@@ -115,6 +118,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
           payload: parseResult.payload,
           counts: parseResult.counts,
         });
+        setImportError(null);
       } catch (err: unknown) {
         setImportStatus({
           type: 'error',
@@ -127,14 +131,22 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
     reader.readAsText(file);
   };
 
-  const executeConfirmImport = () => {
-    if (!pendingImport) return;
+  const executeConfirmImport = async () => {
+    if (!pendingImport || importInFlightRef.current) return;
+
+    importInFlightRef.current = true;
+    setIsImporting(true);
+    setImportError(null);
+
     try {
-      const result = importData(pendingImport.payload);
+      const result = await importData(pendingImport.payload);
       if (!result.success) {
+        const message =
+          result.error || 'Failed to import JSON: Error restoring data';
+        setImportError(message);
         setImportStatus({
           type: 'error',
-          message: result.error || 'Failed to import JSON: Error restoring data',
+          message,
         });
       } else if (!result.changed) {
         setImportStatus({
@@ -147,13 +159,21 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
           message: `Successfully imported backup! Restored ${pendingImport.counts.components} components, ${pendingImport.counts.builds} PC builds, and ${pendingImport.counts.transactions} transactions.`,
         });
       }
+
+      if (result.success) {
+        setImportError(null);
+        setPendingImport(null);
+      }
     } catch (err: unknown) {
+      const message = `Failed to import JSON: ${err instanceof Error ? err.message : 'Error restoring data'}`;
+      setImportError(message);
       setImportStatus({
         type: 'error',
-        message: `Failed to import JSON: ${err instanceof Error ? err.message : 'Error restoring data'}`,
+        message,
       });
     } finally {
-      setPendingImport(null);
+      importInFlightRef.current = false;
+      setIsImporting(false);
     }
   };
 
@@ -444,13 +464,22 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
         title="Import Backup File?"
         message={
           pendingImport
-            ? `Import backup containing ${pendingImport.counts.components} components, ${pendingImport.counts.builds} PC builds, and ${pendingImport.counts.transactions} transactions? This will overwrite your current local database.`
+            ? `Import backup containing ${pendingImport.counts.components} components, ${pendingImport.counts.builds} PC builds, and ${pendingImport.counts.transactions} transactions? This will overwrite your current local database.${
+                importError ? ` Import failed: ${importError} You can retry or cancel.` : ''
+              }`
             : ''
         }
         confirmText="Import & Replace"
         variant="danger"
+        isBusy={isImporting}
+        busyText="Importing..."
         onConfirm={executeConfirmImport}
-        onCancel={() => setPendingImport(null)}
+        onCancel={() => {
+          if (!isImporting) {
+            setImportError(null);
+            setPendingImport(null);
+          }
+        }}
       />
     </div>
   );

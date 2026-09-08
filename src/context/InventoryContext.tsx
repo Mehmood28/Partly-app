@@ -5,8 +5,7 @@ import {
   persistAppState,
   sanitizeAppState,
   resolveInitialAppState,
-  areAppStatesEqual,
-  prepareBackupImportState,
+  executeBackupImport,
 } from '../utils/storage';
 import {
   InventoryContextType,
@@ -155,25 +154,21 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [saveStateToHistory]);
 
   const importData = useCallback(
-    (data: Partial<AppState>): ImportDataResult => {
-      try {
-        const candidateState = prepareBackupImportState(stateRef.current, data);
+    async (data: Partial<AppState>): Promise<ImportDataResult> => {
+      const currentState = stateRef.current;
+      const result = await executeBackupImport(currentState, data);
 
-        if (areAppStatesEqual(stateRef.current, candidateState)) {
-          return { success: true, changed: false };
-        }
-
-        saveStateToHistory('Import backup');
-        persistAppState(candidateState).catch(() => {});
-        setState(candidateState);
-        return { success: true, changed: true };
-      } catch (err: unknown) {
+      if (!result.success || !result.changed) {
         return {
-          success: false,
-          changed: false,
-          error: err instanceof Error ? err.message : 'Error importing backup',
+          success: result.success,
+          changed: result.changed,
+          error: result.error,
         };
       }
+
+      saveStateToHistory('Import backup');
+      setState(result.nextState);
+      return { success: true, changed: true };
     },
     [saveStateToHistory, stateRef]
   );

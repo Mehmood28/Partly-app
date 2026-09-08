@@ -8,6 +8,7 @@ import {
   isValidMonthlyGoal,
   canonicalizeJSON,
   canonicalStringify,
+  executeBackupImport,
 } from './storage';
 import { AppState } from '../types';
 
@@ -695,3 +696,83 @@ describe('Semantic No-Op & Import Handling Logic', () => {
   });
 });
 
+describe('executeBackupImport durable commit boundary', () => {
+  const currentState: AppState = {
+    components: [],
+    builds: [],
+    transactions: [],
+    monthlyGoal: 10000,
+    sheetStats: {
+      monthly: [],
+      yearly: { revenue: 0, profit: 0, pcsSold: 0 },
+    },
+  };
+
+  it('skips persistence and preserves the exact state reference for a semantic no-op', async () => {
+    const persistState = vi.fn(async () => undefined);
+
+    const result = await executeBackupImport(currentState, currentState, persistState);
+
+    expect(result).toEqual({
+      success: true,
+      changed: false,
+      nextState: currentState,
+    });
+    expect(result.nextState).toBe(currentState);
+    expect(persistState).not.toHaveBeenCalled();
+  });
+
+  it('awaits one successful persistence before returning the changed candidate', async () => {
+    let finishPersist: (() => void) | undefined;
+    const persistState = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishPersist = resolve;
+        })
+    );
+
+    let settled = false;
+    const execution = executeBackupImport(
+      currentState,
+      { ...currentState, monthlyGoal: 12500.5 },
+      persistState
+    ).then((result) => {
+      settled = true;
+      return result;
+    });
+
+    await Promise.resolve();
+    expect(persistState).toHaveBeenCalledTimes(1);
+    expect(settled).toBe(false);
+
+    finishPersist?.();
+    const result = await execution;
+
+    expect(result.success).toBe(true);
+    expect(result.changed).toBe(true);
+    expect(result.nextState).not.toBe(currentState);
+    expect(result.nextState.monthlyGoal).toBe(12500.5);
+    expect(persistState).toHaveBeenCalledWith(result.nextState);
+  });
+
+  it('returns the original state and a user-facing error when persistence fails', async () => {
+    const persistState = vi.fn(async () => {
+      throw new Error('Both storage backends failed');
+    });
+
+    const result = await executeBackupImport(
+      currentState,
+      { ...currentState, monthlyGoal: 15000 },
+      persistState
+    );
+
+    expect(result).toEqual({
+      success: false,
+      changed: false,
+      nextState: currentState,
+      error: 'Unable to save the imported backup. Your current data was left unchanged.',
+    });
+    expect(result.nextState).toBe(currentState);
+    expect(persistState).toHaveBeenCalledTimes(1);
+  });
+});

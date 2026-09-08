@@ -578,6 +578,63 @@ export const persistAppState = async (
   return currentWrite;
 };
 
+export interface BackupImportExecutionResult {
+  success: boolean;
+  changed: boolean;
+  nextState: AppState;
+  error?: string;
+}
+
+type BackupStatePersister = (state: AppState) => Promise<unknown>;
+
+/**
+ * Prepares and durably persists a backup before the caller commits it to React state.
+ * A failed persistence attempt leaves the current in-memory state untouched.
+ */
+export const executeBackupImport = async (
+  currentState: AppState,
+  backup: Partial<AppState>,
+  persistState: BackupStatePersister = persistAppState
+): Promise<BackupImportExecutionResult> => {
+  let candidateState: AppState;
+
+  try {
+    candidateState = prepareBackupImportState(currentState, backup);
+  } catch (err: unknown) {
+    return {
+      success: false,
+      changed: false,
+      nextState: currentState,
+      error: err instanceof Error ? err.message : 'Unable to prepare the imported backup.',
+    };
+  }
+
+  if (areAppStatesEqual(currentState, candidateState)) {
+    return {
+      success: true,
+      changed: false,
+      nextState: currentState,
+    };
+  }
+
+  try {
+    await persistState(candidateState);
+  } catch {
+    return {
+      success: false,
+      changed: false,
+      nextState: currentState,
+      error: 'Unable to save the imported backup. Your current data was left unchanged.',
+    };
+  }
+
+  return {
+    success: true,
+    changed: true,
+    nextState: candidateState,
+  };
+};
+
 /**
  * Synchronous initial state loader from localStorage to guarantee instant initial paint
  */

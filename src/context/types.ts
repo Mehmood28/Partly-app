@@ -176,7 +176,7 @@ export interface InventoryContextType {
   relistBulkPartSale: (bulkSaleGroupId: string) => void;
 
   // Sync & Analytics Actions
-  importData: (data: Partial<AppState>) => ImportDataResult;
+  importData: (data: Partial<AppState>) => Promise<ImportDataResult>;
   updateSheetStats: (stats: AppState['sheetStats']) => void;
   updateMonthlyGoal: (goal: number) => void;
 

@@ -1,17 +1,19 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, RotateCcw, HelpCircle } from 'lucide-react';
+import { AlertTriangle, RotateCcw, HelpCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ConfirmModalProps {
   isOpen: boolean;
   title: string;
   message: string;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel: () => void;
   confirmText?: string;
   cancelText?: string;
   variant?: 'danger' | 'emerald' | 'amber' | 'violet';
+  isBusy?: boolean;
+  busyText?: string;
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -23,6 +25,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   variant = 'danger',
+  isBusy = false,
+  busyText = 'Working...',
 }) => {
   const anchorRef = React.useRef<HTMLSpanElement>(null);
 
@@ -85,7 +89,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onCancel}
+            onClick={isBusy ? undefined : onCancel}
             className="absolute inset-0 bg-black/80 backdrop-blur-sm pointer-events-auto"
           />
           <motion.div
@@ -109,16 +113,22 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+                disabled={isBusy}
+                className="px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] disabled:cursor-wait disabled:opacity-60"
               >
                 {cancelText}
               </button>
               <button
                 type="button"
                 onClick={onConfirm}
-                className={getConfirmButtonClasses()}
+                disabled={isBusy}
+                aria-busy={isBusy}
+                className={`${getConfirmButtonClasses()} disabled:cursor-wait disabled:opacity-70`}
               >
-                {confirmText}
+                <span className="flex items-center gap-1.5">
+                  {isBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
+                  {isBusy ? busyText : confirmText}
+                </span>
               </button>
             </div>
           </motion.div>
