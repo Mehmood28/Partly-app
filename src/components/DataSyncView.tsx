@@ -57,9 +57,9 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
   const availableYears = useMemo(() => extractAvailableYears(state.transactions), [state.transactions]);
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
 
-  const { yearTransactions, invalidDateCount } = useMemo(
-    () => filterTransactionsByYear(state.transactions, selectedYear),
-    [state.transactions, selectedYear]
+  const { yearTransactions, invalidDateCount, unmatchedPcSaleCount } = useMemo(
+    () => filterTransactionsByYear(state.transactions, selectedYear, state.builds),
+    [state.transactions, state.builds, selectedYear]
   );
   const dataHealth = useMemo(() => inspectDataHealth(state), [state]);
   const visibleHealthIssues = useMemo(() => dataHealth.issues.slice(0, 20), [dataHealth]);
@@ -542,6 +542,10 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
         }.${
           invalidDateCount > 0
             ? ` (${invalidDateCount} record${invalidDateCount === 1 ? '' : 's'} excluded due to invalid or missing date)`
+            : ''
+        }${
+          unmatchedPcSaleCount > 0
+            ? ` (${unmatchedPcSaleCount} unmatched PC sale record${unmatchedPcSaleCount === 1 ? '' : 's'} excluded to prevent duplicate or orphaned revenue)`
             : ''
         }`}
         confirmText="Generate Report"
