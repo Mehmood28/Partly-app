@@ -1,5 +1,5 @@
 import { TransactionLogItem, PCBuild } from '../types';
-import { parseDateLocal } from './helpers';
+import { calculateBuildPartsCost, parseDateLocal } from './helpers';
 import { classifyTransaction } from './transactionClassification';
 
 export const FINANCIAL_CSV_COLUMNS = [
@@ -49,6 +49,55 @@ export interface FinancialTotals {
   cashPaidOnTradeUp: number;
   incomingTradeUpCostBasis: number;
   netProfit: number;
+}
+
+function normalizeReportName(value: string | undefined): string {
+  return String(value || '').normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function amountsMatch(a: number | undefined, b: number | undefined): boolean {
+  return typeof a === 'number' && Number.isFinite(a) &&
+    typeof b === 'number' && Number.isFinite(b) &&
+    Math.abs(a - b) < 0.005;
+}
+
+/**
+ * Resolves the sold build represented by a PC-sale ledger record.
+ * New records use immutable IDs. Legacy imported records are reconciled by
+ * calendar date and exact sale amount, with the saved name used only to
+ * disambiguate multiple matches.
+ */
+export function findMatchingSoldBuild(
+  tx: TransactionLogItem,
+  builds: PCBuild[]
+): PCBuild | null {
+  const soldBuilds = builds.filter((build) => build.status === 'Sold');
+
+  const immutableMatch = soldBuilds.find(
+    (build) => build.id === tx.relatedComponentId || build.saleTransactionId === tx.id
+  );
+  if (immutableMatch) return immutableMatch;
+
+  const txDate = resolveTransactionDate(tx);
+  if (!txDate) return null;
+
+  const dateAndAmountMatches = soldBuilds.filter((build) => {
+    const buildDate = build.saleDate ? parseDateLocal(build.saleDate) : null;
+    return !!buildDate &&
+      buildDate.year === txDate.parsed.year &&
+      buildDate.monthIndex === txDate.parsed.monthIndex &&
+      buildDate.day === txDate.parsed.day &&
+      amountsMatch(build.salePrice, tx.totalAmount);
+  });
+
+  if (dateAndAmountMatches.length === 1) return dateAndAmountMatches[0];
+  if (dateAndAmountMatches.length === 0) return null;
+
+  const transactionName = normalizeReportName(tx.itemNameOrSummary || tx.title);
+  const nameMatches = dateAndAmountMatches.filter(
+    (build) => normalizeReportName(build.name) === transactionName
+  );
+  return nameMatches.length === 1 ? nameMatches[0] : null;
 }
 
 /**
@@ -104,24 +153,36 @@ export function extractAvailableYears(transactions: TransactionLogItem[]): numbe
  */
 export function filterTransactionsByYear(
   transactions: TransactionLogItem[],
-  selectedYear: number
+  selectedYear: number,
+  builds?: PCBuild[]
 ): {
   yearTransactions: TransactionLogItem[];
   invalidDateCount: number;
+  unmatchedPcSaleCount: number;
 } {
   const yearTransactions: TransactionLogItem[] = [];
   let invalidDateCount = 0;
+  let unmatchedPcSaleCount = 0;
 
   for (const tx of transactions) {
     const resolved = resolveTransactionDate(tx);
     if (!resolved) {
       invalidDateCount++;
     } else if (resolved.parsed.year === selectedYear) {
-      yearTransactions.push(tx);
+      const classification = classifyTransaction(tx, builds || []);
+      if (
+        builds !== undefined &&
+        classification.isPCSale &&
+        !findMatchingSoldBuild(tx, builds)
+      ) {
+        unmatchedPcSaleCount++;
+      } else {
+        yearTransactions.push(tx);
+      }
     }
   }
 
-  return { yearTransactions, invalidDateCount };
+  return { yearTransactions, invalidDateCount, unmatchedPcSaleCount };
 }
 
 /**
@@ -152,6 +213,21 @@ function roundToCents(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
+function resolveReportQuantity(...candidates: unknown[]): number | '' {
+  for (const candidate of candidates) {
+    if (
+      typeof candidate === 'number' &&
+      Number.isFinite(candidate) &&
+      Number.isInteger(candidate) &&
+      candidate > 0
+    ) {
+      return candidate;
+    }
+  }
+
+  return '';
+}
+
 /**
  * Maps a single TransactionLogItem to a structured FinancialRow according to domain rules.
  */
@@ -179,9 +255,7 @@ export function buildFinancialRow(tx: TransactionLogItem, builds: PCBuild[] = []
 
   // 1. EXCHANGE / TRADE_UP rows
   if (classification.isExchange) {
-    const qty = typeof tx.outgoingQuantity === 'number'
-      ? tx.outgoingQuantity
-      : (typeof tx.quantity === 'number' ? tx.quantity : (typeof tx.relatedComponentQty === 'number' ? tx.relatedComponentQty : ''));
+    const qty = resolveReportQuantity(tx.outgoingQuantity, tx.quantity, tx.relatedComponentQty);
 
     const cashPaidOnTradeUp = typeof tx.cashPaidOnTop === 'number' && !isNaN(tx.cashPaidOnTop) && isFinite(tx.cashPaidOnTop)
       ? tx.cashPaidOnTop
@@ -217,9 +291,7 @@ export function buildFinancialRow(tx: TransactionLogItem, builds: PCBuild[] = []
 
   // 2. BUILD_ALLOCATION rows (Internal inventory movements)
   if (classification.isBuildAllocation) {
-    const qty = typeof tx.itemCount === 'number'
-      ? tx.itemCount
-      : (typeof tx.quantity === 'number' ? tx.quantity : (typeof tx.relatedComponentQty === 'number' ? tx.relatedComponentQty : ''));
+    const qty = resolveReportQuantity(tx.itemCount, tx.quantity, tx.relatedComponentQty);
 
     return {
       date,
@@ -243,9 +315,7 @@ export function buildFinancialRow(tx: TransactionLogItem, builds: PCBuild[] = []
 
   // 3. PURCHASE rows
   if (classification.isPurchase) {
-    const qty = typeof tx.quantity === 'number'
-      ? tx.quantity
-      : (typeof tx.relatedComponentQty === 'number' ? tx.relatedComponentQty : (typeof tx.itemCount === 'number' ? tx.itemCount : ''));
+    const qty = resolveReportQuantity(tx.quantity, tx.relatedComponentQty, tx.itemCount);
 
     const purchaseAmount = typeof tx.totalAmount === 'number' && !isNaN(tx.totalAmount) && isFinite(tx.totalAmount)
       ? tx.totalAmount
@@ -272,17 +342,27 @@ export function buildFinancialRow(tx: TransactionLogItem, builds: PCBuild[] = []
   }
 
   // 4. SALE rows
-  const qty = typeof tx.quantity === 'number'
-    ? tx.quantity
-    : (typeof tx.relatedComponentQty === 'number' ? tx.relatedComponentQty : (typeof tx.itemCount === 'number' ? tx.itemCount : ''));
+  // Build-sale transactions store the installed part count in quantity/itemCount.
+  // A financial report must count the sold PC itself, not its component lines.
+  const qty = classification.isPCSale
+    ? 1
+    : resolveReportQuantity(tx.quantity, tx.relatedComponentQty, tx.itemCount);
 
-  const saleRevenue = typeof tx.totalAmount === 'number' && !isNaN(tx.totalAmount) && isFinite(tx.totalAmount)
-    ? tx.totalAmount
-    : undefined;
+  const matchedSoldBuild = classification.isPCSale
+    ? findMatchingSoldBuild(tx, builds)
+    : null;
+
+  const saleRevenue = matchedSoldBuild && typeof matchedSoldBuild.salePrice === 'number' && Number.isFinite(matchedSoldBuild.salePrice)
+    ? matchedSoldBuild.salePrice
+    : (typeof tx.totalAmount === 'number' && !isNaN(tx.totalAmount) && isFinite(tx.totalAmount)
+      ? tx.totalAmount
+      : undefined);
 
   // Recorded Cost Basis
   let recordedCostBasis: number | undefined = undefined;
-  if (typeof tx.soldUnitCost === 'number' && !isNaN(tx.soldUnitCost) && isFinite(tx.soldUnitCost)) {
+  if (matchedSoldBuild) {
+    recordedCostBasis = calculateBuildPartsCost(matchedSoldBuild);
+  } else if (typeof tx.soldUnitCost === 'number' && !isNaN(tx.soldUnitCost) && isFinite(tx.soldUnitCost)) {
     const numericQty = typeof tx.quantity === 'number' && tx.quantity > 0
       ? tx.quantity
       : (typeof tx.relatedComponentQty === 'number' && tx.relatedComponentQty > 0 ? tx.relatedComponentQty : 1);
@@ -313,9 +393,11 @@ export function buildFinancialRow(tx: TransactionLogItem, builds: PCBuild[] = []
     : undefined;
 
   // Net Profit
-  const netProfit = typeof tx.profitMargin === 'number' && !isNaN(tx.profitMargin) && isFinite(tx.profitMargin)
-    ? tx.profitMargin
-    : undefined;
+  const netProfit = matchedSoldBuild && saleRevenue !== undefined && recordedCostBasis !== undefined
+    ? saleRevenue - recordedCostBasis
+    : (typeof tx.profitMargin === 'number' && !isNaN(tx.profitMargin) && isFinite(tx.profitMargin)
+      ? tx.profitMargin
+      : undefined);
 
   return {
     date,
