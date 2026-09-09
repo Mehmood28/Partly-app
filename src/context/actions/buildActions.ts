@@ -14,14 +14,12 @@ import { SellBuildData } from '../types';
 import {
   canDeleteBuildDraft,
   canDismantleBuild,
-  canPartOutTradeInBuild,
   findLinkedSaleTransaction,
   getSaleTradeInEditState,
   isTradeInBuildPristine,
   validatePartOutAccounting,
   validateItemizationAccounting
 } from '../../utils/buildEligibility';
-import { normalizePlatform } from '../../utils/platformDisplay';
 import { BUILD_WARRANTY_DAYS, isValidWarrantyDays, normalizeWarrantyDays } from '../../utils/warranty';
 
 export const handleAddBuild = (

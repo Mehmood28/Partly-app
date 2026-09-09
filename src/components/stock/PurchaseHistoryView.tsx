@@ -8,7 +8,7 @@ import { EditTransactionModal } from '../activity/EditTransactionModal';
 import { TransactionActivityCard } from '../activity/TransactionActivityCard';
 import { ConfirmModal } from '../ConfirmModal';
 import { classifyTransaction } from '../../utils/transactionClassification';
-import { formatCurrency } from '../../utils/helpers';
+import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
 
 interface PurchaseHistoryViewProps {
   isActive?: boolean;
@@ -41,10 +41,6 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
     return state.transactions.filter((tx) => classifyTransaction(tx, state.builds).isPurchase);
   }, [state.transactions, state.builds]);
 
-  const totalSpent = useMemo(() => {
-    return purchaseTransactions.reduce((sum, tx) => sum + (tx.totalAmount || 0), 0);
-  }, [purchaseTransactions]);
-
   const filteredTransactions = useMemo(() => {
     return purchaseTransactions.filter((tx) => {
       const q = deferredSearchQuery.trim().toLowerCase();
@@ -63,13 +59,13 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
   const sortedTransactions = useMemo(() => {
     return [...filteredTransactions].sort((a, b) => {
       if (sortBy === 'date-desc') {
-        const timeA = new Date(a.dateSortable || a.timestamp || 0).getTime() || 0;
-        const timeB = new Date(b.dateSortable || b.timestamp || 0).getTime() || 0;
+        const timeA = resolveTransactionDate(a)?.sortValue ?? 0;
+        const timeB = resolveTransactionDate(b)?.sortValue ?? 0;
         return timeB - timeA;
       }
       if (sortBy === 'date-asc') {
-        const timeA = new Date(a.dateSortable || a.timestamp || 0).getTime() || 0;
-        const timeB = new Date(b.dateSortable || b.timestamp || 0).getTime() || 0;
+        const timeA = resolveTransactionDate(a)?.sortValue ?? 0;
+        const timeB = resolveTransactionDate(b)?.sortValue ?? 0;
         return timeA - timeB;
       }
       if (sortBy === 'amount-desc') {

@@ -7,7 +7,7 @@ import {
   handleRemovePartFromBuild,
   handleSwapPartInBuild,
 } from '../buildActions';
-import { AppState, PCBuild } from '../../../types';
+import { AppState } from '../../../types';
 
 describe('Build Actions Warranty Validation', () => {
   const getMockState = (): AppState => ({

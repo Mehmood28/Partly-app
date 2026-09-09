@@ -1,6 +1,6 @@
 import React from 'react';
 import { PCBuild, TransactionLogItem } from '../../types';
-import { Store, CreditCard, User, Calendar, Shield, Phone, DollarSign, Clock, RefreshCw } from 'lucide-react';
+import { Store, CreditCard, User, Calendar, Shield, Phone, Clock, RefreshCw } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { formatWarrantyLabel, getBuildWarrantyInfo } from '../../utils/warranty';

@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import { InventoryComponent, PurchaseEntry } from '../types';
+import { InventoryComponent } from '../types';
 import { ConfirmModal } from './ConfirmModal';
 import { useInventory } from '../context/InventoryContext';
 import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import {
   calculateAverageUnitCost,
-  calculateTotalQuantity,
-  calculateTotalValue,
   calculateUnassignedQuantityStrict,
   calculateUnassignedValueStrict,
-  formatCompactCurrency,
   formatCurrency, getConditionColor,
-  getCategoryBadgeColor,
   getTagBadgeColor,
   getPlatformBadgeColor,
   getPaymentMethodBadgeColor,
@@ -23,11 +19,8 @@ import {
   ChevronUp,
   Plus,
   Box,
-  LayoutGrid,
   Pencil,
   Trash2,
-  X,
-  ArrowUp,
   Monitor,
   Cpu,
   HardDrive,
@@ -51,7 +44,6 @@ interface ComponentCardProps {
   onUpdateMarketValue?: (componentId: string, value: number) => void;
   onEditComponent?: (component: InventoryComponent) => void;
   onDeleteComponent?: (componentId: string) => { success: boolean; error?: string } | void;
-  onQuickAssign?: (component: InventoryComponent) => void;
   onSellPart?: (component: InventoryComponent, purchaseEntryId: string) => void;
 }
 
@@ -63,7 +55,6 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   onDeletePurchaseEntry,
   onEditComponent,
   onDeleteComponent,
-  onQuickAssign,
   onSellPart,
   actionOverride,
   readonlyMode,
@@ -81,11 +72,9 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
 
-  const totalQty = calculateTotalQuantity(component);
   const unassignedQty = unassignedQuantityOverride !== undefined ? unassignedQuantityOverride : calculateUnassignedQuantityStrict(component, state.builds);
   const unassignedVal = calculateUnassignedValueStrict(component, state.builds);
   const avgCost = unassignedQty > 0 ? unassignedVal / unassignedQty : calculateAverageUnitCost(component);
-  const assigned = component.assignedCount || 0;
 
   const renderCategoryIcon = () => {
     const className = 'w-4 h-4 text-[#7C6CF2]';

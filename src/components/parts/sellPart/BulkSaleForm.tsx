@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useInventory } from '../../../context/InventoryContext';
 import { useToast } from '../../../context/ToastContext';
-import { ComponentCategory, CATEGORIES, PaymentMethod, InventoryComponent, PurchaseEntry } from '../../../types';
+import { CATEGORIES, PaymentMethod, InventoryComponent, PurchaseEntry } from '../../../types';
 import { getAllBatchesWithRemaining, formatCurrency } from '../../../utils/helpers';
 import { CustomSelect } from '../../ui/CustomSelect';
 import { PAYMENT_METHODS } from './SaleDetailsForm';
@@ -11,12 +11,7 @@ import {
   Trash2,
   Search,
   CheckCircle2,
-  AlertCircle,
   TrendingUp,
-  Tag,
-  DollarSign,
-  Calendar,
-  User,
   ShoppingBag,
 } from 'lucide-react';
 

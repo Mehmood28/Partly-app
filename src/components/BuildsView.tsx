@@ -48,8 +48,6 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
   const {
     state,
     updateBuildStatus,
-    updateBuild,
-    allocatePartToBuild,
     removePartFromBuild,
     sellBuild,
     deleteBuild,

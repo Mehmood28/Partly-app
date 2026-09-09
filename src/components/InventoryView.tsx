@@ -20,7 +20,6 @@ interface InventoryViewProps {
   onOpenAddComponent: () => void;
   onOpenAddPurchaseEntry: (componentId: string) => void;
   onEditComponent: (component: InventoryComponent) => void;
-  onQuickAssign: (component: InventoryComponent) => void;
   onOpenSellPart: (component?: InventoryComponent, purchaseEntryId?: string) => void;
   onOpenBulkEntry?: () => void;
 }
@@ -30,7 +29,6 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
   onOpenAddComponent,
   onOpenAddPurchaseEntry,
   onEditComponent,
-  onQuickAssign,
   onOpenSellPart,
   onOpenBulkEntry,
 }) => {
@@ -49,11 +47,6 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
   const handleCategoryChange = React.useCallback((category: string) => {
     setSelectedCategory(category);
-    setSearchQuery('');
-  }, []);
-
-  const handleSubCategoryChange = React.useCallback((subCat: string) => {
-    setActiveSubCategory(subCat);
     setSearchQuery('');
   }, []);
 
@@ -285,7 +278,6 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                       onDeletePurchaseEntry={deletePurchaseEntry}
                       onEditComponent={onEditComponent}
                       onDeleteComponent={deleteComponent}
-                      onQuickAssign={onQuickAssign}
                       onSellPart={onOpenSellPart}
                     />
                   ))}
@@ -374,8 +366,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                         onDeletePurchaseEntry={deletePurchaseEntry}
                         onEditComponent={onEditComponent}
                         onDeleteComponent={deleteComponent}
-                        onQuickAssign={onQuickAssign}
-                        onSellPart={onOpenSellPart}
+                          onSellPart={onOpenSellPart}
                       />
                     ))}
                   </div>

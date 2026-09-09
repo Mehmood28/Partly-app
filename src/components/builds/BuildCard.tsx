@@ -1,9 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
-import { CircuitBoard, Zap, Fan, Package, CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, Cpu, Monitor, HardDrive, Database, ArrowRightLeft, Shield, ShoppingCart, User, Phone, Image as ImageIcon, Loader2, AlertCircle, Wrench } from 'lucide-react';
+import { CircuitBoard, Zap, Fan, Package, CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, Cpu, Monitor, HardDrive, Database, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench } from 'lucide-react';
 import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getConditionColor, getCategoryBadgeColor, getTagBadgeColor, getPlatformBadgeColor, getPaymentMethodBadgeColor } from '../../utils/helpers';
 import { generateInvoice } from '../../utils/invoiceGenerator';
-import { generateMarketplaceAd } from '../../utils/adGenerator';
 import { executeCopyAdConfirmation } from '../../utils/copyAdHelper';
 import { getBuildPresentation } from '../../utils/buildPresentation';
 import { sortByCategory } from '../../utils/sorting';
@@ -18,6 +17,7 @@ import { normalizePlatform } from '../../utils/platformDisplay';
 import { ConfirmModal } from '../ConfirmModal';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { canDeleteBuildDraft, canDismantleBuild, canPartOutTradeInBuild, canMoveToTradeIns } from '../../utils/buildEligibility';
+import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
 import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
 
 interface BuildCardProps {
@@ -151,8 +151,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     );
     if (matches.length === 0) return null;
     return matches.slice().sort((a, b) => {
-      const timeA = new Date(a.dateSortable || a.timestamp || 0).getTime() || 0;
-      const timeB = new Date(b.dateSortable || b.timestamp || 0).getTime() || 0;
+      const timeA = resolveTransactionDate(a)?.sortValue ?? 0;
+      const timeB = resolveTransactionDate(b)?.sortValue ?? 0;
       if (timeB !== timeA) return timeB - timeA;
       return b.id.localeCompare(a.id);
     })[0];

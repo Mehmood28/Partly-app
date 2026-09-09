@@ -16,7 +16,6 @@ import {
   SaveComponentOptions,
 } from './types';
 import { useUndoRedo } from './useUndoRedo';
-import { getAllBatchesWithRemaining } from '../utils/helpers';
 import {
   handleSaveComponent,
   handleAddComponent,

@@ -22,9 +22,7 @@ function AppContent() {
   const {
     state,
     saveComponent,
-    addComponent,
     addComponents,
-    updateComponent,
     addPurchaseEntry,
     addBuild,
     resetToDefault,
@@ -149,10 +147,6 @@ function AppContent() {
     setPurchaseModalComponentId(componentId);
   }, []);
 
-  const handleQuickAssign = React.useCallback((_comp: InventoryComponent) => {
-    setActiveTab('builds');
-  }, []);
-
   const handleResetAllData = () => {
     setConfirmModal({
       isOpen: true,
@@ -259,7 +253,6 @@ function AppContent() {
               onOpenAddComponent={handleOpenAddComponent}
               onOpenAddPurchaseEntry={handleOpenAddPurchaseEntry}
               onEditComponent={handleEditComponent}
-              onQuickAssign={handleQuickAssign}
               onOpenSellPart={handleOpenSellPart}
             />
             <ComponentModal

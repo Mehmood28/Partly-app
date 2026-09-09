@@ -15,7 +15,6 @@ interface StockViewProps {
   onOpenAddComponent: () => void;
   onOpenAddPurchaseEntry: (componentId: string) => void;
   onEditComponent: (component: InventoryComponent) => void;
-  onQuickAssign: (component: InventoryComponent) => void;
   onOpenSellPart: (component?: InventoryComponent, purchaseEntryId?: string) => void;
   onOpenBulkEntry?: () => void;
 }
@@ -27,7 +26,6 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
   onOpenAddComponent,
   onOpenAddPurchaseEntry,
   onEditComponent,
-  onQuickAssign,
   onOpenSellPart,
   onOpenBulkEntry,
 }) => {
@@ -96,7 +94,6 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
             onOpenAddComponent={onOpenAddComponent}
             onOpenAddPurchaseEntry={onOpenAddPurchaseEntry}
             onEditComponent={onEditComponent}
-            onQuickAssign={onQuickAssign}
             onOpenSellPart={onOpenSellPart}
           />
         </div>
