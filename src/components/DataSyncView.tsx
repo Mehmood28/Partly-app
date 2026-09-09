@@ -62,13 +62,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
     [state.transactions, selectedYear]
   );
   const dataHealth = useMemo(() => inspectDataHealth(state), [state]);
-  const visibleHealthIssues = useMemo(
-    () => [
-      ...dataHealth.issues.filter((issue) => issue.severity === 'warning'),
-      ...dataHealth.issues.filter((issue) => issue.severity === 'info'),
-    ].slice(0, 20),
-    [dataHealth]
-  );
+  const visibleHealthIssues = useMemo(() => dataHealth.issues.slice(0, 20), [dataHealth]);
 
   const getBackupStatus = () => {
     if (!lastBackupTimestamp) return { status: 'Backup recommended (Never)', color: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' };
@@ -462,23 +456,14 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
                   <span className="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">
                     {dataHealth.warningCount} warning{dataHealth.warningCount === 1 ? '' : 's'}
                   </span>
-                  <span className="px-2 py-1 rounded-lg bg-sky-500/10 text-sky-300 border border-sky-500/20">
-                    {dataHealth.infoCount} historical note{dataHealth.infoCount === 1 ? '' : 's'}
-                  </span>
                 </div>
 
                 {visibleHealthIssues.map((issue, index) => (
                   <div
                     key={`${issue.code}-${issue.recordId}-${index}`}
-                    className={`rounded-xl border p-3 ${
-                      issue.severity === 'warning'
-                        ? 'bg-amber-500/[0.05] border-amber-500/20'
-                        : 'bg-sky-500/[0.04] border-sky-500/15'
-                    }`}
+                    className="rounded-xl border p-3 bg-amber-500/[0.05] border-amber-500/20"
                   >
-                    <div className={`text-xs font-semibold ${
-                      issue.severity === 'warning' ? 'text-amber-200' : 'text-sky-200'
-                    }`}>
+                    <div className="text-xs font-semibold text-amber-200">
                       {issue.title}
                     </div>
                     <div className="text-[11px] text-zinc-400 mt-1 leading-relaxed">{issue.detail}</div>
@@ -488,7 +473,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
                 {dataHealth.issues.length > visibleHealthIssues.length && (
                   <div className="text-[11px] text-zinc-500 text-center pt-1">
-                    {dataHealth.issues.length - visibleHealthIssues.length} additional historical note{
+                    {dataHealth.issues.length - visibleHealthIssues.length} additional warning{
                       dataHealth.issues.length - visibleHealthIssues.length === 1 ? '' : 's'
                     } hidden to keep this list manageable.
                   </div>

@@ -1,7 +1,5 @@
 import { AppState } from '../types';
 
-export type DataHealthSeverity = 'warning' | 'info';
-
 export interface DataHealthIssue {
   code:
     | 'DUPLICATE_COMPONENT_ID'
@@ -10,9 +8,8 @@ export interface DataHealthIssue {
     | 'DUPLICATE_PURCHASE_ENTRY_ID'
     | 'MISSING_COMPONENT_REFERENCE'
     | 'MISSING_PURCHASE_ENTRY_REFERENCE'
-    | 'UNLINKED_ACTIVE_BUILD_PART'
-    | 'UNLINKED_HISTORICAL_BUILD_PART';
-  severity: DataHealthSeverity;
+    | 'UNLINKED_ACTIVE_BUILD_PART';
+  severity: 'warning';
   title: string;
   detail: string;
   recordId: string;
@@ -21,7 +18,6 @@ export interface DataHealthIssue {
 export interface DataHealthReport {
   issues: DataHealthIssue[];
   warningCount: number;
-  infoCount: number;
 }
 
 const findDuplicateIds = <T>(
@@ -78,6 +74,11 @@ export const inspectDataHealth = (state: AppState): DataHealthReport => {
   }
 
   for (const build of state.builds) {
+    // Sold builds are immutable historical snapshots. Their stored part names,
+    // quantities, and assignment-time costs remain authoritative even when an
+    // old catalog component or purchase batch no longer exists.
+    if (build.status === 'Sold') continue;
+
     for (const [partIndex, part] of (build.parts || []).entries()) {
       const recordId = `${build.id} / part ${partIndex + 1}`;
       if (!componentIds.has(part.componentId)) {
@@ -104,15 +105,10 @@ export const inspectDataHealth = (state: AppState): DataHealthReport => {
         continue;
       }
 
-      const isHistorical = build.status === 'Sold';
       issues.push({
-        code: isHistorical
-          ? 'UNLINKED_HISTORICAL_BUILD_PART'
-          : 'UNLINKED_ACTIVE_BUILD_PART',
-        severity: isHistorical ? 'info' : 'warning',
-        title: isHistorical
-          ? 'Historical build part has no purchase batch link'
-          : 'Active build part has no purchase batch link',
+        code: 'UNLINKED_ACTIVE_BUILD_PART',
+        severity: 'warning',
+        title: 'Active build part has no purchase batch link',
         detail: `${build.name}: ${part.componentName}. Partly has not guessed a batch.`,
         recordId,
       });
@@ -121,7 +117,6 @@ export const inspectDataHealth = (state: AppState): DataHealthReport => {
 
   return {
     issues,
-    warningCount: issues.filter((issue) => issue.severity === 'warning').length,
-    infoCount: issues.filter((issue) => issue.severity === 'info').length,
+    warningCount: issues.length,
   };
 };
