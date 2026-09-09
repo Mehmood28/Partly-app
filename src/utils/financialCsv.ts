@@ -78,10 +78,20 @@ export function findMatchingSoldBuild(
   );
   if (immutableMatch) return immutableMatch;
 
+  // An explicit but unresolved relationship is authoritative evidence that this
+  // transaction belongs to a different/retired entity. Never replace it by
+  // matching an unrelated live build on mutable date, amount, or name fields.
+  if (typeof tx.relatedComponentId === 'string' && tx.relatedComponentId.trim()) {
+    return null;
+  }
+
   const txDate = resolveTransactionDate(tx);
   if (!txDate) return null;
 
   const dateAndAmountMatches = soldBuilds.filter((build) => {
+    // Modern sold builds already have an exact transaction identity. They are
+    // ineligible for legacy heuristic reconciliation with another transaction.
+    if (build.saleTransactionId) return false;
     const buildDate = build.saleDate ? parseDateLocal(build.saleDate) : null;
     return !!buildDate &&
       buildDate.year === txDate.parsed.year &&

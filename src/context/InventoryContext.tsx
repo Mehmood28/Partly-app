@@ -719,16 +719,29 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const relistPartSale = useCallback(
     (transactionId: string) => {
       const current = stateRef.current;
-      const tx = current.transactions.find((t) => t.id === transactionId);
-      if (!tx || tx.type !== 'SALE') return;
+      const matches = current.transactions.filter((t) => t.id === transactionId);
+      if (matches.length !== 1 || matches[0].type !== 'SALE') {
+        return { success: false, error: 'Part sale transaction was not found or is ambiguous.' };
+      }
+      const tx = matches[0];
       const relistQty = getValidatedRelistQuantity(tx);
-      if (relistQty === null) return;
+      if (relistQty === null) {
+        return { success: false, error: 'The saved sale quantity is invalid.' };
+      }
 
       const nextState = handleRelistPartSale(current, transactionId);
-      if (nextState === current) return;
+      if (nextState === current) {
+        return {
+          success: false,
+          error: tx.tradeInCredit
+            ? 'Cannot relist this trade because the incoming part is missing, changed, allocated, sold, or lacks exact linkage.'
+            : 'This part sale could not be safely relisted.',
+        };
+      }
       const summary = tx.title || 'sale';
       saveStateToHistory(`Relist part sale: ${summary}`);
       setState(nextState);
+      return { success: true };
     },
     [saveStateToHistory, stateRef]
   );

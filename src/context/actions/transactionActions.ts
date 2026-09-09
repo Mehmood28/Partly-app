@@ -1,5 +1,5 @@
 import { AppState, ComponentCategory, TransactionLogItem, InventoryComponent, PurchaseEntry, PCBuild, PaymentMethod } from '../../types';
-import { autoTagComponent, parseDateLocal } from '../../utils/helpers';
+import { autoTagComponent, getAllBatchesWithRemaining, parseDateLocal } from '../../utils/helpers';
 import { classifyTransaction } from '../../utils/transactionClassification';
 
 const inferCategory = (name: string): ComponentCategory => {
@@ -473,13 +473,72 @@ export const handleRelistPartSale = (
 ): AppState => {
   if (!transactionId) return prev;
 
-  const targetTx = prev.transactions.find((t) => t.id === transactionId);
-  if (!targetTx || targetTx.type !== 'SALE') return prev;
+  const matches = prev.transactions.filter((t) => t.id === transactionId);
+  if (matches.length !== 1) return prev;
+  const targetTx = matches[0];
+  const classification = classifyTransaction(targetTx, prev.builds);
+  if (!classification.isPartSale || classification.isExchange || classification.isPCSale) return prev;
 
   const relistQty = getValidatedRelistQuantity(targetTx);
   if (relistQty === null) return prev;
 
-  const updatedComponents = restoreTransactionStock(prev.components, targetTx, relistQty);
+  let componentsBeforeOutgoingRestore = prev.components;
+  const hasIncomingTrade =
+    typeof targetTx.tradeInCredit === 'number' &&
+    Number.isFinite(targetTx.tradeInCredit) &&
+    targetTx.tradeInCredit > 0;
+
+  if (hasIncomingTrade) {
+    const incomingComponentId = targetTx.incomingComponentId?.trim();
+    const incomingPurchaseEntryId = targetTx.incomingPurchaseEntryId?.trim();
+    if (!incomingComponentId || !incomingPurchaseEntryId) return prev;
+
+    const incomingMatches = prev.components.filter((component) => component.id === incomingComponentId);
+    if (incomingMatches.length !== 1) return prev;
+    const incomingComponent = incomingMatches[0];
+    const incomingBatchMatches = (incomingComponent.purchaseHistory || []).filter(
+      (entry) => entry.id === incomingPurchaseEntryId
+    );
+    if (incomingBatchMatches.length !== 1) return prev;
+    const incomingBatch = incomingBatchMatches[0];
+    const batchInfo = getAllBatchesWithRemaining(incomingComponent, prev.builds).find(
+      (batch) => batch.entry.id === incomingPurchaseEntryId
+    );
+
+    // Part trades create exactly one incoming unit. Any quantity/cost change or
+    // allocation means downstream activity exists and reversing it is unsafe.
+    if (
+      !batchInfo ||
+      incomingBatch.quantity !== 1 ||
+      batchInfo.availableQuantity !== 1 ||
+      incomingBatch.unitPrice !== targetTx.tradeInCredit ||
+      incomingBatch.sourceSaleTransactionId !== targetTx.id
+    ) {
+      return prev;
+    }
+
+    componentsBeforeOutgoingRestore = prev.components
+      .map((component) =>
+        component.id === incomingComponentId
+          ? {
+              ...component,
+              purchaseHistory: component.purchaseHistory.filter(
+                (entry) => entry.id !== incomingPurchaseEntryId
+              ),
+            }
+          : component
+      )
+      .filter(
+        (component) =>
+          component.id !== incomingComponentId || component.purchaseHistory.length > 0
+      );
+  }
+
+  const updatedComponents = restoreTransactionStock(
+    componentsBeforeOutgoingRestore,
+    targetTx,
+    relistQty
+  );
   const remainingTxs = prev.transactions.filter((t) => t.id !== transactionId);
 
   return {

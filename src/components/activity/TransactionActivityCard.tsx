@@ -304,9 +304,14 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
               cancelText="Cancel"
               variant="emerald"
               onConfirm={() => {
-                relistPartSale(tx.id);
+                const result = relistPartSale(tx.id);
                 setIsRelistConfirmOpen(false);
-                showToast('Part relisted successfully to Stock!');
+                showToast(
+                  result.success
+                    ? 'Part relisted successfully to Stock!'
+                    : result.error || 'Part could not be relisted.',
+                  result.success ? 'success' : 'error'
+                );
               }}
               onCancel={() => setIsRelistConfirmOpen(false)}
             />

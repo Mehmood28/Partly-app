@@ -1224,6 +1224,8 @@ export const handleSellComponentPart = (
     return c;
   });
 
+  let incomingTradeComponentId: string | undefined;
+  let incomingTradePurchaseEntryId: string | undefined;
   if (saleData.incomingTradePart) {
     const tradePart = saleData.incomingTradePart;
     const tradeDate = saleData.saleDate || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
@@ -1239,6 +1241,7 @@ export const handleSellComponentPart = (
       paymentMethod: saleData.paymentMethod || 'Cash',
       platform: 'Part Trade-In',
       taxPercent: 0,
+      sourceSaleTransactionId: saleTx.id,
       notes: `Trade-in from sale of ${targetComp.name}`,
     };
 
@@ -1250,6 +1253,8 @@ export const handleSellComponentPart = (
 
     if (existingCompIndex !== -1) {
       const existingComp = updatedComponents[existingCompIndex];
+      incomingTradeComponentId = existingComp.id;
+      incomingTradePurchaseEntryId = newPurchaseEntryId;
       const res = computeUnresolvedLegacyReservation(existingComp, prev.builds);
       const updatedComp: InventoryComponent = {
         ...existingComp,
@@ -1287,8 +1292,9 @@ export const handleSellComponentPart = (
         }
       }
 
+      const newCompId = `comp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const newComp: InventoryComponent = {
-        id: `comp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        id: newCompId,
         name: tradePart.name.trim(),
         category: tradePart.category,
         specifications: '',
@@ -1298,8 +1304,15 @@ export const handleSellComponentPart = (
         purchaseHistory: [newPurchaseEntry],
         targetMarketValuePerUnit: Number(tradePart.tradeInCredit) * 1.3,
       };
+      incomingTradeComponentId = newCompId;
+      incomingTradePurchaseEntryId = newPurchaseEntryId;
       updatedComponents = [newComp, ...updatedComponents];
     }
+  }
+
+  if (incomingTradeComponentId && incomingTradePurchaseEntryId) {
+    saleTx.incomingComponentId = incomingTradeComponentId;
+    saleTx.incomingPurchaseEntryId = incomingTradePurchaseEntryId;
   }
 
   return {

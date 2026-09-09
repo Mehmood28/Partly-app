@@ -1,6 +1,6 @@
 import { TransactionLogItem, PCBuild } from '../types';
 import { classifyTransaction } from './transactionClassification';
-import { parseDateLocal, formatCurrency } from './helpers';
+import { parseDateLocal } from './helpers';
 import { formatSignedCurrency } from './financialDisplay';
 
 export interface SinglePartSaleDisplayItem {

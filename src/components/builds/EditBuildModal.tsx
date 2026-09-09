@@ -62,8 +62,12 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
 
     updateBuild(build.id, {
       name: editName.trim() || build.name,
-      builtDate: editBuiltDate || undefined,
-      salePrice: !isNaN(priceVal) && priceVal >= 0 ? priceVal : undefined,
+      ...(build.status !== 'Sold'
+        ? {
+            builtDate: editBuiltDate || undefined,
+            salePrice: !isNaN(priceVal) && priceVal >= 0 ? priceVal : undefined,
+          }
+        : {}),
       notes: editNotes.trim(),
       imageUrl: editImageUrl || undefined,
       warrantyDays: resolvedWarrantyDays,
@@ -143,6 +147,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
               <label className="block text-zinc-300 font-medium mb-1 text-xs">Built Date</label>
               <input
                 type="date"
+                disabled={build.status === 'Sold'}
                 value={editBuiltDate}
                 onChange={(e) => setEditBuiltDate(e.target.value)}
                 className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors [color-scheme:dark]"
@@ -158,6 +163,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xs pointer-events-none font-mono">$</span>
               <input
                 type="number" inputMode="decimal"
+                disabled={build.status === 'Sold'}
                 step="any"
                 value={editSalePrice}
                 onChange={(e) => setEditSalePrice(e.target.value)}

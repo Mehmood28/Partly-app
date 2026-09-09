@@ -7,7 +7,6 @@ import {
   areAppStatesEqual,
   isValidMonthlyGoal,
   canonicalizeJSON,
-  canonicalStringify,
   executeBackupImport,
   executePersistedStateChange,
   selectWinningCandidate,
