@@ -33,9 +33,10 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             <h2 className="text-lg font-bold text-zinc-100 font-display">Something went wrong</h2>
             <p className="text-xs text-zinc-400 leading-relaxed font-sans">
-              {this.state.error?.message || 'An unexpected rendering error occurred. Please try reloading.'}
+              An unexpected error occurred. Your saved data is still stored on this device. Please reload the app and try again.
             </p>
             <button
+              type="button"
               onClick={() => {
                 this.setState({ hasError: false, error: undefined });
                 window.location.reload();

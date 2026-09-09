@@ -1,4 +1,4 @@
-const CACHE_NAME = 'partly-shell-png-icon-20260825';
+const CACHE_NAME = 'partly-shell-20260909';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -9,9 +9,10 @@ const STATIC_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => Promise.allSettled(STATIC_ASSETS.map((asset) => cache.add(asset))))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -32,6 +33,21 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (!url.protocol.startsWith('http')) return;
   if (url.pathname.startsWith('/api')) return;
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', responseToCache));
+          }
+          return response;
+        })
+        .catch(async () => (await caches.match('/index.html')) || Response.error())
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
@@ -59,11 +75,7 @@ self.addEventListener('fetch', (event) => {
           });
           return response;
         })
-        .catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-        });
+        .catch(() => Response.error());
     })
   );
 });
