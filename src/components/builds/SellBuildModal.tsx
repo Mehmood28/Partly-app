@@ -1,7 +1,7 @@
 import { resizeImage } from '../../utils/imageResizer';
 import { CustomSelect } from './../ui/CustomSelect';
 import React, { useState, useEffect } from 'react';
-import { PCBuild, Platform, PaymentMethod } from '../../types';
+import { PCBuild, PaymentMethod } from '../../types';
 import { SellBuildData } from '../../context/types';
 import { calculateBuildPartsCost, formatCurrency, parseDateLocal } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';

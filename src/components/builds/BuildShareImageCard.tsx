@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { PCBuild, InventoryComponent } from '../../types';
 import { calculateBuildPartsCost, formatCurrency } from '../../utils/helpers';
 import { extractBuildSpecs } from './discordShareHelpers';

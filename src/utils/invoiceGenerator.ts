@@ -1,5 +1,4 @@
 import { PCBuild, InventoryComponent } from '../types';
-import { sortByCategory } from './sorting';
 import { getBuildPresentation } from './buildPresentation';
 
 export const generateInvoice = async (build: PCBuild, components: InventoryComponent[]) => {

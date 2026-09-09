@@ -9,7 +9,6 @@ import {
   getConditionColor, 
   getPlatformBadgeColor 
 } from '../../utils/helpers';
-import { sortByCategory } from '../../utils/sorting';
 import { getBuildPresentation } from '../../utils/buildPresentation';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { formatWarrantyLabel, getBuildWarrantyInfo } from '../../utils/warranty';

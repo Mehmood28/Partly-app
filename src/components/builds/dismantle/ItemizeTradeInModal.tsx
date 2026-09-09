@@ -49,7 +49,6 @@ export const ItemizeTradeInModal: React.FC<ItemizeTradeInModalProps> = ({ build,
 
   const remainingBalance = targetCost - totalAllocated;
   const isExactMatch = Math.abs(remainingBalance) < 0.009;
-  const hasValidNames = manualParts.every((p) => p.name.trim().length > 0 && p.quantity > 0 && p.unitCost >= 0);
   
   const partOutValidation = useMemo(() => {
     if (!build) return { valid: true };

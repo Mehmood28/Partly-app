@@ -1,9 +1,8 @@
-import { PCBuildPart, InventoryComponent } from '../types';
 import { formatWarrantyLabel } from './warranty';
 
 export function generateMarketplaceAd(
   parts: Array<{category: string, name?: string, componentName?: string, source?: string, quantity?: number}>, 
-  buildName: string,
+  _buildName: string,
   warrantyDays: number = 30
 ): string {
   const hasMultipleSources = parts.some(p => p.source === 'TRADE_IN_BASE') && parts.some(p => p.source === 'ALLOCATED_UPGRADE');
