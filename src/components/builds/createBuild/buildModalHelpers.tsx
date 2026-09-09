@@ -10,6 +10,7 @@ import {
   Package,
 } from 'lucide-react';
 import { ComponentCategory, InventoryComponent, PCBuild, PCBuildPart } from '../../../types';
+import { getAllBatchesWithRemaining } from '../../../utils/helpers';
 
 export const getCategoryIcon = (cat: ComponentCategory) => {
   switch (cat) {
@@ -74,30 +75,26 @@ export const calculateComponentBatchesWithStock = (
   selectedParts: PCBuildPart[],
   initialBuildId?: string
 ): ComponentGroupWithStock => {
-  const batches = comp.purchaseHistory
-    .filter((e) => {
-      const assignedQty = builds.reduce((sum, b) => {
-        if (initialBuildId && b.id === initialBuildId) return sum;
-        return sum + b.parts.filter((p) => p.purchaseEntryId === e.id).reduce((s, p) => s + p.quantity, 0);
-      }, 0);
-      const selectedInBuild = selectedParts.find(
-        (p) => p.componentId === comp.id && p.purchaseEntryId === e.id
+  const effectiveBuilds = initialBuildId
+    ? builds.filter((build) => build.id !== initialBuildId)
+    : builds;
+  const batches = getAllBatchesWithRemaining(comp, effectiveBuilds)
+    .map(({ entry, availableQuantity }) => {
+      const qtyInBuild = selectedParts.reduce(
+        (sum, part) =>
+          part.componentId === comp.id && part.purchaseEntryId === entry.id
+            ? sum + part.quantity
+            : sum,
+        0
       );
-      const qtyInBuild = selectedInBuild ? selectedInBuild.quantity : 0;
-      return e.quantity - assignedQty > 0 || qtyInBuild > 0;
+      return {
+        entry,
+        remainingUnassigned: Math.max(0, availableQuantity - qtyInBuild),
+        qtyInBuild,
+      };
     })
-    .map((entry) => {
-      const assignedQty = builds.reduce((sum, b) => {
-        if (initialBuildId && b.id === initialBuildId) return sum;
-        return sum + b.parts.filter((p) => p.purchaseEntryId === entry.id).reduce((s, p) => s + p.quantity, 0);
-      }, 0);
-      const selectedInBuild = selectedParts.find(
-        (p) => p.componentId === comp.id && p.purchaseEntryId === entry.id
-      );
-      const qtyInBuild = selectedInBuild ? selectedInBuild.quantity : 0;
-      const remainingUnassigned = Math.max(0, entry.quantity - assignedQty - qtyInBuild);
-      return { entry, remainingUnassigned };
-    });
+    .filter(({ remainingUnassigned, qtyInBuild }) => remainingUnassigned > 0 || qtyInBuild > 0)
+    .map(({ entry, remainingUnassigned }) => ({ entry, remainingUnassigned }));
 
   const totalUnassigned = batches.reduce((sum, b) => sum + b.remainingUnassigned, 0);
   const totalUnassignedValue = batches.reduce(

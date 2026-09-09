@@ -34,8 +34,83 @@ export const handleAddBuild = (
 
   const resolvedWarranty = normalizeWarrantyDays(build.warrantyDays, BUILD_WARRANTY_DAYS);
 
+  // New builds are modern records: every allocated part must resolve to one exact
+  // component and purchase batch, and the aggregate request must fit the batch's
+  // strict availability (including unresolved legacy reservations).
+  const requestedByBatch = new Map<string, number>();
+  const validatedParts: PCBuildPart[] = [];
+  for (const part of build.parts || []) {
+    if (
+      typeof part.quantity !== 'number' ||
+      !Number.isFinite(part.quantity) ||
+      !Number.isInteger(part.quantity) ||
+      part.quantity <= 0 ||
+      typeof part.componentId !== 'string' ||
+      !part.componentId.trim() ||
+      typeof part.purchaseEntryId !== 'string' ||
+      !part.purchaseEntryId.trim()
+    ) {
+      return prev;
+    }
+
+    const componentMatches = prev.components.filter((c) => c.id === part.componentId);
+    if (componentMatches.length !== 1) return prev;
+    const component = componentMatches[0];
+    if (component.assignedCount !== undefined && component.assignedCount !== null) {
+      if (
+        typeof component.assignedCount !== 'number' ||
+        !Number.isFinite(component.assignedCount) ||
+        !Number.isInteger(component.assignedCount) ||
+        component.assignedCount < 0
+      ) {
+        return prev;
+      }
+    }
+    const batchMatches = (component.purchaseHistory || []).filter(
+      (entry) => entry.id === part.purchaseEntryId
+    );
+    if (batchMatches.length !== 1) return prev;
+    const batch = batchMatches[0];
+    if (
+      typeof batch.quantity !== 'number' ||
+      !Number.isFinite(batch.quantity) ||
+      !Number.isInteger(batch.quantity) ||
+      batch.quantity <= 0 ||
+      typeof batch.unitPrice !== 'number' ||
+      !Number.isFinite(batch.unitPrice) ||
+      batch.unitPrice < 0
+    ) {
+      return prev;
+    }
+
+    const key = `${component.id}::${batch.id}`;
+    const requested = (requestedByBatch.get(key) || 0) + part.quantity;
+    if (requested > getPurchaseEntryRemainingQuantity(component, batch.id, prev.builds)) {
+      return prev;
+    }
+    requestedByBatch.set(key, requested);
+    const existingPart = validatedParts.find(
+      (candidate) =>
+        candidate.componentId === component.id &&
+        candidate.purchaseEntryId === batch.id
+    );
+    if (existingPart) {
+      existingPart.quantity += part.quantity;
+    } else {
+      validatedParts.push({
+        ...part,
+        componentId: component.id,
+        componentName: component.name,
+        purchaseEntryId: batch.id,
+        category: component.category,
+        unitCostAtAssignment: batch.unitPrice,
+      });
+    }
+  }
+
   const newBuild: PCBuild = {
     ...build,
+    parts: validatedParts,
     warrantyDays: resolvedWarranty,
     id: `build-${Date.now()}`,
     createdDate: new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }),
@@ -44,7 +119,7 @@ export const handleAddBuild = (
   let updatedComponents = prev.components;
   if (build.parts && build.parts.length > 0) {
     const qtyByCompId: Record<string, number> = {};
-    build.parts.forEach((p) => {
+    validatedParts.forEach((p) => {
       qtyByCompId[p.componentId] = (qtyByCompId[p.componentId] || 0) + p.quantity;
     });
 
@@ -148,7 +223,24 @@ export const handleUpdateBuild = (
     }
   }
 
-  const { status: _ignoredStatus, ...validUpdates } = updates;
+  const { status: _ignoredStatus, ...requestedUpdates } = updates;
+  const validUpdates = { ...requestedUpdates };
+  if (targetBuild.status === 'Sold') {
+    const saleCoupledFields: (keyof PCBuild)[] = [
+      'salePrice',
+      'saleDate',
+      'builtDate',
+      'platformSoldOn',
+      'paymentMethod',
+      'buyerName',
+      'buyerPhone',
+      'daysOnMarket',
+      'saleTransactionId',
+    ];
+    for (const field of saleCoupledFields) {
+      delete validUpdates[field];
+    }
+  }
   if (Object.keys(validUpdates).length === 0) {
     return prev;
   }
@@ -243,16 +335,21 @@ export const handleAllocatePartToBuild = (
 
   const avgCost = purchaseEntry.unitPrice;
 
-  // Check if an existing build part will be merged into
-  const existingPartIndex = targetBuild.parts.findIndex(
-    (p) =>
-      p.componentId === componentId &&
-      p.purchaseEntryId === purchaseEntryId &&
-      p.unitCostAtAssignment === avgCost
-  );
+  // A component + purchase-batch pair is one allocation identity. If the batch
+  // cost changed between assignments, retain the exact total historical cost as
+  // a weighted unit cost instead of creating indistinguishable duplicate lines.
+  const matchingPartIndexes = targetBuild.parts
+    .map((part, index) => ({ part, index }))
+    .filter(
+      ({ part: p }) =>
+        p.componentId === componentId &&
+        p.purchaseEntryId === purchaseEntryId
+    )
+    .map(({ index }) => index);
+  const existingPartIndex = matchingPartIndexes[0] ?? -1;
 
-  if (existingPartIndex >= 0) {
-    const existingPart = targetBuild.parts[existingPartIndex];
+  for (const index of matchingPartIndexes) {
+    const existingPart = targetBuild.parts[index];
     if (
       typeof existingPart.quantity !== 'number' ||
       !Number.isFinite(existingPart.quantity) ||
@@ -275,13 +372,23 @@ export const handleAllocatePartToBuild = (
       const newParts = [...build.parts];
 
       if (existingPartIndex >= 0) {
-        const existingPart = newParts[existingPartIndex];
+        const matchingParts = matchingPartIndexes.map((index) => newParts[index]);
+        const existingQuantity = matchingParts.reduce((sum, part) => sum + part.quantity, 0);
+        const existingCost = matchingParts.reduce(
+          (sum, part) => sum + part.quantity * part.unitCostAtAssignment,
+          0
+        );
+        const combinedQuantity = existingQuantity + quantity;
+        const combinedUnitCost = (existingCost + quantity * avgCost) / combinedQuantity;
         newParts[existingPartIndex] = {
-          ...existingPart,
-          quantity: existingPart.quantity + quantity,
-          unitCostAtAssignment: avgCost,
+          ...newParts[existingPartIndex],
+          quantity: combinedQuantity,
+          unitCostAtAssignment: combinedUnitCost,
           purchaseEntryId: purchaseEntryId,
         };
+        for (let i = matchingPartIndexes.length - 1; i >= 1; i--) {
+          newParts.splice(matchingPartIndexes[i], 1);
+        }
       } else {
         newParts.push({
           componentId: targetComp.id,
@@ -673,8 +780,7 @@ export const handleSwapPartInBuild = (
   const existingPartIndex = remainingParts.findIndex(
     (p) =>
       p.componentId === newComponentId &&
-      p.purchaseEntryId === newPurchaseEntryId &&
-      p.unitCostAtAssignment === newBatch.unitPrice
+      p.purchaseEntryId === newPurchaseEntryId
   );
 
   let updatedParts: PCBuildPart[];
@@ -695,9 +801,13 @@ export const handleSwapPartInBuild = (
         error: 'Existing build part has invalid stored quantity or unit cost.',
       };
     }
+    const combinedQuantity = existingPart.quantity + quantity;
+    const combinedUnitCost =
+      (existingPart.quantity * existingPart.unitCostAtAssignment + quantity * newBatch.unitPrice) /
+      combinedQuantity;
     updatedParts = remainingParts.map((p, idx) =>
       idx === existingPartIndex
-        ? { ...p, quantity: p.quantity + quantity }
+        ? { ...p, quantity: combinedQuantity, unitCostAtAssignment: combinedUnitCost }
         : p
     );
   } else {

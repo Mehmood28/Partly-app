@@ -171,7 +171,7 @@ export interface InventoryContextType {
   updateTransaction: (id: string, updates: Partial<TransactionLogItem>) => { success: boolean; error?: string };
   deleteTransaction: (id: string) => void;
   deleteBulkPartSale: (bulkSaleGroupId: string) => void;
-  relistPartSale: (transactionId: string) => void;
+  relistPartSale: (transactionId: string) => { success: boolean; error?: string };
   relistBulkPartSale: (bulkSaleGroupId: string) => void;
 
   // Sync & Analytics Actions

@@ -8,6 +8,8 @@ import { BuildBasicDetails } from './builds/createBuild/BuildBasicDetails';
 import { BuildSelectedPartsList } from './builds/createBuild/BuildSelectedPartsList';
 import { BuildInventoryPicker } from './builds/createBuild/BuildInventoryPicker';
 import { generateBuildTitleFromParts } from './builds/createBuild/buildModalHelpers';
+import { calculateComponentBatchesWithStock } from './builds/createBuild/buildModalHelpers';
+import { getAllBatchesWithRemaining } from '../utils/helpers';
 
 interface BuildModalProps {
   isOpen: boolean;
@@ -123,16 +125,16 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
     const entry = comp.purchaseHistory.find((e) => e.id === entryId);
     if (!entry) return;
     const avgCost = entry.unitPrice;
-
-    const assignedInOtherBuilds = state.builds.reduce((sum, b) => {
-      if (initialData && b.id === initialData.id) return sum;
-      return sum + (b.parts || []).filter((p) => p.purchaseEntryId === entryId).reduce((s, p) => s + (p.quantity || 0), 0);
-    }, 0);
+    const batchAvailability = calculateComponentBatchesWithStock(
+      comp,
+      state.builds,
+      selectedParts,
+      initialData?.id
+    ).batches.find((batch) => batch.entry.id === entryId);
     const existingIndex = selectedParts.findIndex(
       (p) => p.componentId === comp.id && p.purchaseEntryId === entryId
     );
-    const currentQtyInBuild = existingIndex >= 0 ? selectedParts[existingIndex].quantity : 0;
-    const remainingUnassigned = Math.max(0, entry.quantity - assignedInOtherBuilds - currentQtyInBuild);
+    const remainingUnassigned = batchAvailability?.remainingUnassigned || 0;
     if (remainingUnassigned <= 0) return;
 
     if (existingIndex >= 0) {
@@ -163,11 +165,11 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
     const entry = comp && entryId ? comp.purchaseHistory.find((e) => e.id === entryId) : null;
     let maxAllowed = 999;
     if (entry) {
-      const assignedInOtherBuilds = state.builds.reduce((sum, b) => {
-        if (initialData && b.id === initialData.id) return sum;
-        return sum + (b.parts || []).filter((p) => p.purchaseEntryId === entry.id).reduce((s, p) => s + (p.quantity || 0), 0);
-      }, 0);
-      maxAllowed = Math.max(0, entry.quantity - assignedInOtherBuilds);
+      const effectiveBuilds = initialData?.id
+        ? state.builds.filter((build) => build.id !== initialData.id)
+        : state.builds;
+      maxAllowed = getAllBatchesWithRemaining(comp!, effectiveBuilds)
+        .find((batch) => batch.entry.id === entry.id)?.availableQuantity || 0;
     }
 
     setSelectedParts((prev) =>
