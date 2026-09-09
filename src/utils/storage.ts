@@ -334,24 +334,34 @@ let writeQueue: Promise<unknown> = Promise.resolve();
 export const persistAppState = async (
   state: AppState
 ): Promise<StorageEnvelope> => {
+  const revision = getNextRevision();
+  setHighestKnownRevision(revision);
+
+  const envelope: StorageEnvelope = {
+    format: ENVELOPE_FORMAT,
+    version: ENVELOPE_VERSION,
+    revision,
+    savedAt: new Date().toISOString(),
+    state,
+  };
+
+  let localSuccess = false;
+  let localError: unknown = null;
+
+  // Mirror synchronously so the latest change survives an immediate close or background event.
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
+    localSuccess = true;
+  } catch (err) {
+    localError = err;
+    console.warn('Failed to write state to localStorage:', err);
+  }
+
   const task = async (): Promise<StorageEnvelope> => {
-    const revision = getNextRevision();
-    setHighestKnownRevision(revision);
-
-    const envelope: StorageEnvelope = {
-      format: ENVELOPE_FORMAT,
-      version: ENVELOPE_VERSION,
-      revision,
-      savedAt: new Date().toISOString(),
-      state,
-    };
-
     let idbSuccess = false;
-    let localSuccess = false;
     let idbError: unknown = null;
-    let localError: unknown = null;
 
-    // 1. Write to IndexedDB
+    // IndexedDB writes remain serialized so an older write cannot finish last.
     try {
       await localforage.setItem(STORAGE_KEY, envelope);
       idbSuccess = true;
@@ -360,16 +370,7 @@ export const persistAppState = async (
       console.error('Failed to write state to IndexedDB:', err);
     }
 
-    // 2. Write to localStorage
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
-      localSuccess = true;
-    } catch (err) {
-      localError = err;
-      console.warn('Failed to write state to localStorage:', err);
-    }
-
-    // 3. Reject if both failed so callers can log the failure
+    // Reject only when neither storage backend accepted the state.
     if (!idbSuccess && !localSuccess) {
       throw new Error(
         `Failed to persist state to both IndexedDB and localStorage. IDB error: ${idbError}, localStorage error: ${localError}`

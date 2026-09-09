@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
 import { CircuitBoard, Zap, Fan, Package, CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, Cpu, Monitor, HardDrive, Database, ArrowRightLeft, Shield, ShoppingCart, User, Phone, Image as ImageIcon, Loader2, AlertCircle, Wrench } from 'lucide-react';
-import { toPng } from 'html-to-image';
 import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getConditionColor, getCategoryBadgeColor, getTagBadgeColor, getPlatformBadgeColor, getPaymentMethodBadgeColor } from '../../utils/helpers';
 import { generateInvoice } from '../../utils/invoiceGenerator';
 import { generateMarketplaceAd } from '../../utils/adGenerator';
@@ -92,6 +91,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     setImageShareStatus('loading');
     setImageShareError(null);
     try {
+      const { toPng } = await import('html-to-image');
       const dataUrl = await toPng(imageCardRef.current, {
         cacheBust: true,
         pixelRatio: 3,
@@ -103,9 +103,9 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
       setTimeout(() => {
         setImageShareStatus('idle');
       }, 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setImageShareStatus('error');
-      setImageShareError(err.message || 'Failed to share image to Discord');
+      setImageShareError(err instanceof Error ? err.message : 'Failed to share image to Discord');
     }
   };
 

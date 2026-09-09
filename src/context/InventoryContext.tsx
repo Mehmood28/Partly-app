@@ -87,15 +87,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, []);
 
-  // Debounced auto-save to IndexedDB (with localStorage mirror fallback), gated until hydration completes
+  // Persist every committed state immediately after hydration.
   useEffect(() => {
     if (!isHydrated) {
       return;
     }
-    const timeoutId = setTimeout(() => {
-      persistAppState(state).catch((err) => console.error('Auto-persist error:', err));
-    }, 300);
-    return () => clearTimeout(timeoutId);
+    persistAppState(state).catch((err) => console.error('Auto-persist error:', err));
   }, [state, isHydrated]);
 
   // Undo / Redo & Backup Tracking
