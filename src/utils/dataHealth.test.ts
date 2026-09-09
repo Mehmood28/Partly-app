@@ -54,7 +54,7 @@ describe('inspectDataHealth', () => {
       ],
     };
 
-    expect(inspectDataHealth(state)).toEqual({ issues: [], warningCount: 0, infoCount: 0 });
+    expect(inspectDataHealth(state)).toEqual({ issues: [], warningCount: 0 });
   });
 
   it('reports missing components and stale purchase batches without changing state', () => {
@@ -95,7 +95,7 @@ describe('inspectDataHealth', () => {
     expect(state).toEqual(before);
   });
 
-  it('separates active unlinked allocations from informational sold legacy records', () => {
+  it('reports active unlinked allocations and ignores self-contained sold snapshots', () => {
     const state: AppState = {
       ...emptyState(),
       components: [
@@ -116,11 +116,7 @@ describe('inspectDataHealth', () => {
     const report = inspectDataHealth(state);
 
     expect(report.warningCount).toBe(1);
-    expect(report.infoCount).toBe(1);
-    expect(report.issues.map((issue) => issue.code)).toEqual([
-      'UNLINKED_ACTIVE_BUILD_PART',
-      'UNLINKED_HISTORICAL_BUILD_PART',
-    ]);
+    expect(report.issues.map((issue) => issue.code)).toEqual(['UNLINKED_ACTIVE_BUILD_PART']);
   });
 
   it('reports duplicate IDs once per duplicated value', () => {
