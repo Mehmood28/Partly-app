@@ -13,6 +13,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { ConfirmModal } from './ConfirmModal';
+import { getUnassignedBatches } from '../utils/helpers';
 
 interface ComponentModalProps {
   isOpen: boolean;
@@ -233,6 +234,9 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
   };
 
   const liveComponent = initialComponent ? state.components.find(c => c.id === initialComponent.id) : null;
+  const availablePurchaseBatches = liveComponent
+    ? getUnassignedBatches(liveComponent, state.builds)
+    : [];
 
   return (
     <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="max-w-lg">
@@ -306,13 +310,13 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         </div>
         
         {/* EXISTING PURCHASES LIST */}
-        {liveComponent && liveComponent.purchaseHistory && liveComponent.purchaseHistory.length > 0 && !editingPurchaseId && (
+        {liveComponent && availablePurchaseBatches.length > 0 && !editingPurchaseId && (
           <div className="space-y-2 pt-3 border-t border-white/[0.08]">
             <div className="text-xs font-bold text-zinc-300 flex items-center gap-1.5 font-sans">
               <ShoppingCart className="w-3.5 h-3.5 text-[#7C6CF2]" /> Existing Purchases
             </div>
             <div className="space-y-1.5">
-              {liveComponent.purchaseHistory.map(ph => {
+              {availablePurchaseBatches.map(({ entry: ph, availableQuantity }) => {
                 const isTradeUp = state.transactions.some(
                   tx => tx.type === 'EXCHANGE' &&
                         tx.incomingComponentId === liveComponent.id &&
@@ -329,7 +333,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                           </span>
                         )}
                       </div>
-                      <div className="text-zinc-400 font-mono text-[11px] mt-0.5">Qty: {ph.quantity} &middot; ${(ph.unitPrice || 0).toFixed(2)}/ea</div>
+                      <div className="text-zinc-400 font-mono text-[11px] mt-0.5">Qty: {availableQuantity} available &middot; ${(ph.unitPrice || 0).toFixed(2)}/ea</div>
                     </div>
                     <div className="flex gap-1">
                       <button type="button" onClick={() => handleEditPurchase(ph)} className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors" title="Edit purchase">
