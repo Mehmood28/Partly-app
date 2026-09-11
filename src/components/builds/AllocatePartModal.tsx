@@ -104,9 +104,9 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
             </div>
           ) : filteredComponents.map((comp) => {
             const batches = getAllBatchesWithRemaining(comp, state.builds);
-            if (batches.length === 0) return null;
-            const unassignedQty = calculateUnassignedQuantityStrict(comp, state.builds);
             const availableBatches = batches.filter((b) => b.availableQuantity > 0);
+            if (availableBatches.length === 0) return null;
+            const unassignedQty = calculateUnassignedQuantityStrict(comp, state.builds);
             const totalAvailable = availableBatches.reduce((sum, b) => sum + b.availableQuantity, 0);
             const avgPrice =
               totalAvailable > 0
@@ -149,16 +149,11 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                 
                 {isExpanded && (
                   <div className="border-t border-white/[0.08] bg-[#0D1118] p-3 space-y-2">
-                    {batches.map(({ entry, availableQuantity, unitCost }) => {
-                      const isFullyAssigned = availableQuantity <= 0;
+                    {availableBatches.map(({ entry, availableQuantity, unitCost }) => {
                       return (
                         <div
                           key={entry.id}
-                          className={`bg-[#121722] border rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2 transition-all ${
-                            isFullyAssigned
-                              ? 'border-white/[0.04] opacity-50'
-                              : 'border-white/[0.08] hover:border-[#7C6CF2]/40'
-                          }`}
+                          className="bg-[#121722] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2 transition-all"
                         >
                           <div className="flex items-center gap-2 flex-wrap flex-1">
                             <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px] font-mono">
@@ -167,16 +162,8 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                             <span className={`shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-medium leading-none inline-flex items-center justify-center ${getConditionColor(entry.condition)}`}>
                               {entry.condition}
                             </span>
-                            <span
-                              className={`shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center ${
-                                isFullyAssigned
-                                  ? 'bg-white/[0.04] text-zinc-500 border border-white/[0.06]'
-                                  : 'bg-white/[0.06] text-zinc-200 border border-white/[0.08]'
-                              }`}
-                            >
-                              {isFullyAssigned
-                                ? `0 of ${entry.quantity} available`
-                                : `${availableQuantity} of ${entry.quantity} avail @ ${formatCurrency(unitCost)}`}
+                            <span className="bg-white/[0.06] text-zinc-200 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center">
+                              {availableQuantity} available @ {formatCurrency(unitCost)}
                             </span>
                             {!hideSupplierNames && entry.platform && (
                               <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px]">
@@ -185,16 +172,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                             )}
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
-                            {isFullyAssigned ? (
-                              <button
-                                type="button"
-                                disabled
-                                className="bg-white/[0.04] text-zinc-500 border border-white/[0.06] cursor-not-allowed opacity-50 shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium"
-                              >
-                                Assigned
-                              </button>
-                            ) : (
-                              <button
+                            <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -212,7 +190,6 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                               >
                                 Assign
                               </button>
-                            )}
                           </div>
                         </div>
                       );
