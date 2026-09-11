@@ -257,7 +257,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                             {entry.condition}
                           </span>
                           <span className="bg-white/[0.06] text-zinc-200 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold leading-none inline-flex items-center justify-center">
-                            {entry.availableQty} of {entry.quantity} available @ {formatCurrency(entry.unitPrice)}
+                            {entry.availableQty} available @ {formatCurrency(entry.unitPrice)}
                           </span>
                           {!hideSupplierNames && entry.platform && (
                             <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px]">
