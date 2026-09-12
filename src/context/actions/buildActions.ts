@@ -260,6 +260,108 @@ export const handleUpdateBuild = (
   };
 };
 
+type BuildPartMutationResult = {
+  nextState: AppState;
+  success: boolean;
+  error?: string;
+};
+
+/**
+ * Keeps a sold build's exact linked sale transaction in sync after an allocated
+ * part mutation. The mutation remains atomic: invalid or ambiguous sale linkage
+ * discards the entire candidate state rather than leaving accounting snapshots
+ * stale.
+ */
+const finalizeBuildPartMutation = (
+  prev: AppState,
+  candidate: AppState,
+  buildId: string
+): BuildPartMutationResult => {
+  const originalBuild = prev.builds.find((build) => build.id === buildId);
+  if (!originalBuild || originalBuild.status !== 'Sold') {
+    return { nextState: candidate, success: true };
+  }
+
+  const linkResult = findLinkedSaleTransaction(originalBuild, prev.transactions);
+  if (!linkResult.transaction) {
+    return {
+      nextState: prev,
+      success: false,
+      error: `Cannot modify sold build parts: ${linkResult.error || 'Sale transaction not found.'}`,
+    };
+  }
+
+  const linkedSale = linkResult.transaction;
+  const anotherBuildClaimsSale = prev.builds.some(
+    (build) => build.id !== buildId && build.saleTransactionId === linkedSale.id
+  );
+  if (anotherBuildClaimsSale) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Cannot modify sold build parts: Another build references the linked sale transaction.',
+    };
+  }
+
+  if (
+    typeof linkedSale.totalAmount !== 'number' ||
+    !Number.isFinite(linkedSale.totalAmount) ||
+    linkedSale.totalAmount < 0
+  ) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Cannot modify sold build parts: Linked sale amount is invalid.',
+    };
+  }
+
+  const updatedBuild = candidate.builds.find((build) => build.id === buildId);
+  if (!updatedBuild || updatedBuild.status !== 'Sold') {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Cannot modify sold build parts: Updated sold build was not found.',
+    };
+  }
+
+  const updatedCost = calculateBuildPartsCost(updatedBuild);
+  if (!Number.isFinite(updatedCost) || updatedCost < 0) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Cannot modify sold build parts: Updated build cost is invalid.',
+    };
+  }
+
+  const presentation = getBuildPresentation(updatedBuild, candidate.components);
+  const detailsList = presentation.allComponents.map(
+    (part) => `${part.quantity}x ${part.name} (${formatCurrency(part.unitCost)}/ea)`
+  );
+
+  return {
+    nextState: {
+      ...candidate,
+      builds: candidate.builds.map((build) =>
+        build.id === buildId && build.saleTransactionId !== linkedSale.id
+          ? { ...build, saleTransactionId: linkedSale.id }
+          : build
+      ),
+      transactions: candidate.transactions.map((transaction) =>
+        transaction.id === linkedSale.id
+          ? {
+              ...transaction,
+              itemCount: presentation.lineCount,
+              quantity: presentation.totalQuantity,
+              detailsList,
+              profitMargin: linkedSale.totalAmount - updatedCost,
+            }
+          : transaction
+      ),
+    },
+    success: true,
+  };
+};
+
 export const handleAllocatePartToBuild = (
   prev: AppState,
   buildId: string,
@@ -270,10 +372,6 @@ export const handleAllocatePartToBuild = (
   const targetBuild = prev.builds.find((b) => b.id === buildId);
   if (!targetBuild) {
     return { nextState: prev, success: false, error: 'Target build not found.' };
-  }
-
-  if (targetBuild.status === 'Sold') {
-    return { nextState: prev, success: false, error: 'Cannot allocate parts to a sold build.' };
   }
 
   const targetComp = prev.components.find((c) => c.id === componentId);
@@ -411,14 +509,15 @@ export const handleAllocatePartToBuild = (
     return comp;
   });
 
-  return {
-    nextState: {
+  return finalizeBuildPartMutation(
+    prev,
+    {
       ...prev,
       builds: updatedBuilds,
       components: updatedComponents,
     },
-    success: true,
-  };
+    buildId
+  );
 };
 
 export const resolveUniqueAllocationIndex = (
@@ -452,10 +551,6 @@ export const handleRemovePartFromBuild = (
   const targetBuild = prev.builds.find((b) => b.id === buildId);
   if (!targetBuild) {
     return { nextState: prev, success: false, error: 'Target build not found.' };
-  }
-
-  if (targetBuild.status === 'Sold') {
-    return { nextState: prev, success: false, error: 'Cannot remove parts from a sold build.' };
   }
 
   const matches: number[] = [];
@@ -558,14 +653,204 @@ export const handleRemovePartFromBuild = (
     return comp;
   });
 
-  return {
-    nextState: {
+  return finalizeBuildPartMutation(
+    prev,
+    {
       ...prev,
       builds: updatedBuilds,
       components: updatedComponents,
     },
-    success: true,
-  };
+    buildId
+  );
+};
+
+export const handleUpdateBuildPartQuantity = (
+  prev: AppState,
+  buildId: string,
+  componentId: string,
+  purchaseEntryId: string | undefined,
+  newQuantity: number
+): BuildPartMutationResult => {
+  if (
+    typeof newQuantity !== 'number' ||
+    !Number.isFinite(newQuantity) ||
+    !Number.isInteger(newQuantity) ||
+    newQuantity <= 0
+  ) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Build part quantity must be a finite positive whole number.',
+    };
+  }
+
+  const targetBuild = prev.builds.find((build) => build.id === buildId);
+  if (!targetBuild) {
+    return { nextState: prev, success: false, error: 'Target build not found.' };
+  }
+
+  const matchingIndexes: number[] = [];
+  targetBuild.parts.forEach((part, index) => {
+    if (part.componentId !== componentId) return;
+    if (purchaseEntryId !== undefined && purchaseEntryId !== '') {
+      if (part.purchaseEntryId === purchaseEntryId) matchingIndexes.push(index);
+    } else if (!part.purchaseEntryId) {
+      matchingIndexes.push(index);
+    }
+  });
+
+  if (matchingIndexes.length === 0) {
+    return { nextState: prev, success: false, error: 'Allocated part not found in build.' };
+  }
+  if (matchingIndexes.length > 1) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Ambiguous allocation: multiple matching parts found.',
+    };
+  }
+
+  const partIndex = matchingIndexes[0];
+  const currentPart = targetBuild.parts[partIndex];
+  if (
+    typeof currentPart.quantity !== 'number' ||
+    !Number.isFinite(currentPart.quantity) ||
+    !Number.isInteger(currentPart.quantity) ||
+    currentPart.quantity <= 0
+  ) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Stored build part quantity must be a finite positive whole number.',
+    };
+  }
+  if (
+    typeof currentPart.unitCostAtAssignment !== 'number' ||
+    !Number.isFinite(currentPart.unitCostAtAssignment) ||
+    currentPart.unitCostAtAssignment < 0
+  ) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Stored build part unit cost must be a finite non-negative number.',
+    };
+  }
+
+  if (newQuantity === currentPart.quantity) {
+    return { nextState: prev, success: true };
+  }
+
+  const targetComponent = prev.components.find((component) => component.id === componentId);
+  if (!targetComponent) {
+    return { nextState: prev, success: false, error: 'Component not found.' };
+  }
+  if (
+    typeof targetComponent.assignedCount !== 'number' ||
+    !Number.isFinite(targetComponent.assignedCount) ||
+    !Number.isInteger(targetComponent.assignedCount) ||
+    targetComponent.assignedCount < 0
+  ) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Component assigned count must be a finite non-negative whole number.',
+    };
+  }
+
+  const quantityDelta = newQuantity - currentPart.quantity;
+  const nextAssignedCount = targetComponent.assignedCount + quantityDelta;
+  if (nextAssignedCount < 0) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Component assigned count is lower than the requested quantity reduction.',
+    };
+  }
+
+  let nextUnitCost = currentPart.unitCostAtAssignment;
+  if (quantityDelta > 0) {
+    if (!currentPart.purchaseEntryId) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Cannot increase an unlinked legacy allocation without an exact purchase batch.',
+      };
+    }
+
+    const purchaseEntry = (targetComponent.purchaseHistory || []).find(
+      (entry) => entry.id === currentPart.purchaseEntryId
+    );
+    if (!purchaseEntry) {
+      return { nextState: prev, success: false, error: 'Purchase entry not found in component.' };
+    }
+    if (
+      typeof purchaseEntry.quantity !== 'number' ||
+      !Number.isFinite(purchaseEntry.quantity) ||
+      !Number.isInteger(purchaseEntry.quantity) ||
+      purchaseEntry.quantity <= 0
+    ) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Purchase entry quantity must be a finite positive whole number.',
+      };
+    }
+    if (
+      typeof purchaseEntry.unitPrice !== 'number' ||
+      !Number.isFinite(purchaseEntry.unitPrice) ||
+      purchaseEntry.unitPrice < 0
+    ) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Purchase entry unit price must be a finite non-negative number.',
+      };
+    }
+
+    const remainingQuantity = getPurchaseEntryRemainingQuantity(
+      targetComponent,
+      currentPart.purchaseEntryId,
+      prev.builds
+    );
+    if (quantityDelta > remainingQuantity) {
+      return {
+        nextState: prev,
+        success: false,
+        error: `Requested increase (${quantityDelta}) exceeds available batch stock (${remainingQuantity}).`,
+      };
+    }
+
+    nextUnitCost =
+      (currentPart.quantity * currentPart.unitCostAtAssignment +
+        quantityDelta * purchaseEntry.unitPrice) /
+      newQuantity;
+  }
+
+  const updatedBuilds = prev.builds.map((build) => {
+    if (build.id !== buildId) return build;
+    const updatedParts = [...build.parts];
+    updatedParts[partIndex] = {
+      ...updatedParts[partIndex],
+      quantity: newQuantity,
+      unitCostAtAssignment: nextUnitCost,
+    };
+    return { ...build, parts: updatedParts };
+  });
+  const updatedComponents = prev.components.map((component) =>
+    component.id === componentId
+      ? { ...component, assignedCount: nextAssignedCount }
+      : component
+  );
+
+  return finalizeBuildPartMutation(
+    prev,
+    {
+      ...prev,
+      builds: updatedBuilds,
+      components: updatedComponents,
+    },
+    buildId
+  );
 };
 
 export const handleSwapPartInBuild = (
@@ -593,10 +878,6 @@ export const handleSwapPartInBuild = (
   const targetBuild = prev.builds.find((b) => b.id === buildId);
   if (!targetBuild) {
     return { nextState: prev, success: false, error: 'Target build not found.' };
-  }
-
-  if (targetBuild.status === 'Sold') {
-    return { nextState: prev, success: false, error: 'Cannot swap parts in a sold build.' };
   }
 
   const matches: number[] = [];
@@ -862,14 +1143,15 @@ export const handleSwapPartInBuild = (
     return comp;
   });
 
-  return {
-    nextState: {
+  return finalizeBuildPartMutation(
+    prev,
+    {
       ...prev,
       builds: updatedBuilds,
       components: updatedComponents,
     },
-    success: true,
-  };
+    buildId
+  );
 };
 
 export const validateSwapInBuild = (

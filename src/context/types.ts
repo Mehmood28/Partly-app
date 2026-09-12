@@ -143,6 +143,12 @@ export interface InventoryContextType {
     componentId: string,
     purchaseEntryId?: string
   ) => { success: boolean; error?: string };
+  updateBuildPartQuantity: (
+    buildId: string,
+    componentId: string,
+    purchaseEntryId: string | undefined,
+    quantity: number
+  ) => { success: boolean; error?: string };
   swapPartInBuild: (
     buildId: string,
     oldComponentId: string,

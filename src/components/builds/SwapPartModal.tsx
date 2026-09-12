@@ -307,7 +307,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         <ConfirmModal
           isOpen={!!pendingSwap}
           title="Swap Component in Build?"
-          message={`Swap out "${currentPart.componentName}" and assign "${pendingSwap.componentName}" (${pendingSwap.condition}, purchased on ${pendingSwap.date} @ ${formatCurrency(pendingSwap.unitPrice)}) in "${build.name}"? The current part will return to loose stock.`}
+          message={`Swap out "${currentPart.componentName}" and assign "${pendingSwap.componentName}" (${pendingSwap.condition}, purchased on ${pendingSwap.date} @ ${formatCurrency(pendingSwap.unitPrice)}) in "${build.name}"? The current part will return to loose stock.${build.status === 'Sold' ? ' The recorded sold-build cost and profit will be updated.' : ''}`}
           confirmText="Swap Part"
           variant="violet"
           onConfirm={() => {

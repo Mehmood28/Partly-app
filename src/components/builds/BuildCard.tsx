@@ -10,6 +10,7 @@ import { useInventory } from '../../context/InventoryContext';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { useToast } from '../../context/ToastContext';
 import { SwapPartModal } from './SwapPartModal';
+import { EditBuildPartQuantityModal } from './EditBuildPartQuantityModal';
 import { BuildShareImageCard } from './BuildShareImageCard';
 import { shareBuildImageToDiscord } from './discordShareHelpers';
 import { SoldBuildTransactionPanel } from './SoldBuildTransactionPanel';
@@ -61,6 +62,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     else setInternalIsExpanded(!internalIsExpanded);
   };
   const [swapPartData, setSwapPartData] = useState<PCBuildPart | null>(null);
+  const [quantityPartData, setQuantityPartData] = useState<PCBuildPart | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Confirmation modal state
@@ -585,42 +587,50 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                                 {part.componentName}
                               </span>
                               <div className="flex items-center gap-1 shrink-0">
-                                {!isSold && (
-                                  <>
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); setSwapPartData(part); }}
-                                      className="text-zinc-400 hover:text-[#7C6CF2] p-1 rounded-lg hover:bg-white/[0.04] transition-colors"
-                                      title="Swap Part"
-                                    >
-                                      <ArrowRightLeft className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setConfirmModalConfig({
-                                          isOpen: true,
-                                          title: 'Remove Allocated Part?',
-                                          message: `Remove "${part.componentName}" from "${build.name}"? The part will return to loose stock.`,
-                                          confirmText: 'Remove Part',
-                                          variant: 'danger',
-                                          onConfirm: () => {
-                                            setConfirmModalConfig(null);
-                                            const result = removePart(build.id, part.componentId, part.purchaseEntryId);
-                                            if (!result.success) {
-                                              showToast(result.error || 'Failed to remove part from build.', 'error');
-                                              return;
-                                            }
-                                            showToast(`Removed "${part.componentName}" from "${build.name}".`, 'success');
-                                          },
-                                        });
-                                      }}
-                                      className="text-zinc-400 hover:text-rose-400 p-1 rounded-lg hover:bg-white/[0.04] transition-colors"
-                                      title="Remove Part"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </>
-                                )}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setSwapPartData(part); }}
+                                  className="text-zinc-400 hover:text-[#7C6CF2] p-1 rounded-lg hover:bg-white/[0.04] transition-colors"
+                                  title="Swap Part"
+                                  aria-label={`Swap ${part.componentName}`}
+                                >
+                                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setQuantityPartData(part); }}
+                                  className="text-zinc-400 hover:text-[#7C6CF2] p-1 rounded-lg hover:bg-white/[0.04] transition-colors"
+                                  title="Change Quantity"
+                                  aria-label={`Change quantity for ${part.componentName}`}
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setConfirmModalConfig({
+                                      isOpen: true,
+                                      title: 'Remove Allocated Part?',
+                                      message: isSold
+                                        ? `Remove "${part.componentName}" from sold build "${build.name}"? The part will return to loose stock and the recorded build cost and profit will be updated.`
+                                        : `Remove "${part.componentName}" from "${build.name}"? The part will return to loose stock.`,
+                                      confirmText: 'Remove Part',
+                                      variant: 'danger',
+                                      onConfirm: () => {
+                                        setConfirmModalConfig(null);
+                                        const result = removePart(build.id, part.componentId, part.purchaseEntryId);
+                                        if (!result.success) {
+                                          showToast(result.error || 'Failed to remove part from build.', 'error');
+                                          return;
+                                        }
+                                        showToast(`Removed "${part.componentName}" from "${build.name}".`, 'success');
+                                      },
+                                    });
+                                  }}
+                                  className="text-zinc-400 hover:text-rose-400 p-1 rounded-lg hover:bg-white/[0.04] transition-colors"
+                                  title="Remove Part"
+                                  aria-label={`Remove ${part.componentName}`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </div>
                             <div className="flex items-center gap-1.5 flex-wrap mt-1.5 font-mono">
@@ -667,6 +677,17 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               )}
             </div>
           </div>
+
+          {isSold && (
+            <div className="border-t border-white/[0.08] pt-3">
+              <button
+                onClick={(e) => { e.stopPropagation(); onAllocate(build); }}
+                className="w-full bg-[#0D1118] hover:bg-white/[0.04] text-zinc-200 text-xs font-medium py-1.5 px-3 rounded-xl border border-white/[0.08] flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <PlusCircle className="w-3.5 h-3.5 text-[#7C6CF2]" /> Add Part
+              </button>
+            </div>
+          )}
 
           {/* Build Financial Summary Footer (for available/pending-sale builds) */}
           {!isSold && (
@@ -793,6 +814,13 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           build={build} 
           currentPart={swapPartData} 
           onClose={() => setSwapPartData(null)} 
+        />
+      )}
+      {quantityPartData && (
+        <EditBuildPartQuantityModal
+          build={build}
+          part={quantityPartData}
+          onClose={() => setQuantityPartData(null)}
         />
       )}
 

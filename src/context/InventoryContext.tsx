@@ -37,6 +37,7 @@ import {
   handleUpdateBuild,
   handleAllocatePartToBuild,
   handleRemovePartFromBuild,
+  handleUpdateBuildPartQuantity,
   handleSwapPartInBuild,
   handleSellBuild,
   handleRelistBuild,
@@ -490,6 +491,53 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [saveStateToHistory, stateRef]
   );
 
+  const updateBuildPartQuantity = useCallback(
+    (
+      buildId: string,
+      componentId: string,
+      purchaseEntryId: string | undefined,
+      quantity: number
+    ): { success: boolean; error?: string } => {
+      const current = stateRef.current;
+      const build = current.builds.find((candidate) => candidate.id === buildId);
+      if (!build) return { success: false, error: 'Target build not found.' };
+
+      const matchingPart = build.parts.find((part) =>
+        part.componentId === componentId &&
+        (purchaseEntryId
+          ? part.purchaseEntryId === purchaseEntryId
+          : !part.purchaseEntryId)
+      );
+      const previousQuantity = matchingPart?.quantity;
+
+      const result = handleUpdateBuildPartQuantity(
+        current,
+        buildId,
+        componentId,
+        purchaseEntryId,
+        quantity
+      );
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
+
+      if (result.nextState !== current) {
+        const component = current.components.find((candidate) => candidate.id === componentId);
+        const componentName = component?.name || matchingPart?.componentName || 'Part';
+        const quantityChange = previousQuantity !== undefined
+          ? ` (${previousQuantity} → ${quantity})`
+          : '';
+        saveStateToHistory(
+          `Change quantity: ${componentName} in ${build.name}${quantityChange}`
+        );
+        setState(result.nextState);
+      }
+
+      return { success: true };
+    },
+    [saveStateToHistory, stateRef]
+  );
+
   const swapPartInBuild = useCallback(
     (
       buildId: string,
@@ -797,6 +845,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       updateBuild,
       allocatePartToBuild,
       removePartFromBuild,
+      updateBuildPartQuantity,
       swapPartInBuild,
       sellBuild,
       relistBuild,
@@ -842,6 +891,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       updateBuild,
       allocatePartToBuild,
       removePartFromBuild,
+      updateBuildPartQuantity,
       swapPartInBuild,
       sellBuild,
       relistBuild,

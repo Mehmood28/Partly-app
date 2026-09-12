@@ -27,6 +27,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [expandedPartId, setExpandedPartId] = useState<string | null>(null);
+  const [allocationQuantities, setAllocationQuantities] = useState<Record<string, string>>({});
   const [pendingAllocation, setPendingAllocation] = useState<{
     componentId: string;
     componentName: string;
@@ -83,6 +84,11 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
         <p className="text-xs text-zinc-400 font-sans">
           Select an available component from inventory to assign to{' '}
           <strong className="text-zinc-200">{build.name}</strong>.
+          {build.status === 'Sold' && (
+            <span className="block mt-1 text-amber-300">
+              Adding to a sold build will update its recorded cost and profit.
+            </span>
+          )}
         </p>
 
         <InventoryFilterBar
@@ -150,10 +156,12 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                 {isExpanded && (
                   <div className="border-t border-white/[0.08] bg-[#0D1118] p-3 space-y-2">
                     {availableBatches.map(({ entry, availableQuantity, unitCost }) => {
+                      const quantityKey = `${comp.id}:${entry.id}`;
+                      const quantityValue = allocationQuantities[quantityKey] ?? '1';
                       return (
                         <div
                           key={entry.id}
-                          className="bg-[#121722] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2 transition-all"
+                          className="bg-[#121722] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl p-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all"
                         >
                           <div className="flex items-center gap-2 flex-wrap flex-1">
                             <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px] font-mono">
@@ -171,11 +179,41 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                          <div className="flex items-center justify-end gap-1.5 shrink-0 self-end sm:self-auto w-full sm:w-auto">
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="1"
+                              max={availableQuantity}
+                              step="1"
+                              value={quantityValue}
+                              onChange={(event) => {
+                                const value = event.target.value;
+                                setAllocationQuantities((current) => ({
+                                  ...current,
+                                  [quantityKey]: value,
+                                }));
+                              }}
+                              aria-label={`Quantity of ${comp.name} to assign`}
+                              className="w-16 h-8 bg-[#0D1118] border border-white/[0.1] rounded-lg px-2 text-center text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40"
+                            />
                             <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  const requestedQuantity = Number(quantityValue);
+                                  if (
+                                    !Number.isFinite(requestedQuantity) ||
+                                    !Number.isInteger(requestedQuantity) ||
+                                    requestedQuantity <= 0
+                                  ) {
+                                    showToast('Quantity must be a positive whole number.', 'error');
+                                    return;
+                                  }
+                                  if (requestedQuantity > availableQuantity) {
+                                    showToast(`Only ${availableQuantity} available from this batch.`, 'error');
+                                    return;
+                                  }
                                   setPendingAllocation({
                                     componentId: comp.id,
                                     componentName: comp.name,
@@ -183,7 +221,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                                     condition: entry.condition,
                                     date: entry.date,
                                     unitCost,
-                                    quantity: Math.min(1, availableQuantity),
+                                    quantity: requestedQuantity,
                                   });
                                 }}
                                 className="bg-[#7C6CF2] hover:bg-[#8D7FF5] text-white shadow-sm shadow-[#7C6CF2]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
@@ -206,7 +244,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
         <ConfirmModal
           isOpen={!!pendingAllocation}
           title="Assign Component to Build?"
-          message={`Assign ${pendingAllocation.quantity}x "${pendingAllocation.componentName}" (${pendingAllocation.condition}, purchased on ${pendingAllocation.date} @ ${formatCurrency(pendingAllocation.unitCost)}) to "${build.name}"?`}
+          message={`Assign ${pendingAllocation.quantity}x "${pendingAllocation.componentName}" (${pendingAllocation.condition}, purchased on ${pendingAllocation.date} @ ${formatCurrency(pendingAllocation.unitCost)}) to "${build.name}"?${build.status === 'Sold' ? ' This will update the sold build cost and recorded profit.' : ''}`}
           confirmText="Assign Part"
           variant="violet"
           onConfirm={() => {

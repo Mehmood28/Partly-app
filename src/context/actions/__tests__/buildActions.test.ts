@@ -468,11 +468,12 @@ describe('handleAllocatePartToBuild validation and integrity', () => {
     expect(resMissingEntry.nextState).toBe(state);
   });
 
-  it('rejects allocation to a Sold build and preserves original state reference', () => {
+  it('rejects allocation to a Sold build without an exact sale transaction', () => {
     const state = getTestState();
     const res = handleAllocatePartToBuild(state, 'b-sold', 'c1', 'pe1', 1);
     expect(res.success).toBe(false);
-    expect(res.error).toBe('Cannot allocate parts to a sold build.');
+    expect(res.error).toContain('Cannot modify sold build parts:');
+    expect(res.error).toContain('No sale transaction was found');
     expect(res.nextState).toBe(state);
   });
 
@@ -810,11 +811,12 @@ describe('handleRemovePartFromBuild validation and integrity', () => {
     expect(res.nextState).toBe(state);
   });
 
-  it('rejects removal from a Sold build and preserves original state reference', () => {
+  it('rejects removal from a Sold build without an exact sale transaction', () => {
     const state = getTestState();
     const res = handleRemovePartFromBuild(state, 'b-sold', 'c1', 'pe1');
     expect(res.success).toBe(false);
-    expect(res.error).toBe('Cannot remove parts from a sold build.');
+    expect(res.error).toContain('Cannot modify sold build parts:');
+    expect(res.error).toContain('No sale transaction was found');
     expect(res.nextState).toBe(state);
   });
 
@@ -1263,12 +1265,46 @@ describe('handleSwapPartInBuild validation and integrity', () => {
     expect(res.nextState).toBe(state);
   });
 
-  it('rejects Sold target build', () => {
+  it('rejects a valid Sold-build swap when the exact sale transaction is missing', () => {
     const state = getTestState();
-    const res = handleSwapPartInBuild(state, 'b-sold', 'c3', 'pe4', 'c2', 'pe3', 1);
+    const stateWithCpuReplacement: AppState = {
+      ...state,
+      components: [
+        ...state.components,
+        {
+          id: 'c4',
+          name: 'AMD Ryzen 9 7900X',
+          category: 'CPU',
+          specifications: '12-Core 24-Thread',
+          assignedCount: 0,
+          purchaseHistory: [
+            {
+              id: 'pe5',
+              date: '2026-07-12',
+              condition: 'Used',
+              quantity: 1,
+              unitPrice: 300,
+              totalPrice: 300,
+              paymentMethod: 'Cash',
+              platform: 'Local',
+            },
+          ],
+        },
+      ],
+    };
+    const res = handleSwapPartInBuild(
+      stateWithCpuReplacement,
+      'b-sold',
+      'c3',
+      'pe4',
+      'c4',
+      'pe5',
+      1
+    );
     expect(res.success).toBe(false);
-    expect(res.error).toBe('Cannot swap parts in a sold build.');
-    expect(res.nextState).toBe(state);
+    expect(res.error).toContain('Cannot modify sold build parts:');
+    expect(res.error).toContain('No sale transaction was found');
+    expect(res.nextState).toBe(stateWithCpuReplacement);
   });
 
   it('rejects non-existent outgoing allocation', () => {
