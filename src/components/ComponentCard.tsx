@@ -14,6 +14,7 @@ import {
   getPaymentMethodBadgeColor,
   getUnassignedBatches,
 } from '../utils/helpers';
+import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin } from '../utils/tradeInOrigin';
 import {
   ChevronDown,
   ChevronUp,
@@ -246,6 +247,10 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                         (tx.incomingComponentId === component.id || tx.incomingComponentId === (entry as any)._originalComponentId) &&
                         tx.incomingPurchaseEntryId === entry.id
                     );
+                    const isPartedOutTradeInBatch = isPartedOutTradeInEntry(entry);
+                    const tradeInOrigin = isPartedOutTradeInBatch
+                      ? resolvePartedOutEntryOrigin(entry, state.transactions, state.builds)
+                      : null;
 
                     return (
                       <div
@@ -264,18 +269,25 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                               TRADE UP
                             </span>
                           )}
+                          {isPartedOutTradeInBatch && (
+                            <span className="bg-purple-500/15 text-purple-300 border border-purple-500/30 shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+                              {tradeInOrigin?.buyerName
+                                ? `TRADE-IN: ${tradeInOrigin.buyerName}`
+                                : 'TRADE-IN'}
+                            </span>
+                          )}
                           <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                             {batch.availableQuantity}x @ {formatCurrency(entryUnitPrice)}
                           </span>
                           <span className="bg-white/[0.06] text-zinc-200 border border-white/[0.1] shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                             Total: {formatCurrency(entryTotal)}
                           </span>
-                          {!hideSupplierNames && entry.platform && (
+                          {!isPartedOutTradeInBatch && !hideSupplierNames && entry.platform && (
                             <span className={`${getPlatformBadgeColor(entry.platform)} shrink-0 whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
                               {String(entry.platform)}
                             </span>
                           )}
-                          {entry.paymentMethod && (
+                          {!isPartedOutTradeInBatch && entry.paymentMethod && (
                             <span className={`${getPaymentMethodBadgeColor(entry.paymentMethod)} shrink-0 whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
                               {String(entry.paymentMethod)}
                             </span>

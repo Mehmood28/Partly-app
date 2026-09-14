@@ -12,6 +12,9 @@ export interface BuildSpecsMap {
   Case?: string;
 }
 
+export const hasShareableBuildImage = (build: Pick<PCBuild, 'imageUrl'>): boolean =>
+  typeof build.imageUrl === 'string' && build.imageUrl.trim().length > 0;
+
 export function cleanSpecValue(val: string): string {
   if (!val) return '';
   let cleaned = val

@@ -154,6 +154,26 @@ describe('Phase 3A - handleSellBuild Domain Validation', () => {
   });
 
   describe('platform and payment method validation', () => {
+    it('stores the buyer on both the sold build and its exact sale transaction', () => {
+      const state = getMockState();
+      const res = handleSellBuild(state, 'b-active', {
+        salePrice: 1000,
+        saleDate: '2026-07-20',
+        platformSoldOn: 'Facebook',
+        paymentMethod: 'Cash',
+        buyerName: 'Balraj Shah',
+      });
+
+      expect(res.success).toBe(true);
+      const soldBuild = res.nextState.builds.find((build) => build.id === 'b-active');
+      const saleTransaction = res.nextState.transactions.find(
+        (transaction) => transaction.id === soldBuild?.saleTransactionId
+      );
+      expect(soldBuild?.buyerName).toBe('Balraj Shah');
+      expect(saleTransaction?.buyerName).toBe('Balraj Shah');
+      expect(saleTransaction?.relatedComponentId).toBe('b-active');
+    });
+
     it('rejects empty or whitespace platformSoldOn and trims valid platform', () => {
       const state = getMockState();
       const resEmpty = handleSellBuild(state, 'b-active', {

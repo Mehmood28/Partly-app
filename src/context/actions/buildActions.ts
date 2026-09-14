@@ -1655,6 +1655,7 @@ export const handleSellBuild = (
     profitMargin: profit,
     platform: finalPlatformSoldOn,
     paymentMethod: saleData.paymentMethod,
+    buyerName: saleData.buyerName,
     itemNameOrSummary: targetBuild.name,
     detailsList: partsSummary,
     relatedComponentId: targetBuild.id,

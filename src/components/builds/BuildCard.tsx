@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
-import { CircuitBoard, Zap, Fan, Package, CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, Cpu, Monitor, HardDrive, Database, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench } from 'lucide-react';
+import { CircuitBoard, Zap, Fan, Package, CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, Cpu, Monitor, HardDrive, Database, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar } from 'lucide-react';
 import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getConditionColor, getCategoryBadgeColor, getTagBadgeColor, getPlatformBadgeColor, getPaymentMethodBadgeColor } from '../../utils/helpers';
 import { generateInvoice } from '../../utils/invoiceGenerator';
 import { executeCopyAdConfirmation } from '../../utils/copyAdHelper';
@@ -12,7 +12,7 @@ import { useToast } from '../../context/ToastContext';
 import { SwapPartModal } from './SwapPartModal';
 import { EditBuildPartQuantityModal } from './EditBuildPartQuantityModal';
 import { BuildShareImageCard } from './BuildShareImageCard';
-import { shareBuildImageToDiscord } from './discordShareHelpers';
+import { hasShareableBuildImage, shareBuildImageToDiscord } from './discordShareHelpers';
 import { SoldBuildTransactionPanel } from './SoldBuildTransactionPanel';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { ConfirmModal } from '../ConfirmModal';
@@ -20,6 +20,7 @@ import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { canDeleteBuildDraft, canDismantleBuild, canPartOutTradeInBuild, canMoveToTradeIns } from '../../utils/buildEligibility';
 import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
 import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
+import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
 
 interface BuildCardProps {
   isExpanded?: boolean;
@@ -86,8 +87,16 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const partsCost = calculateBuildPartsCost(build);
   const isSold = build.status === 'Sold';
   const isTradeIn = build.acquisitionSource === 'Trade-In';
+  const hasBuildImage = hasShareableBuildImage(build);
+  const tradeInOrigin = isTradeIn
+    ? resolveTradeInBuildOrigin(build, state.transactions, state.builds)
+    : null;
+  const tradeInOriginDate = tradeInOrigin?.date
+    ? formatReadableDate(tradeInOrigin.date) || tradeInOrigin.date
+    : undefined;
 
   const executeShareImageDiscord = async () => {
+    if (!hasBuildImage) return;
     if (imageShareStatus === 'loading' || imageShareStatus === 'success') return;
     if (!imageCardRef.current) return;
     setImageShareStatus('loading');
@@ -113,6 +122,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
 
   const handleShareImageDiscord = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!hasBuildImage) return;
     if (imageShareStatus === 'loading' || imageShareStatus === 'success') return;
     setConfirmModalConfig({
       isOpen: true,
@@ -224,25 +234,27 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 )}
               </div>
               
-              <span
-                className={`text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border shrink-0 mt-0.5 leading-none ${
-                  isSold
-                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
-                    : isListed
-                    ? 'bg-[#7C6CF2]/15 text-[#9D91FA] border-[#7C6CF2]/30'
+              {!(isTradeIn && build.status === 'Trade-In Processing') && (
+                <span
+                  className={`text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border shrink-0 mt-0.5 leading-none ${
+                    isSold
+                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                      : isListed
+                      ? 'bg-[#7C6CF2]/15 text-[#9D91FA] border-[#7C6CF2]/30'
+                      : build.status === 'Trade-In Processing'
+                      ? 'bg-purple-500/15 text-purple-400 border-purple-500/40'
+                      : 'bg-blue-500/15 text-blue-400 border-blue-500/40'
+                  }`}
+                >
+                  {build.status === 'Listed for Sale'
+                    ? 'Available'
+                    : build.status === 'In Progress'
+                    ? 'Pending'
                     : build.status === 'Trade-In Processing'
-                    ? 'bg-purple-500/15 text-purple-400 border-purple-500/40'
-                    : 'bg-blue-500/15 text-blue-400 border-blue-500/40'
-                }`}
-              >
-                {build.status === 'Listed for Sale'
-                  ? 'Available'
-                  : build.status === 'In Progress'
-                  ? 'Pending'
-                  : build.status === 'Trade-In Processing'
-                  ? 'Processing'
-                  : build.status}
-              </span>
+                    ? 'Processing'
+                    : build.status}
+                </span>
+              )}
             </div>
 
             {/* Quick Financial Summary (Collapsed) */}
@@ -412,15 +424,21 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 <button
                   type="button"
                   onClick={handleShareImageDiscord}
-                  disabled={imageShareStatus === 'loading' || imageShareStatus === 'success'}
+                  disabled={!hasBuildImage || imageShareStatus === 'loading' || imageShareStatus === 'success'}
                   className={`border px-2.5 py-1 rounded-lg text-xs transition-colors flex items-center gap-1 font-medium ${
-                    imageShareStatus === 'success'
+                    !hasBuildImage
+                      ? 'border-white/[0.05] text-zinc-600 bg-[#0D1118]/60 cursor-not-allowed opacity-60'
+                      : imageShareStatus === 'success'
                       ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10 cursor-default'
                       : imageShareStatus === 'error'
                       ? 'border-rose-500/40 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20'
                       : 'border-white/[0.08] text-zinc-200 bg-[#0D1118] hover:border-[#7C6CF2]/40'
                   }`}
-                  title={imageShareError || 'Share build as rendered image to Discord'}
+                  title={
+                    !hasBuildImage
+                      ? 'Add a build image to enable sharing'
+                      : imageShareError || 'Share build as rendered image to Discord'
+                  }
                 >
                   {imageShareStatus === 'loading' ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7C6CF2]" />
@@ -459,6 +477,27 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               </div>
             )}
           </div>
+
+          {isTradeIn && tradeInOrigin && (tradeInOrigin.buyerName || tradeInOriginDate) && (
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-[#0D1118] p-2.5 rounded-xl border border-white/[0.08] min-w-0">
+                <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-purple-400 shrink-0" /> Traded In By
+                </div>
+                <div className="text-zinc-200 font-medium truncate text-xs">
+                  {tradeInOrigin.buyerName || 'N/A'}
+                </div>
+              </div>
+              <div className="bg-[#0D1118] p-2.5 rounded-xl border border-white/[0.08] min-w-0">
+                <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-purple-400 shrink-0" /> Trade-In Date
+                </div>
+                <div className="text-zinc-200 font-medium truncate font-mono text-xs">
+                  {tradeInOriginDate || 'N/A'}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Sold-Build Full Transaction & Financials Panel */}
           {isSold && (
@@ -504,46 +543,33 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   {build.tradeInComponentBreakdown.map((part, idx) => (
                     <div
                       key={part.id || idx}
-                      className="flex flex-wrap sm:flex-nowrap items-center justify-between p-2 rounded-xl bg-[#0D1118] border border-white/[0.08] text-xs gap-3"
+                      className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-2.5 flex items-start gap-2.5 text-xs"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <div
-                          className="w-1.5 h-6 rounded-full shrink-0"
-                          style={{ backgroundColor: getCategoryBadgeColor(part.category).replace('text-', 'bg-').split(' ')[0] }}
-                        />
-                        <div className="min-w-0">
-                          <div className="font-medium text-zinc-200 truncate pr-2 flex items-center gap-2">
-                            <span>{part.name}</span>
-                            {part.quantity > 1 && (
-                              <span className="text-[10px] text-zinc-400 font-mono">
-                                x{part.quantity}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-zinc-500 truncate mt-0.5 flex items-center gap-1.5">
-                            <span className="text-[10px] uppercase font-mono font-medium">
-                              {part.category}
-                            </span>
-                            {part.tags && part.tags.length > 0 && (
-                              <>
-                                <span className="w-1 h-1 rounded-full bg-zinc-600" />
-                                <span className="text-[10px] text-zinc-400 truncate">
-                                  {part.tags.join(', ')}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
+                      <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0 mt-0.5">
+                        {renderCategoryIcon(part.category)}
                       </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t border-white/[0.04] sm:border-0 shrink-0">
-                        <div className="text-right">
-                          <div className="text-emerald-400 font-mono font-medium">
-                            {formatCurrency(part.quantity * part.unitCost)}
-                          </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-zinc-200 break-words leading-snug">
+                          {part.name}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1.5 font-mono">
+                          <span className={`${getCategoryBadgeColor(part.category)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+                            {part.category}
+                          </span>
+                          {part.tags?.map((tag, tagIndex) => (
+                            <span key={`${tag}-${tagIndex}`} className={`${getTagBadgeColor(tag)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+                              {tag}
+                            </span>
+                          ))}
+                          <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+                            {part.quantity > 1
+                              ? `${part.quantity}x ${formatCurrency(part.unitCost)}/ea`
+                              : formatCurrency(part.unitCost)}
+                          </span>
                           {part.quantity > 1 && (
-                            <div className="text-zinc-500 font-mono text-[10px] mt-0.5">
-                              {formatCurrency(part.unitCost)} ea
-                            </div>
+                            <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 shrink-0 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+                              {formatCurrency(part.quantity * part.unitCost)} total
+                            </span>
                           )}
                         </div>
                       </div>
@@ -949,18 +975,20 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
       )}
 
       {/* Off-screen card used for HTML-to-Image rendering */}
-      <div
-        style={{
-          position: 'fixed',
-          left: -9999,
-          top: 0,
-          zIndex: -9999,
-          pointerEvents: 'none',
-        }}
-        aria-hidden="true"
-      >
-        <BuildShareImageCard ref={imageCardRef} build={build} components={state.components} />
-      </div>
+      {hasBuildImage && (
+        <div
+          style={{
+            position: 'fixed',
+            left: -9999,
+            top: 0,
+            zIndex: -9999,
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          <BuildShareImageCard ref={imageCardRef} build={build} components={state.components} />
+        </div>
+      )}
     </div>
   );
 });
