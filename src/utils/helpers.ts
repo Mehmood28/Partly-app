@@ -1053,13 +1053,13 @@ export function getPaymentMethodBadgeColor(method: string): string {
 }
 
 export const SUB_CATEGORIES: Record<string, string[]> = {
-  CPU: ['AM4', 'AM5', 'Intel'],
+  CPU: ['AM5', 'AM4', 'Intel'],
   RAM: ['DDR5', 'DDR4'],
   GPU: ['50 Series', '40 Series', '30 Series', 'AMD'],
   Storage: ['Gen5', 'Gen4', 'Gen3'],
   Motherboard: ['AM5', 'AM4', 'Intel'],
-  PSU: ['White', 'Black'],
-  Case: ['White', 'Black'],
+  PSU: ['Black', 'White'],
+  Case: ['Black', 'White'],
   Cooling: ['360mm', '240mm', 'Air Coolers'],
 };
 export const determineSubCategory = (comp: import('../types').InventoryComponent) => {

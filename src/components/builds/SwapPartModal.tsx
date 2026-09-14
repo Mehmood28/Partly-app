@@ -5,7 +5,7 @@ import { useInventory } from '../../context/InventoryContext';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { useToast } from '../../context/ToastContext';
 import { Box, ArrowRightLeft, X, Search, ChevronDown, ChevronUp , Monitor, Cpu, HardDrive, Database, CircuitBoard, Zap, Fan, Package} from 'lucide-react';
-import { formatCurrency, getConditionColor, getUnassignedBatches } from '../../utils/helpers';
+import { formatCurrency, getConditionColor, getUnassignedBatches, SUB_CATEGORIES } from '../../utils/helpers';
 import { ConfirmModal } from '../ConfirmModal';
 
 interface SwapPartModalProps {
@@ -16,11 +16,13 @@ interface SwapPartModalProps {
 
 const getFilterChips = (category: string) => {
   switch (category) {
-    case 'Storage': return ['All', 'Gen5', 'Gen4', 'Gen3'];
-    case 'CPU': return ['All', 'AM5', 'AM4', 'Intel'];
-    case 'Motherboard': return ['All', 'AM5', 'AM4', 'Intel', 'DDR5', 'DDR4'];
-    case 'GPU': return ['All', '50 Series', '40 Series', '30 Series', 'AMD'];
-    case 'RAM': return ['All', 'DDR5', 'DDR4'];
+    case 'Storage':
+    case 'CPU':
+    case 'GPU':
+    case 'RAM':
+      return ['All', ...(SUB_CATEGORIES[category] || [])];
+    case 'Motherboard':
+      return ['All', ...(SUB_CATEGORIES.Motherboard || []), 'DDR5', 'DDR4'];
     default: return ['All'];
   }
 };

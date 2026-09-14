@@ -2,7 +2,7 @@ import React from 'react';
 import { CATEGORIES, ComponentCategory, InventoryComponent } from '../types';
 import { Search, ArrowDownWideNarrow, X } from 'lucide-react';
 import { CustomSelect } from './ui/CustomSelect';
-import { calculateUnassignedQuantityStrict, SortOption, getCategoryBadgeColor, getTagBadgeColor } from '../utils/helpers';
+import { calculateUnassignedQuantityStrict, SortOption, getCategoryBadgeColor, getTagBadgeColor, SUB_CATEGORIES } from '../utils/helpers';
 import { PCBuild } from '../types';
 
 interface InventoryFilterBarProps {
@@ -18,17 +18,6 @@ interface InventoryFilterBarProps {
   activeSubCategory?: string;
   onSubCategoryChange?: (sub: string) => void;
 }
-
-const SUB_CATEGORIES: Record<string, string[]> = {
-  CPU: ['AM4', 'AM5', 'Intel'],
-  RAM: ['DDR5', 'DDR4'],
-  GPU: ['50 Series', '40 Series', '30 Series', 'AMD'],
-  Storage: ['Gen5', 'Gen4', 'Gen3'],
-  Motherboard: ['AM5', 'AM4', 'Intel'],
-  PSU: ['White', 'Black'],
-  Case: ['White', 'Black'],
-  Cooling: ['360mm', '240mm', 'Air Coolers'],
-};
 
 export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
   builds = [],
