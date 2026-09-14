@@ -15,19 +15,27 @@ const resolveFromExactSource = (
   transactions: TransactionLogItem[],
   builds: PCBuild[]
 ): TradeInOrigin | null => {
-  if (!nonEmptyString(sourceSaleTransactionId)) return null;
-
-  const sourceSales = transactions.filter(
-    (transaction) =>
-      transaction.id === sourceSaleTransactionId && transaction.type === 'SALE'
-  );
+  const normalizedSourceSaleTransactionId = nonEmptyString(sourceSaleTransactionId);
+  const normalizedTradeInBuildId = nonEmptyString(expectedTradeInBuildId);
+  const sourceSales = normalizedSourceSaleTransactionId
+    ? transactions.filter(
+        (transaction) =>
+          transaction.id === normalizedSourceSaleTransactionId && transaction.type === 'SALE'
+      )
+    : normalizedTradeInBuildId
+    ? transactions.filter(
+        (transaction) =>
+          transaction.type === 'SALE' &&
+          transaction.incomingTradeInBuildId === normalizedTradeInBuildId
+      )
+    : [];
   if (sourceSales.length !== 1) return null;
 
   const sourceSale = sourceSales[0];
   if (
-    expectedTradeInBuildId &&
+    normalizedTradeInBuildId &&
     sourceSale.incomingTradeInBuildId &&
-    sourceSale.incomingTradeInBuildId !== expectedTradeInBuildId
+    sourceSale.incomingTradeInBuildId !== normalizedTradeInBuildId
   ) {
     return null;
   }

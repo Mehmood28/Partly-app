@@ -70,6 +70,22 @@ describe('trade-in origin presentation', () => {
     });
   });
 
+  it('recovers legacy part-outs through a unique exact incoming trade-in build link', () => {
+    const legacyEntry = { ...partedOutEntry, sourceSaleTransactionId: undefined };
+    const legacyBuild = { ...tradeInBuild, sourceSaleTransactionId: undefined };
+
+    expect(resolvePartedOutEntryOrigin(legacyEntry, [sourceSale], [soldBuild])).toEqual({
+      buyerName: 'Balraj Shah',
+      date: '2026-09-04',
+      sourceSaleTransactionId: 'sale-1',
+    });
+    expect(resolveTradeInBuildOrigin(legacyBuild, [sourceSale], [soldBuild])).toEqual({
+      buyerName: 'Balraj Shah',
+      date: '2026-09-04',
+      sourceSaleTransactionId: 'sale-1',
+    });
+  });
+
   it('prefers the buyer snapshot on the exact source sale transaction', () => {
     const origin = resolveTradeInBuildOrigin(
       tradeInBuild,
@@ -82,6 +98,21 @@ describe('trade-in origin presentation', () => {
   it('does not infer origin from similar records or ambiguous transaction IDs', () => {
     expect(resolveTradeInBuildOrigin(tradeInBuild, [{ ...sourceSale, id: 'sale-10' }], [soldBuild])).toBeNull();
     expect(resolveTradeInBuildOrigin(tradeInBuild, [sourceSale, { ...sourceSale }], [soldBuild])).toBeNull();
+  });
+
+  it('rejects ambiguous legacy links and never overrides a present invalid source ID', () => {
+    const legacyEntry = { ...partedOutEntry, sourceSaleTransactionId: undefined };
+    const duplicateIncomingSale = { ...sourceSale, id: 'sale-2' };
+    expect(
+      resolvePartedOutEntryOrigin(legacyEntry, [sourceSale, duplicateIncomingSale], [soldBuild])
+    ).toBeNull();
+    expect(
+      resolvePartedOutEntryOrigin(
+        { ...partedOutEntry, sourceSaleTransactionId: 'missing-sale' },
+        [sourceSale],
+        [soldBuild]
+      )
+    ).toBeNull();
   });
 
   it('identifies only PC part-out batches and requires a non-empty image for sharing', () => {
