@@ -9,8 +9,9 @@ import {
   Fan,
   Package,
 } from 'lucide-react';
-import { ComponentCategory, InventoryComponent, PCBuild, PCBuildPart } from '../../../types';
+import { ComponentCategory, InventoryComponent, PCBuild } from '../../../types';
 import { getAllBatchesWithRemaining } from '../../../utils/helpers';
+export { generateBuildTitleFromParts } from '../../../utils/buildTitle';
 
 export const getCategoryIcon = (cat: ComponentCategory) => {
   switch (cat) {
@@ -33,27 +34,6 @@ export const getCategoryIcon = (cat: ComponentCategory) => {
       return <Fan className="w-3.5 h-3.5 text-cyan-400" />;
     default:
       return <Package className="w-3.5 h-3.5 text-zinc-400" />;
-  }
-};
-
-export const generateBuildTitleFromParts = (selectedParts: PCBuildPart[]): string => {
-  const cpuName = selectedParts.find(p => p.category === 'CPU')?.componentName || 'CPU';
-  const gpuName = selectedParts.find(p => p.category === 'GPU')?.componentName || '';
-  
-  let shortCpu = cpuName;
-  if (cpuName.toUpperCase().includes('INTEL') || cpuName.toUpperCase().includes('CORE')) {
-    const match = cpuName.match(/(i\d-\d{4,5}[a-zA-Z0-9]*|\d{4,5}[a-zA-Z0-9]*)/i);
-    if (match) shortCpu = match[0];
-  } else {
-    const match = cpuName.match(/Ryzen \d \d{4,5}[a-zA-Z0-9]*/i);
-    if (match) shortCpu = match[0];
-  }
-  const shortGpu = gpuName.match(/(RTX|GTX|RX) \d{4}( XT| Ti| Super)?/i)?.[0] || gpuName.split(' ')[0];
-
-  if (gpuName) {
-    return `${shortCpu} + ${shortGpu}`;
-  } else {
-    return `${shortCpu}`;
   }
 };
 

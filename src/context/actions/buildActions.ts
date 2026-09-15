@@ -24,6 +24,7 @@ import {
 import { BUILD_WARRANTY_DAYS, isValidWarrantyDays, normalizeWarrantyDays } from '../../utils/warranty';
 import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
 import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils/acquiredPC';
+import { generateBuildTitleFromParts } from '../../utils/buildTitle';
 
 export const handleAddBuild = (
   prev: AppState,
@@ -194,9 +195,17 @@ export const handlePurchasePC = (
     unitCost: part.unitCost,
     tags: part.tags && part.tags.length > 0 ? [...part.tags] : undefined,
   }));
-  const cpuName = normalizedBreakdown.find((part) => part.category === 'CPU')?.name;
-  const gpuName = normalizedBreakdown.find((part) => part.category === 'GPU')?.name;
-  const generatedName = [cpuName, gpuName].filter(Boolean).join(' + ');
+  const hasCpuOrGpu = normalizedBreakdown.some(
+    (part) => part.category === 'CPU' || part.category === 'GPU'
+  );
+  const generatedName = hasCpuOrGpu
+    ? generateBuildTitleFromParts(
+      normalizedBreakdown.map((part) => ({
+        category: part.category,
+        componentName: part.name,
+      }))
+    )
+    : '';
   const buildName = purchase.name?.trim() || generatedName || 'Purchased PC';
   const seller = purchase.seller?.trim() || undefined;
 

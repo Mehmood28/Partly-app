@@ -34,7 +34,7 @@ describe('purchased PC actions', () => {
 
     const build = result.nextState.builds[0];
     const transaction = result.nextState.transactions[0];
-    expect(build.name).toBe('Ryzen 5 5600X + ASUS KO RTX 3060 12GB');
+    expect(build.name).toBe('Ryzen 5 5600X + RTX 3060');
     expect(build.status).toBe('In Progress');
     expect(build.acquisitionSource).toBe('Purchased');
     expect(build.estimatedCost).toBe(520);
@@ -47,6 +47,20 @@ describe('purchased PC actions', () => {
     expect(transaction.quantity).toBe(1);
     expect(transaction.relatedComponentId).toBe(build.id);
     expect(build.purchaseTransactionId).toBe(transaction.id);
+  });
+
+  it('uses the same concise CPU + GPU title as a standard build', () => {
+    const result = handlePurchasePC(emptyState(), {
+      purchasePrice: 180,
+      purchaseDate: '2026-09-15',
+      paymentMethod: 'Cash',
+      breakdown: [
+        { category: 'CPU', name: 'Intel Core i5-12400F (6C/12T)', quantity: 1, unitCost: 60 },
+        { category: 'GPU', name: 'XFX Speedster SWFT 210 RX 6600 8GB', quantity: 1, unitCost: 120 },
+      ],
+    });
+
+    expect(result.nextState.builds[0].name).toBe('i5-12400F + RX 6600');
   });
 
   it('accepts an optional empty component breakdown', () => {
