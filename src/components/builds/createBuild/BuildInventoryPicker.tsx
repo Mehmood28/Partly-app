@@ -118,7 +118,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                           }}
                         >
                           <div className="flex flex-col min-w-0 flex-1 pr-2">
-                            <span className="text-xs font-semibold text-zinc-100 truncate font-sans">{comp.name}</span>
+                            <span className="text-xs font-semibold leading-snug text-zinc-100 break-words font-sans">{comp.name}</span>
                             <div className="flex items-center gap-1.5 mt-1 flex-nowrap overflow-hidden">
                               {comp.tags &&
                                 comp.tags.length > 0 &&
