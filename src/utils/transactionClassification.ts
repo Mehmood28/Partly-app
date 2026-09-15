@@ -32,14 +32,15 @@ export function classifyTransaction(
 
   const isPartSale = isSale && !isPCSale;
 
+  const detailCount = tx.detailsList?.filter((detail) => Boolean(detail?.trim())).length || 0;
+  const declaredItemCount =
+    Number.isFinite(tx.itemCount) && tx.itemCount > 0 ? tx.itemCount : 0;
+  const explicitItemCount = Math.max(detailCount, declaredItemCount);
+  const titleSuggestsBulk = Boolean(tx.title?.toLowerCase().startsWith('bulk'));
+
   const isBulkPurchase =
     isPurchase &&
-    ((tx.detailsList && tx.detailsList.length > 1) ||
-      (tx.title && tx.title.toLowerCase().startsWith('bulk')) ||
-      (tx.itemCount !== undefined &&
-        tx.itemCount > 1 &&
-        tx.detailsList &&
-        tx.detailsList.length > 0));
+    (explicitItemCount > 1 || (explicitItemCount === 0 && titleSuggestsBulk));
 
   return {
     isPCSale,

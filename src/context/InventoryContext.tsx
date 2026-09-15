@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { AppState, ComponentCategory, InventoryComponent, PCBuild, PurchaseEntry, TransactionLogItem } from '../types';
+import { AppState, InventoryComponent, PCBuild, PurchaseEntry, TransactionLogItem } from '../types';
 import {
   getSyncInitialAppState,
   persistAppState,
@@ -14,6 +14,8 @@ import {
   ExchangeComponentPartData,
   SellBuildData,
   SaveComponentOptions,
+  AcquiredPCComponentInput,
+  PurchasePCData,
 } from './types';
 import { useUndoRedo } from './useUndoRedo';
 import {
@@ -32,6 +34,7 @@ import {
 } from './actions/componentActions';
 import {
   handleAddBuild,
+  handlePurchasePC,
   handleAddImportedBuilds,
   handleUpdateBuildStatus,
   handleUpdateBuild,
@@ -43,8 +46,10 @@ import {
   handleRelistBuild,
   handleDeleteBuild,
   handleDismantleBuild,
+  handleSaveAcquiredPCComponentBreakdown,
   handleSaveTradeInComponentBreakdown,
 } from './actions/buildActions';
+import { isAcquiredPC } from '../utils/acquiredPC';
 import {
   handleAddTransaction,
   handleUpdateTransaction,
@@ -391,6 +396,21 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [saveStateToHistory, stateRef]
   );
 
+  const purchasePC = useCallback(
+    (purchase: PurchasePCData): { success: boolean; error?: string } => {
+      const current = stateRef.current;
+      const result = handlePurchasePC(current, purchase);
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
+      const purchasedBuild = result.nextState.builds[0];
+      saveStateToHistory(`Buy PC: ${purchasedBuild?.name || purchase.name || 'Purchased PC'}`);
+      setState(result.nextState);
+      return { success: true };
+    },
+    [saveStateToHistory, stateRef]
+  );
+
   const addImportedBuilds = useCallback(
     (builds: PCBuild[]) => {
       const current = stateRef.current;
@@ -621,7 +641,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         !build ||
         build.status === 'Sold' ||
         (build.parts && build.parts.length > 0) ||
-        build.acquisitionSource === 'Trade-In'
+        isAcquiredPC(build)
       ) {
         return;
       }
@@ -634,17 +654,31 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [saveStateToHistory, stateRef]
   );
 
-  const saveTradeInComponentBreakdown = useCallback(
-    (buildId: string, breakdown: { id?: string; category: ComponentCategory; name: string; quantity: number; unitCost: number; tags?: string[] }[]): { success: boolean; error?: string } => {
+  const saveAcquiredPCComponentBreakdown = useCallback(
+    (buildId: string, breakdown: AcquiredPCComponentInput[]): { success: boolean; error?: string } => {
       const build = stateRef.current.builds.find(b => b.id === buildId);
       if (!build) return { success: false, error: 'Build not found.' };
       
-      const res = handleSaveTradeInComponentBreakdown(stateRef.current, buildId, breakdown);
+      const res = handleSaveAcquiredPCComponentBreakdown(stateRef.current, buildId, breakdown);
       if (!res.success) return { success: false, error: res.error };
       if (res.nextState === stateRef.current) return { success: true };
       
-      saveStateToHistory(`Itemize trade-in PC: ${build.name || 'Build'}`);
+      saveStateToHistory(`Itemize ${build.acquisitionSource === 'Purchased' ? 'purchased' : 'trade-in'} PC: ${build.name || 'Build'}`);
       setState(() => res.nextState);
+      return { success: true };
+    },
+    [saveStateToHistory, stateRef]
+  );
+
+  const saveTradeInComponentBreakdown = useCallback(
+    (buildId: string, breakdown: AcquiredPCComponentInput[]) => {
+      const build = stateRef.current.builds.find((candidate) => candidate.id === buildId);
+      if (!build) return { success: false, error: 'Build not found.' };
+      const result = handleSaveTradeInComponentBreakdown(stateRef.current, buildId, breakdown);
+      if (!result.success) return { success: false, error: result.error };
+      if (result.nextState === stateRef.current) return { success: true };
+      saveStateToHistory(`Itemize trade-in PC: ${build.name || 'Build'}`);
+      setState(result.nextState);
       return { success: true };
     },
     [saveStateToHistory, stateRef]
@@ -653,12 +687,13 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const dismantleBuild = useCallback(
     (
       buildId: string,
-      extractedParts?: { category: ComponentCategory; name: string; quantity: number; unitCost: number }[]
+      extractedParts?: AcquiredPCComponentInput[]
     ): { success: boolean; error?: string } => {
       const build = stateRef.current.builds.find((b) => b.id === buildId);
       if (!build) return { success: false, error: 'Build not found.' };
       const buildName = build.name || 'Build';
       const isTradeIn = build.acquisitionSource === 'Trade-In';
+      const isPurchased = build.acquisitionSource === 'Purchased';
       
       const res = handleDismantleBuild(stateRef.current, buildId, extractedParts);
       if (!res.success) {
@@ -667,7 +702,13 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (res.nextState === stateRef.current) {
         return { success: true };
       }
-      saveStateToHistory(isTradeIn ? `Part out trade-in: ${buildName}` : `Dismantle build: ${buildName}`);
+      saveStateToHistory(
+        isTradeIn
+          ? `Part out trade-in: ${buildName}`
+          : isPurchased
+          ? `Part out purchased PC: ${buildName}`
+          : `Dismantle build: ${buildName}`
+      );
       setState(() => res.nextState);
       return { success: true };
     },
@@ -840,6 +881,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       sellComponentPartsBulk,
       exchangeComponentPart,
       addBuild,
+      purchasePC,
       addImportedBuilds,
       updateBuildStatus,
       updateBuild,
@@ -852,6 +894,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       deleteBuild,
       dismantleBuild,
       saveTradeInComponentBreakdown,
+      saveAcquiredPCComponentBreakdown,
       addTransaction,
       updateTransaction,
       deleteTransaction,
@@ -886,6 +929,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       sellComponentPartsBulk,
       exchangeComponentPart,
       addBuild,
+      purchasePC,
       addImportedBuilds,
       updateBuildStatus,
       updateBuild,
@@ -898,6 +942,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       deleteBuild,
       dismantleBuild,
       saveTradeInComponentBreakdown,
+      saveAcquiredPCComponentBreakdown,
       addTransaction,
       updateTransaction,
       deleteTransaction,

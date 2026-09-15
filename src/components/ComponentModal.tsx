@@ -14,6 +14,7 @@ import { useToast } from '../context/ToastContext';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { ConfirmModal } from './ConfirmModal';
 import { getUnassignedBatches } from '../utils/helpers';
+import { resolvePurchaseEntrySeller } from '../utils/tradeInOrigin';
 
 interface ComponentModalProps {
   isOpen: boolean;
@@ -128,7 +129,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     setIncludePurchase(true);
     setUnitPrice(ph.unitPrice.toString());
     setQuantity(ph.quantity.toString());
-    setPlatform(ph.platform || '');
+    setPlatform(resolvePurchaseEntrySeller(ph, state.transactions, state.builds) || '');
     setPaymentMethod(ph.paymentMethod);
     setPurchaseDate(ph.date);
     setCondition(ph.condition);
@@ -322,11 +323,16 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                         tx.incomingComponentId === liveComponent.id &&
                         tx.incomingPurchaseEntryId === ph.id
                 );
+                const purchaseSeller = resolvePurchaseEntrySeller(
+                  ph,
+                  state.transactions,
+                  state.builds
+                );
                 return (
                   <div key={ph.id} className="flex items-center justify-between bg-[#121722] border border-white/[0.08] p-2.5 rounded-xl">
                     <div className="text-xs">
                       <div className="text-zinc-200 font-medium flex items-center gap-1.5 flex-wrap">
-                        <span>{ph.date}{!hideSupplierNames ? ` · ${ph.platform || 'Unknown'}` : ''}</span>
+                        <span>{ph.date}{!hideSupplierNames ? ` · ${purchaseSeller || 'Unknown'}` : ''}</span>
                         {isTradeUp && (
                           <span className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-medium uppercase leading-none inline-flex items-center">
                             TRADE UP
@@ -447,7 +453,8 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                       { value: 'Cash', label: 'Cash' },
                       { value: 'PayPal', label: 'PayPal' },
                       { value: 'Credit Card', label: 'Credit Card' },
-                      { value: 'Debit', label: 'Debit' }
+                      { value: 'Debit', label: 'Debit' },
+                      { value: 'Trade-In', label: 'Trade-In' }
                     ]}
                   />
                 </div>

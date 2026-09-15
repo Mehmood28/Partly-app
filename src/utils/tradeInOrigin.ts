@@ -9,15 +9,29 @@ export interface TradeInOrigin {
 const nonEmptyString = (value: unknown): string | undefined =>
   typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 
+const normalizeName = (value: unknown): string | undefined =>
+  nonEmptyString(value)?.toLocaleLowerCase();
+
+const transactionDate = (transaction: TransactionLogItem): string | undefined =>
+  nonEmptyString(transaction.dateSortable) || nonEmptyString(transaction.timestamp);
+
+const partedOutBuildName = (entry: PurchaseEntry): string | undefined => {
+  const notes = nonEmptyString(entry.notes);
+  if (!notes) return undefined;
+  const match = notes.match(/^Parted out from traded-in PC:\s*(.+)$/i);
+  return nonEmptyString(match?.[1]);
+};
+
 const resolveFromExactSource = (
   sourceSaleTransactionId: string | undefined,
   expectedTradeInBuildId: string | undefined,
   transactions: TransactionLogItem[],
-  builds: PCBuild[]
+  builds: PCBuild[],
+  legacyHints?: { tradeInBuildName?: string; date?: string }
 ): TradeInOrigin | null => {
   const normalizedSourceSaleTransactionId = nonEmptyString(sourceSaleTransactionId);
   const normalizedTradeInBuildId = nonEmptyString(expectedTradeInBuildId);
-  const sourceSales = normalizedSourceSaleTransactionId
+  let sourceSales = normalizedSourceSaleTransactionId
     ? transactions.filter(
         (transaction) =>
           transaction.id === normalizedSourceSaleTransactionId && transaction.type === 'SALE'
@@ -27,8 +41,28 @@ const resolveFromExactSource = (
         (transaction) =>
           transaction.type === 'SALE' &&
           transaction.incomingTradeInBuildId === normalizedTradeInBuildId
-      )
+        )
     : [];
+
+  // Some older part-outs kept the incoming PC name/date but predate the immutable
+  // sale link. Recover only a unique exact name + date match; never use this to
+  // override a present (but invalid) source transaction ID.
+  if (
+    !normalizedSourceSaleTransactionId &&
+    sourceSales.length === 0 &&
+    normalizeName(legacyHints?.tradeInBuildName) &&
+    nonEmptyString(legacyHints?.date)
+  ) {
+    const expectedName = normalizeName(legacyHints?.tradeInBuildName);
+    const expectedDate = nonEmptyString(legacyHints?.date);
+    sourceSales = transactions.filter(
+      (transaction) =>
+        transaction.type === 'SALE' &&
+        normalizeName(transaction.tradeInBuildName) === expectedName &&
+        transactionDate(transaction) === expectedDate
+    );
+  }
+
   if (sourceSales.length !== 1) return null;
 
   const sourceSale = sourceSales[0];
@@ -68,7 +102,8 @@ export const resolveTradeInBuildOrigin = (
     build.sourceSaleTransactionId,
     build.id,
     transactions,
-    builds
+    builds,
+    { tradeInBuildName: build.name, date: build.createdDate }
   );
 };
 
@@ -85,6 +120,15 @@ export const resolvePartedOutEntryOrigin = (
     entry.sourceSaleTransactionId,
     entry.sourceTradeInBuildId,
     transactions,
-    builds
+    builds,
+    { tradeInBuildName: partedOutBuildName(entry), date: entry.date }
   );
 };
+
+export const resolvePurchaseEntrySeller = (
+  entry: PurchaseEntry,
+  transactions: TransactionLogItem[],
+  builds: PCBuild[]
+): string | undefined =>
+  resolvePartedOutEntryOrigin(entry, transactions, builds)?.buyerName ||
+  nonEmptyString(entry.platform);

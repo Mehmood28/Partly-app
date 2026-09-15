@@ -5,7 +5,7 @@ export function generateMarketplaceAd(
   _buildName: string,
   warrantyDays: number = 30
 ): string {
-  const hasMultipleSources = parts.some(p => p.source === 'TRADE_IN_BASE') && parts.some(p => p.source === 'ALLOCATED_UPGRADE');
+  const hasMultipleSources = parts.some(p => p.source?.endsWith('_BASE')) && parts.some(p => p.source === 'ALLOCATED_UPGRADE');
   
   const getPartsStr = (category: string) => {
     const found = parts.filter(p => String(p.category || "").toLowerCase() === String(category || "").toLowerCase());

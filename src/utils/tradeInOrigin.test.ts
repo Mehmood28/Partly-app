@@ -4,6 +4,7 @@ import { hasShareableBuildImage } from '../components/builds/discordShareHelpers
 import {
   isPartedOutTradeInEntry,
   resolvePartedOutEntryOrigin,
+  resolvePurchaseEntrySeller,
   resolveTradeInBuildOrigin,
 } from './tradeInOrigin';
 
@@ -53,6 +54,7 @@ const partedOutEntry: PurchaseEntry = {
   platform: 'Traded-In PC',
   sourceTradeInBuildId: 'trade-in-build',
   sourceSaleTransactionId: 'sale-1',
+  notes: 'Parted out from traded-in PC: 5900X + RTX 3080',
 };
 
 describe('trade-in origin presentation', () => {
@@ -86,6 +88,25 @@ describe('trade-in origin presentation', () => {
     });
   });
 
+  it('recovers an older part-out through its unique trade-in name and date', () => {
+    const olderSale = {
+      ...sourceSale,
+      incomingTradeInBuildId: undefined,
+      tradeInBuildName: '5900X + RTX 3080',
+    };
+    const olderEntry = {
+      ...partedOutEntry,
+      sourceSaleTransactionId: undefined,
+    };
+
+    expect(resolvePartedOutEntryOrigin(olderEntry, [olderSale], [soldBuild])).toEqual({
+      buyerName: 'Balraj Shah',
+      date: '2026-09-04',
+      sourceSaleTransactionId: 'sale-1',
+    });
+    expect(resolvePurchaseEntrySeller(olderEntry, [olderSale], [soldBuild])).toBe('Balraj Shah');
+  });
+
   it('prefers the buyer snapshot on the exact source sale transaction', () => {
     const origin = resolveTradeInBuildOrigin(
       tradeInBuild,
@@ -113,6 +134,24 @@ describe('trade-in origin presentation', () => {
         [soldBuild]
       )
     ).toBeNull();
+
+    const olderEntry = { ...legacyEntry, notes: 'Parted out from traded-in PC: 5900X + RTX 3080' };
+    const legacyNamedSale = {
+      ...sourceSale,
+      incomingTradeInBuildId: undefined,
+      tradeInBuildName: '5900X + RTX 3080',
+    };
+    expect(
+      resolvePartedOutEntryOrigin(
+        olderEntry,
+        [legacyNamedSale, { ...legacyNamedSale, id: 'sale-2' }],
+        [soldBuild]
+      )
+    ).toBeNull();
+  });
+
+  it('falls back to the stored platform when no buyer can be resolved', () => {
+    expect(resolvePurchaseEntrySeller(partedOutEntry, [], [])).toBe('Traded-In PC');
   });
 
   it('identifies only PC part-out batches and requires a non-empty image for sharing', () => {

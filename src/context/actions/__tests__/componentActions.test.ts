@@ -341,6 +341,41 @@ describe('componentActions', () => {
       expect(nextState.components[0].purchaseHistory![0].taxPercent).toBe(0);
     });
 
+    it('records a one-item scanner import as a normal purchase instead of a bulk purchase', () => {
+      const state = mockState;
+      const nextState = handleAddComponents(state, [
+        {
+          name: 'DarkFlash TH285 PLUS BLACK',
+          category: 'Case',
+          purchaseHistory: [
+            {
+              quantity: 1,
+              unitPrice: 158.19,
+              totalPrice: 158.19,
+              taxPercent: 0,
+              date: '2026-09-11',
+              condition: 'Sealed',
+              platform: 'Canada Computers',
+              paymentMethod: 'Credit Card',
+            } as PurchaseEntry,
+          ],
+        } as Omit<InventoryComponent, 'id' | 'assignedCount'>,
+      ]);
+
+      const component = nextState.components.find(
+        (candidate) => candidate.name === 'DarkFlash TH285 PLUS BLACK'
+      );
+      const transaction = nextState.transactions[0];
+
+      expect(component).toBeDefined();
+      expect(transaction.title).toBe('Purchased: Canada Computers');
+      expect(transaction.itemNameOrSummary).toBe('DarkFlash TH285 PLUS BLACK');
+      expect(transaction.itemCount).toBe(1);
+      expect(transaction.quantity).toBe(1);
+      expect(transaction.detailsList).toBeUndefined();
+      expect(transaction.relatedComponentId).toBe(component?.id);
+    });
+
     it('handleAddPurchaseEntry with a missing component returns the original state and creates no transaction', () => {
       const state = mockState;
       const nextState = handleAddPurchaseEntry(state, 'non-existent', {

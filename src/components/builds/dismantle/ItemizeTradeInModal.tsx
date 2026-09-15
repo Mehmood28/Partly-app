@@ -6,10 +6,11 @@ import { BottomSheetModal } from '../../ui/BottomSheetModal';
 import { 
   createInitialParts, 
   ExtractedPartInput, 
-  CATEGORY_WEIGHTS 
+  allocateOptionalPartCosts,
 } from './dismantleHelpers';
 import { ModeBStatusHeader } from './ModeBStatusHeader';
 import { ModeBManualEntry } from './ModeBManualEntry';
+import { getAcquiredPCBreakdown, getAcquiredPCLabel } from '../../../utils/acquiredPC';
 
 interface ItemizeTradeInModalProps {
   build: PCBuild | null;
@@ -25,8 +26,9 @@ export const ItemizeTradeInModal: React.FC<ItemizeTradeInModalProps> = ({ build,
 
   useEffect(() => {
     if (build) {
-      if (build.tradeInComponentBreakdown && build.tradeInComponentBreakdown.length > 0) {
-        setManualParts(build.tradeInComponentBreakdown.map((p) => ({
+      const breakdown = getAcquiredPCBreakdown(build);
+      if (breakdown.length > 0) {
+        setManualParts(breakdown.map((p) => ({
           id: p.id || `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           category: p.category,
           name: p.name,
@@ -42,29 +44,33 @@ export const ItemizeTradeInModal: React.FC<ItemizeTradeInModalProps> = ({ build,
   }, [build?.id]);
 
   const targetCost = build?.estimatedCost || 0;
+  const activeParts = useMemo(
+    () => manualParts.filter((part) => part.name.trim().length > 0),
+    [manualParts]
+  );
 
   const totalAllocated = useMemo(() => {
-    return manualParts.reduce((sum, p) => sum + (Number(p.quantity) || 0) * (Number(p.unitCost) || 0), 0);
-  }, [manualParts]);
+    return activeParts.reduce((sum, p) => sum + (Number(p.quantity) || 0) * (Number(p.unitCost) || 0), 0);
+  }, [activeParts]);
 
   const remainingBalance = targetCost - totalAllocated;
   const isExactMatch = Math.abs(remainingBalance) < 0.009;
   
   const partOutValidation = useMemo(() => {
     if (!build) return { valid: true };
-    const extracted = manualParts.map((p) => ({
+    const extracted = activeParts.map((p) => ({
       category: p.category,
       name: p.name,
       quantity: Number(p.quantity) || 0,
       unitCost: Number(p.unitCost) || 0,
     }));
     return validateItemizationAccounting(build, extracted);
-  }, [build, manualParts]);
+  }, [build, activeParts]);
 
-  const canConfirmModeB = manualParts.length > 0 && partOutValidation.valid;
+  const canConfirmModeB = activeParts.length > 0 && partOutValidation.valid;
 
-  const lockedParts = useMemo(() => manualParts.filter((p) => p.isLocked), [manualParts]);
-  const unlockedParts = useMemo(() => manualParts.filter((p) => !p.isLocked), [manualParts]);
+  const lockedParts = useMemo(() => activeParts.filter((p) => p.isLocked), [activeParts]);
+  const unlockedParts = useMemo(() => activeParts.filter((p) => !p.isLocked), [activeParts]);
 
   const lockedNamesSummary = useMemo(() => {
     if (lockedParts.length === 0) return '';
@@ -107,93 +113,19 @@ export const ItemizeTradeInModal: React.FC<ItemizeTradeInModalProps> = ({ build,
   };
 
   const handleAutoDistribute = () => {
-    if (manualParts.length === 0 || targetCost <= 0) return;
-
-    const locked = manualParts.filter((p) => p.isLocked);
-    const unlocked = manualParts.filter((p) => !p.isLocked);
-
-    if (unlocked.length === 0) return;
-
-    const lockedTotal = locked.reduce(
-      (sum, p) => sum + (Number(p.quantity) || 1) * (Number(p.unitCost) || 0),
-      0
-    );
-
-    const availableBudget = targetCost - lockedTotal;
-    const allocatedMap = new Map<string, number>();
-
-    if (availableBudget <= 0) {
-      unlocked.forEach((p) => allocatedMap.set(p.id, 0));
-    } else {
-      const totalWeight = unlocked.reduce(
-        (sum, p) => sum + (CATEGORY_WEIGHTS[p.category] ?? 0.02),
-        0
-      );
-
-      const targetCents = Math.round(availableBudget * 100);
-      let allocatedCents = 0;
-
-      let highestWeightItemId = unlocked[0].id;
-      let maxWeight = -1;
-
-      unlocked.forEach((p) => {
-        const w = CATEGORY_WEIGHTS[p.category] ?? 0.02;
-        if (w > maxWeight) {
-          maxWeight = w;
-          highestWeightItemId = p.id;
-        }
-        const qty = Math.max(1, Number(p.quantity) || 1);
-        const lineCents = (w / totalWeight) * targetCents;
-        const unitCents = Math.round(lineCents / qty);
-        const actualLineCents = unitCents * qty;
-
-        allocatedCents += actualLineCents;
-        allocatedMap.set(p.id, unitCents / 100);
-      });
-
-      const diffCents = targetCents - allocatedCents;
-      if (diffCents !== 0) {
-        const topItem = unlocked.find((p) => p.id === highestWeightItemId) || unlocked[0];
-        const qty = Math.max(1, Number(topItem.quantity) || 1);
-        const currentUnit = allocatedMap.get(topItem.id) || 0;
-
-        const adjustedUnit = Math.round(currentUnit * 100 + diffCents / qty) / 100;
-        allocatedMap.set(topItem.id, Math.max(0, adjustedUnit));
-
-        const currentSumCents = unlocked.reduce((sum, p) => {
-          const q = Math.max(1, Number(p.quantity) || 1);
-          const u = allocatedMap.get(p.id) ?? 0;
-          return sum + Math.round(q * u * 100);
-        }, 0);
-
-        const finalDiff = targetCents - currentSumCents;
-        if (finalDiff !== 0) {
-          const singleItem = unlocked.find((p) => (Number(p.quantity) || 1) === 1) || topItem;
-          const currentVal = allocatedMap.get(singleItem.id) || 0;
-          allocatedMap.set(
-            singleItem.id,
-            Math.max(0, Math.round(currentVal * 100 + finalDiff) / 100)
-          );
-        }
-      }
-    }
-
-    setManualParts((prev) =>
-      prev.map((p) => {
-        if (allocatedMap.has(p.id)) {
-          return {
-            ...p,
-            unitCost: allocatedMap.get(p.id) ?? 0,
-          };
-        }
-        return p;
-      })
-    );
+    const result = allocateOptionalPartCosts(manualParts, targetCost);
+    if (!result.success) return;
+    const allocatedById = new Map(result.parts.map((part) => [part.id, part.unitCost]));
+    setManualParts((prev) => prev.map((part) =>
+      allocatedById.has(part.id)
+        ? { ...part, unitCost: allocatedById.get(part.id) || 0 }
+        : part
+    ));
   };
 
   const handleConfirm = () => {
     if (!canConfirmModeB) return;
-    const extracted = manualParts.map((p) => ({
+    const extracted = activeParts.map((p) => ({
       id: p.id,
       category: p.category,
       name: p.name.trim(),
@@ -219,9 +151,9 @@ export const ItemizeTradeInModal: React.FC<ItemizeTradeInModalProps> = ({ build,
               </div>
               <div className="min-w-0">
                 <h2 className="text-sm sm:text-base font-bold text-zinc-100 flex items-center gap-2 truncate font-display">
-                  <span className="truncate">Itemize Trade-In PC</span>
+                  <span className="truncate">Itemize {getAcquiredPCLabel(build)}</span>
                   <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium shrink-0">
-                    TRADE-IN
+                    {build.acquisitionSource === 'Purchased' ? 'PURCHASED' : 'TRADE-IN'}
                   </span>
                 </h2>
                 <p className="text-xs text-zinc-400 truncate font-sans">{build.name}</p>
@@ -256,11 +188,13 @@ export const ItemizeTradeInModal: React.FC<ItemizeTradeInModalProps> = ({ build,
             handleRemovePart={handleRemovePart}
             handleUpdatePart={handleUpdatePart}
             handleToggleLock={handleToggleLock}
+            optionalRows
+            heading="Components in PC"
           />
         </div>
 
         <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-t border-white/[0.08] shrink-0 bg-[#0D1118]/95 backdrop-blur-md flex flex-col gap-3 z-30">
-          {!partOutValidation.valid && manualParts.length > 0 && (
+          {!partOutValidation.valid && activeParts.length > 0 && (
             <div className="flex items-start gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 p-2.5 rounded-lg text-xs">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{partOutValidation.error}</span>

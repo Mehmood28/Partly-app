@@ -633,6 +633,7 @@ export const handleAddComponents = (
   compsData: Omit<InventoryComponent, 'id' | 'assignedCount'>[]
 ): AppState => {
   if (compsData.length === 0) return prev;
+  if (compsData.length === 1) return handleAddComponent(prev, compsData[0]);
   
   // 1. Validate all and map entries
   const parsedComps: {

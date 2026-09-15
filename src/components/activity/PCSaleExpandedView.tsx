@@ -178,9 +178,9 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
                       <span className={`${getCategoryBadgeColor(part.category)} px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
                         {part.category}
                       </span>
-                      {part.source === 'TRADE_IN_BASE' ? (
+                      {part.source !== 'ALLOCATED_UPGRADE' ? (
                         <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                          TRADE-IN BASE
+                          {part.source === 'PURCHASED_BASE' ? 'PURCHASED PC BASE' : 'TRADE-IN BASE'}
                         </span>
                       ) : (
                         <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">

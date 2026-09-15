@@ -63,7 +63,10 @@ describe('Phase 3B - Part Out and Ordinary Dismantle Accounting Integrity', () =
       quantity: 1,
       totalAmount: 1000,
       platform: 'Facebook',
+      buyerName: 'Balraj Shah',
       itemNameOrSummary: 'Gaming Rig Sold',
+      incomingTradeInBuildId: 'b-trade-in',
+      tradeInBuildName: 'Trade-In PC Alpha',
     };
 
     return {
@@ -282,11 +285,30 @@ describe('Phase 3B - Part Out and Ordinary Dismantle Accounting Integrity', () =
       expect(gpuEntry?.quantity).toBe(2);
       expect(gpuEntry?.unitPrice).toBe(125.25);
       expect(gpuEntry?.totalPrice).toBe(250.50);
+      expect(gpuEntry?.platform).toBe('Balraj Shah');
+      expect(gpuEntry?.paymentMethod).toBe('Trade-In');
+      expect(gpuEntry?.sourceSaleTransactionId).toBe('tx-src-sale');
 
       const tx = res.nextState.transactions.find((t) => t.incomingTradeInBuildId === 'b-trade-in');
       expect(tx).toBeDefined();
       expect(tx?.quantity).toBe(3);
       expect(tx?.totalAmount).toBe(350.50);
+      expect(tx?.platform).toBe('Balraj Shah');
+      expect(tx?.buyerName).toBe('Balraj Shah');
+    });
+
+    it('stores the resolved seller and sale link for a legacy trade-in build', () => {
+      const state = getMockTradeInState({ upgradeParts: [] });
+      state.builds[0] = { ...state.builds[0], sourceSaleTransactionId: undefined };
+
+      const res = handlePartOutTradeInBuild(state, 'b-trade-in', defaultExtracted);
+      expect(res.success).toBe(true);
+
+      const gpuEntry = res.nextState.components
+        .find((component) => component.name === 'GTX 1660 Super')
+        ?.purchaseHistory[0];
+      expect(gpuEntry?.platform).toBe('Balraj Shah');
+      expect(gpuEntry?.sourceSaleTransactionId).toBe('tx-src-sale');
     });
 
     it('preserves valid zero unit cost and zero total amount', () => {

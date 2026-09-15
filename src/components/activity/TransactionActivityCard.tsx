@@ -14,6 +14,7 @@ import { PurchaseExpandedView } from './PurchaseExpandedView';
 import { BuildAllocationExpandedView } from './BuildAllocationExpandedView';
 import { TradeUpExpandedView } from './TradeUpExpandedView';
 import { classifyTransaction } from '../../utils/transactionClassification';
+import { parseBatchItem } from './activityHelpers';
 
 export interface TransactionActivityCardProps {
   tx: TransactionLogItem;
@@ -64,12 +65,12 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
 
   const isPartSale = isSale && !isPCSale;
 
-  // Is this a bulk/batch purchase containing multiple parts?
-  const isBulkPurchase = isPurchase && (
-    (tx.detailsList && tx.detailsList.length > 1) ||
-    (tx.title && tx.title.toLowerCase().startsWith('bulk')) ||
-    (tx.itemCount !== undefined && tx.itemCount > 1 && tx.detailsList && tx.detailsList.length > 0)
-  );
+  const isBulkPurchase = classification.isBulkPurchase;
+  const isPCPurchase = isPurchase && tx.purchaseKind === 'PC';
+  const singletonPurchaseItem =
+    isPurchase && !isBulkPurchase && tx.detailsList?.length === 1
+      ? parseBatchItem(tx.detailsList[0], state.components, tx)
+      : undefined;
 
   // Trade-up basis resolution
   let outgoingCostBasis = tx.outgoingCostBasis;
@@ -113,7 +114,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
     displayTitle = tx.itemNameOrSummary ? String(tx.itemNameOrSummary) : (tx.title ? String(tx.title).replace(/^(Sold \(Part\)|Part Sold):\s*/i, '') : 'Part Sale');
     subCategoryLabel = 'PART SOLD';
   } else if (isPurchase) {
-    displayTitle = tx.itemNameOrSummary || (tx.title ? String(tx.title).replace(/^Purchased:\s*/i, '') : 'Purchase');
+    displayTitle = singletonPurchaseItem?.itemName || tx.itemNameOrSummary || (tx.title ? String(tx.title).replace(/^Purchased:\s*/i, '') : 'Purchase');
     if (hideSupplierNames) {
       if (tx.platform) {
         const escaped = tx.platform.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -126,7 +127,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
         .replace(/^Bulk Purchase:\s*.+$/i, 'Bulk Purchase')
         .replace(/^(Bulk added\s+\d+\s+items?)\s+from\s+.+$/i, '$1');
     }
-    subCategoryLabel = 'PURCHASE';
+    subCategoryLabel = isPCPurchase ? 'PC PURCHASE' : 'PURCHASE';
   } else if (isBuildAllocation) {
     displayTitle = tx.itemNameOrSummary || (tx.title ? String(tx.title).replace(/^(PC Built|Build Allocation):\s*/i, '') : 'PC Built');
     subCategoryLabel = 'ASSEMBLED';
@@ -135,7 +136,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
   // Linked component for part sales, single purchases & exchanges
   const matchedComp: InventoryComponent | undefined = (!isPCSale && !isExchange && tx.relatedComponentId)
     ? state.components.find(c => c.id === tx.relatedComponentId)
-    : undefined;
+    : singletonPurchaseItem?.comp;
 
   const matchedOutgoingComp: InventoryComponent | undefined = isExchange && tx.outgoingComponentId
     ? state.components.find(c => c.id === tx.outgoingComponentId)

@@ -17,10 +17,11 @@ import { SoldBuildTransactionPanel } from './SoldBuildTransactionPanel';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { ConfirmModal } from '../ConfirmModal';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
-import { canDeleteBuildDraft, canDismantleBuild, canPartOutTradeInBuild, canMoveToTradeIns } from '../../utils/buildEligibility';
+import { canDeleteBuildDraft, canDismantleBuild, canPartOutAcquiredPC, canMoveToTradeIns } from '../../utils/buildEligibility';
 import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
 import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
 import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
+import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils/acquiredPC';
 
 interface BuildCardProps {
   isExpanded?: boolean;
@@ -87,12 +88,18 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const partsCost = calculateBuildPartsCost(build);
   const isSold = build.status === 'Sold';
   const isTradeIn = build.acquisitionSource === 'Trade-In';
+  const isPurchased = isPurchasedPC(build);
+  const isAcquired = isAcquiredPC(build);
+  const acquiredBreakdown = getAcquiredPCBreakdown(build);
   const hasBuildImage = hasShareableBuildImage(build);
   const tradeInOrigin = isTradeIn
     ? resolveTradeInBuildOrigin(build, state.transactions, state.builds)
     : null;
   const tradeInOriginDate = tradeInOrigin?.date
     ? formatReadableDate(tradeInOrigin.date) || tradeInOrigin.date
+    : undefined;
+  const purchaseDate = build.purchaseDate
+    ? formatReadableDate(build.purchaseDate) || build.purchaseDate
     : undefined;
 
   const executeShareImageDiscord = async () => {
@@ -227,9 +234,9 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 <h3 className="font-semibold text-zinc-100 text-xs sm:text-sm leading-tight break-words" title={build.name}>
                   {build.name}
                 </h3>
-                {build.acquisitionSource === 'Trade-In' && (
+                {isAcquired && (
                   <span className="bg-purple-500/15 text-purple-400 border border-purple-500/40 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider uppercase inline-flex items-center">
-                    TRADE-IN
+                    {isPurchased ? 'PURCHASED' : 'TRADE-IN'}
                   </span>
                 )}
               </div>
@@ -323,22 +330,22 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 >
                   <Pencil className="w-3.5 h-3.5" /> Edit
                 </button>
-                {!isSold && isTradeIn && onItemize && (
+                {!isSold && isAcquired && onItemize && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onItemize(build); }}
                     className="bg-[#0D1118] border border-white/[0.08] text-zinc-200 hover:text-white hover:border-emerald-500/40 transition-colors flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium"
-                    title={build.tradeInComponentBreakdown && build.tradeInComponentBreakdown.length > 0 ? 'Edit trade-in component breakdown' : 'Itemize trade-in into components'}
+                    title={acquiredBreakdown.length > 0 ? 'Edit acquired PC component breakdown' : 'Itemize acquired PC into components'}
                   >
-                    <FileText className="w-3.5 h-3.5" /> {build.tradeInComponentBreakdown && build.tradeInComponentBreakdown.length > 0 ? 'Edit Breakdown' : 'Itemize'}
+                    <FileText className="w-3.5 h-3.5" /> {acquiredBreakdown.length > 0 ? 'Edit Breakdown' : 'Itemize'}
                   </button>
                 )}
-                {!isSold && onDismantle && (isTradeIn ? canPartOutTradeInBuild(build) : canDismantleBuild(build)) && (
+                {!isSold && onDismantle && (isAcquired ? canPartOutAcquiredPC(build) : canDismantleBuild(build)) && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onDismantle(build); }}
                     className="bg-[#0D1118] border border-white/[0.08] text-zinc-200 hover:text-white hover:border-[#7C6CF2]/40 transition-colors flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium"
-                    title={isTradeIn ? 'Part out traded-in PC into inventory parts' : 'Dismantle rig and return parts to stock'}
+                    title={isAcquired ? 'Part out acquired PC into inventory parts' : 'Dismantle rig and return parts to stock'}
                   >
-                    <Wrench className="w-3.5 h-3.5" /> {isTradeIn ? 'Part Out' : 'Dismantle'}
+                    <Wrench className="w-3.5 h-3.5" /> {isAcquired ? 'Part Out' : 'Dismantle'}
                   </button>
                 )}
                 {isSold && (
@@ -499,6 +506,27 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             </div>
           )}
 
+          {isPurchased && (build.purchaseSeller || purchaseDate) && (
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-[#0D1118] p-2.5 rounded-xl border border-white/[0.08] min-w-0">
+                <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-purple-400 shrink-0" /> Purchased From
+                </div>
+                <div className="text-zinc-200 font-medium truncate text-xs">
+                  {build.purchaseSeller || 'Not recorded'}
+                </div>
+              </div>
+              <div className="bg-[#0D1118] p-2.5 rounded-xl border border-white/[0.08] min-w-0">
+                <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-purple-400 shrink-0" /> Purchase Date
+                </div>
+                <div className="text-zinc-200 font-medium truncate font-mono text-xs">
+                  {purchaseDate || 'Not recorded'}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Sold-Build Full Transaction & Financials Panel */}
           {isSold && (
             <SoldBuildTransactionPanel
@@ -531,16 +559,16 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               </div>
             )}
 
-            {isTradeIn && build.tradeInComponentBreakdown && build.tradeInComponentBreakdown.length > 0 && (
+            {isAcquired && acquiredBreakdown.length > 0 && (
               <div className="space-y-1.5 pt-2">
                 <div className="text-[10px] font-mono font-semibold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
-                  <span>TRADE-IN COMPONENTS ({build.tradeInComponentBreakdown.length})</span>
+                  <span>{isPurchased ? 'PURCHASED PC' : 'TRADE-IN'} COMPONENTS ({acquiredBreakdown.length})</span>
                   <span className="text-emerald-400/80">
-                    {formatCurrency(build.tradeInComponentBreakdown.reduce((sum, p) => sum + p.quantity * p.unitCost, 0))}
+                    {formatCurrency(acquiredBreakdown.reduce((sum, p) => sum + p.quantity * p.unitCost, 0))}
                   </span>
                 </div>
                 <div className="space-y-1.5">
-                  {build.tradeInComponentBreakdown.map((part, idx) => (
+                  {acquiredBreakdown.map((part, idx) => (
                     <div
                       key={part.id || idx}
                       className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-2.5 flex items-start gap-2.5 text-xs"
@@ -585,7 +613,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               </div>
               {build.parts.length === 0 ? (
                 <div className="text-xs text-zinc-500 italic py-2">
-                  {isTradeIn && build.tradeInComponentBreakdown && build.tradeInComponentBreakdown.length > 0 
+                  {isAcquired && acquiredBreakdown.length > 0
                     ? 'No stock upgrades allocated.'
                     : 'No components assigned yet.'}
                 </div>

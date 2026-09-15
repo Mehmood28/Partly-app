@@ -13,6 +13,7 @@ import { ComponentModal } from './components/ComponentModal';
 import { PurchaseEntryModal } from './components/PurchaseEntryModal';
 import { ConfirmModal } from './components/ConfirmModal';
 import { BuildModal } from './components/BuildModal';
+import { BuyPCModal } from './components/builds/BuyPCModal';
 import { SellPartModal } from './components/parts/sellPart/SellPartModal';
 import { BulkStockEntryModal, ParsedBulkStockItem } from './components/BulkStockEntryModal';
 import { InventoryComponent, PCBuild, PurchaseEntry } from './types';
@@ -25,6 +26,7 @@ function AppContent() {
     addComponents,
     addPurchaseEntry,
     addBuild,
+    purchasePC,
     resetToDefault,
   } = useInventory();
 
@@ -40,6 +42,7 @@ function AppContent() {
   const [purchaseModalComponentId, setPurchaseModalComponentId] = useState<string | null>(null);
 
   const [isBuildModalOpen, setIsBuildModalOpen] = useState<boolean>(false);
+  const [isBuyPCModalOpen, setIsBuyPCModalOpen] = useState<boolean>(false);
   const [initialBuildData, setInitialBuildData] = useState<Partial<PCBuild> | null>(null);
 
   const [isSellPartModalOpen, setIsSellPartModalOpen] = useState<boolean>(false);
@@ -293,6 +296,7 @@ function AppContent() {
             <BuildsView 
               isActive={activeTab === 'builds'} 
               onOpenAddBuild={handleOpenAddBuild}
+              onOpenBuyPC={() => setIsBuyPCModalOpen(true)}
               statusFilter={buildsStatusFilter}
               onStatusFilterChange={setBuildsStatusFilter}
             />
@@ -302,6 +306,21 @@ function AppContent() {
               initialData={initialBuildData}
               onSave={(buildData) => {
                 addBuild(buildData);
+              }}
+            />
+            <BuyPCModal
+              isOpen={isBuyPCModalOpen}
+              onClose={() => setIsBuyPCModalOpen(false)}
+              onConfirm={(purchase) => {
+                const result = purchasePC(purchase);
+                if (!result.success) {
+                  showToast(result.error || 'Unable to save this PC purchase.', 'error');
+                  return result;
+                }
+                setIsBuyPCModalOpen(false);
+                setBuildsStatusFilter('Pending');
+                showToast('PC purchase saved in Pending builds.', 'success');
+                return result;
               }}
             />
           </div>

@@ -25,6 +25,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
   components,
 }) => {
   const { hideSupplierNames } = usePrivacy();
+  const purchasedQuantity = tx.quantity || tx.itemCount || tx.detailsList?.length || 1;
   return (
     <div className="space-y-3">
       {/* Financial Metrics Row */}
@@ -36,7 +37,9 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
           <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Quantity Purchased</div>
           <div className="text-sm sm:text-base font-bold font-mono text-[#9D91FA]">
-            {tx.quantity || tx.itemCount || tx.detailsList?.length || 1} units
+            {tx.purchaseKind === 'PC'
+              ? `${purchasedQuantity} ${purchasedQuantity === 1 ? 'PC' : 'PCs'}`
+              : `${purchasedQuantity} ${purchasedQuantity === 1 ? 'unit' : 'units'}`}
           </div>
         </div>
         {/* Show Unit Price only for single items with quantity > 1 of the same part */}
@@ -54,8 +57,10 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
       {tx.detailsList && tx.detailsList.length > 0 ? (
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-            <span>Batch Purchase Items</span>
-            <span className="font-mono text-zinc-500">{tx.detailsList.length} items</span>
+            <span>{isBulkPurchase ? 'Batch Purchase Items' : 'Purchase Item'}</span>
+            <span className="font-mono text-zinc-500">
+              {tx.detailsList.length} {tx.detailsList.length === 1 ? 'item' : 'items'}
+            </span>
           </div>
 
           <div className="space-y-1.5">
