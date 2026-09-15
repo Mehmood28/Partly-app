@@ -311,6 +311,46 @@ describe('Phase 3B - Part Out and Ordinary Dismantle Accounting Integrity', () =
       expect(gpuEntry?.sourceSaleTransactionId).toBe('tx-src-sale');
     });
 
+    it('stores the sold build buyer when legacy trade-in links and labels are stale', () => {
+      const state = getMockTradeInState({ upgradeParts: [] });
+      state.builds[0] = {
+        ...state.builds[0],
+        id: 'deleted-trade-in-build',
+        name: '5900X + RTX 3080',
+        sourceSaleTransactionId: 'missing-sale',
+      };
+      state.builds.push({
+        id: 'sold-build',
+        name: 'Ryzen 7 9800X3D + RTX 5080',
+        status: 'Sold',
+        createdDate: '2026-05-20',
+        saleDate: '2026-06-01',
+        saleTransactionId: 'tx-src-sale',
+        buyerName: 'Balraj Shah',
+        parts: [],
+      });
+      state.transactions[0] = {
+        ...state.transactions[0],
+        buyerName: undefined,
+        incomingTradeInBuildId: undefined,
+        tradeInBuildName: 'Traded Rig',
+        tradeInCredit: 300,
+      };
+
+      const res = handlePartOutTradeInBuild(
+        state,
+        'deleted-trade-in-build',
+        defaultExtracted
+      );
+      expect(res.success).toBe(true);
+
+      const gpuEntry = res.nextState.components
+        .find((component) => component.name === 'GTX 1660 Super')
+        ?.purchaseHistory[0];
+      expect(gpuEntry?.platform).toBe('Balraj Shah');
+      expect(gpuEntry?.sourceSaleTransactionId).toBe('tx-src-sale');
+    });
+
     it('preserves valid zero unit cost and zero total amount', () => {
       const state = getMockTradeInState({
         estimatedCost: 0,
