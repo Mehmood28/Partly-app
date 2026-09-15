@@ -277,11 +277,15 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                             </span>
                           )}
                           <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                            {batch.availableQuantity}x @ {formatCurrency(entryUnitPrice)}
+                            {batch.availableQuantity === 1
+                              ? formatCurrency(entryUnitPrice)
+                              : `${batch.availableQuantity}x @ ${formatCurrency(entryUnitPrice)}`}
                           </span>
-                          <span className="bg-white/[0.06] text-zinc-200 border border-white/[0.1] shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                            Total: {formatCurrency(entryTotal)}
-                          </span>
+                          {batch.availableQuantity > 1 && (
+                            <span className="bg-white/[0.06] text-zinc-200 border border-white/[0.1] shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+                              Total: {formatCurrency(entryTotal)}
+                            </span>
+                          )}
                           {!isPartedOutTradeInBatch && !hideSupplierNames && entry.platform && (
                             <span className={`${getPlatformBadgeColor(entry.platform)} shrink-0 whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
                               {String(entry.platform)}
