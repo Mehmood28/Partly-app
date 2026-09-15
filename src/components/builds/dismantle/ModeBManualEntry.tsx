@@ -12,6 +12,8 @@ interface ModeBManualEntryProps {
   handleRemovePart: (id: string) => void;
   handleUpdatePart: (id: string, updates: Partial<ExtractedPartInput>) => void;
   handleToggleLock: (id: string) => void;
+  optionalRows?: boolean;
+  heading?: string;
 }
 
 const categoryOptions = CATEGORIES.map((cat) => ({
@@ -26,13 +28,19 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
   handleRemovePart,
   handleUpdatePart,
   handleToggleLock,
+  optionalRows = false,
+  heading = 'Itemize Components',
 }) => {
+  const includedCount = optionalRows
+    ? manualParts.filter((part) => part.name.trim().length > 0).length
+    : manualParts.length;
+
   return (
     <div className="space-y-2.5 pb-8">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <label className="text-xs font-semibold text-zinc-200 font-sans">
-            Itemize Components ({manualParts.length} Parts)
+            {heading} ({includedCount} {includedCount === 1 ? 'Part' : 'Parts'})
           </label>
           {lockedParts.length > 0 && (
             <span className="text-[10px] font-mono bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 text-[#9D91FA] px-1.5 py-0.5 rounded-md">
@@ -76,7 +84,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
               </div>
               <input
                 type="text"
-                required
+                required={!optionalRows}
                 placeholder={`e.g. ${
                   part.category === 'GPU'
                     ? 'RTX 3070 8GB'

@@ -10,17 +10,20 @@ import {
 } from '../../types';
 import { autoTagComponent, calculateBuildPartsCost, computeUnresolvedLegacyReservation, formatCurrency, getPurchaseEntryRemainingQuantity, parseDateLocal } from '../../utils/helpers';
 import { getBuildPresentation } from '../../utils/buildPresentation';
-import { SellBuildData } from '../types';
+import { AcquiredPCComponentInput, PurchasePCData, SellBuildData } from '../types';
 import {
   canDeleteBuildDraft,
   canDismantleBuild,
   findLinkedSaleTransaction,
   getSaleTradeInEditState,
   isTradeInBuildPristine,
+  validateCostBreakdownAccounting,
   validatePartOutAccounting,
   validateItemizationAccounting
 } from '../../utils/buildEligibility';
 import { BUILD_WARRANTY_DAYS, isValidWarrantyDays, normalizeWarrantyDays } from '../../utils/warranty';
+import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
+import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils/acquiredPC';
 
 export const handleAddBuild = (
   prev: AppState,
@@ -147,6 +150,98 @@ export const handleAddImportedBuilds = (
   return {
     ...prev,
     builds: [...builds, ...prev.builds],
+  };
+};
+
+export const handlePurchasePC = (
+  prev: AppState,
+  purchase: PurchasePCData
+): { nextState: AppState; success: boolean; error?: string } => {
+  if (
+    typeof purchase.purchasePrice !== 'number' ||
+    !Number.isFinite(purchase.purchasePrice) ||
+    purchase.purchasePrice <= 0
+  ) {
+    return { nextState: prev, success: false, error: 'Purchase price must be greater than zero.' };
+  }
+  if (
+    typeof purchase.purchaseDate !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(purchase.purchaseDate) ||
+    !parseDateLocal(purchase.purchaseDate)
+  ) {
+    return { nextState: prev, success: false, error: 'Purchase date must be a valid date.' };
+  }
+  if (!VALID_PAYMENT_METHODS.includes(purchase.paymentMethod) || purchase.paymentMethod === 'Trade-In') {
+    return { nextState: prev, success: false, error: 'Invalid purchase payment method.' };
+  }
+
+  const submittedBreakdown = purchase.breakdown || [];
+  if (submittedBreakdown.length > 0) {
+    const validation = validateCostBreakdownAccounting(purchase.purchasePrice, submittedBreakdown);
+    if (!validation.valid) {
+      return { nextState: prev, success: false, error: validation.error };
+    }
+  }
+
+  const now = Date.now();
+  const buildId = `build-purchased-${now}-${Math.random().toString(36).substring(2, 8)}`;
+  const transactionId = `tx-purchased-${now}-${Math.random().toString(36).substring(2, 8)}`;
+  const normalizedBreakdown = submittedBreakdown.map((part, index) => ({
+    id: part.id?.trim() || `brk-${now}-${index}-${Math.random().toString(36).substring(2, 8)}`,
+    category: part.category,
+    name: part.name.trim(),
+    quantity: part.quantity,
+    unitCost: part.unitCost,
+    tags: part.tags && part.tags.length > 0 ? [...part.tags] : undefined,
+  }));
+  const cpuName = normalizedBreakdown.find((part) => part.category === 'CPU')?.name;
+  const gpuName = normalizedBreakdown.find((part) => part.category === 'GPU')?.name;
+  const generatedName = [cpuName, gpuName].filter(Boolean).join(' + ');
+  const buildName = purchase.name?.trim() || generatedName || 'Purchased PC';
+  const seller = purchase.seller?.trim() || undefined;
+
+  const newBuild: PCBuild = {
+    id: buildId,
+    name: buildName,
+    parts: [],
+    acquisitionComponentBreakdown: normalizedBreakdown,
+    status: 'In Progress',
+    createdDate: purchase.purchaseDate,
+    estimatedCost: purchase.purchasePrice,
+    acquisitionSource: 'Purchased',
+    purchaseTransactionId: transactionId,
+    purchaseDate: purchase.purchaseDate,
+    purchaseSeller: seller,
+    purchasePaymentMethod: purchase.paymentMethod,
+    notes: purchase.notes?.trim() || undefined,
+    imageUrl: purchase.imageUrl?.trim() || undefined,
+    warrantyDays: BUILD_WARRANTY_DAYS,
+  };
+
+  const purchaseTransaction: TransactionLogItem = {
+    id: transactionId,
+    type: 'PURCHASE',
+    title: `Purchased PC: ${buildName}`,
+    timestamp: purchase.purchaseDate,
+    dateSortable: purchase.purchaseDate,
+    itemCount: 1,
+    quantity: 1,
+    totalAmount: purchase.purchasePrice,
+    platform: seller,
+    paymentMethod: purchase.paymentMethod,
+    itemNameOrSummary: buildName,
+    relatedComponentId: buildId,
+    purchaseKind: 'PC',
+    notes: purchase.notes?.trim() || undefined,
+  };
+
+  return {
+    nextState: {
+      ...prev,
+      builds: [newBuild, ...prev.builds],
+      transactions: [purchaseTransaction, ...prev.transactions],
+    },
+    success: true,
   };
 };
 
@@ -1873,7 +1968,7 @@ export const handleDeleteBuild = (
   };
 };
 
-export const handlePartOutTradeInBuild = (
+export const handlePartOutAcquiredPC = (
   prev: AppState,
   buildId: string,
   extractedParts: { category: ComponentCategory; name: string; quantity: number; unitCost: number; tags?: string[] }[]
@@ -1941,6 +2036,22 @@ export const handlePartOutTradeInBuild = (
     }
   }
 
+  const purchasedPC = isPurchasedPC(targetBuild);
+  const tradeInOrigin = purchasedPC
+    ? null
+    : resolveTradeInBuildOrigin(targetBuild, prev.transactions, prev.builds);
+  const acquisitionSeller = purchasedPC
+    ? targetBuild.purchaseSeller?.trim() || 'Purchased PC'
+    : tradeInOrigin?.buyerName || 'Traded-In PC';
+  const acquisitionPaymentMethod: PaymentMethod = purchasedPC
+    ? targetBuild.purchasePaymentMethod || 'Cash'
+    : 'Trade-In';
+  const sourceSaleTransactionId =
+    tradeInOrigin?.sourceSaleTransactionId || targetBuild.sourceSaleTransactionId;
+  const sourcePurchaseTransactionId = purchasedPC
+    ? targetBuild.purchaseTransactionId
+    : undefined;
+
   // Determine extraction date
   const isValidCalendarDate = (dateStr?: string | null): boolean => {
     if (!dateStr || typeof dateStr !== 'string') return false;
@@ -1950,8 +2061,14 @@ export const handlePartOutTradeInBuild = (
   };
 
   let extractedDate = '';
-  if (targetBuild.sourceSaleTransactionId) {
-    const srcTx = prev.transactions.find((t) => t.id === targetBuild.sourceSaleTransactionId);
+  if (purchasedPC && targetBuild.purchaseDate && isValidCalendarDate(targetBuild.purchaseDate)) {
+    extractedDate = targetBuild.purchaseDate.trim();
+  }
+  if (tradeInOrigin?.date && isValidCalendarDate(tradeInOrigin.date)) {
+    extractedDate = tradeInOrigin.date.trim();
+  }
+  if (!extractedDate && sourceSaleTransactionId) {
+    const srcTx = prev.transactions.find((t) => t.id === sourceSaleTransactionId);
     if (srcTx?.dateSortable && isValidCalendarDate(srcTx.dateSortable)) {
       extractedDate = srcTx.dateSortable.trim();
     } else if (srcTx?.timestamp && isValidCalendarDate(srcTx.timestamp)) {
@@ -1967,7 +2084,7 @@ export const handlePartOutTradeInBuild = (
 
   let currentComponents = [...prev.components];
 
-  // 1. If this trade-in had allocated upgrade parts, return them to their original batches (unassign them)
+  // 1. Return allocated upgrade parts to their original batches (unassign them).
   const returnedUpgradePartsList: string[] = [];
   if (targetBuild.parts && targetBuild.parts.length > 0) {
     const qtyByCompId: Record<string, number> = {};
@@ -2007,11 +2124,13 @@ export const handlePartOutTradeInBuild = (
       unitPrice: part.unitCost,
       totalPrice: part.quantity * part.unitCost,
       taxPercent: 0,
-      paymentMethod: 'Trade-In',
-      platform: 'Traded-In PC',
-      sourceTradeInBuildId: targetBuild.id,
-      sourceSaleTransactionId: targetBuild.sourceSaleTransactionId,
-      notes: `Parted out from traded-in PC: ${targetBuild.name}`,
+      paymentMethod: acquisitionPaymentMethod,
+      platform: acquisitionSeller,
+      sourceTradeInBuildId: purchasedPC ? undefined : targetBuild.id,
+      sourceSaleTransactionId: purchasedPC ? undefined : sourceSaleTransactionId,
+      sourcePurchasedBuildId: purchasedPC ? targetBuild.id : undefined,
+      sourcePurchaseTransactionId,
+      notes: `Parted out from ${purchasedPC ? 'purchased' : 'traded-in'} PC: ${targetBuild.name}`,
     };
 
     if (existingCompIndex !== -1) {
@@ -2072,17 +2191,18 @@ export const handlePartOutTradeInBuild = (
   const partOutTx: TransactionLogItem = {
     id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
     type: 'BUILD_ALLOCATION',
-    title: `Parted Out Trade-In: ${targetBuild.name}`,
+    title: `${purchasedPC ? 'Parted Out Purchased PC' : 'Parted Out Trade-In'}: ${targetBuild.name}`,
     timestamp: extractedDate,
     dateSortable: extractedDate,
     itemCount: extractedParts.length,
     quantity: extractedParts.reduce((sum, p) => sum + p.quantity, 0),
     totalAmount: totalExtractedValue,
-    platform: 'Traded-In PC',
+    platform: acquisitionSeller,
+    buyerName: tradeInOrigin?.buyerName,
     itemNameOrSummary: targetBuild.name,
     detailsList: partsSummary,
-    incomingTradeInBuildId: targetBuild.id,
-    buildActivityKind: 'TRADE_IN_PART_OUT',
+    incomingTradeInBuildId: purchasedPC ? undefined : targetBuild.id,
+    buildActivityKind: purchasedPC ? 'PURCHASED_PC_PART_OUT' : 'TRADE_IN_PART_OUT',
   };
 
   return {
@@ -2096,6 +2216,19 @@ export const handlePartOutTradeInBuild = (
   };
 };
 
+/** Backward-compatible trade-in entry point retained for existing callers and data tests. */
+export const handlePartOutTradeInBuild = (
+  prev: AppState,
+  buildId: string,
+  extractedParts: { category: ComponentCategory; name: string; quantity: number; unitCost: number; tags?: string[] }[]
+): { nextState: AppState; success: boolean; error?: string } => {
+  const targetBuild = prev.builds.find((build) => build.id === buildId);
+  if (!targetBuild || targetBuild.acquisitionSource !== 'Trade-In') {
+    return { nextState: prev, success: false, error: 'Trade-in build not found.' };
+  }
+  return handlePartOutAcquiredPC(prev, buildId, extractedParts);
+};
+
 export const handleDismantleBuild = (
   prev: AppState,
   buildId: string,
@@ -2104,9 +2237,9 @@ export const handleDismantleBuild = (
   const targetBuild = prev.builds.find((b) => b.id === buildId);
   if (!targetBuild) return { nextState: prev, success: false, error: 'Build not found.' };
 
-  // Route trade-in PCs to dedicated part-out handler
-  if (targetBuild.acquisitionSource === 'Trade-In') {
-    return handlePartOutTradeInBuild(prev, buildId, extractedParts);
+  // Route whole-PC acquisitions to the dedicated part-out handler.
+  if (isAcquiredPC(targetBuild)) {
+    return handlePartOutAcquiredPC(prev, buildId, extractedParts);
   }
 
   // Guard: ordinary builds without parts or ineligible builds cannot be dismantled
@@ -2223,14 +2356,14 @@ export const handleDismantleBuild = (
   };
 };
 
-export const handleSaveTradeInComponentBreakdown = (
+export const handleSaveAcquiredPCComponentBreakdown = (
   prev: AppState,
   buildId: string,
-  breakdown: { id?: string; category: ComponentCategory; name: string; quantity: number; unitCost: number; tags?: string[] }[]
+  breakdown: AcquiredPCComponentInput[]
 ): { nextState: AppState; success: boolean; error?: string } => {
   const targetBuild = prev.builds.find((b) => b.id === buildId);
   if (!targetBuild) {
-    return { nextState: prev, success: false, error: 'Trade-in build not found.' };
+    return { nextState: prev, success: false, error: 'Acquired PC not found.' };
   }
 
   const validation = validateItemizationAccounting(targetBuild, breakdown);
@@ -2238,7 +2371,7 @@ export const handleSaveTradeInComponentBreakdown = (
     return { nextState: prev, success: false, error: validation.error };
   }
 
-  const existingBreakdown = targetBuild.tradeInComponentBreakdown || [];
+  const existingBreakdown = getAcquiredPCBreakdown(targetBuild);
   const existingIds = new Set(existingBreakdown.map((p) => p.id));
   const seenSubmittedIds = new Set<string>();
 
@@ -2293,9 +2426,26 @@ export const handleSaveTradeInComponentBreakdown = (
     nextState: {
       ...prev,
       builds: prev.builds.map((b) =>
-        b.id === buildId ? { ...b, tradeInComponentBreakdown: newBreakdown } : b
+        b.id === buildId
+          ? b.acquisitionSource === 'Purchased'
+            ? { ...b, acquisitionComponentBreakdown: newBreakdown }
+            : { ...b, tradeInComponentBreakdown: newBreakdown }
+          : b
       ),
     },
     success: true,
   };
+};
+
+/** Backward-compatible trade-in entry point retained for existing callers. */
+export const handleSaveTradeInComponentBreakdown = (
+  prev: AppState,
+  buildId: string,
+  breakdown: AcquiredPCComponentInput[]
+): { nextState: AppState; success: boolean; error?: string } => {
+  const targetBuild = prev.builds.find((build) => build.id === buildId);
+  if (!targetBuild || targetBuild.acquisitionSource !== 'Trade-In') {
+    return { nextState: prev, success: false, error: 'Trade-in build not found.' };
+  }
+  return handleSaveAcquiredPCComponentBreakdown(prev, buildId, breakdown);
 };

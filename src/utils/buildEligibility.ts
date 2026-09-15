@@ -1,16 +1,17 @@
 import { PCBuild, TransactionLogItem, InventoryComponent, ComponentCategory, COMPONENT_CATEGORIES } from '../types';
+import { isAcquiredPC } from './acquiredPC';
 
 /**
  * 1. Delete Draft is allowed only when:
  * - Build exists.
  * - Build is not Sold.
- * - acquisitionSource !== 'Trade-In'.
+ * - It is not an acquired whole PC.
  * - It has zero allocated parts.
  */
 export function canDeleteBuildDraft(build: PCBuild | null | undefined): boolean {
   if (!build) return false;
   if (build.status === 'Sold') return false;
-  if (build.acquisitionSource === 'Trade-In') return false;
+  if (isAcquiredPC(build)) return false;
   return !build.parts || build.parts.length === 0;
 }
 
@@ -18,13 +19,13 @@ export function canDeleteBuildDraft(build: PCBuild | null | undefined): boolean 
  * 2. Dismantle is allowed only when:
  * - Build exists.
  * - Build is not Sold.
- * - acquisitionSource !== 'Trade-In'.
+ * - It is not an acquired whole PC.
  * - It has at least one allocated part.
  */
 export function canDismantleBuild(build: PCBuild | null | undefined): boolean {
   if (!build) return false;
   if (build.status === 'Sold') return false;
-  if (build.acquisitionSource === 'Trade-In') return false;
+  if (isAcquiredPC(build)) return false;
   return Boolean(build.parts && build.parts.length > 0);
 }
 
@@ -38,6 +39,13 @@ export function canPartOutTradeInBuild(build: PCBuild | null | undefined): boole
   if (!build) return false;
   if (build.status === 'Sold') return false;
   return build.acquisitionSource === 'Trade-In';
+}
+
+/** Any unsold whole PC acquired through a trade-in or direct purchase can be parted out. */
+export function canPartOutAcquiredPC(build: PCBuild | null | undefined): boolean {
+  if (!build) return false;
+  if (build.status === 'Sold') return false;
+  return isAcquiredPC(build);
 }
 
 /**
@@ -313,7 +321,7 @@ export function validatePartOutAccounting(
   build: PCBuild,
   extractedParts: PartOutValidationPart[]
 ): { valid: boolean; error?: string } {
-  if (!canPartOutTradeInBuild(build)) {
+  if (!canPartOutAcquiredPC(build)) {
     return { valid: false, error: 'Build is not eligible to be parted out.' };
   }
   return validateCostBreakdownAccounting(build.estimatedCost, extractedParts);
@@ -323,11 +331,11 @@ export function validateItemizationAccounting(
   build: PCBuild,
   extractedParts: PartOutValidationPart[]
 ): { valid: boolean; error?: string } {
-  if (build.acquisitionSource !== 'Trade-In') {
-    return { valid: false, error: 'Only trade-in builds can have a component breakdown.' };
+  if (!isAcquiredPC(build)) {
+    return { valid: false, error: 'Only acquired PCs can have an acquisition component breakdown.' };
   }
   if (build.status === 'Sold') {
-    return { valid: false, error: 'Cannot itemize a trade-in build that is already sold.' };
+    return { valid: false, error: 'Cannot itemize an acquired PC that is already sold.' };
   }
   return validateCostBreakdownAccounting(build.estimatedCost, extractedParts);
 }

@@ -35,7 +35,11 @@ export const generateInvoice = async (build: PCBuild, components: InventoryCompo
   // Table
   const tableData = presentation.allComponents.map(part => [
     part.category,
-    part.source === 'TRADE_IN_BASE' ? 'Trade-In Base' : 'Upgrade',
+    part.source === 'TRADE_IN_BASE'
+      ? 'Trade-In Base'
+      : part.source === 'PURCHASED_BASE'
+      ? 'Purchased PC Base'
+      : 'Upgrade',
     part.name,
     part.quantity,
   ]);

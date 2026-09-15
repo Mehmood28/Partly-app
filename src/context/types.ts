@@ -69,6 +69,26 @@ export interface SellBuildData {
   } | null;
 }
 
+export interface AcquiredPCComponentInput {
+  id?: string;
+  category: ComponentCategory;
+  name: string;
+  quantity: number;
+  unitCost: number;
+  tags?: string[];
+}
+
+export interface PurchasePCData {
+  name?: string;
+  purchasePrice: number;
+  purchaseDate: string;
+  seller?: PurchaseEntry['platform'];
+  paymentMethod: PurchaseEntry['paymentMethod'];
+  notes?: string;
+  imageUrl?: string;
+  breakdown?: AcquiredPCComponentInput[];
+}
+
 export interface SaveComponentOptions {
   componentData: Omit<InventoryComponent, 'id' | 'assignedCount'>;
   existingComponentId?: string;
@@ -129,6 +149,7 @@ export interface InventoryContextType {
 
   // Build Actions
   addBuild: (build: Omit<PCBuild, 'id' | 'createdDate'>) => void;
+  purchasePC: (purchase: PurchasePCData) => { success: boolean; error?: string };
   addImportedBuilds: (builds: PCBuild[]) => void;
   updateBuildStatus: (buildId: string, status: PCBuild['status']) => void;
   updateBuild: (buildId: string, updates: Partial<PCBuild>) => void;
@@ -167,9 +188,13 @@ export interface InventoryContextType {
     buildId: string,
     breakdown: { id?: string; category: ComponentCategory; name: string; quantity: number; unitCost: number; tags?: string[] }[]
   ) => { success: boolean; error?: string };
+  saveAcquiredPCComponentBreakdown: (
+    buildId: string,
+    breakdown: AcquiredPCComponentInput[]
+  ) => { success: boolean; error?: string };
   dismantleBuild: (
     buildId: string,
-    extractedParts?: { category: ComponentCategory; name: string; quantity: number; unitCost: number }[]
+    extractedParts?: AcquiredPCComponentInput[]
   ) => { success: boolean; error?: string };
 
   // Transaction Actions

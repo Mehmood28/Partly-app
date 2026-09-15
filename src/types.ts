@@ -52,6 +52,8 @@ export interface PurchaseEntry {
   _originalComponentId?: string;
   sourceTradeInBuildId?: string;
   sourceSaleTransactionId?: string;
+  sourcePurchasedBuildId?: string;
+  sourcePurchaseTransactionId?: string;
 }
 
 export interface InventoryComponent {
@@ -78,19 +80,24 @@ export interface PCBuildPart {
 
 export type BuildStatus = 'In Progress' | 'Listed for Sale' | 'Sold' | 'Trade-In Processing';
 
+export type PCBuildAcquisitionSource = 'Built' | 'Trade-In' | 'Purchased';
+
+export interface PCBuildComponentBreakdown {
+  id: string;
+  category: ComponentCategory;
+  name: string;
+  quantity: number;
+  unitCost: number;
+  tags?: string[];
+}
+
 export interface PCBuild {
   id: string;
   warrantyDays?: number;
   name: string; // e.g. "7700 + 4070 CUSTOM"
   parts: PCBuildPart[];
-  tradeInComponentBreakdown?: {
-    id: string;
-    category: ComponentCategory;
-    name: string;
-    quantity: number;
-    unitCost: number;
-    tags?: string[];
-  }[];
+  tradeInComponentBreakdown?: PCBuildComponentBreakdown[];
+  acquisitionComponentBreakdown?: PCBuildComponentBreakdown[];
   status: BuildStatus;
   createdDate: string;
   builtDate?: string; // Date when the PC was physically built
@@ -99,8 +106,12 @@ export interface PCBuild {
   estimatedCost?: number;
   notes?: string;
   imageUrl?: string;
-  acquisitionSource?: 'Built' | 'Trade-In';
+  acquisitionSource?: PCBuildAcquisitionSource;
   sourceSaleTransactionId?: string; // Immutable ID of the sale transaction where this trade-in PC was acquired
+  purchaseTransactionId?: string; // Immutable ID of the transaction where this whole PC was purchased
+  purchaseDate?: string;
+  purchaseSeller?: Platform;
+  purchasePaymentMethod?: PaymentMethod;
   saleTransactionId?: string; // Immutable ID of the sale transaction for this sold PC build
   // Sale details if sold
   saleDate?: string;
@@ -160,7 +171,8 @@ export interface TransactionLogItem {
   tradeInBuildName?: string;
   tradeInDescription?: string;
   tradeInNotes?: string;
-  buildActivityKind?: 'DISMANTLE' | 'TRADE_IN_PART_OUT';
+  purchaseKind?: 'PC';
+  buildActivityKind?: 'DISMANTLE' | 'TRADE_IN_PART_OUT' | 'PURCHASED_PC_PART_OUT';
 }
 
 export interface AppState {

@@ -1,7 +1,8 @@
 import { ComponentCategory, PCBuild, InventoryComponent } from '../types';
 import { sortByCategory } from './sorting';
+import { getAcquiredPCBreakdown } from './acquiredPC';
 
-export type DisplayComponentSource = 'TRADE_IN_BASE' | 'ALLOCATED_UPGRADE';
+export type DisplayComponentSource = 'TRADE_IN_BASE' | 'PURCHASED_BASE' | 'ALLOCATED_UPGRADE';
 
 export interface BuildDisplayComponent {
   id: string; // A stable display ID for list keys
@@ -33,12 +34,13 @@ export function getBuildPresentation(build: PCBuild | null | undefined, componen
   const baseComponents: BuildDisplayComponent[] = [];
   const upgrades: BuildDisplayComponent[] = [];
 
-  if (build.acquisitionSource === 'Trade-In' && build.tradeInComponentBreakdown) {
-    for (let i = 0; i < build.tradeInComponentBreakdown.length; i++) {
-      const p = build.tradeInComponentBreakdown[i];
+  const acquiredBreakdown = getAcquiredPCBreakdown(build);
+  if (acquiredBreakdown.length > 0) {
+    for (let i = 0; i < acquiredBreakdown.length; i++) {
+      const p = acquiredBreakdown[i];
       baseComponents.push({
         id: p.id || `base-${i}-${p.category}-${p.name}`,
-        source: 'TRADE_IN_BASE',
+        source: build.acquisitionSource === 'Purchased' ? 'PURCHASED_BASE' : 'TRADE_IN_BASE',
         category: p.category,
         name: p.name,
         quantity: p.quantity,

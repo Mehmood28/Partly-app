@@ -17,6 +17,7 @@ import { CustomSelect } from './ui/CustomSelect';
 import {
   Hammer,
   Plus,
+  ShoppingCart,
   X,
   Search,
 } from 'lucide-react';
@@ -26,6 +27,7 @@ export type FilterStatus = 'Available' | 'Pending' | 'Trade-Ins' | 'Sold';
 interface BuildsViewProps {
   isActive?: boolean;
   onOpenAddBuild: (initialData?: Partial<PCBuild>) => void;
+  onOpenBuyPC: () => void;
   statusFilter?: FilterStatus;
   onStatusFilterChange?: (status: FilterStatus) => void;
 }
@@ -42,6 +44,7 @@ type SortOption =
 export const BuildsView: React.FC<BuildsViewProps> = React.memo(({ 
   isActive, 
   onOpenAddBuild,
+  onOpenBuyPC,
   statusFilter: propStatusFilter,
   onStatusFilterChange
 }) => {
@@ -52,7 +55,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
     sellBuild,
     deleteBuild,
     dismantleBuild,
-    saveTradeInComponentBreakdown,
+    saveAcquiredPCComponentBreakdown,
   } = useInventory();
   const { showToast } = useToast();
 
@@ -245,12 +248,20 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           </p>
         </div>
 
-        <button
-          onClick={() => onOpenAddBuild()}
-          className="bg-[#7C6CF2] hover:bg-[#6A58EA] text-white font-semibold shadow-sm text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
-        >
-          <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Create New PC Build
-        </button>
+        <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+          <button
+            onClick={onOpenBuyPC}
+            className="bg-[#121722] hover:bg-white/[0.06] border border-[#7C6CF2]/30 text-[#9D91FA] font-semibold shadow-sm text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" /> Buy PC
+          </button>
+          <button
+            onClick={() => onOpenAddBuild()}
+            className="bg-[#7C6CF2] hover:bg-[#6A58EA] text-white font-semibold shadow-sm text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Create New PC Build
+          </button>
+        </div>
       </div>
 
       {/* Filter Tabs & Search Bar */}
@@ -441,6 +452,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         onClose={() => setDismantlingBuild(null)}
         onConfirm={(buildId, extractedParts) => {
           const isTradeIn = dismantlingBuild?.acquisitionSource === 'Trade-In';
+          const isPurchased = dismantlingBuild?.acquisitionSource === 'Purchased';
           const res = dismantleBuild(buildId, extractedParts);
           if (!res.success) {
             showToast(res.error || 'Failed to dismantle build', 'error');
@@ -450,6 +462,8 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           const totalExtractedCount = extractedParts.reduce((sum, p) => sum + (p.quantity || 1), 0);
           if (isTradeIn) {
             showToast(`Trade-in parted out — ${totalExtractedCount} parts added to inventory stock.`);
+          } else if (isPurchased) {
+            showToast(`Purchased PC parted out — ${totalExtractedCount} parts added to inventory stock.`);
           } else {
             showToast(`Rig dismantled — ${totalExtractedCount} parts returned to inventory stock.`);
           }
@@ -459,13 +473,14 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         build={itemizingBuild}
         onClose={() => setItemizingBuild(null)}
         onConfirm={(buildId, breakdown) => {
-          const res = saveTradeInComponentBreakdown(buildId, breakdown);
+          const acquisitionType = itemizingBuild?.acquisitionSource === 'Purchased' ? 'Purchased PC' : 'Trade-in PC';
+          const res = saveAcquiredPCComponentBreakdown(buildId, breakdown);
           if (!res.success) {
             showToast(res.error || 'Failed to save breakdown', 'error');
             return;
           }
           setItemizingBuild(null);
-          showToast(`Trade-in PC successfully itemized.`);
+          showToast(`${acquisitionType} successfully itemized.`);
         }}
       />
       <SellBuildModal 

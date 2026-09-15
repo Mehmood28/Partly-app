@@ -28,7 +28,7 @@ export function cleanSpecValue(val: string): string {
 export function extractBuildSpecs(parts: Array<{category: string; name: string; quantity: number; source?: string}>): BuildSpecsMap {
   const specs: BuildSpecsMap = {};
   
-  const hasMultipleSources = parts.some(p => p.source === 'TRADE_IN_BASE') && parts.some(p => p.source === 'ALLOCATED_UPGRADE');
+  const hasMultipleSources = parts.some(p => p.source?.endsWith('_BASE')) && parts.some(p => p.source === 'ALLOCATED_UPGRADE');
 
   const formatPartName = (p: {category: string; name: string; quantity: number; source?: string}) => {
     let name = cleanSpecValue(p.name);

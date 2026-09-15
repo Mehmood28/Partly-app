@@ -2,6 +2,7 @@
 import { AppState } from "../types";
 import { InventoryComponent, PCBuild } from '../types';
 import { classifyTransaction } from './transactionClassification';
+import { isAcquiredPC } from './acquiredPC';
 
 export function precomputeAssignedBatches(
   builds: PCBuild[],
@@ -350,7 +351,7 @@ export function calculateBuildPartsCost(build: PCBuild): number {
       ? build.estimatedCost
       : 0;
 
-  if (build.acquisitionSource === 'Trade-In') {
+  if (isAcquiredPC(build)) {
     return baseCost + partsSum;
   }
 
