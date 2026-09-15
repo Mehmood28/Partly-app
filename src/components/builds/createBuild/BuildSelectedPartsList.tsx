@@ -83,7 +83,7 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
                 className="bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 flex items-center justify-between gap-2"
               >
                 <div className="flex items-center min-w-0 flex-1 pr-2">
-                  <span className="text-xs font-medium text-zinc-200 truncate font-sans">{part.componentName}</span>
+                  <span className="text-xs font-medium leading-snug text-zinc-200 break-words font-sans">{part.componentName}</span>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
