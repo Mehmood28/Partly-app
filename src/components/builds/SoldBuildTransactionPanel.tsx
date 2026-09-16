@@ -1,16 +1,17 @@
 import React from 'react';
 import { PCBuild, TransactionLogItem } from '../../types';
-import { Store, CreditCard, User, Calendar, Shield, Phone, Clock, RefreshCw } from 'lucide-react';
-import { formatCurrency } from '../../utils/helpers';
+import { Store, User, Calendar, Shield, Phone, Clock, RefreshCw } from 'lucide-react';
+import { formatCurrency, formatReadableDate } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { formatWarrantyLabel, getBuildWarrantyInfo } from '../../utils/warranty';
 import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
+import { formatPhoneForDisplay, phoneHref } from '../../utils/phoneDisplay';
 
 interface SoldBuildTransactionPanelProps {
   build: PCBuild;
   partsCost: number;
   profit: number;
-  roi: number;
+  profitMarginPercent: number;
   transaction?: TransactionLogItem | null;
 }
 
@@ -18,7 +19,7 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
   build,
   partsCost,
   profit,
-  roi,
+  profitMarginPercent,
   transaction,
 }) => {
   const salePrice = transaction?.totalAmount ?? build.salePrice ?? 0;
@@ -29,6 +30,8 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
   const buyerPhone = build.buyerPhone;
   const builtDate = build.builtDate || build.createdDate;
   const daysOnMarket = build.daysOnMarket;
+  const displaySaleDate = formatReadableDate(saleDate) || saleDate || 'Not recorded';
+  const displayBuiltDate = formatReadableDate(builtDate) || builtDate;
 
   // Trade-in details
   const hasTradeIn = (transaction?.tradeInCredit !== undefined && transaction.tradeInCredit > 0);
@@ -41,14 +44,14 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
 
   return (
     <div className="space-y-2.5 bg-[#0D1118] border border-white/[0.08] p-3 rounded-xl transition-all shadow-sm">
-      {/* 1. Symmetrical Financial Metrics Grid (4 Cards) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      {/* Financial summary */}
+      <div className="grid grid-cols-2 gap-2">
         <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Sale Price</div>
           <div className="text-sm sm:text-base font-bold font-mono text-[#9D91FA] mt-0.5 leading-tight">{formatCurrency(salePrice)}</div>
         </div>
         <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Parts Cost</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Build Cost</div>
           <div className="text-sm sm:text-base font-bold font-mono text-zinc-200 mt-0.5 leading-tight">{formatCurrency(partsCost)}</div>
         </div>
         <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
@@ -56,8 +59,8 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
           <div className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(profit)}`}>{formatSignedCurrency(profit)}</div>
         </div>
         <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">ROI Margin</div>
-          <div className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(roi)}`}>{roi.toFixed(1)}%</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight" title="Net profit divided by sale price">Profit Margin</div>
+          <div className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</div>
         </div>
       </div>
 
@@ -79,54 +82,34 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
         </div>
       )}
 
-      {/* 3. Symmetrical Metadata Grid (4 Cards) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-            <Store className="w-3.5 h-3.5 text-blue-400 shrink-0" /> Platform
+      {/* Sale details: one grouped section, rather than a mix of cards and status pills. */}
+      <div className="rounded-xl border border-white/[0.08] bg-[#121722] overflow-hidden text-xs">
+        <div className="grid grid-cols-2 divide-x divide-white/[0.08]">
+          <div className="p-2.5 min-w-0">
+            <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-[#7C6CF2] shrink-0" /> Buyer
+            </div>
+            <div className="text-zinc-200 font-medium truncate">{buyerName || 'Not recorded'}</div>
+            {buyerPhone && (
+              <a href={phoneHref(buyerPhone)} className="mt-1 inline-flex items-center gap-1 text-[#9D91FA] font-mono text-[11px] hover:text-violet-300 transition-colors">
+                <Phone className="w-3 h-3 shrink-0" /> {formatPhoneForDisplay(buyerPhone)}
+              </a>
+            )}
           </div>
-          <div className="text-zinc-200 font-medium truncate font-mono text-xs">{platform || 'N/A'}</div>
+          <div className="p-2.5 min-w-0">
+            <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5">Sale Details</div>
+            <div className="text-zinc-200 font-medium truncate font-mono text-xs">{paymentMethod || 'Payment N/A'}</div>
+            <div className="mt-1 inline-flex items-center gap-1 text-blue-300 font-mono text-[11px] truncate">
+              <Store className="w-3 h-3 shrink-0" /> {platform || 'Platform N/A'}
+            </div>
+          </div>
         </div>
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-            <CreditCard className="w-3.5 h-3.5 text-[#7C6CF2] shrink-0" /> Payment
-          </div>
-          <div className="text-zinc-200 font-medium truncate font-mono text-xs">{paymentMethod || 'N/A'}</div>
-        </div>
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5 text-[#7C6CF2] shrink-0" /> Buyer
-          </div>
-          <div className="text-zinc-200 font-medium truncate text-xs">{buyerName || 'N/A'}</div>
-        </div>
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" /> Sale Date
-          </div>
-          <div className="text-zinc-200 font-medium truncate font-mono text-xs">{saleDate || 'N/A'}</div>
+        <div className="border-t border-white/[0.08] px-2.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-mono">
+          <span className="inline-flex items-center gap-1 text-zinc-300"><Calendar className="w-3.5 h-3.5 text-zinc-400" /> Sold {displaySaleDate}</span>
+          {displayBuiltDate && <span className="inline-flex items-center gap-1 text-blue-300"><Clock className="w-3.5 h-3.5 text-blue-400" /> Built {displayBuiltDate}</span>}
+          {daysOnMarket !== undefined && <span className="inline-flex items-center gap-1 text-emerald-300"><RefreshCw className="w-3.5 h-3.5 text-emerald-400" /> {daysOnMarket === 0 ? 'Sold same day' : `Sold in ${daysOnMarket} ${daysOnMarket === 1 ? 'day' : 'days'}`}</span>}
         </div>
       </div>
-
-      {/* 4. Additional Metadata Details Row (if present) */}
-      {(buyerPhone || builtDate || daysOnMarket !== undefined) && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-          {buyerPhone && (
-            <span className="bg-[#121722] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase inline-flex items-center gap-1">
-              <Phone className="w-3 h-3 text-[#7C6CF2]" /> {buyerPhone}
-            </span>
-          )}
-          {builtDate && (
-            <span className="bg-blue-500/10 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase inline-flex items-center gap-1">
-              <Clock className="w-3 h-3 text-blue-400" /> Built: {builtDate}
-            </span>
-          )}
-          {daysOnMarket !== undefined && (
-            <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase inline-flex items-center gap-1">
-              <RefreshCw className="w-3 h-3 text-emerald-400" /> {daysOnMarket === 0 ? 'Sold Same Day' : `Sold in ${daysOnMarket} ${daysOnMarket === 1 ? 'day' : 'days'}`}
-            </span>
-          )}
-        </div>
-      )}
 
       {/* 5. Prominent Full-Width 30-Day Warranty Tracker Banner */}
       {warrantyInfo && (

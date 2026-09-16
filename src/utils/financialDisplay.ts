@@ -6,6 +6,12 @@ export const formatSignedCurrency = (amount: number): string => {
   return `${safeAmount > 0 ? '+' : ''}${formatCurrency(safeAmount)}`;
 };
 
+/** Standard profit margin: profit as a percentage of sale revenue. */
+export const calculateProfitMarginPercent = (profit: number, revenue: number): number => {
+  if (!Number.isFinite(profit) || !Number.isFinite(revenue) || revenue <= 0) return 0;
+  return (profit / revenue) * 100;
+};
+
 export const getProfitTextColor = (amount: number): string => {
   if (amount > 0) return 'text-emerald-400';
   if (amount < 0) return 'text-rose-400';

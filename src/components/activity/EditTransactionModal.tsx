@@ -173,7 +173,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
 
             {tx.type === 'SALE' && (
               <div>
-                <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Net Profit Margin ($)</label>
+                <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Net Profit ($)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none font-mono">$</span>
                   <input

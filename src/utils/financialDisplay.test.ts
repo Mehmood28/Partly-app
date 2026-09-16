@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  calculateProfitMarginPercent,
   formatSignedCurrency,
   getProfitBadgeClasses,
   getProfitSummaryClasses,
@@ -7,6 +8,12 @@ import {
 } from './financialDisplay';
 
 describe('financial display helpers', () => {
+  it('calculates profit margin from sale revenue, not cost', () => {
+    expect(calculateProfitMarginPercent(200, 1200)).toBeCloseTo(16.6667, 3);
+    expect(calculateProfitMarginPercent(-200, 1200)).toBeCloseTo(-16.6667, 3);
+    expect(calculateProfitMarginPercent(200, 0)).toBe(0);
+  });
+
   it('formats positive, negative, and zero values with exactly one sign', () => {
     expect(formatSignedCurrency(25)).toBe('+$25.00');
     expect(formatSignedCurrency(-10)).toBe('-$10.00');

@@ -19,7 +19,7 @@ import { ConfirmModal } from '../ConfirmModal';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { canDeleteBuildDraft, canDismantleBuild, canPartOutAcquiredPC, canMoveToTradeIns } from '../../utils/buildEligibility';
 import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
-import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
+import { calculateProfitMarginPercent, formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
 import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
 import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils/acquiredPC';
 
@@ -161,7 +161,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
 
   const isListed = build.status === 'Listed for Sale';
   const profit = (build.salePrice || 0) - partsCost;
-  const roi = partsCost > 0 ? (profit / partsCost) * 100 : 0;
+  const profitMarginPercent = calculateProfitMarginPercent(profit, build.salePrice || 0);
 
   const exactTransaction = React.useMemo(() => {
     if (!isSold) return null;
@@ -269,7 +269,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               <div className="flex flex-col gap-1 w-full mt-1">
                 <div className="flex items-center gap-1.5 flex-wrap font-mono">
                   <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                    COST: {formatCurrency(partsCost)}
+                    BUILD COST: {formatCurrency(partsCost)}
                   </span>
                   {isSold ? (
                     <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
@@ -533,7 +533,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               build={build}
               partsCost={partsCost}
               profit={profit}
-              roi={roi}
+              profitMarginPercent={profitMarginPercent}
               transaction={exactTransaction}
             />
           )}

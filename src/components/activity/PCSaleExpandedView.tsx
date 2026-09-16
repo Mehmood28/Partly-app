@@ -21,7 +21,7 @@ interface PCSaleExpandedViewProps {
   partsCost: number;
   salePrice: number;
   netProfit: number;
-  roi: number;
+  profitMarginPercent: number;
   platform?: string;
   paymentMethod?: string;
   buyerName?: string;
@@ -35,7 +35,7 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
   partsCost,
   salePrice,
   netProfit,
-  roi,
+  profitMarginPercent,
   platform,
   paymentMethod,
   buyerName,
@@ -54,7 +54,7 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
           <div className="text-sm sm:text-base font-bold font-mono text-[#9D91FA]">{formatCurrency(salePrice)}</div>
         </div>
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Parts Cost</div>
+          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Build Cost</div>
           <div className="text-sm sm:text-base font-bold font-mono text-zinc-300">{formatCurrency(partsCost)}</div>
         </div>
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
@@ -62,8 +62,8 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
           <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(netProfit)}`}>{formatSignedCurrency(netProfit)}</div>
         </div>
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">ROI Margin</div>
-          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(roi)}`}>{roi.toFixed(1)}%</div>
+          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5" title="Net profit divided by sale price">Profit Margin</div>
+          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</div>
         </div>
       </div>
 

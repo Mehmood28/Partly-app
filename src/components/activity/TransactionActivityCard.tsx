@@ -15,6 +15,7 @@ import { BuildAllocationExpandedView } from './BuildAllocationExpandedView';
 import { TradeUpExpandedView } from './TradeUpExpandedView';
 import { classifyTransaction } from '../../utils/transactionClassification';
 import { parseBatchItem } from './activityHelpers';
+import { calculateProfitMarginPercent } from '../../utils/financialDisplay';
 
 export interface TransactionActivityCardProps {
   tx: TransactionLogItem;
@@ -150,7 +151,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
   let partsCost = 0;
   let salePrice = tx.totalAmount ?? 0;
   let netProfit = tx.profitMargin ?? 0;
-  let roi = 0;
+  let profitMarginPercent = 0;
 
   if (isPCSale) {
     if (matchedBuild) {
@@ -176,11 +177,11 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
       }
       netProfit = tx.profitMargin ?? (salePrice - partsCost);
     }
-    roi = partsCost > 0 ? (netProfit / partsCost) * 100 : 0;
+    profitMarginPercent = calculateProfitMarginPercent(netProfit, salePrice);
   } else if (isPartSale) {
     netProfit = tx.profitMargin ?? 0;
     partsCost = Math.max(0, salePrice - netProfit);
-    roi = partsCost > 0 ? (netProfit / partsCost) * 100 : 0;
+    profitMarginPercent = calculateProfitMarginPercent(netProfit, salePrice);
   }
 
   // Details for Warranty & Market Duration on PC Sales
@@ -267,7 +268,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
         partsCost={partsCost}
         salePrice={salePrice}
         netProfit={netProfit}
-        roi={roi}
+        profitMarginPercent={profitMarginPercent}
         platform={isPurchase && hideSupplierNames ? undefined : platform}
         paymentMethod={paymentMethod}
         buyerName={buyerName}
@@ -372,7 +373,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
               partsCost={partsCost}
               salePrice={salePrice}
               netProfit={netProfit}
-              roi={roi}
+              profitMarginPercent={profitMarginPercent}
               platform={platform}
               paymentMethod={paymentMethod}
               buyerName={buyerName}
@@ -389,7 +390,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
               partsCost={partsCost}
               salePrice={salePrice}
               netProfit={netProfit}
-              roi={roi}
+              profitMarginPercent={profitMarginPercent}
             />
           )}
 

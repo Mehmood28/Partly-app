@@ -13,7 +13,7 @@ interface PartSaleExpandedViewProps {
   partsCost: number;
   salePrice: number;
   netProfit: number;
-  roi: number;
+  profitMarginPercent: number;
 }
 
 export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
@@ -22,7 +22,7 @@ export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
   partsCost,
   salePrice,
   netProfit,
-  roi,
+  profitMarginPercent,
 }) => {
   return (
     <div className="space-y-3">
@@ -41,7 +41,7 @@ export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
         </div>
         <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/70">
           <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Profit Margin</div>
-          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(roi)}`}>{roi.toFixed(1)}%</div>
+          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</div>
         </div>
       </div>
 

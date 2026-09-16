@@ -10,7 +10,7 @@ import {
   calculateMonthlyMetrics,
   parseDateLocal,
 } from '../utils/helpers';
-import { formatSignedCurrency, getProfitTextColor } from '../utils/financialDisplay';
+import { calculateProfitMarginPercent, formatSignedCurrency, getProfitTextColor } from '../utils/financialDisplay';
 import {
   BarChart,
   Bar,
@@ -96,8 +96,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       partProfit,
     } = calculateMonthlyMetrics(state, selectedYear, idx);
 
-    const pcMargin = pcsSold > 0 && pcRevenue > 0 ? (pcProfit / pcRevenue) * 100 : 0;
-    const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0;
+    const pcProfitMargin = pcsSold > 0 ? calculateProfitMarginPercent(pcProfit, pcRevenue) : 0;
+    const profitMargin = calculateProfitMarginPercent(profit, revenue);
 
     return {
       monthIndex: idx,
@@ -110,7 +110,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       pcRevenue,
       pcCost,
       pcProfit,
-      pcMargin,
+      pcProfitMargin,
       partRevenue,
       partCost,
       partProfit,
@@ -124,24 +124,24 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     totalYearlyCost,
     totalYearlyPcsSold,
     avgYearlyProfitPerBuild,
-    avgYearlyMargin,
+    avgYearlyProfitMargin,
   } = React.useMemo(() => {
     const rev = monthlyData.reduce((sum, m) => sum + m.revenue, 0);
     const prof = monthlyData.reduce((sum, m) => sum + m.profit, 0);
     const cost = Math.max(0, rev - prof);
     const pcs = monthlyData.reduce((sum, m) => sum + m.pcsSold, 0);
-    const pcRev = monthlyData.reduce((sum, m) => sum + m.pcRevenue, 0);
+    const pcRevenue = monthlyData.reduce((sum, m) => sum + m.pcRevenue, 0);
     const pcProf = monthlyData.reduce((sum, m) => sum + m.pcProfit, 0);
 
     const avgProf = pcs > 0 ? pcProf / pcs : 0;
-    const avgMarg = pcs > 0 && pcRev > 0 ? (pcProf / pcRev) * 100 : 0;
+    const avgProfitMargin = pcs > 0 ? calculateProfitMarginPercent(pcProf, pcRevenue) : 0;
     return {
       totalYearlyRevenue: rev,
       totalYearlyProfit: prof,
       totalYearlyCost: cost,
       totalYearlyPcsSold: pcs,
       avgYearlyProfitPerBuild: avgProf,
-      avgYearlyMargin: avgMarg,
+      avgYearlyProfitMargin: avgProfitMargin,
     };
   }, [monthlyData]);
 
@@ -160,10 +160,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
   const selectedMonthAvgProfit =
     selectedMonthPcsSold > 0 ? selectedMonthPcProfit / selectedMonthPcsSold : 0;
-  const selectedMonthAvgMargin =
-    selectedMonthPcsSold > 0 && selectedMonthPcRevenue > 0
-      ? (selectedMonthPcProfit / selectedMonthPcRevenue) * 100
-      : 0;
+  const selectedMonthProfitMargin = selectedMonthPcsSold > 0
+    ? calculateProfitMarginPercent(selectedMonthPcProfit, selectedMonthPcRevenue)
+    : 0;
 
   // In-stock loose inventory value by category
   const categoryData = React.useMemo(() => {
@@ -239,7 +238,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
       {/* Scope Explainer Helper Text */}
       <p className="text-[11px] text-zinc-400 px-1">
-        Totals include PC and loose-part sales. Per-PC averages and PC Margin use PC sales only.
+        Totals include PC and loose-part sales. Per-PC averages and Profit Margin use PC sales only; Profit Margin = PC profit ÷ PC revenue.
       </p>
 
       {/* Performance Cards */}
@@ -281,8 +280,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <p className="text-sm sm:text-base font-bold font-mono text-zinc-100 mt-0.5 leading-tight">{formatCurrency(selectedMonthAvgProfit)}</p>
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">PC Margin</p>
-              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(selectedMonthAvgMargin)}`}>{selectedMonthAvgMargin.toFixed(1)}%</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Profit Margin</p>
+              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(selectedMonthProfitMargin)}`}>{selectedMonthProfitMargin.toFixed(1)}%</p>
             </div>
           </div>
         </div>
@@ -320,8 +319,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <p className="text-sm sm:text-base font-bold font-mono text-zinc-100 mt-0.5 leading-tight">{formatCurrency(avgYearlyProfitPerBuild)}</p>
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">PC Margin</p>
-              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(avgYearlyMargin)}`}>{avgYearlyMargin.toFixed(1)}%</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Profit Margin</p>
+              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(avgYearlyProfitMargin)}`}>{avgYearlyProfitMargin.toFixed(1)}%</p>
             </div>
           </div>
         </div>
@@ -517,11 +516,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
         </div>
 
-        {/* PC Margin Trend Line Chart */}
+        {/* PC Profit Margin Trend Line Chart */}
         <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 space-y-3 lg:col-span-2 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <TrendingUp className="w-3.5 h-3.5 text-[#7C6CF2]" /> PC Margin Trend
+              <TrendingUp className="w-3.5 h-3.5 text-[#7C6CF2]" /> PC Profit Margin Trend
             </h3>
             <span className="text-[11px] font-mono text-zinc-400 font-medium">%</span>
           </div>
@@ -553,9 +552,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       color: '#f4f4f5',
                       fontSize: '12px',
                     }}
-                    formatter={(value: number) => [`${value.toFixed(2)}%`, 'PC Margin']}
+                    formatter={(value: number) => [`${value.toFixed(2)}%`, 'Profit Margin']}
                   />
-                  <Line type="monotone" dataKey="pcMargin" stroke="#7C6CF2" strokeWidth={2.5} dot={{ fill: '#7C6CF2', strokeWidth: 2, r: 3.5 }} activeDot={{ r: 5 }} />
+                  <Line type="monotone" dataKey="pcProfitMargin" stroke="#7C6CF2" strokeWidth={2.5} dot={{ fill: '#7C6CF2', strokeWidth: 2, r: 3.5 }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
