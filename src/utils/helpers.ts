@@ -889,7 +889,7 @@ export function getConditionColor(cond: string): string {
   if (c === 'SEALED') {
     return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30';
   } else if (c.includes('NEW')) {
-    return 'bg-[#67E8F9]/10 text-[#A5F3FC] border border-[#67E8F9]/30';
+    return 'bg-[#62E6E6]/10 text-[#9FF8F4] border border-[#62E6E6]/30';
   } else if (c.includes('USED')) {
     return 'bg-white/[0.04] text-zinc-300 border border-white/[0.10]';
   }
@@ -898,7 +898,7 @@ export function getConditionColor(cond: string): string {
 
 export function getCategoryBadgeColor(category: string): string {
   void category;
-  return 'bg-[#67E8F9]/10 text-[#A5F3FC] border border-[#67E8F9]/30';
+  return 'bg-[#62E6E6]/10 text-[#9FF8F4] border border-[#62E6E6]/30';
 }
 
 /** A shared, restrained palette for component rows. */
@@ -908,15 +908,15 @@ export function getCategoryPresentation(category: string): {
   railClass: string;
 } {
   switch (String(category || '').toUpperCase()) {
-    case 'GPU': return { label: 'GPU', textClass: 'text-[#A5F3FC]', railClass: 'bg-[#67E8F9]' };
-    case 'CPU': return { label: 'CPU', textClass: 'text-[#A5F3FC]', railClass: 'bg-[#67E8F9]' };
-    case 'MOTHERBOARD': return { label: 'MOBO', textClass: 'text-[#A5F3FC]', railClass: 'bg-[#67E8F9]' };
-    case 'RAM': return { label: 'RAM', textClass: 'text-[#A5F3FC]', railClass: 'bg-[#67E8F9]' };
-    case 'COOLING': return { label: 'Cooling', textClass: 'text-[#A5F3FC]', railClass: 'bg-[#67E8F9]' };
-    case 'STORAGE': return { label: 'Storage', textClass: 'text-[#A5F3FC]', railClass: 'bg-[#67E8F9]' };
-    case 'PSU': return { label: 'PSU', textClass: 'text-[#A5F3FC]', railClass: 'bg-[#67E8F9]' };
-    case 'CASE': return { label: 'Case', textClass: 'text-[#A5F3FC]', railClass: 'bg-[#67E8F9]' };
-    case 'FANS': return { label: 'Fans', textClass: 'text-[#A5F3FC]', railClass: 'bg-[#67E8F9]' };
+    case 'GPU': return { label: 'GPU', textClass: 'text-[#9FF8F4]', railClass: 'bg-[#62E6E6]' };
+    case 'CPU': return { label: 'CPU', textClass: 'text-[#9FF8F4]', railClass: 'bg-[#62E6E6]' };
+    case 'MOTHERBOARD': return { label: 'MOBO', textClass: 'text-[#9FF8F4]', railClass: 'bg-[#62E6E6]' };
+    case 'RAM': return { label: 'RAM', textClass: 'text-[#9FF8F4]', railClass: 'bg-[#62E6E6]' };
+    case 'COOLING': return { label: 'Cooling', textClass: 'text-[#9FF8F4]', railClass: 'bg-[#62E6E6]' };
+    case 'STORAGE': return { label: 'Storage', textClass: 'text-[#9FF8F4]', railClass: 'bg-[#62E6E6]' };
+    case 'PSU': return { label: 'PSU', textClass: 'text-[#9FF8F4]', railClass: 'bg-[#62E6E6]' };
+    case 'CASE': return { label: 'Case', textClass: 'text-[#9FF8F4]', railClass: 'bg-[#62E6E6]' };
+    case 'FANS': return { label: 'Fans', textClass: 'text-[#9FF8F4]', railClass: 'bg-[#62E6E6]' };
     case 'ACCESSORIES': return { label: 'Accessories', textClass: 'text-zinc-300', railClass: 'bg-zinc-500' };
     default: return { label: 'Other', textClass: 'text-zinc-300', railClass: 'bg-zinc-500' };
   }
@@ -937,7 +937,7 @@ export function getTagBadgeColor(tag: string): string {
 
 export function getPlatformBadgeColor(platform: string): string {
   void platform;
-  return 'bg-[#67E8F9]/10 text-[#A5F3FC] border border-[#67E8F9]/25';
+  return 'bg-[#62E6E6]/10 text-[#9FF8F4] border border-[#62E6E6]/25';
 }
 
 export function getPaymentMethodBadgeColor(method: string): string {

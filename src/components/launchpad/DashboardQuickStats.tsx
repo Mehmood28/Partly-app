@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Activity, ArrowUpRight } from 'lucide-react';
+import { Activity, ArrowUpRight, Boxes, BadgeDollarSign, MonitorCheck, ShoppingCart } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
 import { calculateUnassignedQuantityStrict } from '../../utils/helpers';
 
@@ -78,91 +78,43 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
   }, [state]);
 
   return (
-    <section className="border-y border-white/[0.08] py-3.5">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-300 flex items-center gap-2">
-          <Activity className="w-3.5 h-3.5 text-[#A3FF12]" /> Operations snapshot
-        </h3>
-        <span className="text-[10px] uppercase tracking-[0.14em] text-zinc-600 font-mono">live</span>
+    <section className="app-section">
+      <div className="mb-3.5 flex items-center justify-between">
+        <h3 className="app-section-kicker"><Activity /> Operations snapshot</h3>
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Live</span>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.08] border border-white/[0.08] rounded-lg overflow-hidden">
-        {/* 1. Listed Builds */}
-        <div 
-          onClick={() => onNavigateToBuilds('Available')}
-          className="min-h-[92px] p-3 bg-[#0F141C] flex flex-col justify-between hover:bg-[#141A24] transition-colors cursor-pointer group"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500 leading-tight">
-              Listed Builds
-            </p>
-            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#A3FF12] transition-colors" />
-          </div>
-          <div>
-            <p className="text-xl font-bold font-mono text-[#67E8F9] leading-tight">
-              {stats.listedCount}
-            </p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Ready for sale</p>
-          </div>
-        </div>
+      <div className="app-panel grid grid-cols-2 lg:grid-cols-4">
+        <button type="button" onClick={() => onNavigateToBuilds('Available')} className="group min-h-[122px] border-b border-r border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025] lg:border-b-0">
+          <div className="flex items-center justify-between"><MonitorCheck className="h-4 w-4 text-[#62E6E6]" /><ArrowUpRight className="h-3.5 w-3.5 text-zinc-600 transition-colors group-hover:text-[#A8FF3E]" /></div>
+          <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-500">Listed Builds</p>
+          <p className="mt-1 font-mono text-2xl font-bold leading-none text-[#62E6E6]">{stats.listedCount}</p>
+          <p className="mt-1.5 text-[11px] text-zinc-500">Ready for sale</p>
+        </button>
 
-        {/* 2. Pending Sale */}
-        <div 
-          onClick={() => onNavigateToBuilds('Pending')}
-          className="min-h-[92px] p-3 bg-[#0F141C] flex flex-col justify-between hover:bg-[#141A24] transition-colors cursor-pointer group"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500 leading-tight">
-              Pending Sale
-            </p>
-            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#A3FF12] transition-colors" />
-          </div>
-          <div>
-            <p className="text-xl font-bold font-mono text-zinc-100 leading-tight group-hover:text-white transition-colors">
-              {stats.pendingSaleCount}
-            </p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Awaiting sale completion</p>
-          </div>
-        </div>
+        <button type="button" onClick={() => onNavigateToBuilds('Pending')} className="group min-h-[122px] border-b border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025] lg:border-b-0 lg:border-r">
+          <div className="flex items-center justify-between"><ShoppingCart className="h-4 w-4 text-zinc-300" /><ArrowUpRight className="h-3.5 w-3.5 text-zinc-600 transition-colors group-hover:text-[#A8FF3E]" /></div>
+          <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-500">Pending Sale</p>
+          <p className="mt-1 font-mono text-2xl font-bold leading-none text-zinc-100">{stats.pendingSaleCount}</p>
+          <p className="mt-1.5 text-[11px] text-zinc-500">Awaiting completion</p>
+        </button>
 
-        {/* 3. Available Stock */}
-        <div 
-          onClick={onNavigateToStock}
-          className="min-h-[92px] p-3 bg-[#0F141C] flex flex-col justify-between hover:bg-[#141A24] transition-colors cursor-pointer group"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500 leading-tight">
-              Available Stock
-            </p>
-            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#A3FF12] transition-colors" />
-          </div>
-          <div>
-            <p className="text-xl font-bold font-mono text-zinc-100 leading-tight group-hover:text-white transition-colors">
-              {stats.availableStockCount} <span className="text-xs font-normal text-zinc-400 font-sans">units</span>
-            </p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Unassigned parts</p>
-          </div>
-        </div>
+        <button type="button" onClick={onNavigateToStock} className="group min-h-[122px] border-r border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025]">
+          <div className="flex items-center justify-between"><Boxes className="h-4 w-4 text-[#62E6E6]" /><ArrowUpRight className="h-3.5 w-3.5 text-zinc-600 transition-colors group-hover:text-[#A8FF3E]" /></div>
+          <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-500">Available Stock</p>
+          <p className="mt-1 font-mono text-2xl font-bold leading-none text-zinc-100">{stats.availableStockCount}<span className="ml-1 font-sans text-[10px] font-medium text-zinc-500">units</span></p>
+          <p className="mt-1.5 text-[11px] text-zinc-500">Unassigned parts</p>
+        </button>
 
-        {/* 4. Last PC Sale */}
-        <div className="min-h-[92px] p-3 bg-[#0F141C] flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500 leading-tight">
-              Last PC Sale
-            </p>
-          </div>
-          <div>
-            <p className="text-lg font-bold font-mono text-emerald-400 leading-tight">
-              {stats.relativeTimeText}
-            </p>
-            {stats.hasSoldBuild && stats.latestBuildName ? (
-              <p className="text-[11px] text-zinc-400 mt-0.5 truncate max-w-full font-sans" title={stats.latestBuildName}>
-                {stats.latestBuildName}
-              </p>
-            ) : (
-              <p className="text-[11px] text-zinc-500 mt-0.5 font-sans">No completed builds sold</p>
-            )}
-          </div>
+        <div className="min-h-[122px] p-3.5 text-left">
+          <BadgeDollarSign className="h-4 w-4 text-[#4DE0A4]" />
+          <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-500">Last PC Sale</p>
+          <p className="mt-1 font-mono text-lg font-bold leading-none text-[#4DE0A4] sm:text-xl">{stats.relativeTimeText}</p>
+          {stats.hasSoldBuild && stats.latestBuildName ? (
+            <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-zinc-400" title={stats.latestBuildName}>{stats.latestBuildName}</p>
+          ) : (
+            <p className="mt-1.5 text-[11px] text-zinc-500">No completed builds sold</p>
+          )}
         </div>
       </div>
     </section>

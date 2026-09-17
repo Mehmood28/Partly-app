@@ -110,13 +110,13 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       <div className="space-y-4 w-full">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-            <Pencil className="w-4 h-4 text-[#A3FF12]" /> Edit Transaction Record
+            <Pencil className="w-4 h-4 text-[#A8FF3E]" /> Edit Transaction Record
           </h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="text-zinc-400 hover:text-white rounded-lg p-1 hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="text-zinc-400 hover:text-white rounded-lg p-1 hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -133,7 +133,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                 setTitleEdited(true);
                 setEditTitle(e.target.value);
               }}
-              className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+              className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
               placeholder={isMasked ? "e.g. Purchased" : "e.g. Purchased: Facebook Marketplace"}
             />
           </div>
@@ -148,7 +148,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                 setSummaryEdited(true);
                 setEditItemSummary(e.target.value);
               }}
-              className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+              className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
               placeholder="e.g. RTX 4070 Super 12GB"
             />
           </div>
@@ -166,7 +166,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                   required
                   value={editAmount}
                   onChange={(e) => setEditAmount(e.target.value)}
-                  className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-mono"
+                  className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-mono"
                 />
               </div>
             </div>
@@ -183,7 +183,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                     required
                     value={editProfit}
                     onChange={(e) => setEditProfit(e.target.value)}
-                    className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-mono"
+                    className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-mono"
                     placeholder="e.g. 150.00"
                   />
                 </div>
@@ -196,7 +196,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                 type="date"
                 value={editDate}
                 onChange={(e) => setEditDate(e.target.value)}
-                className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-mono"
+                className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-mono"
               />
             </div>
           </div>
@@ -209,7 +209,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                 autoComplete="off"
                 value={editPlatform}
                 onChange={(e) => setEditPlatform(e.target.value)}
-                className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+                className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
                 placeholder={isMasked ? "••••••••" : "e.g. Kijiji / Amazon"}
               />
             </div>
@@ -220,7 +220,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                 type="text"
                 value={editPaymentMethod}
                 onChange={(e) => setEditPaymentMethod(e.target.value)}
-                className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+                className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
                 placeholder="e.g. Cash / E-Transfer"
               />
             </div>
@@ -230,13 +230,13 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold text-xs shadow-sm shadow-[#A3FF12]/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+              className="px-4 py-2 rounded-xl bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold text-xs shadow-sm shadow-[#A8FF3E]/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
             >
               Save Changes
             </button>

@@ -95,13 +95,13 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
       >
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-            <Pencil className="w-4 h-4 text-[#A3FF12]" /> Edit PC Build
+            <Pencil className="w-4 h-4 text-[#A8FF3E]" /> Edit PC Build
           </h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -114,23 +114,23 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
               required
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+              className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-zinc-300 font-medium mb-1 text-xs">Status</label>
-              <div className="w-full h-11 bg-[#121722]/60 border border-white/[0.08] rounded-xl px-3 flex items-center">
+              <div className="w-full h-11 bg-[#101719]/60 border border-white/[0.08] rounded-xl px-3 flex items-center">
                 <span
                   className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border leading-none ${
                     build.status === 'Sold'
                       ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
                       : build.status === 'Listed for Sale'
-                      ? 'bg-[#A3FF12]/15 text-[#67E8F9] border-[#A3FF12]/30'
+                      ? 'bg-[#A8FF3E]/15 text-[#62E6E6] border-[#A8FF3E]/30'
                       : build.status === 'Trade-In Processing'
                       ? 'bg-cyan-500/10 text-cyan-300 border-cyan-400/30'
-                      : 'bg-[#67E8F9]/10 text-[#A5F3FC] border-[#67E8F9]/30'
+                      : 'bg-[#62E6E6]/10 text-[#9FF8F4] border-[#62E6E6]/30'
                   }`}
                 >
                   {build.status === 'Listed for Sale'
@@ -150,7 +150,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                 disabled={build.status === 'Sold'}
                 value={editBuiltDate}
                 onChange={(e) => setEditBuiltDate(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors [color-scheme:dark]"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors [color-scheme:dark]"
               />
             </div>
           </div>
@@ -167,7 +167,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                 step="any"
                 value={editSalePrice}
                 onChange={(e) => setEditSalePrice(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors pr-3 pl-7"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors pr-3 pl-7"
                 placeholder="0.00"
               />
             </div>
@@ -197,7 +197,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                   step="1"
                   value={customWarrantyDays}
                   onChange={(e) => setCustomWarrantyDays(e.target.value)}
-                  className="w-20 h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
+                  className="w-20 h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors"
                   placeholder="Days"
                   required
                 />
@@ -211,7 +211,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
               rows={2}
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
-              className="w-full min-h-[60px] bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors resize-y font-sans"
+              className="w-full min-h-[60px] bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors resize-y font-sans"
               placeholder="Build specs, condition, notes..."
             />
           </div>
@@ -231,7 +231,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                   </button>
                 </div>
               ) : (
-                <div className="w-12 h-12 rounded-xl border border-dashed border-white/[0.1] bg-[#121722] flex items-center justify-center text-zinc-500 shrink-0">
+                <div className="w-12 h-12 rounded-xl border border-dashed border-white/[0.1] bg-[#101719] flex items-center justify-center text-zinc-500 shrink-0">
                   <ImagePlus className="w-5 h-5" />
                 </div>
               )}
@@ -244,7 +244,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                     file:mr-2 file:py-1.5 file:px-3
                     file:rounded-lg file:border file:border-white/[0.08]
                     file:text-xs file:font-semibold
-                    file:bg-[#121722] file:text-zinc-200
+                    file:bg-[#101719] file:text-zinc-200
                     hover:file:bg-white/[0.06]
                     cursor-pointer"
                 />
@@ -259,13 +259,13 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold shadow-md shadow-[#A3FF12]/20 px-4 py-2.5 rounded-xl text-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold shadow-md shadow-[#A8FF3E]/20 px-4 py-2.5 rounded-xl text-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             Save Changes
           </button>

@@ -52,8 +52,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     }
     if (variant === 'amber' || variant === 'violet') {
       return (
-        <div className="w-8 h-8 rounded-xl bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center shrink-0">
-          <HelpCircle className="w-4 h-4 text-[#A3FF12]" />
+        <div className="w-8 h-8 rounded-xl bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 flex items-center justify-center shrink-0">
+          <HelpCircle className="w-4 h-4 text-[#A8FF3E]" />
         </div>
       );
     }
@@ -69,7 +69,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       return 'bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-emerald-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500';
     }
     if (variant === 'amber' || variant === 'violet') {
-      return 'bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-[#A3FF12]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]';
+      return 'bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-[#A8FF3E]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]';
     }
     return 'bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-rose-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500';
   };
@@ -96,7 +96,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             initial={{ scale: 0.95, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
-            className="bg-[#0D1118] border border-white/[0.08] rounded-2xl w-full max-w-sm p-4 sm:p-5 relative flex flex-col shadow-2xl z-10 mx-auto pointer-events-auto"
+            className="bg-[#0B1113] border border-white/[0.08] rounded-2xl w-full max-w-sm p-4 sm:p-5 relative flex flex-col shadow-2xl z-10 mx-auto pointer-events-auto"
           >
             <div className="flex items-center gap-2.5 shrink-0 mb-3">
               {renderIcon()}
@@ -114,7 +114,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 type="button"
                 onClick={onCancel}
                 disabled={isBusy}
-                className="px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] disabled:cursor-wait disabled:opacity-60"
+                className="px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] disabled:cursor-wait disabled:opacity-60"
               >
                 {cancelText}
               </button>

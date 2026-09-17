@@ -3,7 +3,6 @@ import { InventoryView } from './InventoryView';
 import { PurchaseHistoryView } from './stock/PurchaseHistoryView';
 import { TransactionHistoryView } from './history/TransactionHistoryView';
 import { Package, ShoppingBag, Tag } from 'lucide-react';
-import { motion } from 'motion/react';
 import { useInventory } from '../context/InventoryContext';
 import { InventoryComponent } from '../types';
 import { classifyTransaction } from '../utils/transactionClassification';
@@ -54,10 +53,10 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
   ];
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       {/* Sub-tab Switcher Header */}
-      <div className="flex justify-center mb-1 w-full">
-        <div className="border-b border-white/[0.10] bg-transparent grid grid-cols-3 gap-1 w-full max-w-lg h-9 items-center">
+      <div className="w-full">
+        <div className="app-segmented grid-cols-3">
           {subTabs.map((tab) => {
             const isSelected = activeSubTab === tab.id;
             const Icon = tab.icon;
@@ -65,20 +64,12 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
               <button
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id)}
-                className={`relative flex items-center justify-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors z-10 h-full whitespace-nowrap overflow-hidden ${
-                  isSelected ? 'text-white font-semibold' : 'text-zinc-500 hover:text-zinc-200'
-                }`}
+                data-active={isSelected}
+                className="flex items-center justify-center gap-1.5 overflow-hidden px-1.5 whitespace-nowrap"
               >
-                {isSelected && (
-                  <motion.div
-                    layoutId="stock-subtab-bg"
-                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#A3FF12] rounded-full"
-                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <Icon className={`w-3.5 h-3.5 shrink-0 relative z-10 ${isSelected ? 'text-[#A3FF12]' : 'text-zinc-500'}`} />
+                <Icon className={`relative z-10 h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-[#A8FF3E]' : 'text-zinc-600'}`} />
                 <span className="relative z-10 truncate">{tab.label}</span>
-                <span className="text-[10px] font-mono opacity-80 shrink-0 relative z-10">({tab.count})</span>
+                <span className="relative z-10 shrink-0 font-mono text-[9px] opacity-75 sm:text-[10px]">({tab.count})</span>
               </button>
             );
           })}

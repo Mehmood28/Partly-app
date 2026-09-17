@@ -1,9 +1,11 @@
 import React from 'react';
 import { Box, Plus, Minus as Dash, Trash2 } from 'lucide-react';
-import { CATEGORIES, InventoryComponent, PCBuildPart } from '../../../types';
-import { formatCurrency } from '../../../utils/helpers';
-import { formatSignedCurrency, getProfitBadgeClasses } from '../../../utils/financialDisplay';
+import { InventoryComponent, PCBuildPart } from '../../../types';
+import { formatCurrency, formatReadableDate, getCategoryPresentation, getConditionDotColor } from '../../../utils/helpers';
+import { formatSignedCurrency, getProfitTextColor } from '../../../utils/financialDisplay';
 import { sortByCategory } from '../../../utils/sorting';
+import { normalizePlatform } from '../../../utils/platformDisplay';
+import { usePrivacy } from '../../../context/PrivacyContext';
 
 interface BuildSelectedPartsListProps {
   selectedParts: PCBuildPart[];
@@ -22,51 +24,31 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
   onUpdatePartQty,
   onRemovePart,
 }) => {
+  const { hideSupplierNames } = usePrivacy();
   const targetPrice = parseFloat(salePrice) || 0;
   const profit = targetPrice - totalBuildCost;
   const margin = targetPrice > 0 ? (profit / targetPrice) * 100 : 0;
 
   return (
-    <div className="space-y-3">
+    <div className="app-panel space-y-3 p-3.5 sm:p-4">
       <div className="flex flex-col gap-2 border-b border-white/[0.08] pb-3">
         <div className="flex items-center justify-between gap-2">
           <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-2 whitespace-nowrap shrink-0 font-display">
-            <Box className="w-4 h-4 text-[#A3FF12] shrink-0" /> Selected Parts ({selectedParts.length})
+            <Box className="w-4 h-4 text-[#A8FF3E] shrink-0" /> Selected Parts ({selectedParts.length})
           </h4>
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            <span className="bg-white/[0.06] border border-white/[0.08] text-zinc-300 whitespace-nowrap px-2 py-0.5 rounded-lg text-xs font-mono font-medium leading-none inline-flex items-center justify-center">
-              Cost: {formatCurrency(totalBuildCost)}
-            </span>
-            <span className={`${getProfitBadgeClasses(targetPrice > 0 ? profit : 0)} border whitespace-nowrap px-2 py-0.5 rounded-lg text-xs font-mono font-semibold leading-none inline-flex items-center justify-center`}>
-              Est Profit: {formatSignedCurrency(targetPrice > 0 ? profit : 0)} {targetPrice > 0 ? `· Margin ${Math.round(margin)}%` : ''}
-            </span>
+          <div className="flex shrink-0 items-center divide-x divide-white/[0.1] font-mono text-[10px]">
+            <span className="pr-2 text-zinc-500">COST <strong className="ml-1 text-zinc-200">{formatCurrency(totalBuildCost)}</strong></span>
+            <span className={`pl-2 ${getProfitTextColor(targetPrice > 0 ? profit : 0)}`}>PROFIT <strong className="ml-1">{formatSignedCurrency(targetPrice > 0 ? profit : 0)}</strong>{targetPrice > 0 ? ` · ${Math.round(margin)}%` : ''}</span>
           </div>
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {CATEGORIES.map((cat) => {
-            const isSelected = selectedParts.some((p) => p.category === cat);
-            return (
-              <span
-                key={cat}
-                className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors ${
-                  isSelected
-                    ? 'bg-[#A3FF12]/20 text-[#67E8F9] border border-[#A3FF12]/40'
-                    : 'bg-[#121722] text-zinc-500 border border-white/[0.06]'
-                }`}
-              >
-                {cat}
-              </span>
-            );
-          })}
         </div>
       </div>
 
       {selectedParts.length === 0 ? (
-        <div className="text-xs text-zinc-500 italic p-3.5 bg-[#121722] rounded-xl border border-white/[0.08] text-center font-sans">
+        <div className="app-panel-quiet p-4 text-center text-xs italic text-zinc-500">
           No parts selected yet. Pick parts from the categories below to include in this build.
         </div>
       ) : (
-        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+        <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
           {sortByCategory(selectedParts).map((part, idx) => {
             const comp = components.find((c) => c.id === part.componentId);
             let purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
@@ -76,20 +58,39 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
                 comp.purchaseHistory[0];
             }
 
+            const category = getCategoryPresentation(part.category);
+            const metadata = [
+              purchaseEntry?.condition,
+              !hideSupplierNames && purchaseEntry?.platform ? normalizePlatform(String(purchaseEntry.platform)) : undefined,
+              purchaseEntry?.paymentMethod ? String(purchaseEntry.paymentMethod) : undefined,
+              purchaseEntry?.date ? formatReadableDate(purchaseEntry.date) || purchaseEntry.date : undefined,
+            ].filter(Boolean) as string[];
+
             return (
               <div
                 key={idx}
-                className="bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 flex items-center justify-between gap-2"
+                className="app-panel-quiet relative flex items-start justify-between gap-2 px-3 py-2.5 pr-4"
               >
-                <div className="flex items-center min-w-0 flex-1 pr-2">
-                  <span className="text-xs font-medium leading-snug text-zinc-200 break-words font-sans">{part.componentName}</span>
+                <span className={`absolute bottom-2.5 right-1 top-2.5 w-0.5 rounded-full ${category.railClass}`} />
+                <div className="min-w-0 flex-1 pr-1">
+                  <div className="flex min-w-0 items-start gap-2">
+                    <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold ${category.textClass}`}>{category.label}</span>
+                    <span className="min-w-0 flex-1 break-words font-sans text-xs font-semibold leading-snug text-zinc-200">{part.componentName}</span>
+                  </div>
+                  {metadata.length > 0 && (
+                    <div className="ml-[4.3rem] mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500">
+                      {purchaseEntry?.condition && <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(purchaseEntry.condition)}`} />{purchaseEntry.condition}</span>}
+                      {metadata.slice(purchaseEntry?.condition ? 1 : 0).map((item, metaIndex) => <span key={`${item}-${metaIndex}`}>· {item}</span>)}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.06] shrink-0 px-2 py-0.5 rounded-lg text-xs font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <span className="whitespace-nowrap font-mono text-xs font-bold text-zinc-100">
                     {formatCurrency(purchaseEntry ? purchaseEntry.unitPrice : part.unitCostAtAssignment)}/ea
                   </span>
-                  <div className="flex items-center gap-1 border border-white/[0.08] bg-[#0D1118] text-zinc-200 rounded-lg px-1.5 py-1">
+                  <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 rounded-lg border border-white/[0.08] bg-[#0B1113] px-1.5 py-1 text-zinc-200">
                     <button
                       type="button"
                       onClick={() => onUpdatePartQty(part.componentId, part.purchaseEntryId, -1)}
@@ -107,18 +108,19 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemovePart(part.componentId, part.purchaseEntryId);
+                      }}
+                      aria-label="Remove part"
+                      className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-rose-500/10 hover:text-rose-400"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemovePart(part.componentId, part.purchaseEntryId);
-                    }}
-                    aria-label="Remove part"
-                    className="text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 p-1.5 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
             );

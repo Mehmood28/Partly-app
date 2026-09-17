@@ -39,19 +39,18 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
     : [];
 
   return (
-    <div className="space-y-2 w-full">
-      {/* Wrapped category index: all options remain visible on mobile. */}
-      <div className="flex flex-wrap items-center gap-x-1 gap-y-1 border-b border-white/[0.08] pb-2 text-xs w-full">
+    <div className="w-full space-y-3">
+      <div className="flex w-full flex-wrap items-center gap-1.5 border-b border-white/[0.08] pb-3">
         <button
           type="button"
           onClick={() => {
             onCategoryChange('ALL');
             onSubCategoryChange?.('');
           }}
-          className={`px-2.5 py-1.5 border-b text-xs font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
+          className={`app-chip px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
             activeCategory === 'ALL'
-              ? 'border-[#A3FF12] text-[#A3FF12] font-bold bg-[#A3FF12]/[0.04]'
-              : 'border-transparent text-zinc-500 hover:text-zinc-200 hover:border-white/[0.12]'
+              ? 'app-chip-active'
+              : ''
           }`}
         >
           All Categories ({components.filter(isAvailable).length})
@@ -69,10 +68,10 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 onCategoryChange(cat);
                 onSubCategoryChange?.('');
               }}
-              className={`px-2.5 py-1.5 border-b text-xs font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
+              className={`app-chip px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
                 isActive
-                  ? 'border-[#A3FF12] text-[#A3FF12] bg-[#A3FF12]/[0.04]'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-200 hover:border-white/[0.12]'
+                  ? 'app-chip-active'
+                  : ''
               }`}
             >
               {cat} ({count})
@@ -83,7 +82,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       
       {/* Sub-Category Pills (Fully Visible Wrapping Layout) */}
       {currentSubCats.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 pb-1 pt-0.5 text-xs w-full">
+        <div className="flex w-full flex-wrap items-center gap-1.5">
           {currentSubCats.map(sub => {
             const isActive = activeSubCategory === sub;
             return (
@@ -91,10 +90,10 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 key={sub}
                 type="button"
                 onClick={() => onSubCategoryChange?.(activeSubCategory === sub ? '' : sub)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
+                className={`app-chip min-h-[32px] px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
                 isActive
-                  ? 'bg-[#67E8F9]/10 text-[#A5F3FC] border border-[#67E8F9]/30'
-                    : 'bg-[#10141E] text-zinc-500 hover:text-zinc-200 border border-white/[0.08]'
+                  ? 'border-[#62E6E6]/50 bg-[#62E6E6]/[0.08] text-[#9FF8F4]'
+                    : ''
                 }`}
               >
                 {sub}
@@ -105,7 +104,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       )}
 
       {/* Controls Row: Search & Sort */}
-      <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-full min-w-0">
+      <div className="flex w-full min-w-0 max-w-full flex-col gap-2.5 sm:flex-row">
         <div className="relative flex-1 min-w-0 w-full max-w-full group">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
           <input
@@ -113,7 +112,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
             placeholder="Search parts by name or model..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full h-11 max-w-full box-border bg-[#10141E] border border-white/[0.08] rounded-lg pl-10 pr-9 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="app-field h-12 max-w-full box-border pl-10 pr-9 text-xs placeholder:text-zinc-600 sm:text-sm"
           />
           {searchQuery && (
             <button
@@ -140,7 +139,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 { value: 'highest-stock', label: 'Highest Units in Stock' },
                 { value: 'lowest-stock', label: 'Lowest Units in Stock' }
               ]}
-              icon={<ArrowDownWideNarrow className="w-4 h-4 text-[#A3FF12]" />}
+              icon={<ArrowDownWideNarrow className="h-4 w-4 text-[#A8FF3E]" />}
               className="w-full sm:min-w-[210px]"
               dropdownClassName="shadow-2xl min-w-[230px] py-1.5"
             />

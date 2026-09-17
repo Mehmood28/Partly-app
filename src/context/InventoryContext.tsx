@@ -961,9 +961,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   return (
     <InventoryContext.Provider value={contextValue}>
       {!isHydrated ? (
-        <div className="min-h-screen bg-[#080B10] flex items-center justify-center text-zinc-400">
+        <div className="min-h-screen bg-[#070A0B] flex items-center justify-center text-zinc-400">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-6 h-6 border-2 border-[#A3FF12]/20 border-t-[#A3FF12] rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#A8FF3E]/20 border-t-[#A8FF3E] rounded-full animate-spin" />
             <span className="text-xs font-mono tracking-wider text-zinc-500 uppercase">Loading workspace...</span>
           </div>
         </div>

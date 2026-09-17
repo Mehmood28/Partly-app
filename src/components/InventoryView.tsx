@@ -151,63 +151,45 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
   return (
     <div className="space-y-4">
-      {/* Capital is a single ledger, not three competing cards. */}
-      <div className="grid grid-cols-3 border-y border-white/[0.08] divide-x divide-white/[0.08]">
-        <div className="py-3 pr-2 flex flex-col justify-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Unassigned</div>
-          <div className="text-emerald-400 font-bold text-sm sm:text-base font-mono mt-0.5 leading-tight">{formatCurrency(unassignedValue)}</div>
+      <div className="app-panel grid grid-cols-3 divide-x divide-white/[0.09]">
+        <div className="flex min-w-0 flex-col justify-center p-3 sm:p-4">
+          <div className="app-metric-label">Unassigned</div>
+          <div className="app-metric-value truncate text-[#4DE0A4]">{formatCurrency(unassignedValue)}</div>
         </div>
-        <div className="py-3 px-2 flex flex-col justify-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Assigned</div>
-          <div className="text-[#67E8F9] font-bold text-sm sm:text-base font-mono mt-0.5 leading-tight">{formatCurrency(activeBuildsCost)}</div>
+        <div className="flex min-w-0 flex-col justify-center p-3 sm:p-4">
+          <div className="app-metric-label">Assigned</div>
+          <div className="app-metric-value truncate text-[#62E6E6]">{formatCurrency(activeBuildsCost)}</div>
         </div>
-        <div className="py-3 pl-2 flex flex-col justify-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Value</div>
-          <div className="text-zinc-100 font-bold text-sm sm:text-base font-mono mt-0.5 leading-tight">{formatCurrency(totalInventoryValue)}</div>
+        <div className="flex min-w-0 flex-col justify-center p-3 sm:p-4">
+          <div className="app-metric-label">Total Value</div>
+          <div className="app-metric-value truncate">{formatCurrency(totalInventoryValue)}</div>
         </div>
       </div>
 
-      {/* Inventory workbench */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/[0.08] pb-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12] shrink-0">
-            <Layers className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-100 leading-tight">
-              IN STOCK
-            </h2>
-            <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">
-              Review all components currently available for builds or sale.
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto shrink-0">
-          {onOpenBulkEntry && (
-            <button
-              type="button"
-              onClick={onOpenBulkEntry}
-              className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all bg-[#10141E] hover:bg-[#182030] border border-white/[0.08] hover:border-[#A3FF12]/40 text-zinc-100 flex items-center justify-center gap-1.5 cursor-pointer"
-              title="Fast Bulk Stock Entry via AI Text or Image Scan"
-            >
-              <Zap className="w-3.5 h-3.5 text-[#A3FF12] shrink-0" />
-              <span>AI Import</span>
-            </button>
-          )}
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:justify-end">
+        {onOpenBulkEntry && (
           <button
             type="button"
-            onClick={() => onOpenAddComponent()}
-            className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-bold rounded-lg transition-all bg-[#A3FF12] hover:bg-[#C2FF5C] text-[#11150C] flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
-            title="Add a new component"
+            onClick={onOpenBulkEntry}
+            className="app-button flex items-center justify-center gap-1.5 px-4"
+            title="Fast Bulk Stock Entry via AI Text or Image Scan"
           >
-            <Plus className="w-3.5 h-3.5 shrink-0" />
-            <span>Add Part</span>
+            <Zap className="h-3.5 w-3.5 shrink-0 text-[#A8FF3E]" />
+            <span>AI Import</span>
           </button>
-        </div>
+        )}
+        <button
+          type="button"
+          onClick={() => onOpenAddComponent()}
+          className="app-button app-button-primary flex shrink-0 items-center justify-center gap-1.5 px-5"
+          title="Add a new component"
+        >
+          <Plus className="w-3.5 h-3.5 shrink-0" />
+          <span>Add Part</span>
+        </button>
       </div>
 
-      {/* Filters are controls, kept separate from the stock ledger. */}
-      <div className="border-b border-white/[0.08] pb-4">
+      <div className="app-panel p-3 sm:p-4">
         <InventoryFilterBar
           builds={state.builds}
           components={state.components.filter(c => calculateUnassignedQuantityStrict(c, state.builds) > 0)}
@@ -225,7 +207,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
       {/* Grouped Component Cards List (Virtualized) */}
       {groupedComponents.length === 0 ? (
-        <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-10 text-center space-y-3">
+        <div className="app-panel space-y-3 p-10 text-center">
           <div className="w-10 h-10 rounded-xl bg-white/[0.04] text-zinc-400 flex items-center justify-center mx-auto border border-white/[0.06]">
             <Filter className="w-5 h-5" />
           </div>
@@ -239,24 +221,24 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             <button
               type="button"
               onClick={() => onOpenAddComponent()}
-              className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-[#11150C] text-xs font-semibold px-3.5 py-2 rounded-lg transition-all inline-flex items-center gap-1.5 shadow-sm shadow-[#A3FF12]/20"
+              className="app-button app-button-primary inline-flex items-center gap-1.5 px-4"
             >
               <Plus className="w-4 h-4" /> Add New Component
             </button>
           </div>
         </div>
       ) : !isVirtualized ? (
-        <div className="overflow-hidden rounded-lg border-x border-white/[0.08] pr-0">
+        <div className="space-y-2">
           {virtualRows.map((row) => {
             if (row.type === 'header') {
               return (
-                <div key={row.key} className="pt-1.5 pb-0.5">
-                  <div className="flex items-center justify-between text-xs font-mono px-1">
-                    <span className="font-semibold text-zinc-200 tracking-wider uppercase text-xs sm:text-sm flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-[#A3FF12]" />
+                <div key={row.key} className="app-panel-quiet mt-4 px-3.5 py-2.5 first:mt-0">
+                  <div className="flex items-center justify-between gap-3 font-mono text-xs">
+                    <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-zinc-100 sm:text-sm">
+                      <Layers className="h-4 w-4 text-[#A8FF3E]" />
                       {row.category}
                     </span>
-                    <div className="flex items-center gap-2.5 text-zinc-400 text-xs">
+                    <div className="flex items-center gap-2.5 text-[10px] text-zinc-400 sm:text-xs">
                       <span>{row.totalUnits} in stock</span>
                       <span className="font-semibold text-zinc-200">{formatCurrency(row.totalVal)}</span>
                     </div>
@@ -267,7 +249,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
             return (
               <div key={row.key}>
-                <div className={`grid grid-cols-1 gap-0 ${row.items.some((component) => component.id === expandedCardId) ? '' : 'lg:grid-cols-2'}`}>
+                <div className={`grid grid-cols-1 gap-2 ${row.items.some((component) => component.id === expandedCardId) ? '' : 'xl:grid-cols-2'}`}>
                   {row.items.map((component) => (
                     <ComponentCard
                       isExpanded={expandedCardId === component.id}
@@ -294,7 +276,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
               scrollOffsetRef.current = e.currentTarget.scrollTop;
             }
           }}
-          className="h-[calc(100dvh-285px)] md:h-[calc(100dvh-170px)] overflow-y-auto pr-1"
+          className="h-[calc(100dvh-330px)] overflow-y-auto pr-1 md:h-[calc(100dvh-210px)]"
           style={{
             overflowAnchor: 'none',
             scrollbarWidth: 'thin',
@@ -327,9 +309,9 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                       paddingBottom: '3px',
                     }}
                   >
-                    <div className="flex items-center justify-between text-xs font-mono px-1">
-                      <span className="font-semibold text-zinc-200 tracking-wider uppercase text-xs sm:text-sm flex items-center gap-1.5">
-                        <Layers className="w-3.5 h-3.5 text-[#A3FF12]" />
+                    <div className="app-panel-quiet flex items-center justify-between gap-3 px-3.5 py-2.5 font-mono text-xs">
+                      <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-zinc-100 sm:text-sm">
+                        <Layers className="h-4 w-4 text-[#A8FF3E]" />
                         {row.category}
                       </span>
                       <div className="flex items-center gap-2.5 text-zinc-400 text-xs">
@@ -355,7 +337,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                     paddingBottom: '6px',
                   }}
                 >
-                  <div className={`grid grid-cols-1 gap-0 ${row.items.some((component) => component.id === expandedCardId) ? '' : 'lg:grid-cols-2'}`}>
+                  <div className={`grid grid-cols-1 gap-2 ${row.items.some((component) => component.id === expandedCardId) ? '' : 'xl:grid-cols-2'}`}>
                     {row.items.map((component) => (
                       <ComponentCard
                         isExpanded={expandedCardId === component.id}

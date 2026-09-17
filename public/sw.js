@@ -1,4 +1,4 @@
-const CACHE_NAME = 'partly-shell-20260909';
+const CACHE_NAME = 'partly-shell-20260917-redesign';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

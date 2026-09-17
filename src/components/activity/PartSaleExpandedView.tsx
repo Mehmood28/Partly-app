@@ -25,20 +25,20 @@ export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
 }) => {
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.08] border border-white/[0.08] rounded-lg overflow-hidden">
-        <div className="p-2.5 bg-[#0D1118]">
+      <div className="app-ledger grid grid-cols-2 sm:grid-cols-4">
+        <div className="bg-[#0b1113] p-3">
           <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Sale Price</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-[#67E8F9]">{formatCurrency(salePrice)}</div>
+          <div className="text-sm sm:text-base font-bold font-mono text-[#62E6E6]">{formatCurrency(salePrice)}</div>
         </div>
-        <div className="p-2.5 bg-[#0D1118]">
+        <div className="bg-[#0b1113] p-3">
           <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Unit Cost</div>
           <div className="text-sm sm:text-base font-bold font-mono text-zinc-300">{formatCurrency(partsCost)}</div>
         </div>
-        <div className="p-2.5 bg-[#0D1118]">
+        <div className="bg-[#0b1113] p-3">
           <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Net Profit</div>
           <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(netProfit)}`}>{formatSignedCurrency(netProfit)}</div>
         </div>
-        <div className="p-2.5 bg-[#0D1118]">
+        <div className="bg-[#0b1113] p-3">
           <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Profit Margin</div>
           <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</div>
         </div>
@@ -46,25 +46,25 @@ export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
 
       {/* Trade-In Breakdown Banner if present */}
       {tx?.tradeInCredit !== undefined && tx.tradeInCredit > 0 && (
-        <div className="bg-[#67E8F9]/[0.06] border border-[#67E8F9]/25 rounded-lg p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
+        <div className="bg-[#62E6E6]/[0.06] border border-[#62E6E6]/25 rounded-lg p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[#A5F3FC] border border-[#67E8F9]/30 px-1.5 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider">
+            <span className="text-[#9FF8F4] border border-[#62E6E6]/30 px-1.5 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider">
               Trade-In Included
             </span>
             <span className="text-zinc-300">
-              Cash: <span className="font-mono font-semibold text-zinc-100">{formatCurrency(tx.cashPortion ?? 0)}</span> + Valuation: <span className="font-mono font-semibold text-[#A5F3FC]">{formatCurrency(tx.tradeInCredit)}</span>
+              Cash: <span className="font-mono font-semibold text-zinc-100">{formatCurrency(tx.cashPortion ?? 0)}</span> + Valuation: <span className="font-mono font-semibold text-[#9FF8F4]">{formatCurrency(tx.tradeInCredit)}</span>
             </span>
           </div>
           <div className="text-[11px] text-zinc-400 font-mono">
-            Total Effective: <span className="text-[#67E8F9] font-semibold">{formatCurrency(salePrice)}</span>
+            Total Effective: <span className="text-[#62E6E6] font-semibold">{formatCurrency(salePrice)}</span>
           </div>
         </div>
       )}
 
       {tx?.buyerName && (
-        <div className="bg-[#0D1118] p-2.5 rounded-lg border border-white/[0.08] flex items-center justify-between text-xs">
+        <div className="app-panel-quiet flex items-center justify-between p-3 text-xs">
           <span className="text-zinc-400">Buyer / Contact:</span>
-          <span className="text-[#A5F3FC] font-medium">{tx.buyerName}</span>
+          <span className="text-[#9FF8F4] font-medium">{tx.buyerName}</span>
         </div>
       )}
 

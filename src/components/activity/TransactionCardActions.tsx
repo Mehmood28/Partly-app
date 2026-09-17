@@ -28,12 +28,12 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
   const isManagedViaBuilds = isPCSale && hasLinkedBuild;
   
   return (
-    <div className="flex items-center justify-between gap-2 flex-wrap">
-      <div className="flex items-center gap-2 flex-wrap">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="contents">
         {!isManagedViaBuilds && (
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(tx); }}
-            className="bg-[#0D1118] border border-white/[0.08] text-zinc-200 hover:border-[#67E8F9]/35 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+            className="app-button flex items-center justify-center gap-1.5 px-2"
             title="Edit Log Record"
           >
             <Pencil className="w-3.5 h-3.5" /> Edit Record
@@ -42,7 +42,7 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
         {(isPCSale || isPartSale) && (
           <button
             onClick={onDownloadInvoice}
-            className="bg-[#0D1118] border border-white/[0.08] text-zinc-200 hover:border-[#67E8F9]/35 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+            className="app-button flex items-center justify-center gap-1.5 px-2"
             title="Download Invoice PDF"
           >
             <FileText className="w-3.5 h-3.5" /> Invoice PDF
@@ -56,7 +56,7 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
         {isPartSale && tx.bulkSaleGroupId && onRelistBulkSale ? (
           <button
             onClick={(e) => { e.stopPropagation(); onRelistBulkSale(); }}
-            className="bg-[#67E8F9]/[0.06] border border-[#67E8F9]/25 text-[#A5F3FC] hover:bg-[#67E8F9]/10 transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+            className="app-button flex items-center justify-center gap-1.5 px-2 text-[#9FF8F4]"
             title="Relist entire bulk sale back into stock"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Relist Entire Bulk Sale
@@ -64,7 +64,7 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
         ) : isPartSale && onRelistPart && (
           <button
             onClick={(e) => { e.stopPropagation(); onRelistPart(tx); }}
-            className="bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400/60 transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+            className="app-button flex items-center justify-center gap-1.5 border-emerald-500/35 bg-emerald-500/10 px-2 text-emerald-400 hover:bg-emerald-500/20"
             title="Relist this part back into stock"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Relist Part
@@ -75,7 +75,7 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
       {!isManagedViaBuilds && (
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(tx.id); }}
-          className="bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+          className="app-button app-button-danger flex items-center justify-center gap-1.5 px-2"
           title="Delete Activity Log"
         >
           <Trash2 className="w-3.5 h-3.5" /> Delete

@@ -49,23 +49,23 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
   };
 
   return (
-    <div className="bg-[#0F141C] border-b border-white/[0.08] transition-colors overflow-hidden group flex flex-col first:border-t">
+    <div className="app-panel group flex flex-col transition-colors">
       <div 
-        className="relative p-3 pl-4 cursor-pointer hover:bg-white/[0.025] transition-colors flex items-start gap-2"
+        className="relative flex min-h-[86px] cursor-pointer items-start gap-2 p-3.5 pl-4 transition-colors hover:bg-white/[0.025] sm:p-4 sm:pl-5"
         onClick={handleToggle}
       >
-        <span className="absolute bottom-2.5 left-0 top-2.5 w-0.5 bg-[#A3FF12]" />
+        <span className="absolute bottom-2.5 left-0 top-2.5 w-0.5 bg-[#A8FF3E]" />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <Layers className="w-3.5 h-3.5 text-[#A3FF12] shrink-0" />
-              <h3 className="font-semibold text-zinc-100 text-xs sm:text-sm leading-snug break-words">
+              <Layers className="w-3.5 h-3.5 text-[#A8FF3E] shrink-0" />
+              <h3 className="break-words text-[13px] font-bold leading-snug text-zinc-100 sm:text-[15px]">
                 Bulk Part Sale
               </h3>
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 border shrink-0 leading-none text-[#A3FF12] border-[#A3FF12]/30">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 border shrink-0 leading-none text-[#A8FF3E] border-[#A8FF3E]/30">
                 BULK SALE
               </span>
 
@@ -79,7 +79,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
             <span>LINES <strong className="font-semibold text-zinc-300">{group.lineCount}</strong></span>
             <span>UNITS <strong className="font-semibold text-zinc-300">{group.totalUnits}</strong></span>
             <span>COST <strong className="font-semibold text-zinc-300">{formatCurrency(group.totalCost)}</strong></span>
-            <span>SOLD <strong className="font-semibold text-[#A5F3FC]">{formatCurrency(group.totalRevenue)}</strong></span>
+            <span>SOLD <strong className="font-semibold text-[#9FF8F4]">{formatCurrency(group.totalRevenue)}</strong></span>
             <span className={getProfitTextColor(group.totalProfit)}>PROFIT <strong className="font-semibold">{formatSignedProfit(group.totalProfit)} ({group.profitMarginPercent.toFixed(1)}%)</strong></span>
           </div>
           <div className="flex items-center gap-x-1.5 gap-y-0.5 flex-wrap mt-1 font-mono text-[10px] text-zinc-500">
@@ -93,7 +93,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
 
       {/* Expanded Details Section */}
       {isExpanded && (
-        <div className="p-3 border-t border-white/[0.08] space-y-3 bg-[#10151E]">
+        <div className="space-y-4 border-t border-white/[0.09] bg-[#0d1416]/95 p-3.5 sm:p-4">
           {/* Action Buttons Row */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <button
@@ -101,7 +101,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
                 e.stopPropagation();
                 setIsRelistConfirmOpen(true);
               }}
-              className="bg-[#A3FF12]/10 border border-[#A3FF12]/30 text-[#A3FF12] hover:bg-[#A3FF12]/15 transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+              className="app-button flex items-center gap-1.5 px-3 text-[#BFFF72]"
               title="Relist entire bulk sale back into stock"
             >
               <RotateCcw className="w-3.5 h-3.5" /> Relist Entire Bulk Sale
@@ -112,7 +112,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
                 e.stopPropagation();
                 setIsDeleteConfirmOpen(true);
               }}
-              className="bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+              className="app-button app-button-danger flex items-center gap-1.5 px-3"
               title="Delete Bulk Part Sale Record"
             >
               <Trash2 className="w-3.5 h-3.5" /> Delete Bulk Sale Record
@@ -121,15 +121,15 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
 
           {/* Aggregate Financial Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.08] border border-white/[0.08] rounded-lg overflow-hidden">
-            <div className="p-2.5 bg-[#0D1118]">
+            <div className="p-2.5 bg-[#0B1113]">
               <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Total Revenue</div>
-              <div className="text-sm sm:text-base font-bold font-mono text-[#67E8F9]">{formatCurrency(group.totalRevenue)}</div>
+              <div className="text-sm sm:text-base font-bold font-mono text-[#62E6E6]">{formatCurrency(group.totalRevenue)}</div>
             </div>
-            <div className="p-2.5 bg-[#0D1118]">
+            <div className="p-2.5 bg-[#0B1113]">
               <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Total Cost</div>
               <div className="text-sm sm:text-base font-bold font-mono text-zinc-300">{formatCurrency(group.totalCost)}</div>
             </div>
-            <div className="p-2.5 bg-[#0D1118]">
+            <div className="p-2.5 bg-[#0B1113]">
               <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Total Profit</div>
               <div className={`text-sm sm:text-base font-bold font-mono ${
                 group.totalProfit > 0 ? 'text-emerald-400' : group.totalProfit < 0 ? 'text-rose-400' : 'text-zinc-300'
@@ -137,7 +137,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
                 {formatSignedProfit(group.totalProfit)}
               </div>
             </div>
-            <div className="p-2.5 bg-[#0D1118]">
+            <div className="p-2.5 bg-[#0B1113]">
               <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Profit Margin</div>
               <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(group.profitMarginPercent)}`}>{group.profitMarginPercent.toFixed(1)}%</div>
             </div>
@@ -147,7 +147,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
           {group.buyerName && (
             <div className="border-y border-white/[0.08] px-1 py-2.5 flex items-center justify-between text-xs">
               <span className="text-zinc-400">Buyer / Contact:</span>
-              <span className="text-[#A5F3FC] font-medium">{group.buyerName}</span>
+              <span className="text-[#9FF8F4] font-medium">{group.buyerName}</span>
             </div>
           )}
           {group.notes && (
@@ -192,7 +192,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
 
                     <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 font-mono">
                       <div className="text-right">
-                        <div className="text-[#67E8F9] font-semibold">{formatCurrency(lineRev)}</div>
+                        <div className="text-[#62E6E6] font-semibold">{formatCurrency(lineRev)}</div>
                         <div className={`text-[10px] ${
                           lineProfit > 0 ? 'text-emerald-400' : lineProfit < 0 ? 'text-rose-400' : 'text-zinc-400'
                         }`}>
@@ -205,7 +205,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
                           e.stopPropagation();
                           onEditLine(tx);
                         }}
-                        className="p-1.5 text-zinc-400 hover:text-[#67E8F9] hover:bg-[#67E8F9]/10 rounded-lg border border-transparent hover:border-[#67E8F9]/30 transition-colors"
+                        className="p-1.5 text-zinc-400 hover:text-[#62E6E6] hover:bg-[#62E6E6]/10 rounded-lg border border-transparent hover:border-[#62E6E6]/30 transition-colors"
                         title="Edit this sale line"
                       >
                         <Pencil className="w-3.5 h-3.5" />

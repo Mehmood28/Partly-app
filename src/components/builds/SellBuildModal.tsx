@@ -278,7 +278,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
             type="button"
             onClick={handleClose}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -292,7 +292,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                 type="date"
                 value={builtDate}
                 onChange={(e) => setBuiltDate(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors [color-scheme:dark]"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors [color-scheme:dark]"
               />
             </div>
             <div>
@@ -302,7 +302,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                 required
                 value={saleDate}
                 onChange={(e) => setSaleDate(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors [color-scheme:dark]"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors [color-scheme:dark]"
               />
             </div>
           </div>
@@ -321,7 +321,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                   required
                   value={salePrice}
                   onChange={(e) => setSalePrice(e.target.value)}
-                  className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors pr-3 pl-7"
+                  className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors pr-3 pl-7"
                   placeholder={hasTradeIn ? "2000" : "2500"}
                 />
               </div>
@@ -365,7 +365,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                   step="1"
                   value={customWarrantyDays}
                   onChange={(e) => setCustomWarrantyDays(e.target.value)}
-                  className="w-20 h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
+                  className="w-20 h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors"
                   placeholder="Days"
                   required
                 />
@@ -374,10 +374,10 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
           </div>
 
           {/* Trade-In Toggle Section */}
-          <div className="bg-[#121722] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
+          <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ArrowRightLeft className="w-4 h-4 text-[#67E8F9]" />
+                <ArrowRightLeft className="w-4 h-4 text-[#62E6E6]" />
                 <span className="text-xs font-semibold text-zinc-200">Accept PC Trade-In</span>
                 {isTradeInLocked && (
                   <span className="inline-flex items-center gap-1 text-[10px] text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/25">
@@ -397,7 +397,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-[#0D1118] border border-white/[0.1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#A3FF12]"></div>
+                <div className="w-9 h-5 bg-[#0B1113] border border-white/[0.1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#A8FF3E]"></div>
               </label>
             </div>
 
@@ -424,7 +424,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                         disabled={isTradeInLocked}
                         value={tradeInCredit}
                         onChange={(e) => setTradeInCredit(e.target.value)}
-                        className={`w-full h-11 bg-[#0D1118] border border-[#A3FF12]/30 rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors pr-3 pl-7 ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className={`w-full h-11 bg-[#0B1113] border border-[#A8FF3E]/30 rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors pr-3 pl-7 ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                         placeholder="500"
                       />
                     </div>
@@ -439,7 +439,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                       disabled={isTradeInLocked}
                       value={tradeInBuildName}
                       onChange={(e) => setTradeInBuildName(e.target.value)}
-                      className={`w-full h-11 bg-[#0D1118] border border-[#A3FF12]/30 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      className={`w-full h-11 bg-[#0B1113] border border-[#A8FF3E]/30 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                       placeholder="e.g. i7-10700K + RTX 3070 Rig"
                     />
                   </div>
@@ -452,20 +452,20 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                     disabled={isTradeInLocked}
                     value={tradeInNotes}
                     onChange={(e) => setTradeInNotes(e.target.value)}
-                    className={`w-full h-11 bg-[#0D1118] border border-[#A3FF12]/30 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    className={`w-full h-11 bg-[#0B1113] border border-[#A8FF3E]/30 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                     placeholder="e.g. Boots fine, needs dusting, 16GB RAM, 650W PSU"
                   />
                 </div>
 
                 {/* Computed Total Effective Sale Price */}
-                <div className="bg-[#A3FF12]/10 border border-[#A3FF12]/30 rounded-xl p-3 flex items-center justify-between">
+                <div className="bg-[#A8FF3E]/10 border border-[#A8FF3E]/30 rounded-xl p-3 flex items-center justify-between">
                   <div>
-                    <div className="text-xs text-[#67E8F9] font-semibold">Total Effective Sale Price</div>
+                    <div className="text-xs text-[#62E6E6] font-semibold">Total Effective Sale Price</div>
                     <div className="text-xs text-zinc-400 font-sans mt-0.5">
                       {formatCurrency(cashAmount)} Cash + {formatCurrency(creditAmount)} Trade-In Credit
                     </div>
                   </div>
-                  <div className="text-base font-bold font-mono text-[#67E8F9]">
+                  <div className="text-base font-bold font-mono text-[#62E6E6]">
                     {formatCurrency(totalEffectivePrice)}
                   </div>
                 </div>
@@ -479,7 +479,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
               type="text"
               value={platformSold}
               onChange={(e) => setPlatformSold(e.target.value)}
-              className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+              className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
               placeholder="e.g. Amazon, Kijiji"
             />
           </div>
@@ -491,7 +491,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                 type="text"
                 value={buyerName}
                 onChange={(e) => setBuyerName(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
                 placeholder="e.g. Alex"
               />
             </div>
@@ -501,7 +501,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                 type="tel"
                 value={buyerPhone}
                 onChange={(e) => setBuyerPhone(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
                 placeholder="e.g. 555-0123"
               />
             </div>
@@ -522,7 +522,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                   </button>
                 </div>
               ) : (
-                <div className="w-12 h-12 rounded-xl border border-dashed border-white/[0.1] bg-[#121722] flex items-center justify-center text-zinc-500 shrink-0">
+                <div className="w-12 h-12 rounded-xl border border-dashed border-white/[0.1] bg-[#101719] flex items-center justify-center text-zinc-500 shrink-0">
                   <ImagePlus className="w-5 h-5" />
                 </div>
               )}
@@ -535,7 +535,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                     file:mr-2 file:py-1.5 file:px-3
                     file:rounded-lg file:border file:border-white/[0.08]
                     file:text-xs file:font-semibold
-                    file:bg-[#121722] file:text-zinc-200
+                    file:bg-[#101719] file:text-zinc-200
                     hover:file:bg-white/[0.06]
                     cursor-pointer"
                 />
@@ -550,7 +550,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
           <button
             type="button"
             onClick={handleClose}
-            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             Cancel
           </button>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Hammer, Sparkles, Package, ArrowRight } from 'lucide-react';
+import { Plus, Hammer, Sparkles, Database, ArrowRight } from 'lucide-react';
 
 interface DashboardQuickActionsProps {
   onOpenAddComponent?: () => void;
@@ -16,33 +16,34 @@ export const DashboardQuickActions: React.FC<DashboardQuickActionsProps> = ({
   onNavigateToStock,
 }) => {
   return (
-    <section>
-      <div className="flex items-center justify-between gap-2 mb-2.5">
-        <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-300 flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-[#A3FF12]" />
-          Quick Actions
-        </h3>
+    <section className="app-section">
+      <div className="mb-3.5 flex items-center justify-between gap-2">
+        <h3 className="app-section-kicker"><Sparkles /> Quick Actions</h3>
+        <span className="hidden text-[10px] text-zinc-600 sm:block">Build. Stock. Automate.</span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.08] border border-white/[0.08] rounded-lg overflow-hidden">
-        {/* Add Build Action */}
+      <div className="app-panel grid grid-cols-2 lg:grid-cols-4">
         <button
           type="button"
           onClick={() => onOpenAddBuild()}
-          className="min-h-11 flex items-center justify-center gap-1.5 py-2 px-3 bg-[#A3FF12] hover:bg-[#C2FF5C] text-[#11150C] text-xs font-bold transition-colors group"
+          className="group relative min-h-[132px] border-b border-r border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025] lg:border-b-0"
         >
-          <Hammer className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          <span>New PC Build</span>
+          <Hammer className="h-5 w-5 text-[#A8FF3E]" />
+          <ArrowRight className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-[#A8FF3E]" />
+          <span className="mt-5 block text-[12px] font-bold text-zinc-100">New PC Build</span>
+          <span className="mt-1 block text-[10px] leading-relaxed text-zinc-500">Create a custom PC build</span>
         </button>
 
         {/* Add Component Action */}
         <button
           type="button"
           onClick={() => onOpenAddComponent && onOpenAddComponent()}
-          className="min-h-11 flex items-center justify-center gap-1.5 py-2 px-3 bg-[#10141E] hover:bg-[#171D29] text-zinc-100 text-xs font-medium transition-colors group"
+          className="group relative min-h-[132px] border-b border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025] lg:border-b-0 lg:border-r"
         >
-          <Plus className="w-3.5 h-3.5 text-[#A3FF12] group-hover:scale-110 transition-transform" />
-          <span>Add Component</span>
+          <Plus className="h-5 w-5 text-[#62E6E6]" />
+          <ArrowRight className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-[#62E6E6]" />
+          <span className="mt-5 block text-[12px] font-bold text-zinc-100">Add Component</span>
+          <span className="mt-1 block text-[10px] leading-relaxed text-zinc-500">Add one part to inventory</span>
         </button>
 
         {/* AI Bulk Stock Entry */}
@@ -50,10 +51,12 @@ export const DashboardQuickActions: React.FC<DashboardQuickActionsProps> = ({
           <button
             type="button"
             onClick={onOpenBulkEntry}
-            className="min-h-11 flex items-center justify-center gap-1.5 py-2 px-3 bg-[#10141E] hover:bg-[#171D29] text-zinc-100 text-xs font-medium transition-colors group"
+            className="group relative min-h-[132px] border-r border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025]"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#67E8F9] group-hover:scale-110 transition-transform" />
-            <span>AI Bulk Import</span>
+            <Sparkles className="h-5 w-5 text-[#62E6E6]" />
+            <ArrowRight className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-[#62E6E6]" />
+            <span className="mt-5 block text-[12px] font-bold text-zinc-100">AI Bulk Import</span>
+            <span className="mt-1 block text-[10px] leading-relaxed text-zinc-500">Import parts from a list or image</span>
           </button>
         )}
 
@@ -61,11 +64,12 @@ export const DashboardQuickActions: React.FC<DashboardQuickActionsProps> = ({
         <button
           type="button"
           onClick={onNavigateToStock}
-          className="min-h-11 flex items-center justify-center gap-1.5 py-2 px-3 bg-[#10141E] hover:bg-[#171D29] text-zinc-300 hover:text-white text-xs font-medium transition-colors group"
+          className="group relative min-h-[132px] p-3.5 text-left transition-colors hover:bg-white/[0.025]"
         >
-          <Package className="w-3.5 h-3.5 text-[#67E8F9] group-hover:scale-110 transition-transform" />
-          <span>Inventory Stock</span>
-          <ArrowRight className="w-3 h-3 text-zinc-500 group-hover:translate-x-0.5 transition-transform" />
+          <Database className="h-5 w-5 text-[#62E6E6]" />
+          <ArrowRight className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-[#62E6E6]" />
+          <span className="mt-5 block text-[12px] font-bold text-zinc-100">Inventory Stock</span>
+          <span className="mt-1 block text-[10px] leading-relaxed text-zinc-500">View and manage current stock</span>
         </button>
       </div>
     </section>

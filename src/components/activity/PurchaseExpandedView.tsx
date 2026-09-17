@@ -31,25 +31,25 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className={`grid gap-px bg-white/[0.08] border border-white/[0.08] rounded-lg overflow-hidden ${
+      <div className={`app-ledger grid ${
         !isBulkPurchase && tx.quantity && tx.quantity > 1 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'
       }`}>
-        <div className="p-2.5 bg-[#0D1118]">
+        <div className="bg-[#0b1113] p-3">
           <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Total Spent</div>
           <div className="mt-0.5 text-sm sm:text-base font-bold font-mono text-zinc-100">{formatCurrency(tx.totalAmount)}</div>
         </div>
-        <div className="p-2.5 bg-[#0D1118]">
+        <div className="bg-[#0b1113] p-3">
           <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Quantity Purchased</div>
-          <div className="mt-0.5 text-sm sm:text-base font-bold font-mono text-[#67E8F9]">
+          <div className="mt-0.5 text-sm sm:text-base font-bold font-mono text-[#62E6E6]">
             {tx.purchaseKind === 'PC'
               ? `${purchasedQuantity} ${purchasedQuantity === 1 ? 'PC' : 'PCs'}`
               : `${purchasedQuantity} ${purchasedQuantity === 1 ? 'unit' : 'units'}`}
           </div>
         </div>
         {!isBulkPurchase && tx.quantity && tx.quantity > 1 && (
-          <div className="p-2.5 bg-[#0D1118] col-span-2 sm:col-span-1">
+          <div className="col-span-2 bg-[#0b1113] p-3 sm:col-span-1">
             <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Unit Price</div>
-            <div className="mt-0.5 text-sm sm:text-base font-bold font-mono text-[#67E8F9]">
+            <div className="mt-0.5 text-sm sm:text-base font-bold font-mono text-[#62E6E6]">
               {formatCurrency(tx.totalAmount / tx.quantity)}
             </div>
           </div>
@@ -63,7 +63,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
             <span className="font-mono">{purchasedItems.length} {purchasedItems.length === 1 ? 'item' : 'items'}</span>
           </div>
 
-          <div className="overflow-hidden rounded-lg border-x border-white/[0.08]">
+          <div className="app-ledger">
             {purchasedItems.map((item, idx) => {
               const category = getCategoryPresentation(item.category || 'Other');
               const metadata = [
@@ -72,7 +72,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
               ].filter(Boolean) as string[];
 
               return (
-                <div key={idx} className="relative border-b first:border-t border-white/[0.08] bg-[#0D1118] px-3 py-2.5 pr-4 text-xs">
+                <div key={idx} className="app-ledger-row relative bg-[#0b1113] px-3.5 py-3 pr-5 text-xs">
                   <span className={`absolute right-1.5 top-2.5 bottom-2.5 w-0.5 ${category.railClass}`} />
                   <div className="flex items-start gap-2 min-w-0">
                     <span className={`w-[4.4rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold tracking-wide ${category.textClass}`}>
@@ -107,7 +107,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
       ) : matchedComp ? (
         <div className="border-y border-white/[0.08] py-2.5 text-xs">
           <div className="flex items-start gap-2">
-            <span className="w-[4.4rem] shrink-0 font-mono text-[10px] font-bold text-[#A5F3FC]">{matchedComp.category}</span>
+            <span className="w-[4.4rem] shrink-0 font-mono text-[10px] font-bold text-[#9FF8F4]">{matchedComp.category}</span>
             <span className="min-w-0 flex-1 break-words text-zinc-200">{matchedComp.name}</span>
           </div>
           {matchedComp.tags?.length ? (

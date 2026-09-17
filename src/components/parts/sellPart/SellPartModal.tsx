@@ -351,7 +351,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
       <div className="w-full">
         <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12]">
+            <div className="w-10 h-10 rounded-xl bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 flex items-center justify-center text-[#A8FF3E]">
               {saleMode === 'bulk' ? <Layers className="w-5 h-5" /> : <Tag className="w-5 h-5" />}
             </div>
             <div>
@@ -373,21 +373,21 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
               handleCloseAndReset();
             }}
             aria-label="Close modal"
-            className="text-zinc-400 hover:text-white rounded-lg p-1 hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="text-zinc-400 hover:text-white rounded-lg p-1 hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Mode Switcher Tabs */}
-        <div className="px-5 pt-3 pb-2 border-b border-white/[0.06] bg-[#0A0E14]">
-          <div className="flex items-center gap-1 p-1 bg-[#121722] border border-white/[0.06] rounded-xl">
+        <div className="px-5 pt-3 pb-2 border-b border-white/[0.06] bg-[#0B1113]">
+          <div className="flex items-center gap-1 p-1 bg-[#101719] border border-white/[0.06] rounded-xl">
             <button
               type="button"
               onClick={() => setSaleMode('single')}
               className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold font-sans flex items-center justify-center gap-1.5 transition-all ${
                 saleMode === 'single'
-                  ? 'bg-[#A3FF12] text-white shadow-sm'
+                  ? 'bg-[#A8FF3E] text-[#07100B] shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
               }`}
             >
@@ -399,7 +399,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
               onClick={() => setSaleMode('bulk')}
               className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold font-sans flex items-center justify-center gap-1.5 transition-all ${
                 saleMode === 'bulk'
-                  ? 'bg-[#A3FF12] text-white shadow-sm'
+                  ? 'bg-[#A8FF3E] text-[#07100B] shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
               }`}
             >
@@ -419,7 +419,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
           </div>
         ) : hasNoInStockParts ? (
           <div className="p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#A3FF12] flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 text-[#A8FF3E] flex items-center justify-center mx-auto">
               <Package className="w-6 h-6" />
             </div>
             <div className="space-y-1">
@@ -437,7 +437,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                   e.stopPropagation();
                   onClose();
                 }}
-                className="px-4 py-2 rounded-xl border border-white/[0.08] text-zinc-400 hover:text-white text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+                className="px-4 py-2 rounded-xl border border-white/[0.08] text-zinc-400 hover:text-white text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
               >
                 Close
               </button>
@@ -452,7 +452,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                       onOpenAddComponent();
                     }, 50);
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold text-xs shadow-sm shadow-[#A3FF12]/20 transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+                  className="px-4 py-2 rounded-xl bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold text-xs shadow-sm shadow-[#A8FF3E]/20 transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add New Component</span>
@@ -467,7 +467,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                 Select Component / Part
               </label>
               {preselectedComponent ? (
-                <div className="bg-[#121722] border border-white/[0.08] rounded-xl p-3 flex items-center justify-between">
+                <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3 flex items-center justify-between">
                   <div>
                     <div className="text-xs font-medium text-zinc-100 font-sans">
                       {preselectedComponent.name}
@@ -563,7 +563,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                   />
 
                   {!isTradeUp && (
-                    <div className="bg-[#121722] border border-white/[0.08] rounded-xl p-3.5 space-y-2">
+                    <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-2">
                       <div className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">
                         Sale Summary &amp; Profit Preview
                       </div>
@@ -603,7 +603,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                         e.stopPropagation();
                         handleCloseAndReset();
                       }}
-                      className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+                      className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
                     >
                       Cancel
                     </button>

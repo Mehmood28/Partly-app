@@ -17,24 +17,22 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
   customError,
 }) => {
   return (
-    <section className="border-t border-white/[0.08] pt-4 relative">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-300 flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-[#A3FF12]" />
-          Custom AI Build Request
-        </h3>
-        <span className="text-[11px] text-zinc-400 font-mono hidden sm:inline-block">In-Stock Optimization</span>
+    <section className="app-section relative">
+      <div className="mb-3.5 flex items-center justify-between gap-2">
+        <h3 className="app-section-kicker"><Sparkles /> Custom AI Build Request</h3>
+        <span className="hidden text-[10px] text-zinc-600 sm:inline-block">Describe. Generate. Refine.</span>
       </div>
-      <div className="flex flex-col sm:flex-row gap-2 relative z-10 w-full max-w-full min-w-0">
+      <div className="app-panel p-2.5 sm:p-3">
+      <div className="relative z-10 flex w-full min-w-0 max-w-full flex-col gap-2.5 lg:flex-row">
         <div className="relative flex-1 min-w-0 w-full max-w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <input
             type="text"
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !isGeneratingCustomBuild && onGenerate()}
             placeholder="e.g. 'White AM5 build with RTX 4080', 'Budget esports rig under $800'..."
-            className="w-full h-11 box-border bg-[#10141E] border border-white/[0.08] rounded-lg pl-9 pr-9 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-all placeholder-zinc-500"
+            className="app-field h-12 box-border pl-10 pr-9 text-xs placeholder:text-zinc-600 sm:text-sm"
           />
           {customPrompt && (
             <button
@@ -50,7 +48,7 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
         <button
           onClick={onGenerate}
           disabled={!customPrompt.trim() || isGeneratingCustomBuild}
-          className="h-11 bg-[#A3FF12] hover:bg-[#C2FF5C] disabled:opacity-50 disabled:cursor-not-allowed text-[#11150C] px-4 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 shrink-0"
+          className="app-button app-button-primary h-12 shrink-0 px-6 disabled:cursor-not-allowed disabled:opacity-45"
         >
           {isGeneratingCustomBuild ? (
             <>
@@ -59,15 +57,16 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
             </>
           ) : (
             <>
-              <Sparkles className="w-3.5 h-3.5 text-white" />
+              <Sparkles className="w-3.5 h-3.5" />
               <span>Generate Build</span>
             </>
           )}
         </button>
       </div>
+      </div>
       
       {customError && (
-        <div className="mt-2 text-rose-400 bg-rose-500/10 border border-rose-500/20 relative z-10 px-3 py-1.5 rounded-lg text-xs font-medium">
+        <div className="relative z-10 mt-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-400">
           {customError}
         </div>
       )}

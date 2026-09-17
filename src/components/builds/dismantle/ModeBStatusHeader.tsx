@@ -26,7 +26,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
 }) => {
   return (
     <div className="mt-3 space-y-2">
-      <div className="grid grid-cols-3 gap-2 p-2.5 bg-[#121722] border border-white/[0.08] rounded-xl text-xs">
+      <div className="grid grid-cols-3 gap-2 p-2.5 bg-[#101719] border border-white/[0.08] rounded-xl text-xs">
         <div>
           <div className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider font-sans">Target Value</div>
           <div className="text-xs sm:text-sm font-bold font-mono text-zinc-100 mt-0.5">
@@ -37,7 +37,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
           <div className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider font-sans">Total Allocated</div>
           <div
             className={`text-xs sm:text-sm font-bold font-mono mt-0.5 ${
-              isExactMatch ? 'text-emerald-400' : 'text-[#67E8F9]'
+              isExactMatch ? 'text-emerald-400' : 'text-[#62E6E6]'
             }`}
           >
             {formatCurrency(totalAllocated)}
@@ -47,7 +47,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
           <div className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider font-sans flex items-center justify-between">
             <span>Remaining</span>
             {lockedParts.length > 0 && (
-              <span className="text-[9px] text-[#67E8F9] font-mono lowercase">
+              <span className="text-[9px] text-[#62E6E6] font-mono lowercase">
                 {lockedParts.length} locked
               </span>
             )}
@@ -58,7 +58,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
                 ? 'text-emerald-400'
                 : remainingBalance < 0
                 ? 'text-rose-400'
-                : 'text-[#67E8F9]'
+                : 'text-[#62E6E6]'
             }`}
           >
             {remainingBalance < 0
@@ -69,9 +69,9 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
       </div>
 
       {!isExactMatch ? (
-        <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#A3FF12]/10 border border-[#A3FF12]/25 text-xs text-zinc-200">
+        <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#A8FF3E]/10 border border-[#A8FF3E]/25 text-xs text-zinc-200">
           <div className="flex items-center gap-2 min-w-0">
-            <AlertCircle className="w-4 h-4 shrink-0 text-[#A3FF12]" />
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#A8FF3E]" />
             <div className="min-w-0">
               {unlockedParts.length === 0 ? (
                 <span className="text-[11px] sm:text-xs text-zinc-300">
@@ -81,7 +81,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
                 <div className="text-[11px] sm:text-xs truncate">
                   <span>
                     Re-distribute {remainingBalance > 0 ? 'remaining ' : 'balance '}
-                    <span className="font-mono font-bold text-[#67E8F9]">
+                    <span className="font-mono font-bold text-[#62E6E6]">
                       {remainingBalance < 0
                         ? `-${formatCurrency(Math.abs(remainingBalance))}`
                         : formatCurrency(remainingBalance)}
@@ -105,9 +105,9 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
             type="button"
             onClick={handleAutoDistribute}
             disabled={unlockedParts.length === 0}
-            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
               unlockedParts.length > 0
-                ? 'bg-[#A3FF12] hover:bg-[#C2FF5C] text-white shadow-sm shadow-[#A3FF12]/20 cursor-pointer'
+                ? 'bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] shadow-sm shadow-[#A8FF3E]/20 cursor-pointer'
                 : 'bg-white/[0.04] text-zinc-500 border border-white/[0.06] cursor-not-allowed'
             }`}
           >

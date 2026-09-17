@@ -49,29 +49,29 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.08]">
-        <div className="bg-[#0F141C] p-2.5">
-          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Sale Price</div>
-          <div className="mt-0.5 font-mono text-sm font-bold text-[#67E8F9]">{formatCurrency(salePrice)}</div>
+      <div className="app-ledger grid grid-cols-2 sm:grid-cols-4">
+        <div className="bg-[#0b1113] p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Sale Price</div>
+          <div className="mt-0.5 font-mono text-sm font-bold text-[#62E6E6]">{formatCurrency(salePrice)}</div>
         </div>
-        <div className="bg-[#0F141C] p-2.5">
-          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Build Cost</div>
+        <div className="bg-[#0b1113] p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Build Cost</div>
           <div className="mt-0.5 font-mono text-sm font-bold text-zinc-200">{formatCurrency(partsCost)}</div>
         </div>
-        <div className="bg-[#0F141C] p-2.5">
-          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Net Profit</div>
+        <div className="bg-[#0b1113] p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Net Profit</div>
           <div className={`mt-0.5 font-mono text-sm font-bold ${getProfitTextColor(netProfit)}`}>{formatSignedCurrency(netProfit)}</div>
         </div>
-        <div className="bg-[#0F141C] p-2.5">
-          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Profit Margin</div>
+        <div className="bg-[#0b1113] p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Profit Margin</div>
           <div className={`mt-0.5 font-mono text-sm font-bold ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</div>
         </div>
       </div>
 
       {tx.tradeInCredit !== undefined && tx.tradeInCredit > 0 && (
-        <div className="border-l-2 border-[#67E8F9] bg-[#67E8F9]/[0.05] px-3 py-2 text-[11px] text-zinc-300">
+        <div className="border-l-2 border-[#62E6E6] bg-[#62E6E6]/[0.05] px-3 py-2 text-[11px] text-zinc-300">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <span className="font-semibold uppercase tracking-[0.12em] text-[#A5F3FC]">Trade-in included</span>
+            <span className="font-semibold uppercase tracking-[0.12em] text-[#9FF8F4]">Trade-in included</span>
             <span className="font-mono text-zinc-100">Effective sale {formatCurrency(salePrice)}</span>
           </div>
           <div className="mt-1 flex flex-wrap gap-x-2 text-zinc-400">
@@ -83,27 +83,27 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.08] text-xs">
+      <div className="app-ledger grid grid-cols-2 text-xs sm:grid-cols-4">
         {platform && (
-          <div className="bg-[#0F141C] p-2.5">
-            <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Platform</div>
+          <div className="bg-[#0b1113] p-3">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Platform</div>
             <div className="mt-0.5 truncate text-zinc-200">{normalizePlatform(platform)}</div>
           </div>
         )}
         {paymentMethod && (
-          <div className="bg-[#0F141C] p-2.5">
-            <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Payment</div>
+          <div className="bg-[#0b1113] p-3">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Payment</div>
             <div className="mt-0.5 truncate text-zinc-200">{paymentMethod}</div>
           </div>
         )}
         {buyerName && (
-          <div className="bg-[#0F141C] p-2.5">
-            <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Buyer</div>
+          <div className="bg-[#0b1113] p-3">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Buyer</div>
             <div className="mt-0.5 truncate text-zinc-200">{buyerName}</div>
           </div>
         )}
-        <div className="bg-[#0F141C] p-2.5">
-          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Sale Date</div>
+        <div className="bg-[#0b1113] p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Sale Date</div>
           <div className="mt-0.5 truncate font-mono text-zinc-200">{saleDate || 'N/A'}</div>
         </div>
       </div>
@@ -130,7 +130,7 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
           <span className="font-mono text-zinc-500">{presentation ? presentation.totalQuantity : fallbackItems.reduce((sum, item) => sum + item.quantity, 0)} items</span>
         </div>
 
-        <div className="overflow-hidden rounded-b-lg border-x border-b border-white/[0.08]">
+        <div className="app-ledger rounded-t-none border-t-0">
           {presentation ? presentation.allComponents.map((part, partIdx) => {
             const comp = part.originalComponentId ? components.find((candidate) => candidate.id === part.originalComponentId) : null;
             let purchaseEntry = comp?.purchaseHistory?.find((entry) => entry.id === part.originalPurchaseEntryId);
@@ -147,10 +147,10 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
 
             return (
               <div key={part.id || `${part.category}-${part.name}-${partIdx}`} className="relative grid grid-cols-[3.8rem_minmax(0,1fr)_auto] gap-2 border-b border-white/[0.06] px-2.5 py-2.5 last:border-b-0">
-                <span className={`pt-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.14em] ${category.textClass}`}>{category.label}</span>
+                <span className={`pt-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] ${category.textClass}`}>{category.label}</span>
                 <div className="min-w-0">
                   <div className="break-words text-xs font-medium leading-snug text-zinc-100">{part.name}</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[9px] text-zinc-500">
+                  <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] text-zinc-500">
                     {purchaseEntry ? (
                       <>
                         <span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(purchaseEntry.condition)}`} />
@@ -172,10 +172,10 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
             const category = getCategoryPresentation(item.category);
             return (
               <div key={`${item.itemName}-${idx}`} className="relative grid grid-cols-[3.8rem_minmax(0,1fr)_auto] gap-2 border-b border-white/[0.06] px-2.5 py-2.5 last:border-b-0">
-                <span className={`pt-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.14em] ${category.textClass}`}>{category.label}</span>
+                <span className={`pt-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] ${category.textClass}`}>{category.label}</span>
                 <div className="min-w-0">
                   <div className="break-words text-xs font-medium leading-snug text-zinc-100">{item.itemName}</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[9px] text-zinc-500">
+                  <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] text-zinc-500">
                     {item.condition && <><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(item.condition)}`} /><span>{item.condition}</span></>}
                     {!hideSupplierNames && item.platform && <><span>·</span><span>{normalizePlatform(item.platform)}</span></>}
                     {item.tags.length > 0 && <><span>·</span><span>{item.tags.join(' · ')}</span></>}

@@ -73,33 +73,33 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const categoryPresentation = getCategoryPresentation(component.category);
 
   const getCardBorder = () => {
-    return 'border-white/[0.08] hover:border-[#A3FF12]/40';
+    return 'border-white/[0.08] hover:border-[#A8FF3E]/40';
   };
 
   return (
-    <div className={`bg-[#0F141C] border-b first:border-t overflow-hidden transition-colors ${getCardBorder()}`} style={{ contain: 'content', willChange: 'transform' }}>
+    <div className={`app-panel transition-colors ${getCardBorder()} ${isExpanded ? 'border-l-2 border-l-[#A8FF3E] shadow-[0_18px_45px_rgba(0,0,0,0.28)]' : ''}`} style={{ contain: 'content', willChange: 'transform' }}>
       {/* Collapsed Header Bar - Clickable for mobile */}
       <div 
-        className="relative cursor-pointer px-3 py-2.5 pr-4"
+        className="relative min-h-[70px] cursor-pointer px-3.5 py-3 pr-5 transition-colors hover:bg-white/[0.018]"
         onClick={handleToggle}
       >
-        <span className={`absolute right-1.5 top-2.5 bottom-2.5 w-0.5 rounded-full ${categoryPresentation.railClass}`} />
-        <div className="flex items-start gap-2 min-w-0">
-          <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold tracking-wide ${categoryPresentation.textClass}`}>
+        <span className={`absolute bottom-3 right-1.5 top-3 w-0.5 rounded-full ${categoryPresentation.railClass}`} />
+        <div className="flex min-w-0 items-start gap-2.5">
+          <span className={`w-[4.1rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.08em] ${categoryPresentation.textClass}`}>
             {categoryPresentation.label}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
-              <h3 className="min-w-0 flex-1 break-words text-xs font-semibold leading-snug tracking-tight text-zinc-100 sm:text-sm">
+              <h3 className="min-w-0 flex-1 break-words text-[13px] font-bold leading-snug tracking-[-0.02em] text-zinc-100 sm:text-[15px]">
                 {String(component.name || '')}
               </h3>
-              <span className="shrink-0 font-mono text-xs font-bold text-zinc-100 whitespace-nowrap">{formatCurrency(unassignedVal)}</span>
+              <span className="shrink-0 whitespace-nowrap font-mono text-[13px] font-bold text-white sm:text-sm">{formatCurrency(unassignedVal)}</span>
               <div className="-mr-1 -mt-0.5 flex items-center gap-1 text-zinc-500">
                 {actionOverride ? actionOverride : null}
                 {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </div>
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500">
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500 sm:text-[11px]">
               {(component.tags || []).filter((tag): tag is string => typeof tag === 'string' && Boolean(tag)).map((tag, idx) => <span key={`${tag}-${idx}`}>{idx > 0 && '· '}{tag}</span>)}
               {(component.tags || []).some((tag) => typeof tag === 'string' && Boolean(tag)) && <span>·</span>}
               <span>{unassignedQty} in stock</span>
@@ -111,18 +111,18 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
       {/* Expanded Content Section */}
       {isExpanded && (
-        <div className="border-t border-white/[0.08] bg-[#10151E] p-3 space-y-3">
+        <div className="space-y-4 border-t border-white/[0.09] bg-[#0d1416]/95 p-3.5 sm:p-4">
           
           {/* Expanded Action Toolbar */}
           {!readonlyMode && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-0.5 hide-scrollbar">
+            <div className="grid grid-cols-3 gap-2">
               {onAddPurchaseEntry && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onAddPurchaseEntry(component.id);
                   }}
-                  className="bg-[#A3FF12]/15 hover:bg-[#A3FF12]/25 text-[#67E8F9] border border-[#A3FF12]/30 transition-colors whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                  className="app-button flex items-center justify-center gap-1.5 whitespace-nowrap px-2 text-[#BFFF72]"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Stock
                 </button>
@@ -133,7 +133,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                     e.stopPropagation();
                     onEditComponent(component);
                   }}
-                  className="bg-[#0D1118] hover:bg-[#182030] text-zinc-300 hover:text-white px-3 py-1.5 rounded-lg border border-white/[0.08] text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5"
+                  className="app-button flex items-center justify-center gap-1.5 whitespace-nowrap px-2"
                 >
                   <Pencil className="w-3.5 h-3.5" /> Edit
                 </button>
@@ -144,7 +144,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                     e.stopPropagation();
                     setShowDeleteConfirm(true);
                   }}
-                  className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors whitespace-nowrap flex items-center gap-1.5 ml-auto px-3 py-1.5 rounded-lg text-xs font-medium"
+                  className="app-button app-button-danger flex items-center justify-center gap-1.5 whitespace-nowrap px-2"
                 >
                   <Trash2 className="w-3.5 h-3.5" /> Delete
                 </button>
@@ -154,11 +154,11 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
           {/* PURCHASE HISTORY Section */}
           <div>
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase">
+            <div className="mb-2.5 flex items-center justify-between gap-3">
+              <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-400 sm:text-[11px]">
                 PURCHASE HISTORY · {visibleBatchCount} BATCH{visibleBatchCount === 1 ? '' : 'ES'}
               </span>
-              <span className="font-mono text-[10px] font-semibold text-[#A5F3FC]">{formatCurrency(unassignedVal)}</span>
+              <span className="font-mono text-[11px] font-bold text-[#62E6E6] sm:text-xs">{formatCurrency(unassignedVal)}</span>
             </div>
 
             {(() => {
@@ -166,7 +166,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
               if (component.purchaseHistory.length === 0) {
                 return (
-                  <div className="text-xs text-zinc-500 italic p-3 bg-[#0D1118] border-y border-white/[0.06]">
+                  <div className="text-xs text-zinc-500 italic p-3 bg-[#0B1113] border-y border-white/[0.06]">
                     No purchase entries logged yet. Click "Add Stock" above.
                   </div>
                 );
@@ -174,14 +174,14 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
               if (visibleBatches.length === 0) {
                 return (
-                  <div className="text-xs text-zinc-500 italic p-3 bg-[#0D1118] border-y border-white/[0.06]">
+                  <div className="text-xs text-zinc-500 italic p-3 bg-[#0B1113] border-y border-white/[0.06]">
                     All batches for this part are currently assigned or sold.
                   </div>
                 );
               }
 
               return (
-                <div className="overflow-hidden border-y border-white/[0.08]">
+                <div className="app-ledger">
                   {visibleBatches.map((batch) => {
                     const entry = batch.entry;
                     const entryUnitPrice = batch.unitCost;
@@ -199,15 +199,15 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                       : null;
 
                     return (
-                      <div key={entry.id} className="relative border-b border-white/[0.06] bg-[#0D1118] px-3 py-2.5 pr-4 last:border-b-0">
-                        <span className={`absolute right-1.5 top-2.5 bottom-2.5 w-0.5 rounded-full ${categoryPresentation.railClass}`} />
+                      <div key={entry.id} className="app-ledger-row relative bg-[#0b1113] px-3 py-3 pr-5 sm:px-4">
+                        <span className={`absolute bottom-3 right-1.5 top-3 w-0.5 rounded-full ${categoryPresentation.railClass}`} />
                         <div className="flex items-start gap-2">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start gap-2">
-                              <span className="min-w-0 flex-1 font-mono text-[10px] font-semibold uppercase tracking-wide text-zinc-300">{formatReadableDate(entry.date) || entry.date}</span>
-                              <span className="shrink-0 font-mono text-xs font-bold text-zinc-100 whitespace-nowrap">{formatCurrency(entryTotal)}</span>
+                              <span className="min-w-0 flex-1 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 sm:text-[11px]">{formatReadableDate(entry.date) || entry.date}</span>
+                              <span className="shrink-0 whitespace-nowrap font-mono text-[13px] font-bold text-zinc-100">{formatCurrency(entryTotal)}</span>
                             </div>
-                            <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500">
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-[10px] leading-snug text-zinc-500 sm:text-[11px]">
                               <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}</span>
                               {isTradeUpBatch && <span>· Trade-up</span>}
                               {isPartedOutTradeInBatch ? (
@@ -223,14 +223,14 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                             </div>
                           </div>
                         </div>
-                        <div className="mt-2 flex items-center justify-end gap-1.5">
+                        <div className="mt-2 flex items-center justify-end gap-2 border-t border-white/[0.06] pt-2">
                           {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onSellPart(component, entry.id);
                               }}
-                              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-[#A5F3FC] transition-colors hover:bg-[#A3FF12]/10 hover:text-white"
+                              className="flex min-h-8 items-center gap-1 rounded-lg border border-[#62E6E6]/25 px-2.5 text-xs font-semibold text-[#9FF8F4] transition-colors hover:bg-[#62E6E6]/10 hover:text-white"
                             >
                               <Tag className="w-3 h-3" /> Sell
                             </button>

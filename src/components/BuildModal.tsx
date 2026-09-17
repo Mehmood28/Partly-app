@@ -228,23 +228,21 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="max-w-2xl">
-      <form className="space-y-4 w-full" onSubmit={handleSubmit}>
+    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="max-w-4xl">
+      <form className="w-full space-y-4" onSubmit={handleSubmit}>
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <div className="sticky -top-3.5 z-20 -mx-3.5 flex items-start justify-between border-b border-white/[0.09] bg-[#0b1113]/95 px-3.5 pb-3 pt-1 backdrop-blur-xl sm:-top-5 sm:-mx-5 sm:px-5 sm:pt-0">
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-              <Hammer className="w-4 h-4 text-[#A3FF12]" /> Create New PC Build
+            <h3 className="flex items-center gap-2 text-base font-extrabold text-zinc-100 sm:text-lg">
+              <Hammer className="h-4 w-4 text-[#A8FF3E]" /> Create New PC Build
             </h3>
-            <p className="text-xs text-zinc-400 mt-0.5 font-sans">
-              Set title, status, target price, and select inventory parts separated by category.
-            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 sm:text-xs">Title the build, set its target, then allocate real inventory batches.</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -291,21 +289,21 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
         />
 
         {/* Footer Actions */}
-        <div className="pt-3 flex items-center justify-between border-t border-white/[0.08]">
+        <div className="sticky -bottom-3.5 z-20 -mx-3.5 flex flex-col gap-2.5 border-t border-white/[0.09] bg-[#0b1113]/96 px-3.5 pb-1 pt-3 backdrop-blur-xl sm:-bottom-5 sm:-mx-5 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:pb-0">
           <div className="text-xs text-zinc-400 font-sans">
-            Status: <span className="text-[#67E8F9] font-medium">{status === 'Listed for Sale' ? 'Available' : status}</span>
+            Status: <span className="text-[#62E6E6] font-medium">{status === 'Listed for Sale' ? 'Available' : status}</span>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="grid grid-cols-[auto_1fr] items-center gap-2 sm:flex">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+              className="app-button px-4"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold shadow-md shadow-[#A3FF12]/20 text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+              className="app-button app-button-primary flex items-center justify-center gap-1.5 px-4"
             >
               <Hammer className="w-4 h-4" /> {initialData && initialData.id ? `Save PC Build (${selectedParts.length} Parts)` : `Create PC Build (${selectedParts.length} Parts)`}
             </button>

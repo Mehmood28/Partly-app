@@ -205,25 +205,25 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
   };
 
   return (
-    <div className="space-y-5 w-full">
-      <section className="border-b border-white/[0.08] pb-3">
+    <div className="data-view w-full space-y-5">
+      <section className="app-panel p-3.5 sm:p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-10">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12] shrink-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#A8FF3E]/25 bg-[#A8FF3E]/[0.08] text-[#A8FF3E]">
               <FolderSync className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-1.5">
+              <h2 className="app-page-title flex items-center gap-1.5 text-sm uppercase tracking-[0.08em]">
                 <span>Data Management &amp; Sync</span>
               </h2>
-              <p className="text-[11px] text-zinc-400 mt-0.5">
+              <p className="app-page-copy mt-1">
                 Manage JSON backups, CSV exports, local state, and database maintenance
               </p>
             </div>
           </div>
 
           <div className="gap-2 text-zinc-400 shrink-0 text-[10px] font-mono font-medium tracking-wider uppercase inline-flex items-center justify-center whitespace-nowrap">
-            <Database className="w-3.5 h-3.5 text-[#A3FF12]" />
+            <Database className="w-3.5 h-3.5 text-[#A8FF3E]" />
             <span>Database: {totalComponentsCount} parts · {totalBuildsCount} builds</span>
           </div>
         </div>
@@ -257,11 +257,11 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
       <div className="grid grid-cols-1 gap-3">
         {/* JSON Backup & Restore */}
-        <section className="border-y border-white/[0.08] py-3.5 flex flex-col justify-between space-y-3">
+        <section className="app-panel flex flex-col justify-between space-y-3 p-3.5 sm:p-4">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-white/[0.08] mb-2.5">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12] shrink-0">
+                <div className="w-6 h-6 rounded-md bg-[#A8FF3E]/10 border border-[#A8FF3E]/25 flex items-center justify-center text-[#A8FF3E] shrink-0">
                   <FileJson className="w-3.5 h-3.5" />
                 </div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-100">JSON Backup &amp; Restore</h3>
@@ -275,14 +275,14 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
               Export a complete snapshot of your inventory, builds, and transactions to a JSON file, or restore from a previously saved backup.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/[0.08] border border-white/[0.08] rounded-lg overflow-hidden">
+            <div className="app-ledger grid grid-cols-1 sm:grid-cols-2">
               <button
                 onClick={() => setIsExportJsonConfirmOpen(true)}
-                className="min-h-[86px] p-3 bg-[#10141E] hover:bg-white/[0.04] transition-colors text-left flex flex-col justify-between group"
+                className="min-h-[86px] p-3 bg-[#101719] hover:bg-white/[0.04] transition-colors text-left flex flex-col justify-between group"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <FileDown className="w-4 h-4 text-[#A3FF12]" />
-                  <ArrowRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-[#A3FF12] transition-colors" />
+                  <FileDown className="w-4 h-4 text-[#A8FF3E]" />
+                  <ArrowRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-[#A8FF3E] transition-colors" />
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-zinc-100 group-hover:text-white">
@@ -296,11 +296,11 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="min-h-[86px] p-3 bg-[#10141E] hover:bg-white/[0.04] transition-colors text-left flex flex-col justify-between group"
+                className="min-h-[86px] p-3 bg-[#101719] hover:bg-white/[0.04] transition-colors text-left flex flex-col justify-between group"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <HardDriveUpload className="w-4 h-4 text-[#A3FF12]" />
-                  <ArrowRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-[#A3FF12] transition-colors" />
+                  <HardDriveUpload className="w-4 h-4 text-[#A8FF3E]" />
+                  <ArrowRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-[#A8FF3E] transition-colors" />
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-zinc-100 group-hover:text-white">
@@ -323,17 +323,17 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
           </div>
 
           <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 pt-2 border-t border-white/[0.06]">
-            <Info className="w-3.5 h-3.5 text-[#A3FF12] shrink-0" />
+            <Info className="w-3.5 h-3.5 text-[#A8FF3E] shrink-0" />
             <span>Importing a backup will replace current local database state.</span>
           </div>
         </section>
       </div>
 
       {/* CSV Reports Export */}
-      <section className="border-y border-white/[0.08] py-3.5">
+      <section className="app-panel p-3.5 sm:p-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-white/[0.08] mb-2.5">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12] shrink-0">
+            <div className="w-6 h-6 rounded-md bg-[#A8FF3E]/10 border border-[#A8FF3E]/25 flex items-center justify-center text-[#A8FF3E] shrink-0">
               <FileSpreadsheet className="w-3.5 h-3.5" />
             </div>
             <div>
@@ -352,7 +352,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
               id="financial-activity-year-select"
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="h-8 bg-[#121722] border border-white/[0.08] rounded-lg px-2.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40"
+              className="h-8 bg-[#101719] border border-white/[0.08] rounded-lg px-2.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40"
             >
               {availableYears.map((yr) => (
                 <option key={yr} value={yr}>
@@ -372,10 +372,10 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
                 setIsExportFinancialConfirmOpen(true);
               }
             }}
-            className={`p-3 bg-[#10141E] border border-white/[0.08] rounded-lg text-left flex items-center justify-between group transition-colors ${
+            className={`p-3 bg-[#101719] border border-white/[0.08] rounded-lg text-left flex items-center justify-between group transition-colors ${
               yearTransactions.length === 0
                 ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-white/[0.04] hover:border-[#A3FF12]/40'
+                : 'hover:bg-white/[0.04] hover:border-[#A8FF3E]/40'
             }`}
           >
             <div>
@@ -391,13 +391,13 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
                 </div>
               )}
             </div>
-            <FileDown className="w-4 h-4 text-[#A3FF12] group-hover:scale-110 transition-transform shrink-0 ml-2" />
+            <FileDown className="w-4 h-4 text-[#A8FF3E] group-hover:scale-110 transition-transform shrink-0 ml-2" />
           </button>
         </div>
       </section>
 
       {/* Read-only data relationship diagnostics */}
-      <section className="border-y border-white/[0.08] py-3.5">
+      <section className="app-panel p-3.5 sm:p-4">
         <button
           type="button"
           aria-expanded={isDataHealthOpen}
@@ -484,7 +484,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
       </section>
 
       {/* Reset & Maintenance */}
-      <section className="border-y border-white/[0.08] py-3.5">
+      <section className="app-panel p-3.5 sm:p-4">
         <div className="flex items-center gap-2 pb-2.5 border-b border-white/[0.08] mb-2.5">
           <div className="w-6 h-6 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
             <RotateCcw className="w-3.5 h-3.5" />
@@ -497,7 +497,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#10141E] border border-white/[0.08] rounded-lg p-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#101719] border border-white/[0.08] rounded-lg p-3">
           <div>
             <div className="text-xs font-semibold text-zinc-200">Reset All Database Data</div>
             <p className="text-[11px] text-zinc-400 mt-0.5">

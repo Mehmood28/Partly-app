@@ -66,7 +66,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
   } | null>(null);
 
   const renderCategoryIcon = (category: string) => {
-    const className = 'w-4 h-4 text-[#A3FF12]';
+    const className = 'w-4 h-4 text-[#A8FF3E]';
     switch (category) {
       case 'GPU': return <Monitor className={className} />;
       case 'CPU': return <Cpu className={className} />;
@@ -149,9 +149,9 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 shrink-0">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-            <ArrowRightLeft className="w-4 h-4 text-[#A3FF12]" /> Swap {currentPart.category}
+            <ArrowRightLeft className="w-4 h-4 text-[#A8FF3E]" /> Swap {currentPart.category}
           </h3>
-          <button onClick={onClose} aria-label="Close modal" className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]">
+          <button onClick={onClose} aria-label="Close modal" className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -179,7 +179,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
               placeholder="Search parts by name or model..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full max-w-full box-border bg-[#121722] border border-white/[0.08] rounded-xl pl-9 pr-8 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+              className="w-full max-w-full box-border bg-[#101719] border border-white/[0.08] rounded-xl pl-9 pr-8 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
             />
             {searchQuery && (
               <button
@@ -199,10 +199,10 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                 <button
                   key={chip}
                   onClick={() => setActiveFilter(activeFilter === chip ? 'All' : chip)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
                     activeFilter === chip
-                      ? 'bg-[#A3FF12] text-white shadow-sm shadow-[#A3FF12]/20'
-                      : 'bg-[#121722] text-zinc-400 border border-white/[0.08] hover:text-white hover:bg-white/[0.04]'
+                      ? 'bg-[#A8FF3E] text-[#07100B] shadow-sm shadow-[#A8FF3E]/20'
+                      : 'bg-[#101719] text-zinc-400 border border-white/[0.08] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   {chip}
@@ -218,13 +218,13 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
             const isExpanded = expandedPartId === comp.id;
 
             return (
-              <div key={comp.id} className="bg-[#121722] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl mb-2 transition-all overflow-hidden">
+              <div key={comp.id} className="bg-[#101719] border border-white/[0.08] hover:border-[#A8FF3E]/40 rounded-xl mb-2 transition-all overflow-hidden">
                 {/* Main Accordion Header */}
                 <div
                   onClick={() => setExpandedPartId(isExpanded ? null : comp.id)}
                   className="p-3 cursor-pointer flex items-start gap-2.5 group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 flex items-center justify-center shrink-0 mt-0.5">
                     {renderCategoryIcon(comp.category)}
                   </div>
                   <div className="flex flex-col gap-1 min-w-0 flex-1">
@@ -235,7 +235,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                           {subCategory}
                         </span>
                       )}
-                      <span className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#67E8F9] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
+                      <span className="bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 text-[#62E6E6] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
                         {totalAvailable} in stock
                       </span>
                       <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">Avg: ${avgPrice.toFixed(2)}/ea</span>
@@ -248,9 +248,9 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
 
                 {/* Expanded Batches */}
                 {isExpanded && (
-                  <div className="border-t border-white/[0.08] bg-[#0D1118] p-3 space-y-2">
+                  <div className="border-t border-white/[0.08] bg-[#0B1113] p-3 space-y-2">
                     {validEntries.map(entry => (
-                      <div key={entry.id} className="bg-[#121722] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2.5 transition-all">
+                      <div key={entry.id} className="bg-[#101719] border border-white/[0.08] hover:border-[#A8FF3E]/40 rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2.5 transition-all">
                         <div className="flex items-center gap-2 flex-wrap flex-1">
                           <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px] font-mono">
                             {entry.date}
@@ -282,7 +282,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                                 unitPrice: entry.unitPrice,
                               });
                             }}
-                            className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white shadow-sm shadow-[#A3FF12]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+                            className="bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] shadow-sm shadow-[#A8FF3E]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
                           >
                             Swap
                           </button>
@@ -296,7 +296,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
           })}
 
           {filteredParts.length === 0 && (
-            <div className="text-center py-12 px-4 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/[0.08] rounded-xl bg-[#121722]/50 mt-4">
+            <div className="text-center py-12 px-4 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/[0.08] rounded-xl bg-[#101719]/50 mt-4">
               <Box className="w-8 h-8 mb-3 text-zinc-500" />
               <p className="text-sm font-medium text-zinc-400">No compatible parts found</p>
               <p className="text-xs text-zinc-500 mt-1 max-w-[250px] mx-auto">Try adjusting your search or filters, or ensure there is active stock.</p>

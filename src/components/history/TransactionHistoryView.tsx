@@ -99,23 +99,17 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/[0.08] pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12] shrink-0">
-            <Tag className="w-4 h-4" />
-          </div>
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-100">
-              SOLD PARTS
-            </h2>
-            <p className="text-[11px] text-zinc-400 mt-0.5">
-              Review individual component sales and trade-ups outside complete PC builds.
-            </p>
-          </div>
+      <header className="flex items-start gap-3 px-1 pt-1">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#A8FF3E]/25 bg-[#A8FF3E]/[0.08] text-[#A8FF3E]">
+          <Tag className="h-4 w-4" />
         </div>
-      </div>
+        <div>
+          <h2 className="text-lg font-extrabold tracking-[-0.035em] text-white sm:text-xl">Sold Parts</h2>
+          <p className="app-page-copy mt-1">Individual component sales and trade-ups outside complete builds.</p>
+        </div>
+      </header>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-b border-white/[0.08] pb-3">
+      <div className="app-panel flex flex-col items-center justify-between gap-2.5 p-3 sm:flex-row">
         <div className="relative w-full sm:flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -123,7 +117,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
             placeholder="Search sold parts, trade-ups, platform, payment method..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-10 pl-9 pr-8 bg-[#10141E] border border-white/[0.08] rounded-lg py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
+            className="app-field h-12 pl-9 pr-8 text-xs placeholder:text-zinc-600 sm:text-sm"
           />
           {searchQuery && (
             <button
@@ -154,13 +148,13 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
 
       {/* Cards List (Virtualized or Normal Document Flow) */}
       {sortedDisplayItems.length === 0 ? (
-        <div className="text-center py-10 bg-[#0D1118] border border-white/[0.08] rounded-xl p-6 text-zinc-400 space-y-2">
+        <div className="text-center py-10 bg-[#0B1113] border border-white/[0.08] rounded-xl p-6 text-zinc-400 space-y-2">
           <Filter className="w-8 h-8 mx-auto mb-2 text-zinc-500" />
           <p className="text-sm font-semibold text-zinc-200">No sold parts or trade-ups found</p>
           <p className="text-xs text-zinc-400">Try changing your search query or selling/trading components from stock.</p>
         </div>
       ) : !isVirtualized ? (
-        <div className="overflow-hidden rounded-lg border-x border-white/[0.08]">
+        <div className="space-y-2">
           {sortedDisplayItems.map((item) => {
             if (item.type === 'bulk-group') {
               return (
@@ -196,7 +190,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
               scrollOffsetRef.current = e.currentTarget.scrollTop;
             }
           }}
-          className="h-[calc(100dvh-285px)] md:h-[calc(100dvh-170px)] overflow-y-auto pr-1"
+          className="h-[calc(100dvh-330px)] overflow-y-auto pr-1 md:h-[calc(100dvh-210px)]"
           style={{
             overflowAnchor: 'none',
             scrollbarWidth: 'thin',

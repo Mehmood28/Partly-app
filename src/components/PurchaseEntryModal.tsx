@@ -56,7 +56,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4 text-[#A3FF12]" /> Log Component Purchase
+              <ShoppingCart className="w-4 h-4 text-[#A8FF3E]" /> Log Component Purchase
             </h3>
             <p className="text-xs text-zinc-400 font-medium truncate mt-0.5 max-w-[300px]">
               {componentName}
@@ -66,7 +66,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -85,7 +85,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                   required
                   value={unitPrice}
                   onChange={(e) => setUnitPrice(e.target.value)}
-                  className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors pr-3 pl-7"
+                  className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors pr-3 pl-7"
                   placeholder="0.00"
                 />
               </div>
@@ -99,7 +99,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                 min="1"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors [color-scheme:dark]"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors [color-scheme:dark]"
               />
             </div>
             <div>
@@ -139,7 +139,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                 autoComplete="off"
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors"
                 placeholder={hideSupplierNames ? "••••••••" : "e.g. Amazon, Best Buy, Daniel"}
               />
             </div>
@@ -168,7 +168,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                 step="any"
                 value={taxPercent}
                 onChange={(e) => setTaxPercent(e.target.value)}
-                className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors"
                 placeholder="0"
               />
             </div>
@@ -179,13 +179,13 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold shadow-md shadow-[#A3FF12]/20 text-xs px-4 py-2.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold shadow-md shadow-[#A8FF3E]/20 text-xs px-4 py-2.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
           >
             Save Purchase Entry
           </button>

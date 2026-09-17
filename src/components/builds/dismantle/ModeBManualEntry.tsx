@@ -43,7 +43,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
             {heading} ({includedCount} {includedCount === 1 ? 'Part' : 'Parts'})
           </label>
           {lockedParts.length > 0 && (
-            <span className="text-[10px] font-mono bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#67E8F9] px-1.5 py-0.5 rounded-md">
+            <span className="text-[10px] font-mono bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 text-[#62E6E6] px-1.5 py-0.5 rounded-md">
               {lockedParts.length} locked
             </span>
           )}
@@ -51,7 +51,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
         <button
           type="button"
           onClick={handleAddPart}
-          className="flex items-center gap-1 text-xs text-[#A3FF12] hover:text-[#67E8F9] transition-colors font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] rounded-lg px-2 py-1"
+          className="flex items-center gap-1 text-xs text-[#A8FF3E] hover:text-[#62E6E6] transition-colors font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] rounded-lg px-2 py-1"
         >
           <Plus className="w-3.5 h-3.5" /> Add Component
         </button>
@@ -62,9 +62,9 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
           <div
             key={part.id}
             style={{ zIndex: manualParts.length - index + 20 }}
-            className={`relative p-2.5 sm:p-3 rounded-xl bg-[#121722] border text-xs space-y-2.5 transition-colors ${
+            className={`relative p-2.5 sm:p-3 rounded-xl bg-[#101719] border text-xs space-y-2.5 transition-colors ${
               part.isLocked
-                ? 'border-[#A3FF12]/40 shadow-sm shadow-[#A3FF12]/10'
+                ? 'border-[#A8FF3E]/40 shadow-sm shadow-[#A8FF3E]/10'
                 : 'border-white/[0.08] hover:border-white/[0.15]'
             }`}
           >
@@ -79,7 +79,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                     const keptTags = (part.tags || []).filter(t => validTags.includes(t));
                     handleUpdatePart(part.id, { category: newCat, tags: keptTags });
                   }}
-                  className="h-8 text-xs bg-[#0D1118] border-white/[0.08] hover:border-[#A3FF12]/50"
+                  className="h-8 text-xs bg-[#0B1113] border-white/[0.08] hover:border-[#A8FF3E]/50"
                 />
               </div>
               <input
@@ -104,7 +104,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                 }`}
                 value={part.name}
                 onChange={(e) => handleUpdatePart(part.id, { name: e.target.value })}
-                className="flex-1 min-w-0 h-8 bg-[#0D1118] border border-white/[0.08] rounded-xl px-2.5 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
+                className="flex-1 min-w-0 h-8 bg-[#0B1113] border border-white/[0.08] rounded-xl px-2.5 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
               />
               {manualParts.length > 1 && (
                 <button
@@ -131,7 +131,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                       quantity: Math.max(1, parseInt(e.target.value) || 1),
                     })
                   }
-                  className="w-12 sm:w-14 h-7 bg-[#0D1118] border border-white/[0.08] rounded-lg px-1.5 text-xs text-zinc-100 font-mono text-center focus:outline-none focus:border-[#A3FF12]"
+                  className="w-12 sm:w-14 h-7 bg-[#0B1113] border border-white/[0.08] rounded-lg px-1.5 text-xs text-zinc-100 font-mono text-center focus:outline-none focus:border-[#A8FF3E]"
                 />
               </div>
 
@@ -154,10 +154,10 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                         isLocked: true,
                       });
                     }}
-                    className={`w-24 sm:w-28 h-7 bg-[#0D1118] border rounded-lg pl-5 pr-7 text-xs font-mono focus:outline-none transition-colors ${
+                    className={`w-24 sm:w-28 h-7 bg-[#0B1113] border rounded-lg pl-5 pr-7 text-xs font-mono focus:outline-none transition-colors ${
                       part.isLocked
-                        ? 'border-[#A3FF12]/50 text-[#67E8F9] focus:border-[#A3FF12]'
-                        : 'border-white/[0.08] text-zinc-100 focus:border-[#A3FF12]'
+                        ? 'border-[#A8FF3E]/50 text-[#62E6E6] focus:border-[#A8FF3E]'
+                        : 'border-white/[0.08] text-zinc-100 focus:border-[#A8FF3E]'
                     }`}
                   />
                   <button
@@ -166,7 +166,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                     aria-label={part.isLocked ? 'Unlock price' : 'Lock price'}
                     className={`absolute right-1 p-1 rounded-md transition-colors ${
                       part.isLocked
-                        ? 'text-[#A3FF12] hover:text-[#67E8F9] hover:bg-[#A3FF12]/15'
+                        ? 'text-[#A8FF3E] hover:text-[#62E6E6] hover:bg-[#A8FF3E]/15'
                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]'
                     }`}
                     title={
@@ -176,7 +176,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                     }
                   >
                     {part.isLocked ? (
-                      <Lock className="w-3 h-3 text-[#A3FF12]" />
+                      <Lock className="w-3 h-3 text-[#A8FF3E]" />
                     ) : (
                       <Unlock className="w-3 h-3" />
                     )}
@@ -188,7 +188,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                 Total:{' '}
                 <span
                   className={`font-semibold ${
-                    part.isLocked ? 'text-[#67E8F9]' : 'text-zinc-200'
+                    part.isLocked ? 'text-[#62E6E6]' : 'text-zinc-200'
                   }`}
                 >
                   {formatCurrency(
@@ -215,7 +215,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                         }}
                         className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-colors border ${
                           isSelected
-                            ? 'bg-[#A3FF12]/20 text-[#67E8F9] border-[#A3FF12]/40'
+                            ? 'bg-[#A8FF3E]/20 text-[#62E6E6] border-[#A8FF3E]/40'
                             : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:bg-white/[0.08] hover:text-zinc-200'
                         }`}
                       >

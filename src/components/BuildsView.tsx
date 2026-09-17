@@ -235,29 +235,27 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
   return (
     <div className="space-y-4">
       {/* Build workbench */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
-        <div>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12]">
-              <Hammer className="w-3.5 h-3.5" />
+      <div className="app-panel flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+        <div className="min-w-0">
+          <h2 className="app-page-title flex items-center gap-2.5 text-sm uppercase tracking-[0.08em]">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#A8FF3E]/25 bg-[#A8FF3E]/[0.08] text-[#A8FF3E]">
+              <Hammer className="h-4 w-4" />
             </div>
             PC BUILDS
           </h2>
-          <p className="text-[11px] text-zinc-400 mt-1">
-            Manage PC builds, inventory allocation, listings, and sales.
-          </p>
+          <p className="app-page-copy ml-[46px] mt-[-2px]">Builds, allocation, listings, and completed sales.</p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
           <button
             onClick={onOpenBuyPC}
-            className="min-h-10 bg-[#10141E] hover:bg-white/[0.06] border border-[#67E8F9]/30 text-[#67E8F9] font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shrink-0"
+            className="app-button flex shrink-0 items-center justify-center gap-1.5 px-4 text-[#9FF8F4]"
           >
             <ShoppingCart className="w-3.5 h-3.5" /> Buy PC
           </button>
           <button
             onClick={() => onOpenAddBuild()}
-            className="min-h-10 bg-[#A3FF12] hover:bg-[#C2FF5C] text-[#11150C] font-bold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shrink-0"
+            className="app-button app-button-primary flex shrink-0 items-center justify-center gap-1.5 px-4"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Create New PC Build
           </button>
@@ -265,13 +263,14 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       </div>
 
       {/* Filter controls */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 border-b border-white/[0.08] pb-3">
+      <div className="app-panel space-y-3 p-3 sm:p-4">
         {/* Status Filter Tabs: Available, Pending, Sold */}
-        <div className="flex items-center gap-1.5 flex-nowrap sm:flex-wrap border-b border-white/[0.10] pb-0 md:pb-0 text-xs">
+        <div className="app-segmented grid-cols-4">
           <button 
             type="button"
             onClick={() => handleTabChange('Available')} 
-            className={`relative px-2.5 py-1.5 sm:py-1 rounded-t-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors shrink-0 cursor-pointer ${statusFilter === 'Available' ? 'text-[#A3FF12] border-b-2 border-[#A3FF12]' : 'text-zinc-500 hover:text-zinc-200'}`}
+            data-active={statusFilter === 'Available'}
+            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
           >
             AVAILABLE ({availableCount})
           </button>
@@ -279,7 +278,8 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           <button 
             type="button"
             onClick={() => handleTabChange('Pending')} 
-            className={`relative px-2.5 py-1.5 sm:py-1 rounded-t-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors shrink-0 cursor-pointer ${statusFilter === 'Pending' ? 'text-[#A3FF12] border-b-2 border-[#A3FF12]' : 'text-zinc-500 hover:text-zinc-200'}`}
+            data-active={statusFilter === 'Pending'}
+            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
           >
             PENDING ({pendingCount})
           </button>
@@ -287,7 +287,8 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           <button 
             type="button"
             onClick={() => handleTabChange('Trade-Ins')} 
-            className={`relative px-2.5 py-1.5 sm:py-1 rounded-t-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors shrink-0 cursor-pointer ${statusFilter === 'Trade-Ins' ? 'text-[#A3FF12] border-b-2 border-[#A3FF12]' : 'text-zinc-500 hover:text-zinc-200'}`}
+            data-active={statusFilter === 'Trade-Ins'}
+            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
           >
             TRADE-INS ({tradeInCount})
           </button>
@@ -295,14 +296,15 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           <button 
             type="button"
             onClick={() => handleTabChange('Sold')} 
-            className={`relative px-2.5 py-1.5 sm:py-1 rounded-t-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors shrink-0 cursor-pointer ${statusFilter === 'Sold' ? 'text-[#A3FF12] border-b-2 border-[#A3FF12]' : 'text-zinc-500 hover:text-zinc-200'}`}
+            data-active={statusFilter === 'Sold'}
+            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
           >
             SOLD ({soldCount})
           </button>
         </div>
 
         {/* Controls: Sort dropdown & Search Input */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto min-w-0 max-w-full">
+        <div className="flex w-full min-w-0 max-w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
           {statusFilter === 'Sold' && (
             <div className="w-full sm:w-auto min-w-0 shrink-0">
               <CustomSelect
@@ -323,14 +325,14 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           )}
 
           {/* Search Input */}
-          <div className="relative w-full max-w-full md:w-56 min-w-0 flex-1">
+          <div className="relative min-w-0 flex-1">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search builds..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full max-w-full box-border h-10 pl-9 pr-8 bg-[#10141E] border border-white/[0.08] rounded-lg py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
+              className="app-field h-12 max-w-full box-border pl-9 pr-8 text-xs placeholder:text-zinc-600 sm:text-sm"
             />
             {searchQuery && (
               <button
@@ -348,7 +350,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
 
       {/* PC Builds Grid (Virtualized or Normal Document Flow) */}
       {filteredBuilds.length === 0 ? (
-        <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-10 text-center text-zinc-400 space-y-2">
+        <div className="app-panel space-y-2 p-10 text-center text-zinc-400">
           <div className="text-sm font-semibold text-zinc-200">No {statusFilter.toLowerCase()} builds found</div>
           <p className="text-xs text-zinc-400">
             {statusFilter === 'Available'
@@ -361,9 +363,9 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           </p>
         </div>
       ) : !isVirtualized ? (
-        <div className="space-y-1.5 pr-1">
+        <div className="space-y-2.5 pr-1">
           {buildRows.map((rowBuilds, rowIndex) => (
-            <div key={rowBuilds.map(b => b.id).join('-') || rowIndex} className={`grid grid-cols-1 gap-1.5 ${rowBuilds.some((build) => build.id === expandedBuildId) ? '' : 'lg:grid-cols-2'}`}>
+            <div key={rowBuilds.map(b => b.id).join('-') || rowIndex} className={`grid grid-cols-1 gap-2.5 ${rowBuilds.some((build) => build.id === expandedBuildId) ? '' : 'xl:grid-cols-2'}`}>
               {rowBuilds.map((build) => (
                 <BuildCard
                   isExpanded={expandedBuildId === build.id}
@@ -391,7 +393,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
               scrollOffsetRef.current = e.currentTarget.scrollTop;
             }
           }}
-          className="h-[calc(100dvh-275px)] md:h-[calc(100dvh-170px)] overflow-y-auto pr-1"
+          className="h-[calc(100dvh-330px)] overflow-y-auto pr-1 md:h-[calc(100dvh-210px)]"
           style={{
             overflowAnchor: 'none',
             scrollbarWidth: 'thin',
@@ -420,7 +422,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
                     paddingBottom: '6px',
                   }}
                 >
-                  <div className={`grid grid-cols-1 gap-1.5 ${rowBuilds.some((build) => build.id === expandedBuildId) ? '' : 'lg:grid-cols-2'}`}>
+                  <div className={`grid grid-cols-1 gap-2.5 ${rowBuilds.some((build) => build.id === expandedBuildId) ? '' : 'xl:grid-cols-2'}`}>
                     {rowBuilds.map((build) => (
                       <BuildCard
                         isExpanded={expandedBuildId === build.id}

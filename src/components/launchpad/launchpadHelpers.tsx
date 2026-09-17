@@ -37,7 +37,7 @@ export const isColorCompatible = (category: string, part: { name: string }, them
 };
 
 export const getCategoryIcon = (cat: string) => {
-  const iconClass = 'w-3.5 h-3.5 text-[#67E8F9]';
+  const iconClass = 'w-3.5 h-3.5 text-[#62E6E6]';
   switch (cat) {
     case 'GPU': return <MonitorPlay className={iconClass} />;
     case 'CPU': return <Cpu className={iconClass} />;

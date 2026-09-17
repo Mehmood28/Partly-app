@@ -57,11 +57,11 @@ export const SessionHistoryPopover: React.FC<SessionHistoryPopoverProps> = ({ id
       id={id}
       role="region"
       aria-label="Session History Log"
-      className={`bg-[#0D1118] border border-white/[0.12] rounded-2xl shadow-2xl shadow-black/90 flex flex-col overflow-hidden text-zinc-100 ${className || ''}`}
+      className={`bg-[#0B1113] border border-white/[0.12] rounded-2xl shadow-2xl shadow-black/90 flex flex-col overflow-hidden text-zinc-100 ${className || ''}`}
     >
-      <div className="flex items-center justify-between gap-3 px-3.5 py-3 border-b border-white/[0.08] bg-[#0D1118] shrink-0">
+      <div className="flex items-center justify-between gap-3 px-3.5 py-3 border-b border-white/[0.08] bg-[#0B1113] shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <History className="w-4 h-4 text-[#A3FF12] shrink-0" />
+          <History className="w-4 h-4 text-[#A8FF3E] shrink-0" />
           <div className="min-w-0">
             <h2 className="text-xs sm:text-sm font-bold text-white tracking-tight leading-none font-display">
               Session History Log
@@ -72,7 +72,7 @@ export const SessionHistoryPopover: React.FC<SessionHistoryPopoverProps> = ({ id
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0 font-mono text-[9px] sm:text-[10px]">
-          <span className="px-1.5 py-1 rounded-md bg-[#A3FF12]/15 border border-[#A3FF12]/25 text-[#CFFAFE]">
+          <span className="px-1.5 py-1 rounded-md bg-[#A8FF3E]/15 border border-[#A8FF3E]/25 text-[#9FF8F4]">
             {undoCount} undo
           </span>
           <span className="px-1.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] text-zinc-400">
@@ -92,7 +92,7 @@ export const SessionHistoryPopover: React.FC<SessionHistoryPopoverProps> = ({ id
               key={`${item.direction}-${index}-${item.timestamp}`}
               className={`p-2.5 rounded-xl border text-xs transition-colors ${
                 item.isNext && item.direction === 'undo'
-                  ? 'bg-[#A3FF12]/10 border-[#A3FF12]/25 text-white'
+                  ? 'bg-[#A8FF3E]/10 border-[#A8FF3E]/25 text-white'
                   : item.isNext
                   ? 'bg-white/[0.06] border-white/[0.12] text-white'
                   : 'bg-white/[0.02] border-white/[0.04] text-zinc-300'
@@ -102,7 +102,7 @@ export const SessionHistoryPopover: React.FC<SessionHistoryPopoverProps> = ({ id
                 <span
                   className={`text-[9px] font-mono font-semibold px-1.5 py-1 rounded shrink-0 leading-none mt-0.5 ${
                     item.direction === 'undo'
-                      ? 'bg-[#A3FF12]/20 text-[#CFFAFE]'
+                      ? 'bg-[#A8FF3E]/20 text-[#9FF8F4]'
                       : 'bg-white/[0.08] text-zinc-300'
                   }`}
                 >
