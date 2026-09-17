@@ -9,7 +9,7 @@ import {
   Fan,
   Package,
 } from 'lucide-react';
-import { ComponentCategory, InventoryComponent, PCBuild } from '../../../types';
+import { ComponentCategory, InventoryComponent, PCBuild, PCBuildPart } from '../../../types';
 import { getAllBatchesWithRemaining } from '../../../utils/helpers';
 export { generateBuildTitleFromParts } from '../../../utils/buildTitle';
 

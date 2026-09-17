@@ -2,7 +2,7 @@ import React from 'react';
 import { CATEGORIES, ComponentCategory, InventoryComponent } from '../types';
 import { Search, ArrowDownWideNarrow, X } from 'lucide-react';
 import { CustomSelect } from './ui/CustomSelect';
-import { calculateUnassignedQuantityStrict, SortOption, getCategoryBadgeColor, getTagBadgeColor, SUB_CATEGORIES } from '../utils/helpers';
+import { calculateUnassignedQuantityStrict, SortOption, SUB_CATEGORIES } from '../utils/helpers';
 import { PCBuild } from '../types';
 
 interface InventoryFilterBarProps {
@@ -61,7 +61,6 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
           const count = components.filter((c) => c.category === cat && isAvailable(c)).length;
           if (count === 0 && activeCategory !== cat) return null;
           const isActive = activeCategory === cat;
-          const badgeClass = getCategoryBadgeColor(cat);
           return (
             <button
               key={cat}
@@ -72,7 +71,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
                 isActive
-                  ? `${badgeClass} ring-1 ring-[#7C6CF2]/50 shadow-sm shadow-[#7C6CF2]/30`
+                  ? 'bg-[#7C6CF2] text-white border border-[#7C6CF2] shadow-sm shadow-[#7C6CF2]/30'
                   : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08] hover:bg-white/[0.04]'
               }`}
             >
@@ -87,15 +86,14 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
         <div className="flex flex-wrap items-center gap-1.5 pb-1 pt-0.5 text-xs w-full">
           {currentSubCats.map(sub => {
             const isActive = activeSubCategory === sub;
-            const tagColor = getTagBadgeColor(sub);
             return (
               <button
                 key={sub}
                 type="button"
                 onClick={() => onSubCategoryChange?.(activeSubCategory === sub ? '' : sub)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
-                  isActive
-                    ? `${tagColor} ring-1 ring-[#7C6CF2]/40 shadow-sm`
+                isActive
+                  ? 'bg-[#7C6CF2]/15 text-[#B7AEFF] border border-[#7C6CF2]/40 shadow-sm'
                     : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08] hover:bg-white/[0.04]'
                 }`}
               >

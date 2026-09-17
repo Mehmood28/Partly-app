@@ -11,19 +11,26 @@ export type ComponentCategory =
   | 'Accessories'
   | 'Other';
 
-export const COMPONENT_CATEGORIES: ComponentCategory[] = [
+/**
+ * Canonical component order for every customer-facing list and picker.
+ * Keep this ordered by how a PC is normally described, not alphabetically.
+ */
+export const CATEGORIES: ComponentCategory[] = [
   'GPU',
   'CPU',
-  'RAM',
-  'Storage',
   'Motherboard',
+  'RAM',
+  'Cooling',
+  'Storage',
   'PSU',
   'Case',
-  'Cooling',
   'Fans',
   'Accessories',
   'Other',
 ];
+
+// Retained for validation call sites; it intentionally shares the display order.
+export const COMPONENT_CATEGORIES = CATEGORIES;
 
 export type Condition = 'Sealed' | 'New Open Box' | 'New No Box' | 'Used Open Box' | 'Used No Box' | 'Used';
 
@@ -181,17 +188,3 @@ export interface AppState {
   transactions: TransactionLogItem[];
   monthlyGoal?: number;
 }
-
-export const CATEGORIES: ComponentCategory[] = [
-  'GPU',
-  'CPU',
-  'Motherboard',
-  'RAM',
-  'Cooling',
-  'Storage',
-  'PSU',
-  'Case',
-  'Fans',
-  'Accessories',
-  'Other',
-];

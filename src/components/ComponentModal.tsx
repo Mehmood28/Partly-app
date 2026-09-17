@@ -6,6 +6,7 @@ import {
   InventoryComponent,
   PaymentMethod,
   PurchaseEntry,
+  CATEGORIES,
 } from '../types';
 import { X, Package, ShoppingCart, User, Calendar, Tag, DollarSign, Edit, Trash2 } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
@@ -27,20 +28,6 @@ interface ComponentModalProps {
   ) => { success: boolean; error?: string } | void;
   initialComponent?: InventoryComponent | null;
 }
-
-const CATEGORIES: ComponentCategory[] = [
-  'GPU',
-  'CPU',
-  'RAM',
-  'Storage',
-  'Motherboard',
-  'PSU',
-  'Case',
-  'Cooling',
-  'Fans',
-  'Accessories',
-  'Other',
-];
 
 export const ComponentModal: React.FC<ComponentModalProps> = ({
   isOpen,

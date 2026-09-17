@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
-import { CircuitBoard, Zap, Fan, Package, CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, Cpu, Monitor, HardDrive, Database, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar } from 'lucide-react';
-import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getConditionColor, getCategoryBadgeColor, getTagBadgeColor, getPlatformBadgeColor, getPaymentMethodBadgeColor } from '../../utils/helpers';
+import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, Cpu, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, MoreVertical } from 'lucide-react';
+import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getCategoryPresentation, getConditionDotColor } from '../../utils/helpers';
 import { generateInvoice } from '../../utils/invoiceGenerator';
 import { executeCopyAdConfirmation } from '../../utils/copyAdHelper';
 import { getBuildPresentation } from '../../utils/buildPresentation';
@@ -65,6 +65,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   };
   const [swapPartData, setSwapPartData] = useState<PCBuildPart | null>(null);
   const [quantityPartData, setQuantityPartData] = useState<PCBuildPart | null>(null);
+  const [partActionsData, setPartActionsData] = useState<PCBuildPart | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Confirmation modal state
@@ -144,21 +145,6 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     });
   };
 
-  const renderCategoryIcon = (category: string) => {
-    const className = 'w-4 h-4 text-[#7C6CF2]';
-    switch (category) {
-      case 'GPU': return <Monitor className={className} />;
-      case 'CPU': return <Cpu className={className} />;
-      case 'RAM': return <HardDrive className={className} />;
-      case 'Storage': return <Database className={className} />;
-      case 'Motherboard': return <CircuitBoard className={className} />;
-      case 'PSU': return <Zap className={className} />;
-      case 'Cooling': return <Fan className={className} />;
-      case 'Case': return <Package className={className} />;
-      default: return <Cpu className={className} />;
-    }
-  };
-
   const isListed = build.status === 'Listed for Sale';
   const profit = (build.salePrice || 0) - partsCost;
   const profitMarginPercent = calculateProfitMarginPercent(profit, build.salePrice || 0);
@@ -205,6 +191,28 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   };
 
   const formattedSoldDate = build.saleDate ? formatReadableDate(build.saleDate) : null;
+
+  const openRemovePartConfirm = (part: PCBuildPart) => {
+    setPartActionsData(null);
+    setConfirmModalConfig({
+      isOpen: true,
+      title: 'Remove Allocated Part?',
+      message: isSold
+        ? `Remove "${part.componentName}" from sold build "${build.name}"? The part will return to loose stock and the recorded build cost and profit will be updated.`
+        : `Remove "${part.componentName}" from "${build.name}"? The part will return to loose stock.`,
+      confirmText: 'Remove Part',
+      variant: 'danger',
+      onConfirm: () => {
+        setConfirmModalConfig(null);
+        const result = removePart(build.id, part.componentId, part.purchaseEntryId);
+        if (!result.success) {
+          showToast(result.error || 'Failed to remove part from build.', 'error');
+          return;
+        }
+        showToast(`Removed "${part.componentName}" from "${build.name}".`, 'success');
+      },
+    });
+  };
 
   return (
     <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl relative flex flex-col transition-all duration-200 overflow-hidden shadow-sm group">
@@ -560,169 +568,101 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             )}
 
             {isAcquired && acquiredBreakdown.length > 0 && (
-              <div className="space-y-1.5 pt-2">
-                <div className="text-[10px] font-mono font-semibold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
-                  <span>{isPurchased ? 'PURCHASED PC' : 'TRADE-IN'} COMPONENTS ({acquiredBreakdown.length})</span>
-                  <span className="text-emerald-400/80">
+              <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#0D1118]">
+                <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] px-3 py-2.5">
+                  <span className="text-[10px] font-mono font-semibold text-zinc-400 uppercase tracking-wider">
+                    {isPurchased ? 'PURCHASED PC' : 'TRADE-IN'} COMPONENTS · {acquiredBreakdown.length} ITEMS
+                  </span>
+                  <span className="font-mono text-xs font-semibold text-zinc-200 whitespace-nowrap">
                     {formatCurrency(acquiredBreakdown.reduce((sum, p) => sum + p.quantity * p.unitCost, 0))}
                   </span>
                 </div>
-                <div className="space-y-1.5">
-                  {acquiredBreakdown.map((part, idx) => (
-                    <div
-                      key={part.id || idx}
-                      className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-2.5 flex items-start gap-2.5 text-xs"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0 mt-0.5">
-                        {renderCategoryIcon(part.category)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium text-zinc-200 break-words leading-snug">
-                          {part.name}
+                <div className="divide-y divide-white/[0.06]">
+                  {sortByCategory(acquiredBreakdown).map((part, idx) => {
+                    const category = getCategoryPresentation(part.category);
+                    const totalCost = part.quantity * part.unitCost;
+                    return (
+                      <div key={part.id || idx} className="relative px-3 py-2.5 pr-4 text-xs">
+                        <span className={`absolute right-1.5 top-2.5 bottom-2.5 w-0.5 rounded-full ${category.railClass}`} />
+                        <div className="flex items-start gap-2 min-w-0">
+                          <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold tracking-wide ${category.textClass}`}>
+                            {category.label}
+                          </span>
+                          <span className="min-w-0 flex-1 font-medium leading-snug text-zinc-200 break-words">{part.name}</span>
+                          <span className="shrink-0 font-mono text-xs font-bold text-zinc-100 whitespace-nowrap">
+                            {formatCurrency(totalCost)}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1.5 flex-wrap mt-1.5 font-mono">
-                          <span className={`${getCategoryBadgeColor(part.category)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                            {part.category}
-                          </span>
-                          {part.tags?.map((tag, tagIndex) => (
-                            <span key={`${tag}-${tagIndex}`} className={`${getTagBadgeColor(tag)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                              {tag}
-                            </span>
-                          ))}
-                          <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                            {part.quantity > 1
-                              ? `${part.quantity}x ${formatCurrency(part.unitCost)}/ea`
-                              : formatCurrency(part.unitCost)}
-                          </span>
-                          {part.quantity > 1 && (
-                            <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 shrink-0 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                              {formatCurrency(part.quantity * part.unitCost)} total
-                            </span>
-                          )}
+                        <div className="ml-[4.3rem] mt-1 font-mono text-[10px] leading-snug text-zinc-500">
+                          {part.quantity > 1 ? `${part.quantity} × ${formatCurrency(part.unitCost)} each` : 'Base component'}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            <div className="space-y-1.5 pt-2">
-              <div className="text-[10px] font-mono font-semibold text-zinc-400 uppercase tracking-wider">
-                ALLOCATED PARTS ({build.parts.length})
+            <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#0D1118]">
+              <div className="flex items-center justify-between gap-3 border-b border-[#7C6CF2]/25 px-3 py-2.5">
+                <span className="text-[10px] font-mono font-semibold text-zinc-400 uppercase tracking-wider">
+                  ALLOCATED PARTS · {build.parts.length} ITEMS
+                </span>
+                <span className="font-mono text-xs font-bold text-[#B7AEFF] whitespace-nowrap">
+                  BUILD COST {formatCurrency(partsCost)}
+                </span>
               </div>
               {build.parts.length === 0 ? (
-                <div className="text-xs text-zinc-500 italic py-2">
+                <div className="px-3 py-3 text-xs text-zinc-500 italic">
                   {isAcquired && acquiredBreakdown.length > 0
                     ? 'No stock upgrades allocated.'
                     : 'No components assigned yet.'}
                 </div>
               ) : (
-                <div className="space-y-1.5">
+                <div className="divide-y divide-white/[0.06]">
                   {sortByCategory(build.parts).map((part, partIdx) => {
                     const comp = state.components.find((c) => c.id === part.componentId);
                     let purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
                     if (!purchaseEntry && comp?.purchaseHistory?.length) {
                       purchaseEntry = comp.purchaseHistory.find((pe) => pe.unitPrice === part.unitCostAtAssignment) || comp.purchaseHistory[0];
                     }
+                    const category = getCategoryPresentation(part.category);
+                    // Assignment cost is immutable, so every row total always reconciles to Build Cost.
+                    const unitCost = part.unitCostAtAssignment;
+                    const totalCost = unitCost * part.quantity;
+                    const metadata = [
+                      purchaseEntry?.condition,
+                      !hideSupplierNames && purchaseEntry?.platform ? normalizePlatform(String(purchaseEntry.platform)) : undefined,
+                      purchaseEntry?.paymentMethod ? String(purchaseEntry.paymentMethod) : undefined,
+                      purchaseEntry?.date ? formatReadableDate(purchaseEntry.date) || purchaseEntry.date : undefined,
+                    ].filter(Boolean) as string[];
 
                     return (
                       <div
                         key={`${part.componentId}-${part.purchaseEntryId || partIdx}-${part.unitCostAtAssignment}`}
-                        className="bg-[#0D1118] border border-white/[0.08] rounded-xl mb-1.5 flex flex-col text-xs overflow-hidden transition-all shadow-sm"
+                        className="relative px-3 py-2.5 pr-4 text-xs"
                       >
-                        <div className="p-2.5 flex items-start gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0 mt-0.5">
-                            {renderCategoryIcon(part.category)}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="font-medium text-zinc-100 break-words block leading-snug text-xs sm:text-sm">
-                                {part.componentName}
-                              </span>
-                              <div className="flex items-center gap-1 shrink-0">
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setSwapPartData(part); }}
-                                  className="text-zinc-400 hover:text-[#7C6CF2] p-1 rounded-lg hover:bg-white/[0.04] transition-colors"
-                                  title="Swap Part"
-                                  aria-label={`Swap ${part.componentName}`}
-                                >
-                                  <ArrowRightLeft className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setQuantityPartData(part); }}
-                                  className="text-zinc-400 hover:text-[#7C6CF2] p-1 rounded-lg hover:bg-white/[0.04] transition-colors"
-                                  title="Change Quantity"
-                                  aria-label={`Change quantity for ${part.componentName}`}
-                                >
-                                  <Pencil className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setConfirmModalConfig({
-                                      isOpen: true,
-                                      title: 'Remove Allocated Part?',
-                                      message: isSold
-                                        ? `Remove "${part.componentName}" from sold build "${build.name}"? The part will return to loose stock and the recorded build cost and profit will be updated.`
-                                        : `Remove "${part.componentName}" from "${build.name}"? The part will return to loose stock.`,
-                                      confirmText: 'Remove Part',
-                                      variant: 'danger',
-                                      onConfirm: () => {
-                                        setConfirmModalConfig(null);
-                                        const result = removePart(build.id, part.componentId, part.purchaseEntryId);
-                                        if (!result.success) {
-                                          showToast(result.error || 'Failed to remove part from build.', 'error');
-                                          return;
-                                        }
-                                        showToast(`Removed "${part.componentName}" from "${build.name}".`, 'success');
-                                      },
-                                    });
-                                  }}
-                                  className="text-zinc-400 hover:text-rose-400 p-1 rounded-lg hover:bg-white/[0.04] transition-colors"
-                                  title="Remove Part"
-                                  aria-label={`Remove ${part.componentName}`}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 flex-wrap mt-1.5 font-mono">
-                              <span className={`${getCategoryBadgeColor(part.category)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                                {part.category}
-                              </span>
-                              {comp?.tags && Array.isArray(comp.tags) && comp.tags.map((tag, idx) => typeof tag === 'string' ? (
-                                <span key={idx} className={`${getTagBadgeColor(tag)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                                  {tag}
-                                </span>
-                              ) : null)}
-                              {purchaseEntry && (
-                                <>
-                                  <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                                    {purchaseEntry.date}
-                                  </span>
-                                  <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap ${getConditionColor(purchaseEntry.condition)}`}>
-                                    {purchaseEntry.condition.toUpperCase()}
-                                  </span>
-                                </>
-                              )}
-                              <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                                {part.quantity > 1 
-                                  ? `${part.quantity}x ${formatCurrency(purchaseEntry ? purchaseEntry.unitPrice : part.unitCostAtAssignment)}/ea` 
-                                  : formatCurrency(purchaseEntry ? purchaseEntry.unitPrice : part.unitCostAtAssignment)}
-                              </span>
-                              {!hideSupplierNames && purchaseEntry?.platform && (
-                                <span className={`${getPlatformBadgeColor(purchaseEntry.platform)} shrink-0 whitespace-nowrap px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                                  {normalizePlatform(String(purchaseEntry.platform))}
-                                </span>
-                              )}
-                              {purchaseEntry?.paymentMethod && (
-                                <span className={`${getPaymentMethodBadgeColor(purchaseEntry.paymentMethod)} shrink-0 whitespace-nowrap px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                                  {String(purchaseEntry.paymentMethod)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                        <span className={`absolute right-1.5 top-2.5 bottom-2.5 w-0.5 rounded-full ${category.railClass}`} />
+                        <div className="flex items-start gap-2 min-w-0">
+                          <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold tracking-wide ${category.textClass}`}>
+                            {category.label}
+                          </span>
+                          <span className="min-w-0 flex-1 font-medium leading-snug text-zinc-100 break-words">{part.componentName}</span>
+                          <span className="shrink-0 font-mono text-xs font-bold text-zinc-100 whitespace-nowrap">{formatCurrency(totalCost)}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setPartActionsData(part); }}
+                            className="-mr-1 -mt-1 shrink-0 rounded-lg p-1 text-zinc-500 transition-colors hover:bg-white/[0.05] hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+                            title={`Actions for ${part.componentName}`}
+                            aria-label={`Actions for ${part.componentName}`}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="ml-[4.3rem] mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500">
+                          {purchaseEntry?.condition && <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(purchaseEntry.condition)}`} />{purchaseEntry.condition}</span>}
+                          {metadata.slice(purchaseEntry?.condition ? 1 : 0).map((item, index) => <span key={`${item}-${index}`}>· {item}</span>)}
+                          {part.quantity > 1 && <span>· {part.quantity} × {formatCurrency(unitCost)} each</span>}
                         </div>
                       </div>
                     );
@@ -876,6 +816,56 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           part={quantityPartData}
           onClose={() => setQuantityPartData(null)}
         />
+      )}
+
+      {partActionsData && (
+        <BottomSheetModal
+          isOpen={Boolean(partActionsData)}
+          onClose={() => setPartActionsData(null)}
+          className="max-w-sm"
+        >
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] pb-3">
+              <div className="min-w-0">
+                <div className={`font-mono text-[10px] font-bold uppercase tracking-wider ${getCategoryPresentation(partActionsData.category).textClass}`}>
+                  {getCategoryPresentation(partActionsData.category).label}
+                </div>
+                <h3 className="mt-1 break-words text-sm font-semibold text-zinc-100">{partActionsData.componentName}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPartActionsData(null)}
+                aria-label="Close part actions"
+                className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="grid gap-2">
+              <button
+                type="button"
+                onClick={() => { setSwapPartData(partActionsData); setPartActionsData(null); }}
+                className="flex min-h-11 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#121722] px-3 text-left text-xs font-medium text-zinc-200 transition-colors hover:border-[#7C6CF2]/40 hover:text-white"
+              >
+                <ArrowRightLeft className="h-4 w-4 text-[#9D91FA]" /> Swap part
+              </button>
+              <button
+                type="button"
+                onClick={() => { setQuantityPartData(partActionsData); setPartActionsData(null); }}
+                className="flex min-h-11 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#121722] px-3 text-left text-xs font-medium text-zinc-200 transition-colors hover:border-[#7C6CF2]/40 hover:text-white"
+              >
+                <Pencil className="h-4 w-4 text-[#9D91FA]" /> Change quantity
+              </button>
+              <button
+                type="button"
+                onClick={() => openRemovePartConfirm(partActionsData)}
+                className="flex min-h-11 items-center gap-2 rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 text-left text-xs font-medium text-rose-300 transition-colors hover:bg-rose-500/20"
+              >
+                <Trash2 className="h-4 w-4" /> Remove from build
+              </button>
+            </div>
+          </div>
+        </BottomSheetModal>
       )}
 
       {/* Confirmation Modal */}

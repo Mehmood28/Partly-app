@@ -908,7 +908,7 @@ export function getCategoryBadgeColor(category: string): string {
   const cat = String(category || "").toUpperCase();
   switch (cat) {
     case 'GPU':
-      return 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40';
+      return 'bg-violet-500/15 text-violet-300 border border-violet-500/35';
     case 'CPU':
       return 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
     case 'MOTHERBOARD':
@@ -916,11 +916,11 @@ export function getCategoryBadgeColor(category: string): string {
     case 'RAM':
       return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
     case 'STORAGE':
-      return 'bg-sky-500/20 text-sky-300 border border-sky-500/40';
-    case 'PSU':
-      return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40';
-    case 'CASE':
       return 'bg-orange-500/20 text-orange-300 border border-orange-500/40';
+    case 'PSU':
+      return 'bg-sky-500/20 text-sky-300 border border-sky-500/40';
+    case 'CASE':
+      return 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40';
     case 'COOLING':
       return 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
     case 'FANS':
@@ -930,6 +930,35 @@ export function getCategoryBadgeColor(category: string): string {
     default:
       return 'bg-violet-500/20 text-violet-300 border border-violet-500/40';
   }
+}
+
+/** A shared, restrained palette for component rows. */
+export function getCategoryPresentation(category: string): {
+  label: string;
+  textClass: string;
+  railClass: string;
+} {
+  switch (String(category || '').toUpperCase()) {
+    case 'GPU': return { label: 'GPU', textClass: 'text-violet-300', railClass: 'bg-violet-400' };
+    case 'CPU': return { label: 'CPU', textClass: 'text-amber-300', railClass: 'bg-amber-400' };
+    case 'MOTHERBOARD': return { label: 'MOBO', textClass: 'text-rose-300', railClass: 'bg-rose-400' };
+    case 'RAM': return { label: 'RAM', textClass: 'text-emerald-300', railClass: 'bg-emerald-400' };
+    case 'COOLING': return { label: 'Cooling', textClass: 'text-cyan-300', railClass: 'bg-cyan-400' };
+    case 'STORAGE': return { label: 'Storage', textClass: 'text-orange-300', railClass: 'bg-orange-400' };
+    case 'PSU': return { label: 'PSU', textClass: 'text-sky-300', railClass: 'bg-sky-400' };
+    case 'CASE': return { label: 'Case', textClass: 'text-fuchsia-300', railClass: 'bg-fuchsia-400' };
+    case 'FANS': return { label: 'Fans', textClass: 'text-teal-300', railClass: 'bg-teal-400' };
+    case 'ACCESSORIES': return { label: 'Accessories', textClass: 'text-zinc-300', railClass: 'bg-zinc-400' };
+    default: return { label: 'Other', textClass: 'text-zinc-300', railClass: 'bg-zinc-400' };
+  }
+}
+
+export function getConditionDotColor(condition: string): string {
+  const normalized = String(condition || '').toUpperCase();
+  if (normalized.includes('SEALED')) return 'bg-emerald-400';
+  if (normalized.includes('NEW')) return 'bg-cyan-400';
+  if (normalized.includes('USED')) return 'bg-amber-400';
+  return 'bg-zinc-500';
 }
 
 export function getTagBadgeColor(tag: string): string {

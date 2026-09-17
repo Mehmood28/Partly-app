@@ -9,7 +9,7 @@ import {
   calculateUnassignedQuantityStrict,
   calculateUnassignedValueStrict,
   formatCurrency, getConditionColor,
-  getTagBadgeColor,
+  getCategoryPresentation,
   getPlatformBadgeColor,
   getPaymentMethodBadgeColor,
   getUnassignedBatches,
@@ -77,8 +77,10 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const unassignedVal = calculateUnassignedValueStrict(component, state.builds);
   const avgCost = unassignedQty > 0 ? unassignedVal / unassignedQty : calculateAverageUnitCost(component);
 
+  const categoryPresentation = getCategoryPresentation(component.category);
+
   const renderCategoryIcon = () => {
-    const className = 'w-4 h-4 text-[#7C6CF2]';
+    const className = `w-4 h-4 ${categoryPresentation.textClass}`;
     switch (component.category) {
       case 'GPU': return <Monitor className={className} />;
       case 'CPU': return <Cpu className={className} />;
@@ -107,7 +109,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
         <div className="flex items-start justify-between gap-2.5">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             {/* Left Square Icon Box */}
-            <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center shrink-0 mt-0.5">
               {renderCategoryIcon()}
             </div>
             {/* Title & Subtitle Info */}
@@ -119,7 +121,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                 {component.tags && component.tags.length > 0 && (
                   <>
                     {component.tags.map((tag, idx) => (
-                      <span key={idx} className={`${getTagBadgeColor(tag)} px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+                      <span key={idx} className="bg-white/[0.04] text-zinc-400 border border-white/[0.08] px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                         {tag}
                       </span>
                     ))}
