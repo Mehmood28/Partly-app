@@ -1,19 +1,18 @@
 import React from 'react';
-import { Store, CreditCard, User, Calendar, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { InventoryComponent, PCBuild, TransactionLogItem } from '../../types';
 import { usePrivacy } from '../../context/PrivacyContext';
-import { 
-  formatCurrency, 
-  getCategoryBadgeColor, 
-  getTagBadgeColor, 
-  getConditionColor, 
-  getPlatformBadgeColor 
+import {
+  formatCurrency,
+  getCategoryPresentation,
+  getConditionDotColor,
 } from '../../utils/helpers';
 import { getBuildPresentation } from '../../utils/buildPresentation';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { formatWarrantyLabel, getBuildWarrantyInfo } from '../../utils/warranty';
-import { renderCategoryIcon, parseBatchItem } from './activityHelpers';
+import { parseBatchItem } from './activityHelpers';
 import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
+import { sortByCategory } from '../../utils/sorting';
 
 interface PCSaleExpandedViewProps {
   tx: TransactionLogItem;
@@ -44,219 +43,154 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
 }) => {
   const { hideSupplierNames } = usePrivacy();
   const presentation = matchedBuild ? getBuildPresentation(matchedBuild, components) : null;
+  const fallbackItems = sortByCategory(
+    (tx.detailsList || []).map((detail) => parseBatchItem(detail, components, tx)),
+  );
 
   return (
     <div className="space-y-3">
-      {/* Financial Metrics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Sale Price</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-[#67E8F9]">{formatCurrency(salePrice)}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.08]">
+        <div className="bg-[#0F141C] p-2.5">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Sale Price</div>
+          <div className="mt-0.5 font-mono text-sm font-bold text-[#67E8F9]">{formatCurrency(salePrice)}</div>
         </div>
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Build Cost</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-zinc-300">{formatCurrency(partsCost)}</div>
+        <div className="bg-[#0F141C] p-2.5">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Build Cost</div>
+          <div className="mt-0.5 font-mono text-sm font-bold text-zinc-200">{formatCurrency(partsCost)}</div>
         </div>
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Net Profit</div>
-          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(netProfit)}`}>{formatSignedCurrency(netProfit)}</div>
+        <div className="bg-[#0F141C] p-2.5">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Net Profit</div>
+          <div className={`mt-0.5 font-mono text-sm font-bold ${getProfitTextColor(netProfit)}`}>{formatSignedCurrency(netProfit)}</div>
         </div>
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5" title="Net profit divided by sale price">Profit Margin</div>
-          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</div>
+        <div className="bg-[#0F141C] p-2.5">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Profit Margin</div>
+          <div className={`mt-0.5 font-mono text-sm font-bold ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</div>
         </div>
       </div>
 
-      {/* Trade-In Breakdown Banner if present */}
       {tx.tradeInCredit !== undefined && tx.tradeInCredit > 0 && (
-        <div className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 rounded-xl p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-[#A3FF12]/20 text-[#67E8F9] border border-[#A3FF12]/40 px-2 py-0.5 rounded-md text-[10px] font-bold font-mono uppercase tracking-wider">
-              Trade-In Included
-            </span>
-            <span className="text-zinc-300">
-              Cash: <span className="font-mono font-semibold text-zinc-100">{formatCurrency(tx.cashPortion ?? 0)}</span> + Valuation: <span className="font-mono font-semibold text-[#67E8F9]">{formatCurrency(tx.tradeInCredit)}</span>
-            </span>
-            {tx.tradeInDescription && (
-              <span className="text-xs text-zinc-300 font-medium">({tx.tradeInDescription})</span>
-            )}
+        <div className="border-l-2 border-[#67E8F9] bg-[#67E8F9]/[0.05] px-3 py-2 text-[11px] text-zinc-300">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <span className="font-semibold uppercase tracking-[0.12em] text-[#A5F3FC]">Trade-in included</span>
+            <span className="font-mono text-zinc-100">Effective sale {formatCurrency(salePrice)}</span>
           </div>
-          <div className="text-[11px] text-zinc-400 font-mono">
-            Total Effective: <span className="text-[#67E8F9] font-semibold">{formatCurrency(salePrice)}</span>
+          <div className="mt-1 flex flex-wrap gap-x-2 text-zinc-400">
+            <span>Cash {formatCurrency(tx.cashPortion ?? 0)}</span>
+            <span>·</span>
+            <span>Valuation {formatCurrency(tx.tradeInCredit)}</span>
+            {tx.tradeInDescription && <><span>·</span><span>{tx.tradeInDescription}</span></>}
           </div>
         </div>
       )}
 
-      {/* Metadata Badges & Specs Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.08] text-xs">
         {platform && (
-          <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-            <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-              <Store className="w-3.5 h-3.5 text-blue-400" /> Platform
-            </div>
-            <div className="text-zinc-200 font-medium truncate font-mono text-xs">{normalizePlatform(platform)}</div>
+          <div className="bg-[#0F141C] p-2.5">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Platform</div>
+            <div className="mt-0.5 truncate text-zinc-200">{normalizePlatform(platform)}</div>
           </div>
         )}
         {paymentMethod && (
-          <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-            <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-              <CreditCard className="w-3.5 h-3.5 text-[#A3FF12]" /> Payment
-            </div>
-            <div className="text-zinc-200 font-medium truncate font-mono text-xs">{paymentMethod}</div>
+          <div className="bg-[#0F141C] p-2.5">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Payment</div>
+            <div className="mt-0.5 truncate text-zinc-200">{paymentMethod}</div>
           </div>
         )}
         {buyerName && (
-          <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-            <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-[#A3FF12]" /> Buyer
-            </div>
-            <div className="text-zinc-200 font-medium truncate text-xs">{buyerName}</div>
+          <div className="bg-[#0F141C] p-2.5">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Buyer</div>
+            <div className="mt-0.5 truncate text-zinc-200">{buyerName}</div>
           </div>
         )}
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-zinc-400" /> Sale Date
-          </div>
-          <div className="text-zinc-200 font-medium truncate font-mono text-xs">{saleDate || 'N/A'}</div>
+        <div className="bg-[#0F141C] p-2.5">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Sale Date</div>
+          <div className="mt-0.5 truncate font-mono text-zinc-200">{saleDate || 'N/A'}</div>
         </div>
       </div>
 
-      {/* Warranty Banner */}
       {(() => {
-        const warrantyInfo = getBuildWarrantyInfo(saleDate, new Date(), tx.warrantyDaysAtSale ?? matchedBuild?.warrantyDays ?? 30);
+        const warrantyDays = tx.warrantyDaysAtSale ?? matchedBuild?.warrantyDays ?? 30;
+        const warrantyInfo = getBuildWarrantyInfo(saleDate, new Date(), warrantyDays);
         if (!warrantyInfo) return null;
         return (
-          <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-mono font-medium ${
-            warrantyInfo.isActive ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+          <div className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-[10px] font-mono font-medium ${
+            warrantyInfo.isActive
+              ? 'border-emerald-500/25 bg-emerald-500/[0.06] text-emerald-300'
+              : 'border-rose-500/25 bg-rose-500/[0.06] text-rose-300'
           }`}>
-            <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5" />
-              <span>{formatWarrantyLabel(tx.warrantyDaysAtSale ?? matchedBuild?.warrantyDays ?? 30)}</span>
-            </div>
-            <span>{warrantyInfo.isActive ? `ACTIVE (${warrantyInfo.daysLeft} DAYS REMAINING)` : `EXPIRED (${warrantyInfo.expiryFormatted})`}</span>
+            <span className="flex items-center gap-1.5"><Shield className="h-3.5 w-3.5" />{formatWarrantyLabel(warrantyDays)}</span>
+            <span>{warrantyInfo.isActive ? `${warrantyInfo.daysLeft} days remaining` : `Expired ${warrantyInfo.expiryFormatted}`}</span>
           </div>
         );
       })()}
 
-      {/* Build Components Included */}
-      <div className="space-y-2 pt-1">
-        <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-          <span>Build Components Included</span>
-          <span className="font-mono text-zinc-500">
-            {presentation ? presentation.totalQuantity : (tx.detailsList?.length || 0)} parts
-          </span>
+      <section className="pt-1">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
+          <span>Build components</span>
+          <span className="font-mono text-zinc-500">{presentation ? presentation.totalQuantity : fallbackItems.reduce((sum, item) => sum + item.quantity, 0)} items</span>
         </div>
 
-        <div className="space-y-1.5">
-          {presentation ? (
-            presentation.allComponents.map((part, partIdx) => {
-              const comp = part.originalComponentId ? components.find(c => c.id === part.originalComponentId) : null;
-              let purchaseEntry = comp?.purchaseHistory?.find(pe => pe.id === part.originalPurchaseEntryId);
-              if (!purchaseEntry && comp?.purchaseHistory?.length) {
-                purchaseEntry = comp.purchaseHistory.find(pe => pe.unitPrice === part.unitCost) || comp.purchaseHistory[0];
-              }
+        <div className="overflow-hidden rounded-b-lg border-x border-b border-white/[0.08]">
+          {presentation ? presentation.allComponents.map((part, partIdx) => {
+            const comp = part.originalComponentId ? components.find((candidate) => candidate.id === part.originalComponentId) : null;
+            let purchaseEntry = comp?.purchaseHistory?.find((entry) => entry.id === part.originalPurchaseEntryId);
+            if (!purchaseEntry && comp?.purchaseHistory?.length) {
+              purchaseEntry = comp.purchaseHistory.find((entry) => entry.unitPrice === part.unitCost) || comp.purchaseHistory[0];
+            }
+            const category = getCategoryPresentation(part.category);
+            const unitCost = purchaseEntry?.unitPrice ?? part.unitCost;
+            const source = part.source === 'PURCHASED_BASE'
+              ? 'Purchased PC base'
+              : part.source === 'TRADE_IN_BASE'
+                ? 'Trade-in base'
+                : '';
 
-              return (
-                <div
-                  key={part.id || `${part.category}-${part.name}-${partIdx}`}
-                  className="bg-[#121722] border border-white/[0.08] rounded-xl p-2.5 flex items-start gap-2.5 text-xs shadow-sm"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center shrink-0 mt-0.5">
-                    {renderCategoryIcon(part.category)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-medium text-zinc-100 break-words block leading-snug">
-                        {part.name}
-                      </span>
-                      <span className="font-mono font-medium text-[#67E8F9] shrink-0 ml-2">
-                        {formatCurrency(part.quantity * (purchaseEntry ? purchaseEntry.unitPrice : part.unitCost))}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 flex-wrap mt-1.5 font-mono text-zinc-400">
-                      <span className={`${getCategoryBadgeColor(part.category)} px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                        {part.category}
-                      </span>
-                      {part.source !== 'ALLOCATED_UPGRADE' ? (
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                          {part.source === 'PURCHASED_BASE' ? 'PURCHASED PC BASE' : 'TRADE-IN BASE'}
-                        </span>
-                      ) : (
-                        <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                          UPGRADE
-                        </span>
-                      )}
-                      {(part.tags || (comp?.tags && Array.isArray(comp.tags) ? comp.tags : []))?.map((tag, idx) => typeof tag === 'string' ? (
-                        <span key={idx} className={`${getTagBadgeColor(tag)} px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                          {tag}
-                        </span>
-                      ) : null)}
-                      {purchaseEntry && (
-                        <>
-                          <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                            {purchaseEntry.date}
-                          </span>
-                          <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap ${getConditionColor(purchaseEntry.condition)}`}>
-                            {purchaseEntry.condition.toUpperCase()}
-                          </span>
-                          {!hideSupplierNames && purchaseEntry.platform && (
-                            <span className={`${getPlatformBadgeColor(purchaseEntry.platform)} shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                              {String(purchaseEntry.platform)}
-                            </span>
-                          )}
-                        </>
-                      )}
-                      <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                        {part.quantity > 1 
-                          ? `${part.quantity}x ${formatCurrency(purchaseEntry ? purchaseEntry.unitPrice : part.unitCost)}/ea` 
-                          : formatCurrency(purchaseEntry ? purchaseEntry.unitPrice : part.unitCost)}
-                      </span>
-                    </div>
+            return (
+              <div key={part.id || `${part.category}-${part.name}-${partIdx}`} className="relative grid grid-cols-[3.8rem_minmax(0,1fr)_auto] gap-2 border-b border-white/[0.06] px-2.5 py-2.5 last:border-b-0">
+                <span className={`pt-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.14em] ${category.textClass}`}>{category.label}</span>
+                <div className="min-w-0">
+                  <div className="break-words text-xs font-medium leading-snug text-zinc-100">{part.name}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[9px] text-zinc-500">
+                    {purchaseEntry ? (
+                      <>
+                        <span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(purchaseEntry.condition)}`} />
+                        <span>{purchaseEntry.condition}</span>
+                        {!hideSupplierNames && purchaseEntry.platform && <><span>·</span><span>{normalizePlatform(String(purchaseEntry.platform))}</span></>}
+                        <span>·</span><span>{purchaseEntry.paymentMethod}</span>
+                        <span>·</span><span>{purchaseEntry.date}</span>
+                      </>
+                    ) : source ? <span>{source}</span> : null}
+                    {part.tags?.length ? <><span>·</span><span>{part.tags.join(' · ')}</span></> : null}
+                    {part.quantity > 1 && <><span>·</span><span>{part.quantity} × {formatCurrency(unitCost)} each</span></>}
                   </div>
                 </div>
-              );
-            })
-          ) : tx.detailsList && tx.detailsList.length > 0 ? (
-            tx.detailsList.map((detail, idx) => {
-              const item = parseBatchItem(detail, components, tx);
-              return (
-                <div key={idx} className="bg-[#121722] border border-white/[0.08] rounded-xl p-2.5 flex items-start gap-2.5 text-xs shadow-sm">
-                  <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center shrink-0 mt-0.5">
-                    {renderCategoryIcon(item.category)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-medium text-zinc-100 break-words block leading-snug">
-                        {item.itemName}
-                      </span>
-                      {item.totalPrice > 0 && (
-                        <span className="font-mono font-medium text-[#67E8F9] shrink-0 ml-2">
-                          {formatCurrency(item.totalPrice)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-wrap mt-1.5 font-mono text-zinc-400">
-                      <span className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#67E8F9] px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                        Qty: {item.quantity}
-                      </span>
-                      {item.unitPrice > 0 && (
-                        <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                          {item.quantity > 1 ? `${formatCurrency(item.unitPrice)}/ea` : formatCurrency(item.unitPrice)}
-                        </span>
-                      )}
-                    </div>
+                <span className="font-mono text-xs font-bold text-zinc-100">{formatCurrency(part.quantity * unitCost)}</span>
+                <span className={`absolute inset-y-2 right-0 w-0.5 rounded-full ${category.railClass}`} />
+              </div>
+            );
+          }) : fallbackItems.length > 0 ? fallbackItems.map((item, idx) => {
+            const category = getCategoryPresentation(item.category);
+            return (
+              <div key={`${item.itemName}-${idx}`} className="relative grid grid-cols-[3.8rem_minmax(0,1fr)_auto] gap-2 border-b border-white/[0.06] px-2.5 py-2.5 last:border-b-0">
+                <span className={`pt-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.14em] ${category.textClass}`}>{category.label}</span>
+                <div className="min-w-0">
+                  <div className="break-words text-xs font-medium leading-snug text-zinc-100">{item.itemName}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[9px] text-zinc-500">
+                    {item.condition && <><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(item.condition)}`} /><span>{item.condition}</span></>}
+                    {!hideSupplierNames && item.platform && <><span>·</span><span>{normalizePlatform(item.platform)}</span></>}
+                    {item.tags.length > 0 && <><span>·</span><span>{item.tags.join(' · ')}</span></>}
+                    {item.quantity > 1 && item.unitPrice > 0 && <><span>·</span><span>{item.quantity} × {formatCurrency(item.unitPrice)} each</span></>}
                   </div>
                 </div>
-              );
-            })
-          ) : (
-            <div className="text-xs text-zinc-500 italic p-3 text-center bg-[#121722] rounded-xl border border-white/[0.08]">
-              No part components details logged.
-            </div>
+                {item.totalPrice > 0 && <span className="font-mono text-xs font-bold text-zinc-100">{formatCurrency(item.totalPrice)}</span>}
+                <span className={`absolute inset-y-2 right-0 w-0.5 rounded-full ${category.railClass}`} />
+              </div>
+            );
+          }) : (
+            <div className="p-3 text-center text-xs italic text-zinc-500">No component details logged.</div>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 };

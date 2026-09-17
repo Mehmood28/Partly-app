@@ -150,27 +150,27 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
   }, [selectedCategory, activeSubCategory, sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
 
   return (
-    <div className="space-y-2">
-      {/* Compact 3-Metric Capital Breakdown */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="border border-white/[0.08] bg-[#0D1118] rounded-xl p-2.5 flex flex-col justify-center shadow-sm">
+    <div className="space-y-4">
+      {/* Capital is a single ledger, not three competing cards. */}
+      <div className="grid grid-cols-3 border-y border-white/[0.08] divide-x divide-white/[0.08]">
+        <div className="py-3 pr-2 flex flex-col justify-center">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Unassigned</div>
           <div className="text-emerald-400 font-bold text-sm sm:text-base font-mono mt-0.5 leading-tight">{formatCurrency(unassignedValue)}</div>
         </div>
-        <div className="border border-white/[0.08] bg-[#0D1118] rounded-xl p-2.5 flex flex-col justify-center shadow-sm">
+        <div className="py-3 px-2 flex flex-col justify-center">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Assigned</div>
           <div className="text-[#67E8F9] font-bold text-sm sm:text-base font-mono mt-0.5 leading-tight">{formatCurrency(activeBuildsCost)}</div>
         </div>
-        <div className="border border-white/[0.08] bg-[#0D1118] rounded-xl p-2.5 flex flex-col justify-center shadow-sm">
+        <div className="py-3 pl-2 flex flex-col justify-center">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Value</div>
           <div className="text-zinc-100 font-bold text-sm sm:text-base font-mono mt-0.5 leading-tight">{formatCurrency(totalInventoryValue)}</div>
         </div>
       </div>
 
-      {/* Unified In Stock Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-[#0D1118] border border-white/[0.08] p-2.5 sm:p-3 rounded-xl shadow-sm">
+      {/* Inventory workbench */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/[0.08] pb-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12] shrink-0">
+          <div className="w-8 h-8 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12] shrink-0">
             <Layers className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -187,7 +187,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             <button
               type="button"
               onClick={onOpenBulkEntry}
-              className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all bg-[#121722] hover:bg-[#182030] border border-white/[0.08] hover:border-[#A3FF12]/40 text-zinc-100 flex items-center justify-center gap-1.5 cursor-pointer"
+              className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all bg-[#10141E] hover:bg-[#182030] border border-white/[0.08] hover:border-[#A3FF12]/40 text-zinc-100 flex items-center justify-center gap-1.5 cursor-pointer"
               title="Fast Bulk Stock Entry via AI Text or Image Scan"
             >
               <Zap className="w-3.5 h-3.5 text-[#A3FF12] shrink-0" />
@@ -197,7 +197,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           <button
             type="button"
             onClick={() => onOpenAddComponent()}
-            className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all bg-[#A3FF12] hover:bg-[#C2FF5C] text-white shadow-sm shadow-[#A3FF12]/20 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+            className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-bold rounded-lg transition-all bg-[#A3FF12] hover:bg-[#C2FF5C] text-[#11150C] flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
             title="Add a new component"
           >
             <Plus className="w-3.5 h-3.5 shrink-0" />
@@ -206,8 +206,8 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         </div>
       </div>
 
-      {/* Category Quick Filter Chips & Stock Search */}
-      <div className="bg-[#0D1118] border border-white/[0.08] p-2.5 rounded-xl shadow-sm">
+      {/* Filters are controls, kept separate from the stock ledger. */}
+      <div className="border-b border-white/[0.08] pb-4">
         <InventoryFilterBar
           builds={state.builds}
           components={state.components.filter(c => calculateUnassignedQuantityStrict(c, state.builds) > 0)}
@@ -239,14 +239,14 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             <button
               type="button"
               onClick={() => onOpenAddComponent()}
-              className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-all inline-flex items-center gap-1.5 shadow-sm shadow-[#A3FF12]/20"
+              className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-[#11150C] text-xs font-semibold px-3.5 py-2 rounded-lg transition-all inline-flex items-center gap-1.5 shadow-sm shadow-[#A3FF12]/20"
             >
               <Plus className="w-4 h-4" /> Add New Component
             </button>
           </div>
         </div>
       ) : !isVirtualized ? (
-        <div className="space-y-1.5 pr-1">
+        <div className="overflow-hidden rounded-lg border-x border-white/[0.08] pr-0">
           {virtualRows.map((row) => {
             if (row.type === 'header') {
               return (
@@ -267,7 +267,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
             return (
               <div key={row.key}>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                <div className={`grid grid-cols-1 gap-0 ${row.items.some((component) => component.id === expandedCardId) ? '' : 'lg:grid-cols-2'}`}>
                   {row.items.map((component) => (
                     <ComponentCard
                       isExpanded={expandedCardId === component.id}
@@ -355,7 +355,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                     paddingBottom: '6px',
                   }}
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  <div className={`grid grid-cols-1 gap-0 ${row.items.some((component) => component.id === expandedCardId) ? '' : 'lg:grid-cols-2'}`}>
                     {row.items.map((component) => (
                       <ComponentCard
                         isExpanded={expandedCardId === component.id}

@@ -37,15 +37,16 @@ export const isColorCompatible = (category: string, part: { name: string }, them
 };
 
 export const getCategoryIcon = (cat: string) => {
+  const iconClass = 'w-3.5 h-3.5 text-[#67E8F9]';
   switch (cat) {
-    case 'GPU': return <MonitorPlay className="w-3.5 h-3.5 text-indigo-400" />;
-    case 'CPU': return <Cpu className="w-3.5 h-3.5 text-amber-400" />;
-    case 'Motherboard': return <CircuitBoard className="w-3.5 h-3.5 text-rose-400" />;
-    case 'RAM': return <MemoryStick className="w-3.5 h-3.5 text-emerald-400" />;
-    case 'Cooling': return <Fan className="w-3.5 h-3.5 text-cyan-400" />;
-    case 'Storage': return <HardDrive className="w-3.5 h-3.5 text-sky-400" />;
-    case 'PSU': return <Zap className="w-3.5 h-3.5 text-yellow-400" />;
-    case 'Case': return <Box className="w-3.5 h-3.5 text-orange-400" />;
+    case 'GPU': return <MonitorPlay className={iconClass} />;
+    case 'CPU': return <Cpu className={iconClass} />;
+    case 'Motherboard': return <CircuitBoard className={iconClass} />;
+    case 'RAM': return <MemoryStick className={iconClass} />;
+    case 'Cooling': return <Fan className={iconClass} />;
+    case 'Storage': return <HardDrive className={iconClass} />;
+    case 'PSU': return <Zap className={iconClass} />;
+    case 'Case': return <Box className={iconClass} />;
     default: return <CheckCircle2 className="w-3.5 h-3.5 text-neutral-500" />;
   }
 };

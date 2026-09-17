@@ -66,11 +66,11 @@ export const GoalBar: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#A3FF12]/40 transition-all duration-200 rounded-xl p-3 flex flex-col gap-2 shadow-sm">
+    <section className="border border-white/[0.08] border-l-2 border-l-[#A3FF12] rounded-lg bg-[#0F141C] px-3.5 py-3 flex flex-col gap-3">
       {/* Top Header Row */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-lg bg-[#A3FF12]/15 text-[#A3FF12] border border-[#A3FF12]/30">
+          <div className="text-[#A3FF12]">
             <Target className="w-4 h-4" />
           </div>
           <span className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
@@ -78,25 +78,24 @@ export const GoalBar: React.FC = () => {
           </span>
         </div>
 
-        {/* Status Pills: Days Left & Amount Left */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
+        <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono text-zinc-400">
+          <span className="inline-flex items-center gap-1">
             <Clock className="w-3 h-3 text-[#A3FF12]" />
             {daysRemaining === 0 ? 'Last day' : `${daysRemaining}d left`}
           </span>
 
           {isCompleted ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-mono font-medium text-emerald-300">
+            <span className="inline-flex items-center gap-1 text-emerald-300">
               <CheckCircle2 className="w-3 h-3" />
               Goal Reached!
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
+            <span className="inline-flex items-center gap-1">
               <span className="text-[#67E8F9] font-bold">{formatCurrency(amountLeft)}</span> left
             </span>
           )}
 
-          <span className="text-xs font-bold text-emerald-400 font-mono pl-1">
+          <span className="text-xs font-bold text-emerald-400 font-mono pl-1 border-l border-white/[0.1]">
             {percentage}%
           </span>
         </div>
@@ -145,12 +144,12 @@ export const GoalBar: React.FC = () => {
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full h-1.5 bg-[#090B10] border border-white/[0.06] rounded-full overflow-hidden">
+      <div className="w-full h-1 bg-[#090B10] overflow-hidden">
         <div 
           className="h-full bg-gradient-to-r from-[#A3FF12] via-[#C2FF5C] to-emerald-400 rounded-full transition-all duration-700 ease-out"
           style={{ width: `${percentage}%` }}
         />
       </div>
-    </div>
+    </section>
   );
 };

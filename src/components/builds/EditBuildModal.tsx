@@ -130,7 +130,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                       ? 'bg-[#A3FF12]/15 text-[#67E8F9] border-[#A3FF12]/30'
                       : build.status === 'Trade-In Processing'
                       ? 'bg-cyan-500/10 text-cyan-300 border-cyan-400/30'
-                      : 'bg-blue-500/15 text-blue-400 border-blue-500/40'
+                      : 'bg-[#67E8F9]/10 text-[#A5F3FC] border-[#67E8F9]/30'
                   }`}
                 >
                   {build.status === 'Listed for Sale'
@@ -225,7 +225,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                   <button
                     type="button"
                     onClick={() => setEditImageUrl('')}
-                    className="absolute top-0.5 right-0.5 bg-black/80 rounded-md p-1 text-zinc-300 hover:text-red-400 transition-colors"
+                    className="absolute top-0.5 right-0.5 bg-black/80 rounded-md p-1 text-zinc-300 hover:text-rose-400 transition-colors"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>

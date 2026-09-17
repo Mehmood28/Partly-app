@@ -78,27 +78,28 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
   }, [state]);
 
   return (
-    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl p-3.5 relative overflow-hidden transition-all duration-300 shadow-sm">
-      <div className="flex items-center justify-between mb-3 relative z-10 flex-wrap gap-1.5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-          <Activity className="w-3.5 h-3.5 text-[#A3FF12]" /> At a Glance
+    <section className="border-y border-white/[0.08] py-3.5">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-300 flex items-center gap-2">
+          <Activity className="w-3.5 h-3.5 text-[#A3FF12]" /> Operations snapshot
         </h3>
+        <span className="text-[10px] uppercase tracking-[0.14em] text-zinc-600 font-mono">live</span>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 relative z-10">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.08] border border-white/[0.08] rounded-lg overflow-hidden">
         {/* 1. Listed Builds */}
         <div 
           onClick={() => onNavigateToBuilds('Available')}
-          className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between hover:border-[#A3FF12]/40 transition-all cursor-pointer group"
+          className="min-h-[92px] p-3 bg-[#0F141C] flex flex-col justify-between hover:bg-[#141A24] transition-colors cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-1">
-            <p className="text-[11px] font-semibold text-zinc-400 leading-tight">
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500 leading-tight">
               Listed Builds
             </p>
             <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#A3FF12] transition-colors" />
           </div>
           <div>
-            <p className="text-base sm:text-lg font-bold font-mono text-[#67E8F9] leading-tight">
+            <p className="text-xl font-bold font-mono text-[#67E8F9] leading-tight">
               {stats.listedCount}
             </p>
             <p className="text-[11px] text-zinc-500 mt-0.5">Ready for sale</p>
@@ -108,16 +109,16 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
         {/* 2. Pending Sale */}
         <div 
           onClick={() => onNavigateToBuilds('Pending')}
-          className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between hover:border-[#A3FF12]/40 transition-all cursor-pointer group"
+          className="min-h-[92px] p-3 bg-[#0F141C] flex flex-col justify-between hover:bg-[#141A24] transition-colors cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-1">
-            <p className="text-[11px] font-semibold text-zinc-400 leading-tight">
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500 leading-tight">
               Pending Sale
             </p>
             <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#A3FF12] transition-colors" />
           </div>
           <div>
-            <p className="text-base sm:text-lg font-bold font-mono text-zinc-100 leading-tight group-hover:text-white transition-colors">
+            <p className="text-xl font-bold font-mono text-zinc-100 leading-tight group-hover:text-white transition-colors">
               {stats.pendingSaleCount}
             </p>
             <p className="text-[11px] text-zinc-500 mt-0.5">Awaiting sale completion</p>
@@ -127,16 +128,16 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
         {/* 3. Available Stock */}
         <div 
           onClick={onNavigateToStock}
-          className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between hover:border-[#A3FF12]/40 transition-all cursor-pointer group"
+          className="min-h-[92px] p-3 bg-[#0F141C] flex flex-col justify-between hover:bg-[#141A24] transition-colors cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-1">
-            <p className="text-[11px] font-semibold text-zinc-400 leading-tight">
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500 leading-tight">
               Available Stock
             </p>
             <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#A3FF12] transition-colors" />
           </div>
           <div>
-            <p className="text-base sm:text-lg font-bold font-mono text-zinc-100 leading-tight group-hover:text-white transition-colors">
+            <p className="text-xl font-bold font-mono text-zinc-100 leading-tight group-hover:text-white transition-colors">
               {stats.availableStockCount} <span className="text-xs font-normal text-zinc-400 font-sans">units</span>
             </p>
             <p className="text-[11px] text-zinc-500 mt-0.5">Unassigned parts</p>
@@ -144,14 +145,14 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
         </div>
 
         {/* 4. Last PC Sale */}
-        <div className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between">
+        <div className="min-h-[92px] p-3 bg-[#0F141C] flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-[11px] font-semibold text-zinc-400 leading-tight">
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500 leading-tight">
               Last PC Sale
             </p>
           </div>
           <div>
-            <p className="text-base sm:text-lg font-bold font-mono text-emerald-400 leading-tight">
+            <p className="text-lg font-bold font-mono text-emerald-400 leading-tight">
               {stats.relativeTimeText}
             </p>
             {stats.hasSoldBuild && stats.latestBuildName ? (
@@ -164,6 +165,6 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };

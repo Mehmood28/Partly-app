@@ -23,7 +23,7 @@ export interface ParsedBatchItem {
   comp?: InventoryComponent;
 }
 
-export const renderCategoryIcon = (category?: string, className = 'w-4 h-4 text-amber-400') => {
+export const renderCategoryIcon = (category?: string, className = 'w-4 h-4 text-[#67E8F9]') => {
   switch (category?.toUpperCase()) {
     case 'GPU': return <Monitor className={className} />;
     case 'CPU': return <Cpu className={className} />;

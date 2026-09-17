@@ -40,18 +40,18 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
 
   return (
     <div className="space-y-2 w-full">
-      {/* Category Pills (Fully Visible Wrapping Layout) */}
-      <div className="flex flex-wrap items-center gap-1.5 pb-1 pt-0.5 text-xs w-full">
+      {/* Wrapped category index: all options remain visible on mobile. */}
+      <div className="flex flex-wrap items-center gap-x-1 gap-y-1 border-b border-white/[0.08] pb-2 text-xs w-full">
         <button
           type="button"
           onClick={() => {
             onCategoryChange('ALL');
             onSubCategoryChange?.('');
           }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
+          className={`px-2.5 py-1.5 border-b text-xs font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
             activeCategory === 'ALL'
-              ? 'bg-[#A3FF12] text-white font-bold shadow-sm shadow-[#A3FF12]/30'
-              : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08] hover:bg-white/[0.04]'
+              ? 'border-[#A3FF12] text-[#A3FF12] font-bold bg-[#A3FF12]/[0.04]'
+              : 'border-transparent text-zinc-500 hover:text-zinc-200 hover:border-white/[0.12]'
           }`}
         >
           All Categories ({components.filter(isAvailable).length})
@@ -69,10 +69,10 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 onCategoryChange(cat);
                 onSubCategoryChange?.('');
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
+              className={`px-2.5 py-1.5 border-b text-xs font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
                 isActive
-                  ? 'bg-[#A3FF12] text-white border border-[#A3FF12] shadow-sm shadow-[#A3FF12]/30'
-                  : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08] hover:bg-white/[0.04]'
+                  ? 'border-[#A3FF12] text-[#A3FF12] bg-[#A3FF12]/[0.04]'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-200 hover:border-white/[0.12]'
               }`}
             >
               {cat} ({count})
@@ -91,10 +91,10 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 key={sub}
                 type="button"
                 onClick={() => onSubCategoryChange?.(activeSubCategory === sub ? '' : sub)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
                 isActive
-                  ? 'bg-[#A3FF12]/15 text-[#A5F3FC] border border-[#A3FF12]/40 shadow-sm'
-                    : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08] hover:bg-white/[0.04]'
+                  ? 'bg-[#67E8F9]/10 text-[#A5F3FC] border border-[#67E8F9]/30'
+                    : 'bg-[#10141E] text-zinc-500 hover:text-zinc-200 border border-white/[0.08]'
                 }`}
               >
                 {sub}
@@ -113,7 +113,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
             placeholder="Search parts by name or model..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full h-11 max-w-full box-border bg-[#121722] border border-white/[0.08] rounded-xl pl-10 pr-9 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
+            className="w-full h-11 max-w-full box-border bg-[#10141E] border border-white/[0.08] rounded-lg pl-10 pr-9 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
           />
           {searchQuery && (
             <button

@@ -1,26 +1,13 @@
 import React from 'react';
-import { 
-  Cpu, 
-  Tag, 
-  ShoppingCart, 
-  Hammer, 
-  ChevronUp, 
-  ChevronDown, 
-  User, 
-  Store,
-  TrendingUp
-} from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { InventoryComponent, TransactionLogItem } from '../../types';
-import { 
-  formatCurrency, 
-  getCategoryBadgeColor, 
-  getPlatformBadgeColor, 
-  getPaymentMethodBadgeColor, 
-  getConditionColor 
+import {
+  formatCurrency,
+  getConditionDotColor,
 } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { usePrivacy } from '../../context/PrivacyContext';
-import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
+import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 
 interface TransactionCardHeaderProps {
   tx: TransactionLogItem;
@@ -51,11 +38,14 @@ interface TransactionCardHeaderProps {
   conditionStr?: string;
 }
 
+/**
+ * Dense transaction ledger row. Financials and useful metadata stay visible
+ * without turning every value into a separate coloured badge.
+ */
 export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
   tx,
   displayTitle,
   subCategoryLabel,
-  imageUrl,
   isPCSale,
   isPartSale,
   isPurchase,
@@ -80,255 +70,89 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
   conditionStr,
 }) => {
   const { hideSupplierNames } = usePrivacy();
-  return (
-    <div 
-      className="p-3 cursor-pointer hover:bg-white/[0.02] transition-colors flex items-start gap-3"
-      onClick={onToggle}
-    >
-      {/* Left Thumbnail / Icon */}
-      {imageUrl ? (
-        <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/[0.08] mt-0.5">
-          <img src={imageUrl} alt={displayTitle} className="w-full h-full object-cover" />
-        </div>
-      ) : (
-        <div className={`w-9 h-9 rounded-lg shrink-0 flex items-center justify-center border mt-0.5 ${
-          isExchange
-            ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400'
-            : isPCSale 
-            ? 'bg-[#A3FF12]/15 border-[#A3FF12]/30 text-[#67E8F9]'
-            : isPartSale 
-            ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
-            : isPurchase
-            ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
-            : 'bg-indigo-500/15 border-indigo-500/30 text-indigo-400'
-        }`}>
-          {isExchange ? <TrendingUp className="w-4 h-4" /> : isPCSale ? <Cpu className="w-4 h-4" /> : isPartSale ? <Tag className="w-4 h-4" /> : isPurchase ? <ShoppingCart className="w-4 h-4" /> : <Hammer className="w-4 h-4" />}
-        </div>
-      )}
+  const recordedDate = saleDate || tx.dateSortable || tx.timestamp;
+  const quantity = tx.quantity || tx.itemCount || tx.detailsList?.length || 1;
+  const statusTone = isPurchase
+    ? 'text-[#67E8F9] border-[#67E8F9]/30'
+    : isPCSale || isPartSale
+      ? 'text-[#A3FF12] border-[#A3FF12]/30'
+      : 'text-zinc-300 border-white/[0.12]';
+  const railTone = isPurchase ? 'bg-[#67E8F9]' : isPCSale || isPartSale ? 'bg-[#A3FF12]' : 'bg-zinc-500';
 
-      {/* Content Body */}
-      <div className="flex-1 min-w-0">
-        {/* Top Title & Status Row (No Truncate, Full Name Display) */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h3 className="font-semibold text-zinc-100 text-xs sm:text-sm leading-snug break-words">
+  return (
+    <button
+      type="button"
+      className="relative w-full cursor-pointer px-3 py-2.5 pl-4 text-left transition-colors hover:bg-white/[0.025]"
+      onClick={onToggle}
+      aria-expanded={isExpanded}
+    >
+      <span className={`absolute bottom-2.5 left-0 top-2.5 w-0.5 ${railTone}`} />
+
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-2">
+            <h3 className="min-w-0 flex-1 break-words text-xs font-semibold leading-snug text-zinc-100 sm:text-sm">
               {displayTitle}
             </h3>
-          </div>
-          
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span
-              className={`text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border shrink-0 leading-none ${
-                isExchange
-                  ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/40'
-                  : isPCSale
-                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
-                  : isPartSale
-                  ? 'bg-teal-500/15 text-teal-400 border-teal-500/40'
-                  : isPurchase
-                  ? 'bg-rose-500/15 text-rose-400 border-rose-500/40'
-                  : 'bg-indigo-500/15 text-indigo-400 border-indigo-500/40'
-              }`}
-            >
+            <span className={`shrink-0 border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.1em] ${statusTone}`}>
               {subCategoryLabel}
             </span>
+          </div>
 
-            <div className="text-zinc-500 group-hover:text-zinc-300 transition-colors ml-1">
-              {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500 sm:text-[11px]">
+            {isExchange && (
+              <>
+                <span>OUTGOING <strong className="font-semibold text-zinc-300">{formatCurrency(outgoingCostBasis)}</strong></span>
+                <span>CASH <strong className="font-semibold text-[#A5F3FC]">{formatCurrency(cashPaidOnTop)}</strong></span>
+                <span>INCOMING <strong className="font-semibold text-zinc-100">{formatCurrency(incomingCostBasis)}</strong></span>
+              </>
+            )}
+
+            {(isPCSale || isPartSale) && (
+              <>
+                <span>COST <strong className="font-semibold text-zinc-300">{formatCurrency(partsCost)}</strong></span>
+                <span>SOLD <strong className="font-semibold text-[#A5F3FC]">{formatCurrency(salePrice)}</strong></span>
+                <span className={getProfitTextColor(netProfit)}>
+                  PROFIT <strong className="font-semibold">{formatSignedCurrency(netProfit)} ({profitMarginPercent.toFixed(1)}%)</strong>
+                </span>
+              </>
+            )}
+
+            {isPurchase && (
+              <>
+                <span>PAID <strong className="font-semibold text-zinc-100">{formatCurrency(tx.totalAmount)}</strong></span>
+                {(isBulkPurchase || quantity > 1) && <span>QTY <strong className="font-semibold text-zinc-300">{quantity}</strong></span>}
+              </>
+            )}
+
+            {isBuildAllocation && (
+              <>
+                <span>BUILD COST <strong className="font-semibold text-[#A5F3FC]">{formatCurrency(tx.totalAmount)}</strong></span>
+                {tx.itemCount ? <span>{tx.itemCount} ITEMS</span> : null}
+              </>
+            )}
+          </div>
+
+          <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500">
+            {matchedComp?.category && <span className="font-semibold text-[#A5F3FC]">{matchedComp.category}</span>}
+            {conditionStr && (
+              <span className="inline-flex items-center gap-1">
+                <span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(conditionStr)}`} />
+                {conditionStr}
+              </span>
+            )}
+            {!hideSupplierNames && platform && <span>· {normalizePlatform(platform)}</span>}
+            {buyerName && <span>· {buyerName}</span>}
+            {paymentMethod && <span>· {paymentMethod}</span>}
+            {recordedDate && <span>· {recordedDate}</span>}
+            {daysOnMarket !== undefined && <span>· {daysOnMarket === 0 ? 'same day' : `${daysOnMarket} days`}</span>}
           </div>
         </div>
 
-        {/* Minimal Summary Pills - Ordered by Type */}
-        <div className="flex items-center gap-1.5 flex-wrap mt-2 font-mono">
-          {/* Trade Up Pills */}
-          {isExchange && (
-            <>
-              {/* Cost Basis Flow */}
-              <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                OUTGOING BASIS: {formatCurrency(outgoingCostBasis)}
-              </span>
-              <span className="bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                CASH PAID ON TOP: {formatCurrency(cashPaidOnTop)}
-              </span>
-              <span className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/40 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                INCOMING BASIS: {formatCurrency(incomingCostBasis)}
-              </span>
-
-              {/* Meta */}
-              {platform && (
-                <span className={`${getPlatformBadgeColor(platform)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center gap-1 justify-center whitespace-nowrap`}>
-                  <Store className="w-2.5 h-2.5" /> {normalizePlatform(platform)}
-                </span>
-              )}
-              {paymentMethod && (
-                <span className={`${getPaymentMethodBadgeColor(paymentMethod)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                  {paymentMethod}
-                </span>
-              )}
-              {/* Date */}
-              <span className="bg-white/[0.04] text-zinc-400 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                {tx.dateSortable || tx.timestamp}
-              </span>
-            </>
-          )}
-
-          {/* Sold PC Pills */}
-          {isPCSale && (
-            <>
-              {/* Financials */}
-              <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                BUILD COST: {formatCurrency(partsCost)}
-              </span>
-              <span className="bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                SOLD: {formatCurrency(salePrice)}
-              </span>
-              <span className={`${getProfitBadgeClasses(netProfit)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                PROFIT: {formatSignedCurrency(netProfit)} {profitMarginPercent !== 0 ? `(${profitMarginPercent.toFixed(0)}%)` : ''}
-              </span>
-              {/* Meta */}
-              {platform && (
-                <span className={`${getPlatformBadgeColor(platform)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center gap-1 justify-center whitespace-nowrap`}>
-                  <ShoppingCart className="w-2.5 h-2.5" /> {normalizePlatform(platform)}
-                </span>
-              )}
-              {buyerName && (
-                <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center gap-1 justify-center whitespace-nowrap">
-                  <User className="w-2.5 h-2.5" /> {buyerName}
-                </span>
-              )}
-              {paymentMethod && (
-                <span className={`${getPaymentMethodBadgeColor(paymentMethod)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                  {paymentMethod}
-                </span>
-              )}
-              {/* Date & Performance */}
-              {saleDate && (
-                <span className="bg-white/[0.04] text-zinc-400 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                  {saleDate}
-                </span>
-              )}
-              {daysOnMarket !== undefined && (
-                <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                  {daysOnMarket === 0 ? 'SAME DAY' : `${daysOnMarket}D`}
-                </span>
-              )}
-            </>
-          )}
-
-          {/* Part Sale Pills */}
-          {isPartSale && (
-            <>
-              {/* Financials */}
-              <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                COST: {formatCurrency(partsCost)}
-              </span>
-              <span className="bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                SOLD: {formatCurrency(salePrice)}
-              </span>
-              <span className={`${getProfitBadgeClasses(netProfit)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                PROFIT: {formatSignedCurrency(netProfit)} {profitMarginPercent !== 0 ? `(${profitMarginPercent.toFixed(0)}%)` : ''}
-              </span>
-              {/* Category */}
-              {matchedComp?.category && (
-                <span className={`${getCategoryBadgeColor(matchedComp.category)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                  {matchedComp.category}
-                </span>
-              )}
-              {tx.bulkSaleGroupId && (
-                <span className="bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                  BULK SALE
-                </span>
-              )}
-              {/* Meta */}
-              {platform && (
-                <span className={`${getPlatformBadgeColor(platform)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center gap-1 justify-center whitespace-nowrap`}>
-                  <Store className="w-2.5 h-2.5" /> {normalizePlatform(platform)}
-                </span>
-              )}
-              {buyerName && (
-                <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center gap-1 justify-center whitespace-nowrap">
-                  <User className="w-2.5 h-2.5" /> {buyerName}
-                </span>
-              )}
-              {paymentMethod && (
-                <span className={`${getPaymentMethodBadgeColor(paymentMethod)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                  {paymentMethod}
-                </span>
-              )}
-              {/* Date */}
-              <span className="bg-white/[0.04] text-zinc-400 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                {tx.dateSortable || tx.timestamp}
-              </span>
-            </>
-          )}
-
-          {/* Purchase Pills */}
-          {isPurchase && (
-            <>
-              {/* Financials */}
-              <span className="bg-rose-500/15 text-rose-400 border border-rose-500/40 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                PAID: {formatCurrency(tx.totalAmount)}
-              </span>
-              {/* Item Details */}
-              {matchedComp?.category && (
-                <span className={`${getCategoryBadgeColor(matchedComp.category)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                  {matchedComp.category}
-                </span>
-              )}
-              {isBulkPurchase ? (
-                <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                  QTY: {tx.quantity || tx.itemCount || tx.detailsList?.length || 1} UNITS
-                </span>
-              ) : tx.quantity && tx.quantity > 1 ? (
-                <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                  QTY: {tx.quantity}X ({formatCurrency(tx.totalAmount / tx.quantity)}/ea)
-                </span>
-              ) : null}
-              {conditionStr && (
-                <span className={`px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap ${getConditionColor(conditionStr)}`}>
-                  {conditionStr.toUpperCase()}
-                </span>
-              )}
-              {/* Meta */}
-              {!hideSupplierNames && platform && (
-                <span className={`${getPlatformBadgeColor(platform)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center gap-1 justify-center whitespace-nowrap`}>
-                  <Store className="w-2.5 h-2.5" /> {normalizePlatform(platform)}
-                </span>
-              )}
-              {paymentMethod && (
-                <span className={`${getPaymentMethodBadgeColor(paymentMethod)} px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                  {paymentMethod}
-                </span>
-              )}
-              {/* Date */}
-              <span className="bg-white/[0.04] text-zinc-400 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                {tx.dateSortable || tx.timestamp}
-              </span>
-            </>
-          )}
-
-          {/* Build Allocation Pills */}
-          {isBuildAllocation && (
-            <>
-              {/* Financials */}
-              <span className="bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                BUILD COST: {formatCurrency(tx.totalAmount)}
-              </span>
-              {/* Item details */}
-              {tx.itemCount && (
-                <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                  PARTS: {tx.itemCount} ITEMS
-                </span>
-              )}
-              {/* Date */}
-              <span className="bg-white/[0.04] text-zinc-400 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                {tx.dateSortable || tx.timestamp}
-              </span>
-            </>
-          )}
-        </div>
+        <span className="mt-0.5 shrink-0 text-zinc-500">
+          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </span>
       </div>
-    </div>
+    </button>
   );
 };

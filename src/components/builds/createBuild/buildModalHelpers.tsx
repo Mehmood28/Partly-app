@@ -14,24 +14,25 @@ import { getAllBatchesWithRemaining } from '../../../utils/helpers';
 export { generateBuildTitleFromParts } from '../../../utils/buildTitle';
 
 export const getCategoryIcon = (cat: ComponentCategory) => {
+  const iconClass = 'w-3.5 h-3.5 text-[#67E8F9]';
   switch (cat) {
     case 'CPU':
-      return <Cpu className="w-3.5 h-3.5 text-amber-400" />;
+      return <Cpu className={iconClass} />;
     case 'GPU':
-      return <Monitor className="w-3.5 h-3.5 text-cyan-300" />;
+      return <Monitor className={iconClass} />;
     case 'RAM':
-      return <HardDrive className="w-3.5 h-3.5 text-emerald-400" />;
+      return <HardDrive className={iconClass} />;
     case 'Storage':
-      return <Database className="w-3.5 h-3.5 text-blue-400" />;
+      return <Database className={iconClass} />;
     case 'Motherboard':
-      return <CircuitBoard className="w-3.5 h-3.5 text-pink-400" />;
+      return <CircuitBoard className={iconClass} />;
     case 'PSU':
-      return <Zap className="w-3.5 h-3.5 text-yellow-400" />;
+      return <Zap className={iconClass} />;
     case 'Case':
-      return <Box className="w-3.5 h-3.5 text-orange-400" />;
+      return <Box className={iconClass} />;
     case 'Cooling':
     case 'Fans':
-      return <Fan className="w-3.5 h-3.5 text-cyan-400" />;
+      return <Fan className={iconClass} />;
     default:
       return <Package className="w-3.5 h-3.5 text-zinc-400" />;
   }

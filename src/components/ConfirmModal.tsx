@@ -58,8 +58,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       );
     }
     return (
-      <div className="w-8 h-8 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shrink-0">
-        <AlertTriangle className="w-4 h-4 text-red-400" />
+      <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center shrink-0">
+        <AlertTriangle className="w-4 h-4 text-rose-400" />
       </div>
     );
   };
@@ -71,7 +71,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     if (variant === 'amber' || variant === 'violet') {
       return 'bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-[#A3FF12]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]';
     }
-    return 'bg-red-500 hover:bg-red-600 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500';
+    return 'bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-rose-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500';
   };
 
   const isHiddenByParent = Boolean(anchorRef.current?.parentElement?.closest('.hidden'));

@@ -332,7 +332,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                       <button type="button" onClick={() => handleEditPurchase(ph)} className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors" title="Edit purchase">
                         <Edit className="w-3.5 h-3.5" />
                       </button>
-                      <button type="button" onClick={() => handleDeletePurchase(ph.id)} className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-white/[0.06] rounded-lg transition-colors" title="Delete purchase">
+                      <button type="button" onClick={() => handleDeletePurchase(ph.id)} className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-white/[0.06] rounded-lg transition-colors" title="Delete purchase">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>

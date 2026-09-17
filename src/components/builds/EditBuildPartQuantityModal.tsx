@@ -107,7 +107,7 @@ export const EditBuildPartQuantityModal: React.FC<EditBuildPartQuantityModalProp
         </div>
 
         {build.status === 'Sold' && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
+          <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-[11px] leading-relaxed text-rose-200">
             This sold-build correction will update loose stock, recorded build cost, and sale profit together.
           </div>
         )}

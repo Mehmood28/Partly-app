@@ -85,7 +85,7 @@ export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({
       }
       
       const totalCost = buildParts.reduce((sum: number, p) => sum + p.avgCost, 0);
-      let estimatedPrice = totalCost * 1.35; // 35% margin
+      let estimatedPrice = totalCost * 1.35; // Initial pricing seed; displayed percentage is revenue-based margin.
       let projectedProfit = estimatedPrice - totalCost;
       if (projectedProfit < 250) {
         estimatedPrice = totalCost + 250;
@@ -158,7 +158,7 @@ export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-5 pb-2">
       {/* Monthly Profit Goal */}
       <GoalBar />
       

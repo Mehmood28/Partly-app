@@ -215,28 +215,14 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   };
 
   return (
-    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl relative flex flex-col transition-all duration-200 overflow-hidden shadow-sm group">
+    <div className="bg-[#0F141C] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-lg relative flex flex-col transition-all duration-200 overflow-hidden group">
       {/* Collapsed Header - Always Visible */}
       <div 
-        className="p-3 cursor-pointer hover:bg-white/[0.02] transition-colors flex items-center justify-between"
+        className="p-3 cursor-pointer hover:bg-white/[0.02] transition-colors flex items-start gap-2"
         onClick={handleToggle}
       >
-        {/* Left Side: Thumbnail & Title */}
-        <div className="flex flex-1 items-center gap-3 min-w-0">
-          {/* Thumbnail */}
-          {!isExpanded && (
-            build.imageUrl ? (
-              <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-white/[0.08]">
-                <img src={build.imageUrl} alt={build.name} className="w-full h-full object-cover" />
-              </div>
-            ) : (
-              <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-white/[0.08] bg-[#121722] flex items-center justify-center">
-                <Cpu className="w-5 h-5 text-[#A3FF12]" />
-              </div>
-            )
-          )}
-          
-          <div className="flex-1 space-y-1 min-w-0">
+        <div className="flex-1 min-w-0">
+          <div className="space-y-1 min-w-0">
             <div className="flex items-start justify-between gap-1.5">
               <div className="flex items-center gap-1.5 flex-wrap min-w-0 pr-1">
                 <h3 className="font-semibold text-zinc-100 text-xs sm:text-sm leading-tight break-words" title={build.name}>
@@ -253,12 +239,12 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 <span
                   className={`text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border shrink-0 mt-0.5 leading-none ${
                     isSold
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                       : isListed
-                      ? 'bg-[#A3FF12]/15 text-[#67E8F9] border-[#A3FF12]/30'
+                      ? 'bg-[#A3FF12]/10 text-[#A3FF12] border-[#A3FF12]/30'
                       : build.status === 'Trade-In Processing'
-                      ? 'bg-cyan-500/10 text-cyan-300 border-cyan-400/30'
-                      : 'bg-blue-500/15 text-blue-400 border-blue-500/40'
+                      ? 'bg-[#67E8F9]/10 text-[#A5F3FC] border-[#67E8F9]/30'
+                      : 'bg-[#67E8F9]/10 text-[#A5F3FC] border-[#67E8F9]/30'
                   }`}
                 >
                   {build.status === 'Listed for Sale'
@@ -293,12 +279,30 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     SOLD <span className="font-medium text-zinc-300">{formattedSoldDate}</span>
                   </div>
                 )}
+                {!isSold && (
+                  <div className="text-zinc-600">
+                    {build.parts.length} PART{build.parts.length === 1 ? '' : 'S'}
+                    <span> · BUILT {formatReadableDate(build.builtDate || build.completionDate || build.createdDate) || build.builtDate || build.completionDate || build.createdDate}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        <div className="pl-2 shrink-0">
+        {!isExpanded && (
+          build.imageUrl ? (
+            <div className="w-20 h-16 rounded-md overflow-hidden shrink-0 border border-white/[0.08] bg-[#090B10]">
+              <img src={build.imageUrl} alt={build.name} className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-12 h-12 rounded-md shrink-0 border border-white/[0.08] bg-[#10141E] flex items-center justify-center">
+              <Cpu className="w-4 h-4 text-[#A3FF12]" />
+            </div>
+          )
+        )}
+
+        <div className="pt-0.5 shrink-0">
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
           ) : (
@@ -309,23 +313,29 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
 
       {/* Expanded Details */}
       {isExpanded && (
-        <div className="p-3 pt-0 space-y-3 border-t border-white/[0.08] mt-1 bg-[#121722]">
+        <div className="p-3 pt-0 space-y-3 border-t border-white/[0.08] mt-1 bg-[#10151E]">
           {/* Build identity stays compact: finance at left, the existing build image at right. */}
           <div className={`grid gap-3 pt-3 ${build.imageUrl ? 'grid-cols-[minmax(0,1fr)_7.5rem] sm:grid-cols-[minmax(0,1fr)_10rem]' : 'grid-cols-1'}`}>
             <div className="min-w-0">
-              <div className="grid grid-cols-3 divide-x divide-white/[0.08] border-y border-white/[0.08]">
-                <div className="py-2 pr-2">
-                  <div className="text-[9px] uppercase tracking-wider text-zinc-500">Build Cost</div>
-                  <div className="mt-0.5 font-mono text-xs font-bold text-zinc-100">{formatCurrency(partsCost)}</div>
+              <div className="divide-y divide-white/[0.07] border-y border-white/[0.08]">
+                <div className="flex items-center justify-between gap-3 py-1.5">
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Build Cost</span>
+                  <span className="font-mono text-[11px] font-bold text-zinc-100">{formatCurrency(partsCost)}</span>
                 </div>
-                <div className="px-2 py-2">
-                  <div className="text-[9px] uppercase tracking-wider text-zinc-500">{isSold ? 'Sale Price' : 'Target'}</div>
-                  <div className="mt-0.5 font-mono text-xs font-bold text-[#A5F3FC]">{build.salePrice ? formatCurrency(build.salePrice) : '—'}</div>
+                <div className="flex items-center justify-between gap-3 py-1.5">
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{isSold ? 'Sale Price' : 'Target'}</span>
+                  <span className="font-mono text-[11px] font-bold text-[#A5F3FC]">{build.salePrice ? formatCurrency(build.salePrice) : '—'}</span>
                 </div>
-                <div className="py-2 pl-2">
-                  <div className="text-[9px] uppercase tracking-wider text-zinc-500">{isSold ? 'Net Profit' : 'Est. Profit'}</div>
-                  <div className={`mt-0.5 font-mono text-xs font-bold ${getProfitTextColor((build.salePrice || 0) - partsCost)}`}>{build.salePrice ? formatSignedCurrency((build.salePrice || 0) - partsCost) : '—'}</div>
+                <div className="flex items-center justify-between gap-3 py-1.5">
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{isSold ? 'Net Profit' : 'Est. Profit'}</span>
+                  <span className={`font-mono text-[11px] font-bold ${getProfitTextColor((build.salePrice || 0) - partsCost)}`}>{build.salePrice ? formatSignedCurrency((build.salePrice || 0) - partsCost) : '—'}</span>
                 </div>
+                {isSold && (
+                  <div className="flex items-center justify-between gap-3 py-1.5">
+                    <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Profit Margin</span>
+                    <span className={`font-mono text-[11px] font-bold ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</span>
+                  </div>
+                )}
               </div>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] text-zinc-500">
                 {isSold && formattedSoldDate ? <span>Sold {formattedSoldDate}</span> : <span>{build.parts.length} allocated parts</span>}
@@ -551,9 +561,6 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           {isSold && (
             <SoldBuildTransactionPanel
               build={build}
-              partsCost={partsCost}
-              profit={profit}
-              profitMarginPercent={profitMarginPercent}
               transaction={exactTransaction}
             />
           )}
@@ -567,7 +574,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             )}
 
             {isAcquired && acquiredBreakdown.length > 0 && (
-              <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#0D1118]">
+              <div className="overflow-hidden border-y border-white/[0.08] bg-[#0D1118]">
                 <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] px-3 py-2.5">
                   <span className="text-[10px] font-mono font-semibold text-zinc-400 uppercase tracking-wider">
                     {isPurchased ? 'PURCHASED PC' : 'TRADE-IN'} COMPONENTS · {acquiredBreakdown.length} ITEMS
@@ -602,7 +609,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               </div>
             )}
 
-            <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#0D1118]">
+            <div className="overflow-hidden border-y border-white/[0.08] bg-[#0D1118]">
               <div className="flex items-center justify-between gap-3 border-b border-[#A3FF12]/25 px-3 py-2.5">
                 <span className="text-[10px] font-mono font-semibold text-zinc-400 uppercase tracking-wider">
                   ALLOCATED PARTS · {build.parts.length} ITEMS
@@ -719,7 +726,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                         },
                       });
                     }}
-                    className="bg-blue-500/15 border border-blue-500/30 text-blue-400 hover:bg-blue-500/25 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl text-xs font-medium"
+                    className="bg-[#67E8F9]/10 border border-[#67E8F9]/30 text-[#A5F3FC] hover:bg-[#67E8F9]/15 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg text-xs font-medium"
                     title="Mark build as Pending Sale"
                   >
                     <Clock className="w-3.5 h-3.5" /> Mark Pending

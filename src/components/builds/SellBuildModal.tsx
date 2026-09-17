@@ -380,7 +380,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                 <ArrowRightLeft className="w-4 h-4 text-[#67E8F9]" />
                 <span className="text-xs font-semibold text-zinc-200">Accept PC Trade-In</span>
                 {isTradeInLocked && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/25">
                     <Lock className="w-3 h-3" /> Locked
                   </span>
                 )}
@@ -402,7 +402,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
             </div>
 
             {isTradeInLocked && (
-              <div className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 leading-relaxed">
+              <div className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/25 rounded-lg p-2 leading-relaxed">
                 {tradeInEditState.lockReason || 'This trade-in PC has downstream activity (allocated upgrade parts, parts extracted, or listed/sold) and cannot be removed or have its trade-in valuation changed.'}
               </div>
             )}
@@ -516,7 +516,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
                   <button
                     type="button"
                     onClick={() => setImageUrl('')}
-                    className="absolute top-0.5 right-0.5 bg-black/80 rounded-md p-1 text-zinc-300 hover:text-red-400 transition-colors"
+                    className="absolute top-0.5 right-0.5 bg-black/80 rounded-md p-1 text-zinc-300 hover:text-rose-400 transition-colors"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>

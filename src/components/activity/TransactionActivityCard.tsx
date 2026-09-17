@@ -246,7 +246,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
 
   return (
     <div 
-      className="bg-[#0D1118] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl transition-all duration-200 overflow-hidden shadow-sm group flex flex-col"
+      className="bg-[#0F141C] border-b border-white/[0.08] transition-colors overflow-hidden group flex flex-col first:border-t"
     >
       {/* Unexpanded (Collapsed) Header */}
       <TransactionCardHeader
@@ -280,7 +280,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
 
       {/* Expanded Details Section */}
       {isExpanded && (
-        <div className="p-3.5 border-t border-white/[0.08] space-y-3.5 bg-[#121722]">
+        <div className="p-3 border-t border-white/[0.08] space-y-3 bg-[#10151E]">
           {/* Action Buttons Row - Only for real sales / purchases */}
           {!isExchange && (
             <TransactionCardActions

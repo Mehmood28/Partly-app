@@ -17,9 +17,9 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
   customError,
 }) => {
   return (
-    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#A3FF12]/40 transition-all duration-300 rounded-xl p-3 relative overflow-hidden shadow-sm">
+    <section className="border-t border-white/[0.08] pt-4 relative">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
+        <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-300 flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-[#A3FF12]" />
           Custom AI Build Request
         </h3>
@@ -34,7 +34,7 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
             onChange={(e) => setCustomPrompt(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !isGeneratingCustomBuild && onGenerate()}
             placeholder="e.g. 'White AM5 build with RTX 4080', 'Budget esports rig under $800'..."
-            className="w-full h-9 box-border bg-[#121722] border border-white/[0.08] rounded-lg pl-9 pr-9 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-all placeholder-zinc-500"
+            className="w-full h-11 box-border bg-[#10141E] border border-white/[0.08] rounded-lg pl-9 pr-9 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-all placeholder-zinc-500"
           />
           {customPrompt && (
             <button
@@ -50,7 +50,7 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
         <button
           onClick={onGenerate}
           disabled={!customPrompt.trim() || isGeneratingCustomBuild}
-          className="h-9 bg-[#A3FF12] hover:bg-[#C2FF5C] disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-2 shrink-0 shadow-sm shadow-[#A3FF12]/20"
+          className="h-11 bg-[#A3FF12] hover:bg-[#C2FF5C] disabled:opacity-50 disabled:cursor-not-allowed text-[#11150C] px-4 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 shrink-0"
         >
           {isGeneratingCustomBuild ? (
             <>
@@ -71,6 +71,6 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
           {customError}
         </div>
       )}
-    </div>
+    </section>
   );
 };

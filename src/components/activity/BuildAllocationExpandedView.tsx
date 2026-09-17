@@ -6,32 +6,28 @@ interface BuildAllocationExpandedViewProps {
   tx: TransactionLogItem;
 }
 
-export const BuildAllocationExpandedView: React.FC<BuildAllocationExpandedViewProps> = ({ tx }) => {
-  return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Total Build Cost</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-[#67E8F9]">{formatCurrency(tx.totalAmount)}</div>
-        </div>
-        <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Total Parts Allocated</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-zinc-200">{tx.itemCount || tx.quantity || 0} components</div>
-        </div>
+export const BuildAllocationExpandedView: React.FC<BuildAllocationExpandedViewProps> = ({ tx }) => (
+  <div className="space-y-3">
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.08]">
+      <div className="bg-[#0D1118] p-2.5">
+        <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Build Cost</div>
+        <div className="mt-0.5 font-mono text-sm font-bold text-[#A5F3FC]">{formatCurrency(tx.totalAmount)}</div>
       </div>
-
-      {tx.detailsList && tx.detailsList.length > 0 && (
-        <div className="space-y-1.5 pt-1">
-          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">Allocated Components</div>
-          <div className="space-y-1">
-            {tx.detailsList.map((d, idx) => (
-              <div key={idx} className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.06] flex items-center justify-between text-xs">
-                <span className="text-zinc-200 break-words">{d}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="bg-[#0D1118] p-2.5">
+        <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Parts Allocated</div>
+        <div className="mt-0.5 font-mono text-sm font-bold text-zinc-200">{tx.itemCount || tx.quantity || 0}</div>
+      </div>
     </div>
-  );
-};
+
+    {tx.detailsList && tx.detailsList.length > 0 && (
+      <section>
+        <div className="border-b border-white/[0.08] pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Allocated components</div>
+        <div className="overflow-hidden rounded-b-lg border-x border-b border-white/[0.08]">
+          {tx.detailsList.map((detail, idx) => (
+            <div key={idx} className="border-b border-white/[0.06] px-2.5 py-2 text-xs leading-snug text-zinc-200 last:border-b-0">{detail}</div>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+);

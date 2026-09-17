@@ -17,14 +17,14 @@ interface SpecItemConfig {
 }
 
 const SPEC_CONFIGS: SpecItemConfig[] = [
-  { category: 'GPU', key: 'GPU', colorClass: 'text-[#67E8F9]', bulletColor: 'bg-[#A3FF12]' },
-  { category: 'CPU', key: 'CPU', colorClass: 'text-blue-400', bulletColor: 'bg-blue-400' },
-  { category: 'Motherboard', key: 'Motherboard', colorClass: 'text-indigo-400', bulletColor: 'bg-indigo-400' },
-  { category: 'RAM', key: 'RAM', colorClass: 'text-emerald-400', bulletColor: 'bg-emerald-400' },
-  { category: 'Cooler', key: 'Cooler', colorClass: 'text-cyan-400', bulletColor: 'bg-cyan-400' },
-  { category: 'Storage', key: 'Storage', colorClass: 'text-teal-400', bulletColor: 'bg-teal-400' },
-  { category: 'PSU', key: 'PSU', colorClass: 'text-violet-400', bulletColor: 'bg-violet-400' },
-  { category: 'Case', key: 'Case', colorClass: 'text-cyan-300', bulletColor: 'bg-purple-400' },
+  { category: 'GPU', key: 'GPU', colorClass: 'text-[#A5F3FC]', bulletColor: 'bg-[#67E8F9]' },
+  { category: 'CPU', key: 'CPU', colorClass: 'text-[#A5F3FC]', bulletColor: 'bg-[#67E8F9]' },
+  { category: 'Motherboard', key: 'Motherboard', colorClass: 'text-[#A5F3FC]', bulletColor: 'bg-[#67E8F9]' },
+  { category: 'RAM', key: 'RAM', colorClass: 'text-[#A5F3FC]', bulletColor: 'bg-[#67E8F9]' },
+  { category: 'Cooling', key: 'Cooler', colorClass: 'text-[#A5F3FC]', bulletColor: 'bg-[#67E8F9]' },
+  { category: 'Storage', key: 'Storage', colorClass: 'text-[#A5F3FC]', bulletColor: 'bg-[#67E8F9]' },
+  { category: 'PSU', key: 'PSU', colorClass: 'text-[#A5F3FC]', bulletColor: 'bg-[#67E8F9]' },
+  { category: 'Case', key: 'Case', colorClass: 'text-[#A5F3FC]', bulletColor: 'bg-[#67E8F9]' },
 ];
 
 export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCardProps>(({ build, components }, ref) => {

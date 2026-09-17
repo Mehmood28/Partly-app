@@ -254,7 +254,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                             onChange={(e) => updateParsedItem(idx, 'category', e.target.value as ComponentCategory)}
                             className="w-full min-w-[110px] bg-[#0D1118] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#A3FF12]"
                           >
-                            {['GPU', 'CPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooling', 'Fans', 'Accessories', 'Other'].map(cat => (
+                            {['GPU', 'CPU', 'Motherboard', 'RAM', 'Cooling', 'Storage', 'PSU', 'Case', 'Fans', 'Accessories', 'Other'].map(cat => (
                               <option key={cat} value={cat}>{cat}</option>
                             ))}
                           </select>
@@ -329,7 +329,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                           <button 
                             type="button"
                             onClick={() => removeParsedItem(idx)} 
-                            className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-white/[0.06] rounded-lg transition-colors"
+                            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-white/[0.06] rounded-lg transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>

@@ -103,7 +103,7 @@ function AppContent() {
         category: item.category,
         specifications: '',
         purchaseHistory: [ph],
-        targetMarketValuePerUnit: (item.unitCost || 0) * 1.5, // default 50% markup
+        targetMarketValuePerUnit: (item.unitCost || 0) * 1.5, // Default market-value estimate.
       };
     });
     

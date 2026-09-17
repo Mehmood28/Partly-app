@@ -1,8 +1,9 @@
 import React from 'react';
 import { Box, Plus, Minus as Dash, Trash2 } from 'lucide-react';
-import { InventoryComponent, PCBuildPart } from '../../../types';
+import { CATEGORIES, InventoryComponent, PCBuildPart } from '../../../types';
 import { formatCurrency } from '../../../utils/helpers';
 import { formatSignedCurrency, getProfitBadgeClasses } from '../../../utils/financialDisplay';
+import { sortByCategory } from '../../../utils/sorting';
 
 interface BuildSelectedPartsListProps {
   selectedParts: PCBuildPart[];
@@ -12,8 +13,6 @@ interface BuildSelectedPartsListProps {
   onUpdatePartQty: (componentId: string, entryId: string | undefined, delta: number) => void;
   onRemovePart: (componentId: string, entryId?: string) => void;
 }
-
-const CATEGORY_TAGS = ['GPU', 'CPU', 'Motherboard', 'RAM', 'Cooling', 'Storage', 'PSU', 'Case', 'Fans'];
 
 export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
   selectedParts,
@@ -39,12 +38,12 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
               Cost: {formatCurrency(totalBuildCost)}
             </span>
             <span className={`${getProfitBadgeClasses(targetPrice > 0 ? profit : 0)} border whitespace-nowrap px-2 py-0.5 rounded-lg text-xs font-mono font-semibold leading-none inline-flex items-center justify-center`}>
-              Est Profit: {formatSignedCurrency(targetPrice > 0 ? profit : 0)} {targetPrice > 0 ? `(${Math.round(margin)}%)` : ''}
+              Est Profit: {formatSignedCurrency(targetPrice > 0 ? profit : 0)} {targetPrice > 0 ? `· Margin ${Math.round(margin)}%` : ''}
             </span>
           </div>
         </div>
         <div className="flex flex-wrap gap-1">
-          {CATEGORY_TAGS.map((cat) => {
+          {CATEGORIES.map((cat) => {
             const isSelected = selectedParts.some((p) => p.category === cat);
             return (
               <span
@@ -68,7 +67,7 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
         </div>
       ) : (
         <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-          {selectedParts.map((part, idx) => {
+          {sortByCategory(selectedParts).map((part, idx) => {
             const comp = components.find((c) => c.id === part.componentId);
             let purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
             if (!purchaseEntry && comp?.purchaseHistory?.length) {

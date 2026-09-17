@@ -233,12 +233,12 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
   }, [statusFilter, sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
 
   return (
-    <div className="space-y-2">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0D1118] border border-white/[0.08] p-3 rounded-xl shadow-sm">
+    <div className="space-y-4">
+      {/* Build workbench */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12]">
+            <div className="w-6 h-6 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12]">
               <Hammer className="w-3.5 h-3.5" />
             </div>
             PC BUILDS
@@ -251,21 +251,21 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
           <button
             onClick={onOpenBuyPC}
-            className="bg-[#121722] hover:bg-white/[0.06] border border-[#A3FF12]/30 text-[#67E8F9] font-semibold shadow-sm text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
+            className="min-h-10 bg-[#10141E] hover:bg-white/[0.06] border border-[#67E8F9]/30 text-[#67E8F9] font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shrink-0"
           >
             <ShoppingCart className="w-3.5 h-3.5" /> Buy PC
           </button>
           <button
             onClick={() => onOpenAddBuild()}
-            className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold shadow-sm text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
+            className="min-h-10 bg-[#A3FF12] hover:bg-[#C2FF5C] text-[#11150C] font-bold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shrink-0"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Create New PC Build
           </button>
         </div>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 bg-[#0D1118] border border-white/[0.08] p-2.5 rounded-xl shadow-sm">
+      {/* Filter controls */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 border-b border-white/[0.08] pb-3">
         {/* Status Filter Tabs: Available, Pending, Sold */}
         <div className="flex items-center gap-1.5 flex-nowrap sm:flex-wrap border-b border-white/[0.10] pb-0 md:pb-0 text-xs">
           <button 
@@ -330,7 +330,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
               placeholder="Search builds..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full max-w-full box-border h-9 pl-9 pr-8 bg-[#121722] border border-white/[0.08] rounded-xl py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
+              className="w-full max-w-full box-border h-10 pl-9 pr-8 bg-[#10141E] border border-white/[0.08] rounded-lg py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
             />
             {searchQuery && (
               <button
@@ -363,7 +363,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       ) : !isVirtualized ? (
         <div className="space-y-1.5 pr-1">
           {buildRows.map((rowBuilds, rowIndex) => (
-            <div key={rowBuilds.map(b => b.id).join('-') || rowIndex} className="grid grid-cols-1 lg:grid-cols-2 gap-1.5">
+            <div key={rowBuilds.map(b => b.id).join('-') || rowIndex} className={`grid grid-cols-1 gap-1.5 ${rowBuilds.some((build) => build.id === expandedBuildId) ? '' : 'lg:grid-cols-2'}`}>
               {rowBuilds.map((build) => (
                 <BuildCard
                   isExpanded={expandedBuildId === build.id}
@@ -420,7 +420,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
                     paddingBottom: '6px',
                   }}
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5">
+                  <div className={`grid grid-cols-1 gap-1.5 ${rowBuilds.some((build) => build.id === expandedBuildId) ? '' : 'lg:grid-cols-2'}`}>
                     {rowBuilds.map((build) => (
                       <BuildCard
                         isExpanded={expandedBuildId === build.id}

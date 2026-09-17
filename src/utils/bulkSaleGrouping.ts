@@ -22,7 +22,7 @@ export interface BulkPartSaleGroupDisplayItem {
   totalCost: number;
   totalRevenue: number;
   totalProfit: number;
-  profitPercentage: number;
+  profitMarginPercent: number;
   saleDate: string;
   platform?: string;
   paymentMethod?: string;
@@ -168,7 +168,7 @@ export function createBulkGroupDisplayItem(
   const buyerName = firstTx?.buyerName;
   const notes = firstTx?.notes;
 
-  const profitPercentage = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
+  const profitMarginPercent = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
   return {
     type: 'bulk-group',
@@ -180,7 +180,7 @@ export function createBulkGroupDisplayItem(
     totalCost,
     totalRevenue,
     totalProfit,
-    profitPercentage,
+    profitMarginPercent,
     saleDate,
     platform,
     paymentMethod,

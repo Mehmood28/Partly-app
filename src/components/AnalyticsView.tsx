@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GoalBar } from './GoalBar';
 import { CustomSelect } from './ui/CustomSelect';
 import { useInventory } from '../context/InventoryContext';
+import { CATEGORIES } from '../types';
 import {
   calculateUnassignedValueStrict,
   calculateUnassignedQuantityStrict,
@@ -167,19 +168,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   // In-stock loose inventory value by category
   const categoryData = React.useMemo(() => {
     const precomputedMap = precomputeAssignedBatches(state.builds);
-    return [
-      'GPU',
-      'RAM',
-      'CPU',
-      'Storage',
-      'Motherboard',
-      'PSU',
-      'Case',
-      'Cooling',
-      'Fans',
-      'Accessories',
-      'Other',
-    ]
+    return CATEGORIES
       .map((cat) => {
         const items = state.components.filter((c) => c.category === cat);
         const value = items.reduce((sum, c) => sum + calculateUnassignedValueStrict(c, state.builds, precomputedMap), 0);
@@ -194,14 +183,14 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   }, [state.components, state.builds]);
 
   return (
-    <div className="space-y-3 w-full">
+    <div className="space-y-5 w-full">
       <GoalBar />
 
-      {/* Top Controls Banner */}
-      <div className="bg-[#0D1118] border border-white/[0.08] p-3 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+      {/* Reporting controls */}
+      <section className="border-b border-white/[0.08] pb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12]">
+            <div className="w-6 h-6 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12]">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
             PC SALES & PORTFOLIO ANALYTICS
@@ -234,17 +223,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Scope Explainer Helper Text */}
       <p className="text-[11px] text-zinc-400 px-1">
         Totals include PC and loose-part sales. Per-PC averages and Profit Margin use PC sales only; Profit Margin = PC profit ÷ PC revenue.
       </p>
 
-      {/* Performance Cards */}
+      {/* Month and annual ledgers */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Selected Month Performance Card */}
-        <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 relative overflow-hidden shadow-sm">
+        <section className="border-y border-white/[0.08] py-3.5">
           <div className="flex items-center justify-between mb-3 relative z-10 flex-wrap gap-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5 text-[#A3FF12]" /> {selectedMonthName} {selectedYear} Performance
@@ -258,36 +247,36 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 relative z-10">
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+          <div className="grid grid-cols-2 gap-px bg-white/[0.08] border border-white/[0.08] rounded-lg overflow-hidden relative z-10">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Revenue</p>
               <p className="text-sm sm:text-base font-bold font-mono text-[#67E8F9] mt-0.5 leading-tight">{formatCurrency(selectedMonthRevenue)}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Cost</p>
               <p className="text-sm sm:text-base font-bold font-mono text-zinc-200 mt-0.5 leading-tight">{formatCurrency(selectedMonthCost)}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Net Profit</p>
               <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(selectedMonthProfit)}`}>{formatSignedCurrency(selectedMonthProfit)}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">PCs Sold</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-blue-400 mt-0.5 leading-tight">{selectedMonthPcsSold}</p>
+              <p className="text-sm sm:text-base font-bold font-mono text-[#67E8F9] mt-0.5 leading-tight">{selectedMonthPcsSold}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Avg Profit / PC</p>
               <p className="text-sm sm:text-base font-bold font-mono text-zinc-100 mt-0.5 leading-tight">{formatCurrency(selectedMonthAvgProfit)}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Profit Margin</p>
               <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(selectedMonthProfitMargin)}`}>{selectedMonthProfitMargin.toFixed(1)}%</p>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Yearly Stats Card */}
-        <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 relative overflow-hidden shadow-sm">
+        <section className="border-y border-white/[0.08] py-3.5">
           <div className="flex items-center justify-between mb-3 relative z-10 flex-wrap gap-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
               <BarChart2 className="w-3.5 h-3.5 text-[#A3FF12]" /> {selectedYear} Full Year Totals
@@ -297,38 +286,38 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 relative z-10">
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+          <div className="grid grid-cols-2 gap-px bg-white/[0.08] border border-white/[0.08] rounded-lg overflow-hidden relative z-10">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Revenue</p>
               <p className="text-sm sm:text-base font-bold font-mono text-[#67E8F9] mt-0.5 leading-tight">{formatCurrency(totalYearlyRevenue)}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Cost</p>
               <p className="text-sm sm:text-base font-bold font-mono text-zinc-200 mt-0.5 leading-tight">{formatCurrency(totalYearlyCost)}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Net Profit</p>
               <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(totalYearlyProfit)}`}>{formatSignedCurrency(totalYearlyProfit)}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total PCs Sold</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-blue-400 mt-0.5 leading-tight">{totalYearlyPcsSold}</p>
+              <p className="text-sm sm:text-base font-bold font-mono text-[#67E8F9] mt-0.5 leading-tight">{totalYearlyPcsSold}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Avg Profit / PC</p>
               <p className="text-sm sm:text-base font-bold font-mono text-zinc-100 mt-0.5 leading-tight">{formatCurrency(avgYearlyProfitPerBuild)}</p>
             </div>
-            <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
+            <div className="p-3 bg-[#0F141C] flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Profit Margin</p>
               <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(avgYearlyProfitMargin)}`}>{avgYearlyProfitMargin.toFixed(1)}%</p>
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
       {/* Monthly Sales Tracking Spreadsheet Table */}
-      <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl overflow-hidden shadow-sm">
-        <div className="bg-[#121722] px-3.5 py-2.5 border-b border-white/[0.08] flex items-center justify-between">
+      <section className="border border-white/[0.08] rounded-lg overflow-hidden">
+        <div className="px-3.5 py-2.5 border-b border-white/[0.08] flex items-center justify-between">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
               <PackageCheck className="w-3.5 h-3.5 text-[#A3FF12]" /> Sales Tracking — {selectedYear}
@@ -346,7 +335,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <th className="py-2.5 px-3 w-[28%] border-r border-white/[0.06]">Month</th>
                 <th className="py-2.5 px-3 w-[24%] border-r border-white/[0.06]">Revenue</th>
                 <th className="py-2.5 px-3 w-[24%] border-r border-white/[0.06] text-emerald-400">Profit</th>
-                <th className="py-2.5 px-3 w-[24%] text-blue-400">PCs Sold</th>
+                <th className="py-2.5 px-3 w-[24%] text-[#67E8F9]">PCs Sold</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04] font-mono text-xs">
@@ -392,7 +381,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                     </td>
 
                     {/* PCs Sold Cell */}
-                    <td className="py-2 px-3 text-blue-400 font-mono font-medium text-center sm:text-left">
+                    <td className="py-2 px-3 text-[#67E8F9] font-mono font-medium text-center sm:text-left">
                       {row.pcsSold}
                     </td>
                   </tr>
@@ -411,19 +400,19 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <td className={`py-2.5 px-3 border-r border-white/[0.06] ${getProfitTextColor(totalYearlyProfit)}`}>
                   {formatSignedCurrency(totalYearlyProfit)}
                 </td>
-                <td className="py-2.5 px-3 text-blue-400 text-center sm:text-left">
+                <td className="py-2.5 px-3 text-[#67E8F9] text-center sm:text-left">
                   {totalYearlyPcsSold}
                 </td>
               </tr>
             </tfoot>
           </table>
         </div>
-      </div>
+      </section>
 
       {/* Visual Analytics Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Monthly Revenue & Profit Chart */}
-        <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 space-y-3 shadow-sm">
+        <section className="border-y border-white/[0.08] py-3.5 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
               <TrendingUp className="w-3.5 h-3.5 text-[#A3FF12]" /> {selectedYear} Monthly Total Revenue & Profit
@@ -462,18 +451,18 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       name,
                     ]}
                   />
-                  <Bar dataKey="revenue" fill="#A3FF12" name="Revenue" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="profit" fill="#10b981" name="Profit" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="#67E8F9" name="Revenue" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="profit" fill="#A3FF12" name="Profit" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full w-full" />
             )}
           </div>
-        </div>
+        </section>
 
         {/* Inventory Value by Category Bar Chart */}
-        <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 space-y-3 shadow-sm">
+        <section className="border-y border-white/[0.08] py-3.5 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
               <PieIcon className="w-3.5 h-3.5 text-[#A3FF12]" /> Inventory Valuation by Category
@@ -507,17 +496,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                     }}
                     formatter={(value: number) => [formatCurrency(value), 'Inventory Value']}
                   />
-                  <Bar dataKey="value" fill="#38bdf8" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="value" fill="#67E8F9" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full w-full" />
             )}
           </div>
-        </div>
+        </section>
 
         {/* PC Profit Margin Trend Line Chart */}
-        <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 space-y-3 lg:col-span-2 shadow-sm">
+        <section className="border-y border-white/[0.08] py-3.5 space-y-3 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
               <TrendingUp className="w-3.5 h-3.5 text-[#A3FF12]" /> PC Profit Margin Trend
@@ -561,7 +550,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <div className="h-full w-full" />
             )}
           </div>
-        </div>
+        </section>
       </div>
 
     </div>

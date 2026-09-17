@@ -33,7 +33,7 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
         {!isManagedViaBuilds && (
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(tx); }}
-            className="bg-neutral-900 border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+            className="bg-[#0D1118] border border-white/[0.08] text-zinc-200 hover:border-[#67E8F9]/35 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
             title="Edit Log Record"
           >
             <Pencil className="w-3.5 h-3.5" /> Edit Record
@@ -42,7 +42,7 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
         {(isPCSale || isPartSale) && (
           <button
             onClick={onDownloadInvoice}
-            className="bg-neutral-900 border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+            className="bg-[#0D1118] border border-white/[0.08] text-zinc-200 hover:border-[#67E8F9]/35 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
             title="Download Invoice PDF"
           >
             <FileText className="w-3.5 h-3.5" /> Invoice PDF
@@ -56,7 +56,7 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
         {isPartSale && tx.bulkSaleGroupId && onRelistBulkSale ? (
           <button
             onClick={(e) => { e.stopPropagation(); onRelistBulkSale(); }}
-            className="bg-indigo-950/40 border border-indigo-500/40 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-400/60 transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+            className="bg-[#67E8F9]/[0.06] border border-[#67E8F9]/25 text-[#A5F3FC] hover:bg-[#67E8F9]/10 transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
             title="Relist entire bulk sale back into stock"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Relist Entire Bulk Sale

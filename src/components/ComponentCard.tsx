@@ -73,11 +73,11 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const categoryPresentation = getCategoryPresentation(component.category);
 
   const getCardBorder = () => {
-    return 'border-white/[0.08] hover:border-[#A3FF12]/40 shadow-sm';
+    return 'border-white/[0.08] hover:border-[#A3FF12]/40';
   };
 
   return (
-    <div className={`bg-[#0D1118] border rounded-xl overflow-hidden transition-all duration-200 ${getCardBorder()}`} style={{ contain: 'content', willChange: 'transform' }}>
+    <div className={`bg-[#0F141C] border-b first:border-t overflow-hidden transition-colors ${getCardBorder()}`} style={{ contain: 'content', willChange: 'transform' }}>
       {/* Collapsed Header Bar - Clickable for mobile */}
       <div 
         className="relative cursor-pointer px-3 py-2.5 pr-4"
@@ -111,7 +111,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
       {/* Expanded Content Section */}
       {isExpanded && (
-        <div className="border-t border-white/[0.08] bg-[#121722] p-3 space-y-3">
+        <div className="border-t border-white/[0.08] bg-[#10151E] p-3 space-y-3">
           
           {/* Expanded Action Toolbar */}
           {!readonlyMode && (
@@ -166,7 +166,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
               if (component.purchaseHistory.length === 0) {
                 return (
-                  <div className="text-xs text-zinc-500 italic p-3 bg-[#0D1118] rounded-xl border border-white/[0.06]">
+                  <div className="text-xs text-zinc-500 italic p-3 bg-[#0D1118] border-y border-white/[0.06]">
                     No purchase entries logged yet. Click "Add Stock" above.
                   </div>
                 );
@@ -174,14 +174,14 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
               if (visibleBatches.length === 0) {
                 return (
-                  <div className="text-xs text-zinc-500 italic p-3 bg-[#0D1118] rounded-xl border border-white/[0.06]">
+                  <div className="text-xs text-zinc-500 italic p-3 bg-[#0D1118] border-y border-white/[0.06]">
                     All batches for this part are currently assigned or sold.
                   </div>
                 );
               }
 
               return (
-                <div className="overflow-hidden rounded-xl border border-white/[0.08]">
+                <div className="overflow-hidden border-y border-white/[0.08]">
                   {visibleBatches.map((batch) => {
                     const entry = batch.entry;
                     const entryUnitPrice = batch.unitCost;

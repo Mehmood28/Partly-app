@@ -98,11 +98,10 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
   }, [sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
 
   return (
-    <div className="space-y-2">
-      {/* Unified Sold Parts Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-[#0D1118] border border-white/[0.08] p-3 rounded-xl shadow-sm">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/[0.08] pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12] shrink-0">
+          <div className="w-8 h-8 rounded-md bg-[#A3FF12]/10 border border-[#A3FF12]/25 flex items-center justify-center text-[#A3FF12] shrink-0">
             <Tag className="w-4 h-4" />
           </div>
           <div>
@@ -116,8 +115,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 bg-[#0D1118] border border-white/[0.08] p-2.5 rounded-xl shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-b border-white/[0.08] pb-3">
         <div className="relative w-full sm:flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -125,7 +123,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
             placeholder="Search sold parts, trade-ups, platform, payment method..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 pl-9 pr-8 bg-[#121722] border border-white/[0.08] rounded-xl py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
+            className="w-full h-10 pl-9 pr-8 bg-[#10141E] border border-white/[0.08] rounded-lg py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
           />
           {searchQuery && (
             <button
@@ -162,7 +160,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
           <p className="text-xs text-zinc-400">Try changing your search query or selling/trading components from stock.</p>
         </div>
       ) : !isVirtualized ? (
-        <div className="space-y-1.5 pr-1">
+        <div className="overflow-hidden rounded-lg border-x border-white/[0.08]">
           {sortedDisplayItems.map((item) => {
             if (item.type === 'bulk-group') {
               return (

@@ -887,21 +887,13 @@ export function calculateMonthlyMetrics(state: AppState, year: number, monthInde
 export function getConditionColor(cond: string): string {
   const c = String(cond || "").toUpperCase();
   if (c === 'SEALED') {
-    return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50';
-  } else if (c === 'NEW OPEN BOX') {
-    return 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50';
-  } else if (c === 'NEW NO BOX') {
-    return 'bg-sky-500/20 text-sky-300 border border-sky-500/50';
-  } else if (c === 'USED OPEN BOX') {
-    return 'bg-amber-500/25 text-amber-300 border border-amber-500/50';
-  } else if (c === 'USED NO BOX' || c === 'USED') {
-    return 'bg-orange-500/20 text-orange-300 border border-orange-500/50';
+    return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30';
   } else if (c.includes('NEW')) {
-    return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50';
+    return 'bg-[#67E8F9]/10 text-[#A5F3FC] border border-[#67E8F9]/30';
   } else if (c.includes('USED')) {
-    return 'bg-orange-500/20 text-orange-300 border border-orange-500/50';
+    return 'bg-white/[0.04] text-zinc-300 border border-white/[0.10]';
   }
-  return 'bg-violet-500/20 text-violet-300 border border-violet-500/50';
+  return 'bg-white/[0.04] text-zinc-300 border border-white/[0.10]';
 }
 
 export function getCategoryBadgeColor(category: string): string {
@@ -934,7 +926,7 @@ export function getConditionDotColor(condition: string): string {
   const normalized = String(condition || '').toUpperCase();
   if (normalized.includes('SEALED')) return 'bg-emerald-400';
   if (normalized.includes('NEW')) return 'bg-cyan-400';
-  if (normalized.includes('USED')) return 'bg-amber-400';
+  if (normalized.includes('USED')) return 'bg-zinc-400';
   return 'bg-zinc-500';
 }
 

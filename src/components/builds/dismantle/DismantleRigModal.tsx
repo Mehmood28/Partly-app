@@ -192,7 +192,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
           </div>
 
           {isAcquired && build.parts && build.parts.length > 0 && (
-            <div className="mt-2 text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-2.5">
+            <div className="mt-2 text-xs text-[#A5F3FC] bg-[#67E8F9]/[0.06] border border-[#67E8F9]/25 rounded-xl p-2.5">
               Notice: {build.parts.length} allocated upgrade component(s) will automatically return to their original inventory batches upon parting out.
             </div>
           )}

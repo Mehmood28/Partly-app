@@ -85,7 +85,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
           Select an available component from inventory to assign to{' '}
           <strong className="text-zinc-200">{build.name}</strong>.
           {build.status === 'Sold' && (
-            <span className="block mt-1 text-amber-300">
+            <span className="block mt-1 text-rose-300">
               Adding to a sold build will update its recorded cost and profit.
             </span>
           )}

@@ -72,12 +72,12 @@ export const CustomBuildResultCard: React.FC<CustomBuildResultCardProps> = ({
               Value: {formatCurrency(customBuild.estimatedPrice)}
             </span>
             <span className={`${getProfitBadgeClasses(customBuild.projectedProfit)} border gap-1 shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-              Profit: {formatSignedCurrency(customBuild.projectedProfit)} ({Math.round(customBuild.margin)}%)
+              Profit: {formatSignedCurrency(customBuild.projectedProfit)} · Margin {Math.round(customBuild.margin)}%
             </span>
           </div>
           <button
             onClick={() => onStartBuild(customBuild)}
-            className="flex items-center justify-center gap-2 bg-[#A3FF12] hover:bg-[#C2FF5C] text-white px-4 py-2 rounded-lg font-semibold text-xs transition-colors shrink-0 shadow-sm shadow-[#A3FF12]/20"
+            className="flex items-center justify-center gap-2 bg-[#A3FF12] hover:bg-[#C2FF5C] text-[#11150C] px-4 py-2 rounded-lg font-semibold text-xs transition-colors shrink-0 shadow-sm shadow-[#A3FF12]/20"
           >
             <Hammer className="w-3.5 h-3.5" />
             <span>Create PC Build</span>

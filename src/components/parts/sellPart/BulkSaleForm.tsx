@@ -465,7 +465,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                   <button
                     type="button"
                     onClick={() => handleRemoveLine(idx)}
-                    className="p-1 rounded text-zinc-500 hover:text-red-400 hover:bg-white/[0.04] transition-colors"
+                    className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-white/[0.04] transition-colors"
                     title="Remove item"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -528,7 +528,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                     <span>•</span>
                     <span>Cost: {formatCurrency(item.lineCost)}</span>
                   </div>
-                  <div className={`font-semibold ${item.lineProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <div className={`font-semibold ${item.lineProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {item.lineProfit >= 0 ? '+' : ''}
                     {formatCurrency(item.lineProfit)}
                   </div>
@@ -637,12 +637,12 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
           <div className="bg-[#0D1118]/80 border border-white/[0.04] rounded-lg p-2">
             <span className="text-[10px] text-zinc-500 uppercase font-mono block">Net Profit</span>
             <div className="flex items-center gap-1 font-mono">
-              <span className={`text-xs font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <span className={`text-xs font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {netProfit >= 0 ? '+' : ''}
                 {formatCurrency(netProfit)}
               </span>
               <span className="text-[10px] text-zinc-500">
-                ({profitMarginPercent.toFixed(1)}%)
+                · Margin {profitMarginPercent.toFixed(1)}%
               </span>
             </div>
           </div>
