@@ -8,28 +8,20 @@ import {
   calculateAverageUnitCost,
   calculateUnassignedQuantityStrict,
   calculateUnassignedValueStrict,
-  formatCurrency, getConditionColor,
+  formatCurrency,
+  formatReadableDate,
   getCategoryPresentation,
-  getPlatformBadgeColor,
-  getPaymentMethodBadgeColor,
+  getConditionDotColor,
   getUnassignedBatches,
 } from '../utils/helpers';
 import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin } from '../utils/tradeInOrigin';
+import { normalizePlatform } from '../utils/platformDisplay';
 import {
   ChevronDown,
   ChevronUp,
   Plus,
-  Box,
   Pencil,
   Trash2,
-  Monitor,
-  Cpu,
-  HardDrive,
-  Database,
-  CircuitBoard,
-  Zap,
-  Fan,
-  Package,
   Tag,
 } from 'lucide-react';
 
@@ -76,24 +68,9 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const unassignedQty = unassignedQuantityOverride !== undefined ? unassignedQuantityOverride : calculateUnassignedQuantityStrict(component, state.builds);
   const unassignedVal = calculateUnassignedValueStrict(component, state.builds);
   const avgCost = unassignedQty > 0 ? unassignedVal / unassignedQty : calculateAverageUnitCost(component);
+  const visibleBatchCount = getUnassignedBatches(component, state.builds).length;
 
   const categoryPresentation = getCategoryPresentation(component.category);
-
-  const renderCategoryIcon = () => {
-    const className = `w-4 h-4 ${categoryPresentation.textClass}`;
-    switch (component.category) {
-      case 'GPU': return <Monitor className={className} />;
-      case 'CPU': return <Cpu className={className} />;
-      case 'RAM': return <HardDrive className={className} />;
-      case 'Storage': return <Database className={className} />;
-      case 'Motherboard': return <CircuitBoard className={className} />;
-      case 'PSU': return <Zap className={className} />;
-      case 'Case': return <Box className={className} />;
-      case 'Cooling':
-      case 'Fans': return <Fan className={className} />;
-      default: return <Package className={className} />;
-    }
-  };
 
   const getCardBorder = () => {
     return 'border-white/[0.08] hover:border-[#7C6CF2]/40 shadow-sm';
@@ -103,63 +80,30 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
     <div className={`bg-[#0D1118] border rounded-xl overflow-hidden transition-all duration-200 ${getCardBorder()}`} style={{ contain: 'content', willChange: 'transform' }}>
       {/* Collapsed Header Bar - Clickable for mobile */}
       <div 
-        className="p-3 flex flex-col gap-2 cursor-pointer"
+        className="relative cursor-pointer px-3 py-2.5 pr-4"
         onClick={handleToggle}
       >
-        <div className="flex items-start justify-between gap-2.5">
-          <div className="flex items-start gap-3 flex-1 min-w-0">
-            {/* Left Square Icon Box */}
-            <div className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center shrink-0 mt-0.5">
-              {renderCategoryIcon()}
-            </div>
-            {/* Title & Subtitle Info */}
-            <div className="min-w-0 flex-1">
-              <h3 className="text-xs sm:text-sm font-semibold text-zinc-100 tracking-tight">
-                {String(component.name || "")}
+        <span className={`absolute right-1.5 top-2.5 bottom-2.5 w-0.5 rounded-full ${categoryPresentation.railClass}`} />
+        <div className="flex items-start gap-2 min-w-0">
+          <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold tracking-wide ${categoryPresentation.textClass}`}>
+            {categoryPresentation.label}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start gap-2">
+              <h3 className="min-w-0 flex-1 break-words text-xs font-semibold leading-snug tracking-tight text-zinc-100 sm:text-sm">
+                {String(component.name || '')}
               </h3>
-              <div className="font-mono text-zinc-400 mt-1.5 flex flex-row items-center gap-1.5 flex-wrap tracking-tight">
-                {component.tags && component.tags.length > 0 && (
-                  <>
-                    {component.tags.map((tag, idx) => (
-                      <span key={idx} className="bg-white/[0.04] text-zinc-400 border border-white/[0.08] px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                        {tag}
-                      </span>
-                    ))}
-                  </>
-                )}
-                {unassignedQty === 1 ? (
-                  <>
-                    <span className="bg-white/[0.06] border border-white/[0.1] text-zinc-300 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                      Qty: 1
-                    </span>
-                    <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                      {formatCurrency(unassignedVal)}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="bg-white/[0.06] border border-white/[0.1] text-zinc-300 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                      Qty: {unassignedQty}
-                    </span>
-                    <span className="bg-white/[0.06] text-zinc-300 border border-white/[0.1] whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                      {formatCurrency(avgCost)}/ea
-                    </span>
-                    {unassignedVal > 0 && (
-                      <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                        {formatCurrency(unassignedVal)} total
-                      </span>
-                    )}
-                  </>
-                )}
+              <span className="shrink-0 font-mono text-xs font-bold text-zinc-100 whitespace-nowrap">{formatCurrency(unassignedVal)}</span>
+              <div className="-mr-1 -mt-0.5 flex items-center gap-1 text-zinc-500">
+                {actionOverride ? actionOverride : null}
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </div>
             </div>
-          </div>
-          
-          {/* Action Buttons Container */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {actionOverride ? actionOverride : null}
-            <div className="text-zinc-500 ml-0.5">
-              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500">
+              {(component.tags || []).filter((tag): tag is string => typeof tag === 'string' && Boolean(tag)).map((tag, idx) => <span key={`${tag}-${idx}`}>{idx > 0 && '· '}{tag}</span>)}
+              {(component.tags || []).some((tag) => typeof tag === 'string' && Boolean(tag)) && <span>·</span>}
+              <span>{unassignedQty} in stock</span>
+              <span>· {formatCurrency(avgCost)} each</span>
             </div>
           </div>
         </div>
@@ -210,10 +154,11 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
           {/* PURCHASE HISTORY Section */}
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between gap-3 mb-2">
               <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase">
-                PURCHASE HISTORY
+                PURCHASE HISTORY · {visibleBatchCount} BATCH{visibleBatchCount === 1 ? '' : 'ES'}
               </span>
+              <span className="font-mono text-[10px] font-semibold text-[#B7AEFF]">{formatCurrency(unassignedVal)}</span>
             </div>
 
             {(() => {
@@ -236,13 +181,12 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
               }
 
               return (
-                <div className="space-y-1.5">
+                <div className="overflow-hidden rounded-xl border border-white/[0.08]">
                   {visibleBatches.map((batch) => {
                     const entry = batch.entry;
                     const entryUnitPrice = batch.unitCost;
                     const entryTotal = entryUnitPrice * batch.availableQuantity;
                     
-                    const conditionColor = getConditionColor(entry.condition || "");
                     const isTradeUpBatch = state.transactions.some(
                       (tx) =>
                         tx.type === 'EXCHANGE' &&
@@ -255,63 +199,38 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                       : null;
 
                     return (
-                      <div
-                        key={entry.id}
-                        className="bg-[#0D1118] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2.5 transition-all shadow-sm"
-                      >
-                        <div className="flex items-center gap-1.5 flex-wrap flex-1">
-                          <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                            {entry.date}
-                          </span>
-                          <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap ${conditionColor}`}>
-                            {entry.condition.toUpperCase()}
-                          </span>
-                          {isTradeUpBatch && (
-                            <span className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                              TRADE UP
-                            </span>
-                          )}
-                          {isPartedOutTradeInBatch && (
-                            <span className="bg-purple-500/15 text-purple-300 border border-purple-500/30 shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                              {tradeInOrigin?.buyerName
-                                ? `TRADE-IN: ${tradeInOrigin.buyerName}`
-                                : 'TRADE-IN'}
-                            </span>
-                          )}
-                          <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                            {batch.availableQuantity === 1
-                              ? formatCurrency(entryUnitPrice)
-                              : `${batch.availableQuantity}x @ ${formatCurrency(entryUnitPrice)}`}
-                          </span>
-                          {batch.availableQuantity > 1 && (
-                            <span className="bg-white/[0.06] text-zinc-200 border border-white/[0.1] shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                              Total: {formatCurrency(entryTotal)}
-                            </span>
-                          )}
-                          {!isPartedOutTradeInBatch && !hideSupplierNames && entry.platform && (
-                            <span className={`${getPlatformBadgeColor(entry.platform)} shrink-0 whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                              {String(entry.platform)}
-                            </span>
-                          )}
-                          {!isPartedOutTradeInBatch && entry.paymentMethod && (
-                            <span className={`${getPaymentMethodBadgeColor(entry.paymentMethod)} shrink-0 whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                              {String(entry.paymentMethod)}
-                            </span>
-                          )}
-                          {(entry.taxPercent ?? 0) > 0 && (
-                            <span className="text-rose-400 text-[10px] pl-1.5 border-l border-white/[0.08] shrink-0 font-mono font-medium">
-                              +Tax
-                            </span>
-                          )}
+                      <div key={entry.id} className="relative border-b border-white/[0.06] bg-[#0D1118] px-3 py-2.5 pr-4 last:border-b-0">
+                        <span className={`absolute right-1.5 top-2.5 bottom-2.5 w-0.5 rounded-full ${categoryPresentation.railClass}`} />
+                        <div className="flex items-start gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start gap-2">
+                              <span className="min-w-0 flex-1 font-mono text-[10px] font-semibold uppercase tracking-wide text-zinc-300">{formatReadableDate(entry.date) || entry.date}</span>
+                              <span className="shrink-0 font-mono text-xs font-bold text-zinc-100 whitespace-nowrap">{formatCurrency(entryTotal)}</span>
+                            </div>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500">
+                              <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}</span>
+                              {isTradeUpBatch && <span>· Trade-up</span>}
+                              {isPartedOutTradeInBatch ? (
+                                <span>· {tradeInOrigin?.buyerName ? `Trade-in: ${tradeInOrigin.buyerName}` : 'Trade-in'}</span>
+                              ) : (
+                                <>
+                                  {!hideSupplierNames && entry.platform && <span>· {normalizePlatform(String(entry.platform))}</span>}
+                                  {entry.paymentMethod && <span>· {String(entry.paymentMethod)}</span>}
+                                </>
+                              )}
+                              <span>· {batch.availableQuantity} × {formatCurrency(entryUnitPrice)} each</span>
+                              {(entry.taxPercent ?? 0) > 0 && <span className="text-rose-400">· +Tax</span>}
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                        <div className="mt-2 flex items-center justify-end gap-1.5">
                           {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onSellPart(component, entry.id);
                               }}
-                              className="border border-[#7C6CF2]/40 bg-[#7C6CF2]/15 text-[#9D91FA] hover:bg-[#7C6CF2]/25 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1"
+                              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-[#B7AEFF] transition-colors hover:bg-[#7C6CF2]/10 hover:text-white"
                             >
                               <Tag className="w-3 h-3" /> Sell
                             </button>
@@ -319,10 +238,10 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                           {!readonlyMode && onDeletePurchaseEntry && (
                             <button
                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 setDeletingEntryId(entry.id);
+                                e.stopPropagation();
+                                setDeletingEntryId(entry.id);
                               }}
-                              className="text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 p-1.5 rounded-lg transition-colors"
+                              className="rounded-lg p-1 text-rose-400 transition-colors hover:bg-rose-500/10 hover:text-rose-300"
                               title="Delete entry"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

@@ -19,7 +19,7 @@ import { ConfirmModal } from '../ConfirmModal';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { canDeleteBuildDraft, canDismantleBuild, canPartOutAcquiredPC, canMoveToTradeIns } from '../../utils/buildEligibility';
 import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
-import { calculateProfitMarginPercent, formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
+import { calculateProfitMarginPercent, formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
 import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils/acquiredPC';
 
@@ -274,39 +274,23 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
 
             {/* Quick Financial Summary (Collapsed) */}
             {!isExpanded && (
-              <div className="flex flex-col gap-1 w-full mt-1">
-                <div className="flex items-center gap-1.5 flex-wrap font-mono">
-                  <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                    BUILD COST: {formatCurrency(partsCost)}
-                  </span>
+              <div className="mt-1.5 flex flex-col gap-1 font-mono text-[10px] leading-tight sm:text-[11px]">
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-zinc-500">
+                  <span>BUILD COST <strong className="font-semibold text-zinc-300">{formatCurrency(partsCost)}</strong></span>
                   {isSold ? (
-                    <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                      SOLD: {formatCurrency(build.salePrice || 0)}
-                    </span>
+                    <span>SOLD <strong className="font-semibold text-[#B7AEFF]">{formatCurrency(build.salePrice || 0)}</strong></span>
                   ) : (
-                    build.salePrice ? (
-                      <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                        TARGET: {formatCurrency(build.salePrice)}
-                      </span>
-                    ) : null
+                    build.salePrice ? <span>TARGET <strong className="font-semibold text-[#B7AEFF]">{formatCurrency(build.salePrice)}</strong></span> : null
                   )}
                   {isSold ? (
-                    <span className={`${getProfitBadgeClasses(profit)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                      PROFIT: {formatSignedCurrency(profit)}
-                    </span>
+                    <span className={getProfitTextColor(profit)}>PROFIT <strong className="font-semibold">{formatSignedCurrency(profit)}</strong></span>
                   ) : (
-                    build.salePrice ? (
-                      <span className={`${getProfitBadgeClasses(build.salePrice - partsCost)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                        EST PROFIT: {formatSignedCurrency(build.salePrice - partsCost)}
-                      </span>
-                    ) : null
+                    build.salePrice ? <span className={getProfitTextColor(build.salePrice - partsCost)}>EST. PROFIT <strong className="font-semibold">{formatSignedCurrency(build.salePrice - partsCost)}</strong></span> : null
                   )}
                 </div>
-
                 {isSold && formattedSoldDate && (
-                  <div className="text-[10px] sm:text-[11px] text-zinc-400 font-mono tracking-tight leading-tight">
-                    <span className="text-zinc-500 font-normal">Sold: </span>
-                    <span className="text-zinc-300 font-medium">{formattedSoldDate}</span>
+                  <div className="text-zinc-500">
+                    SOLD <span className="font-medium text-zinc-300">{formattedSoldDate}</span>
                   </div>
                 )}
               </div>
@@ -686,19 +670,13 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           {/* Build Financial Summary Footer (for available/pending-sale builds) */}
           {!isSold && (
             <div className="border-t border-white/[0.08] pt-3 space-y-2.5">
-              <div className="flex flex-wrap items-center gap-1.5 font-mono">
-                <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                  COST: {formatCurrency(partsCost)}
-                </span>
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-[10px] text-zinc-500 sm:text-[11px]">
+                <span>BUILD COST <strong className="font-semibold text-zinc-300">{formatCurrency(partsCost)}</strong></span>
                 {build.salePrice && (
-                  <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
-                    TARGET: {formatCurrency(build.salePrice)}
-                  </span>
+                  <span>TARGET <strong className="font-semibold text-[#B7AEFF]">{formatCurrency(build.salePrice)}</strong></span>
                 )}
                 {build.salePrice && (
-                  <span className={`${getProfitBadgeClasses(build.salePrice - partsCost)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
-                    EST PROFIT: {formatSignedCurrency(build.salePrice - partsCost)}
-                  </span>
+                  <span className={getProfitTextColor(build.salePrice - partsCost)}>EST. PROFIT <strong className="font-semibold">{formatSignedCurrency(build.salePrice - partsCost)}</strong></span>
                 )}
               </div>
 
