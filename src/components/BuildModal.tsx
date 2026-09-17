@@ -234,7 +234,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-              <Hammer className="w-4 h-4 text-[#7C6CF2]" /> Create New PC Build
+              <Hammer className="w-4 h-4 text-[#A3FF12]" /> Create New PC Build
             </h3>
             <p className="text-xs text-zinc-400 mt-0.5 font-sans">
               Set title, status, target price, and select inventory parts separated by category.
@@ -244,7 +244,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -293,19 +293,19 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
         {/* Footer Actions */}
         <div className="pt-3 flex items-center justify-between border-t border-white/[0.08]">
           <div className="text-xs text-zinc-400 font-sans">
-            Status: <span className="text-[#9D91FA] font-medium">{status === 'Listed for Sale' ? 'Available' : status}</span>
+            Status: <span className="text-[#67E8F9] font-medium">{status === 'Listed for Sale' ? 'Available' : status}</span>
           </div>
           <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+              className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-[#7C6CF2] hover:bg-[#8D7FF5] text-white font-semibold shadow-md shadow-[#7C6CF2]/20 text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+              className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold shadow-md shadow-[#A3FF12]/20 text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
             >
               <Hammer className="w-4 h-4" /> {initialData && initialData.id ? `Save PC Build (${selectedParts.length} Parts)` : `Create PC Build (${selectedParts.length} Parts)`}
             </button>

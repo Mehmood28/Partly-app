@@ -51,7 +51,7 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
           <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Sale Price</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-[#9D91FA]">{formatCurrency(salePrice)}</div>
+          <div className="text-sm sm:text-base font-bold font-mono text-[#67E8F9]">{formatCurrency(salePrice)}</div>
         </div>
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
           <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Build Cost</div>
@@ -69,20 +69,20 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
 
       {/* Trade-In Breakdown Banner if present */}
       {tx.tradeInCredit !== undefined && tx.tradeInCredit > 0 && (
-        <div className="bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 rounded-xl p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
+        <div className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 rounded-xl p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-[#7C6CF2]/20 text-[#9D91FA] border border-[#7C6CF2]/40 px-2 py-0.5 rounded-md text-[10px] font-bold font-mono uppercase tracking-wider">
+            <span className="bg-[#A3FF12]/20 text-[#67E8F9] border border-[#A3FF12]/40 px-2 py-0.5 rounded-md text-[10px] font-bold font-mono uppercase tracking-wider">
               Trade-In Included
             </span>
             <span className="text-zinc-300">
-              Cash: <span className="font-mono font-semibold text-zinc-100">{formatCurrency(tx.cashPortion ?? 0)}</span> + Valuation: <span className="font-mono font-semibold text-[#9D91FA]">{formatCurrency(tx.tradeInCredit)}</span>
+              Cash: <span className="font-mono font-semibold text-zinc-100">{formatCurrency(tx.cashPortion ?? 0)}</span> + Valuation: <span className="font-mono font-semibold text-[#67E8F9]">{formatCurrency(tx.tradeInCredit)}</span>
             </span>
             {tx.tradeInDescription && (
               <span className="text-xs text-zinc-300 font-medium">({tx.tradeInDescription})</span>
             )}
           </div>
           <div className="text-[11px] text-zinc-400 font-mono">
-            Total Effective: <span className="text-[#9D91FA] font-semibold">{formatCurrency(salePrice)}</span>
+            Total Effective: <span className="text-[#67E8F9] font-semibold">{formatCurrency(salePrice)}</span>
           </div>
         </div>
       )}
@@ -100,7 +100,7 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
         {paymentMethod && (
           <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
             <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-              <CreditCard className="w-3.5 h-3.5 text-[#7C6CF2]" /> Payment
+              <CreditCard className="w-3.5 h-3.5 text-[#A3FF12]" /> Payment
             </div>
             <div className="text-zinc-200 font-medium truncate font-mono text-xs">{paymentMethod}</div>
           </div>
@@ -108,7 +108,7 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
         {buyerName && (
           <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
             <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-[#7C6CF2]" /> Buyer
+              <User className="w-3.5 h-3.5 text-[#A3FF12]" /> Buyer
             </div>
             <div className="text-zinc-200 font-medium truncate text-xs">{buyerName}</div>
           </div>
@@ -161,7 +161,7 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
                   key={part.id || `${part.category}-${part.name}-${partIdx}`}
                   className="bg-[#121722] border border-white/[0.08] rounded-xl p-2.5 flex items-start gap-2.5 text-xs shadow-sm"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center shrink-0 mt-0.5">
                     {renderCategoryIcon(part.category)}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -169,7 +169,7 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
                       <span className="font-medium text-zinc-100 break-words block leading-snug">
                         {part.name}
                       </span>
-                      <span className="font-mono font-medium text-[#9D91FA] shrink-0 ml-2">
+                      <span className="font-mono font-medium text-[#67E8F9] shrink-0 ml-2">
                         {formatCurrency(part.quantity * (purchaseEntry ? purchaseEntry.unitPrice : part.unitCost))}
                       </span>
                     </div>
@@ -222,7 +222,7 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
               const item = parseBatchItem(detail, components, tx);
               return (
                 <div key={idx} className="bg-[#121722] border border-white/[0.08] rounded-xl p-2.5 flex items-start gap-2.5 text-xs shadow-sm">
-                  <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center shrink-0 mt-0.5">
                     {renderCategoryIcon(item.category)}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -231,13 +231,13 @@ export const PCSaleExpandedView: React.FC<PCSaleExpandedViewProps> = ({
                         {item.itemName}
                       </span>
                       {item.totalPrice > 0 && (
-                        <span className="font-mono font-medium text-[#9D91FA] shrink-0 ml-2">
+                        <span className="font-mono font-medium text-[#67E8F9] shrink-0 ml-2">
                           {formatCurrency(item.totalPrice)}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap mt-1.5 font-mono text-zinc-400">
-                      <span className="bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 text-[#9D91FA] px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+                      <span className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#67E8F9] px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                         Qty: {item.quantity}
                       </span>
                       {item.unitPrice > 0 && (

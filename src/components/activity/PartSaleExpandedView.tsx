@@ -47,9 +47,9 @@ export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
 
       {/* Trade-In Breakdown Banner if present */}
       {tx?.tradeInCredit !== undefined && tx.tradeInCredit > 0 && (
-        <div className="bg-purple-950/25 border border-purple-500/30 rounded-xl p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
+        <div className="bg-purple-950/25 border border-cyan-400/30 rounded-xl p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider">
+            <span className="bg-purple-500/20 text-purple-300 border border-cyan-400/30 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider">
               Trade-In Included
             </span>
             <span className="text-zinc-300">

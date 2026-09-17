@@ -44,7 +44,7 @@ export const StatsOverview: React.FC = React.memo(() => {
     <div className="flex items-center gap-2 ml-auto shrink-0 whitespace-nowrap">
       {/* Inventory Value */}
       <div 
-        className="gap-1.5 bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 cursor-pointer relative group px-2 py-1 rounded-lg text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors hover:bg-[#7C6CF2]/25"
+        className="gap-1.5 bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30 cursor-pointer relative group px-2 py-1 rounded-lg text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors hover:bg-[#A3FF12]/25"
         onClick={() => setShowInventoryPopover(!showInventoryPopover)}
         ref={popoverRef}
       >
@@ -66,8 +66,8 @@ export const StatsOverview: React.FC = React.memo(() => {
                 <span className="text-zinc-200 font-mono font-medium">{formatCurrency(activeBuildsCost)}</span>
               </div>
               <div className="pt-2 border-t border-white/[0.08] flex justify-between items-center">
-                <span className="text-[#7C6CF2] font-semibold uppercase text-[10px] tracking-wider">Total Inventory</span>
-                <span className="text-[#7C6CF2] font-mono font-bold">{formatCurrency(totalStockValuation)}</span>
+                <span className="text-[#A3FF12] font-semibold uppercase text-[10px] tracking-wider">Total Inventory</span>
+                <span className="text-[#A3FF12] font-mono font-bold">{formatCurrency(totalStockValuation)}</span>
               </div>
             </div>
           </div>

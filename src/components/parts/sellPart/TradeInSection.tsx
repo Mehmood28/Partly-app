@@ -58,7 +58,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
     <div className="bg-[#121722] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ArrowRightLeft className="w-4 h-4 text-[#7C6CF2]" />
+          <ArrowRightLeft className="w-4 h-4 text-[#A3FF12]" />
           <span className="text-xs font-semibold text-zinc-100 font-sans">Trade-In / Trade Up</span>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
@@ -68,7 +68,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
             onChange={(e) => setHasTradeIn(e.target.checked)}
             className="sr-only peer"
           />
-          <div className="w-9 h-5 bg-white/[0.08] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#7C6CF2]"></div>
+          <div className="w-9 h-5 bg-white/[0.08] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#A3FF12]"></div>
         </label>
       </div>
 
@@ -81,12 +81,12 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
               onClick={() => setTradeDirection('CUSTOMER_TRADE_IN')}
               className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 tradeDirection === 'CUSTOMER_TRADE_IN'
-                  ? 'bg-[#7C6CF2]/15 border-[#7C6CF2]/40 text-zinc-100 shadow-sm'
+                  ? 'bg-[#A3FF12]/15 border-[#A3FF12]/40 text-zinc-100 shadow-sm'
                   : 'bg-[#0D1118] border-white/[0.06] text-zinc-400 hover:bg-white/[0.03] hover:text-zinc-200'
               }`}
             >
               <div className="flex items-center gap-1.5 mb-1">
-                <UserCheck className={`w-3.5 h-3.5 ${tradeDirection === 'CUSTOMER_TRADE_IN' ? 'text-[#9D91FA]' : 'text-zinc-500'}`} />
+                <UserCheck className={`w-3.5 h-3.5 ${tradeDirection === 'CUSTOMER_TRADE_IN' ? 'text-[#67E8F9]' : 'text-zinc-500'}`} />
                 <span className="text-xs font-semibold">Customer Trade-In</span>
               </div>
               <span className="text-[10px] text-zinc-500 leading-tight">
@@ -143,7 +143,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                       required={hasTradeIn}
                       value={tradeInCredit}
                       onChange={(e) => setTradeInCredit(e.target.value)}
-                      className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-mono"
+                      className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-mono"
                       placeholder="40.00"
                     />
                   </div>
@@ -171,7 +171,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                           }}
                           className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-colors border ${
                             isSelected
-                              ? 'bg-[#7C6CF2]/20 text-[#9D91FA] border-[#7C6CF2]/40'
+                              ? 'bg-[#A3FF12]/20 text-[#67E8F9] border-[#A3FF12]/40'
                               : 'bg-[#0D1118] text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
                           }`}
                         >
@@ -192,19 +192,19 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                   required={hasTradeIn}
                   value={tradeInPartName}
                   onChange={(e) => setTradeInPartName(e.target.value)}
-                  className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-sans"
+                  className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
                   placeholder="e.g. GTX 1660 Super 6GB"
                 />
               </div>
 
-              <div className="bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 rounded-xl p-3 flex items-center justify-between">
+              <div className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 rounded-xl p-3 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#9D91FA] uppercase tracking-wider font-semibold">Total Effective Sale Price</div>
+                  <div className="text-[10px] text-[#67E8F9] uppercase tracking-wider font-semibold">Total Effective Sale Price</div>
                   <div className="text-xs text-zinc-400">
                     {formatCurrency(parsedCashTotal)} Cash + {formatCurrency(creditAmount)} Trade-In Credit
                   </div>
                 </div>
-                <div className="text-base font-bold font-mono text-[#9D91FA]">
+                <div className="text-base font-bold font-mono text-[#67E8F9]">
                   {formatCurrency(totalEffectiveSalePrice)}
                 </div>
               </div>

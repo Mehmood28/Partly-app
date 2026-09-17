@@ -174,7 +174,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
                 <h2 className="text-sm sm:text-base font-bold text-zinc-100 flex items-center gap-2 truncate font-display">
                   <span className="truncate">{isAcquired ? `Part Out ${getAcquiredPCLabel(build)}` : 'Dismantle PC Build'}</span>
                   {isAcquired && (
-                    <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium shrink-0">
+                    <span className="bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium shrink-0">
                       {isTradeIn ? 'TRADE-IN' : 'PURCHASED'}
                     </span>
                   )}
@@ -185,7 +185,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
             <button
               onClick={onClose}
               aria-label="Close modal"
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors shrink-0 ml-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors shrink-0 ml-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
             >
               <X className="w-5 h-5" />
             </button>
@@ -239,7 +239,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
             >
               Cancel
             </button>

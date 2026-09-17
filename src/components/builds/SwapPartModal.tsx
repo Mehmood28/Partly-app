@@ -66,7 +66,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
   } | null>(null);
 
   const renderCategoryIcon = (category: string) => {
-    const className = 'w-4 h-4 text-[#7C6CF2]';
+    const className = 'w-4 h-4 text-[#A3FF12]';
     switch (category) {
       case 'GPU': return <Monitor className={className} />;
       case 'CPU': return <Cpu className={className} />;
@@ -84,7 +84,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
 
   // 1. Process inventory for matching category
   const categoryParts = state.components.filter(c => c.category === currentPart.category);
-  
+
   // 2. Map parts to their actual available entries
   const availablePartsWithEntries = categoryParts.map(comp => {
     // getUnassignedBatches accounts for FIFO sold deductions AND assigned counts across all builds
@@ -94,10 +94,10 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
     }));
 
     const totalAvailable = validEntries.reduce((sum, e) => sum + e.availableQty, 0);
-    const avgPrice = totalAvailable > 0 
-      ? validEntries.reduce((sum, e) => sum + (e.unitPrice * e.availableQty), 0) / totalAvailable 
+    const avgPrice = totalAvailable > 0
+      ? validEntries.reduce((sum, e) => sum + (e.unitPrice * e.availableQty), 0) / totalAvailable
       : 0;
-    
+
     return {
       comp,
       validEntries,
@@ -149,9 +149,9 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 shrink-0">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-            <ArrowRightLeft className="w-4 h-4 text-[#7C6CF2]" /> Swap {currentPart.category}
+            <ArrowRightLeft className="w-4 h-4 text-[#A3FF12]" /> Swap {currentPart.category}
           </h3>
-          <button onClick={onClose} aria-label="Close modal" className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]">
+          <button onClick={onClose} aria-label="Close modal" className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -174,12 +174,12 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         <div className="space-y-3 shrink-0 w-full max-w-full min-w-0">
           <div className="relative w-full max-w-full min-w-0">
             <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input 
+            <input
               type="text"
               placeholder="Search parts by name or model..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full max-w-full box-border bg-[#121722] border border-white/[0.08] rounded-xl pl-9 pr-8 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-sans"
+              className="w-full max-w-full box-border bg-[#121722] border border-white/[0.08] rounded-xl pl-9 pr-8 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
             />
             {searchQuery && (
               <button
@@ -192,16 +192,16 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
               </button>
             )}
           </div>
-          
+
           {chips.length > 1 && (
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
               {chips.map(chip => (
                 <button
                   key={chip}
                   onClick={() => setActiveFilter(activeFilter === chip ? 'All' : chip)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
-                    activeFilter === chip 
-                      ? 'bg-[#7C6CF2] text-white shadow-sm shadow-[#7C6CF2]/20' 
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
+                    activeFilter === chip
+                      ? 'bg-[#A3FF12] text-white shadow-sm shadow-[#A3FF12]/20'
                       : 'bg-[#121722] text-zinc-400 border border-white/[0.08] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
@@ -216,15 +216,15 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         <div className="overflow-y-auto pr-1 space-y-2 pb-6 min-h-[45vh]">
           {filteredParts.map(({ comp, validEntries, totalAvailable, avgPrice, subCategory }) => {
             const isExpanded = expandedPartId === comp.id;
-            
+
             return (
-              <div key={comp.id} className="bg-[#121722] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl mb-2 transition-all overflow-hidden">
+              <div key={comp.id} className="bg-[#121722] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl mb-2 transition-all overflow-hidden">
                 {/* Main Accordion Header */}
-                <div 
+                <div
                   onClick={() => setExpandedPartId(isExpanded ? null : comp.id)}
                   className="p-3 cursor-pointer flex items-start gap-2.5 group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center shrink-0 mt-0.5">
                     {renderCategoryIcon(comp.category)}
                   </div>
                   <div className="flex flex-col gap-1 min-w-0 flex-1">
@@ -235,7 +235,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                           {subCategory}
                         </span>
                       )}
-                      <span className="bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 text-[#9D91FA] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
+                      <span className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#67E8F9] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
                         {totalAvailable} in stock
                       </span>
                       <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">Avg: ${avgPrice.toFixed(2)}/ea</span>
@@ -250,7 +250,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                 {isExpanded && (
                   <div className="border-t border-white/[0.08] bg-[#0D1118] p-3 space-y-2">
                     {validEntries.map(entry => (
-                      <div key={entry.id} className="bg-[#121722] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2.5 transition-all">
+                      <div key={entry.id} className="bg-[#121722] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2.5 transition-all">
                         <div className="flex items-center gap-2 flex-wrap flex-1">
                           <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px] font-mono">
                             {entry.date}
@@ -282,7 +282,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                                 unitPrice: entry.unitPrice,
                               });
                             }}
-                            className="bg-[#7C6CF2] hover:bg-[#8D7FF5] text-white shadow-sm shadow-[#7C6CF2]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+                            className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white shadow-sm shadow-[#A3FF12]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
                           >
                             Swap
                           </button>

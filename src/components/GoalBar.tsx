@@ -66,11 +66,11 @@ export const GoalBar: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#7C6CF2]/40 transition-all duration-200 rounded-xl p-3 flex flex-col gap-2 shadow-sm">
+    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#A3FF12]/40 transition-all duration-200 rounded-xl p-3 flex flex-col gap-2 shadow-sm">
       {/* Top Header Row */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-lg bg-[#7C6CF2]/15 text-[#7C6CF2] border border-[#7C6CF2]/30">
+          <div className="p-1 rounded-lg bg-[#A3FF12]/15 text-[#A3FF12] border border-[#A3FF12]/30">
             <Target className="w-4 h-4" />
           </div>
           <span className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
@@ -81,7 +81,7 @@ export const GoalBar: React.FC = () => {
         {/* Status Pills: Days Left & Amount Left */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
-            <Clock className="w-3 h-3 text-[#7C6CF2]" />
+            <Clock className="w-3 h-3 text-[#A3FF12]" />
             {daysRemaining === 0 ? 'Last day' : `${daysRemaining}d left`}
           </span>
 
@@ -92,7 +92,7 @@ export const GoalBar: React.FC = () => {
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
-              <span className="text-[#9D91FA] font-bold">{formatCurrency(amountLeft)}</span> left
+              <span className="text-[#67E8F9] font-bold">{formatCurrency(amountLeft)}</span> left
             </span>
           )}
 
@@ -112,13 +112,13 @@ export const GoalBar: React.FC = () => {
               inputMode="decimal"
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              className="bg-[#090B10] border border-[#7C6CF2]/50 rounded-lg px-2 py-1 text-xs text-zinc-100 w-28 focus:outline-none focus:ring-1 focus:ring-[#7C6CF2] font-mono"
+              className="bg-[#090B10] border border-[#A3FF12]/50 rounded-lg px-2 py-1 text-xs text-zinc-100 w-28 focus:outline-none focus:ring-1 focus:ring-[#A3FF12] font-mono"
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleSave()}
             />
             <button 
               onClick={handleSave} 
-              className="bg-[#7C6CF2]/20 text-[#7C6CF2] border border-[#7C6CF2]/40 hover:bg-[#7C6CF2]/30 px-2.5 py-1 rounded-lg text-xs font-medium"
+              className="bg-[#A3FF12]/20 text-[#A3FF12] border border-[#A3FF12]/40 hover:bg-[#A3FF12]/30 px-2.5 py-1 rounded-lg text-xs font-medium"
             >
               <Check className="w-3.5 h-3.5" />
             </button>
@@ -135,7 +135,7 @@ export const GoalBar: React.FC = () => {
             <span className="text-xs text-zinc-400 font-mono">
               / {formatCurrency(monthlyGoal)}
             </span>
-            <Edit2 className="w-3 h-3 text-zinc-400 group-hover:text-[#7C6CF2] transition-colors ml-0.5 self-center" />
+            <Edit2 className="w-3 h-3 text-zinc-400 group-hover:text-[#A3FF12] transition-colors ml-0.5 self-center" />
           </div>
         )}
 
@@ -147,7 +147,7 @@ export const GoalBar: React.FC = () => {
       {/* Progress Bar */}
       <div className="w-full h-1.5 bg-[#090B10] border border-white/[0.06] rounded-full overflow-hidden">
         <div 
-          className="h-full bg-gradient-to-r from-[#7C6CF2] via-[#8D7FF5] to-emerald-400 rounded-full transition-all duration-700 ease-out"
+          className="h-full bg-gradient-to-r from-[#A3FF12] via-[#C2FF5C] to-emerald-400 rounded-full transition-all duration-700 ease-out"
           style={{ width: `${percentage}%` }}
         />
       </div>

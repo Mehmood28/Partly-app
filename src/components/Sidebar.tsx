@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       {/* Desktop Sidebar (hidden on phone) */}
       <aside className="hidden md:flex flex-col w-64 h-dvh fixed top-0 left-0 bg-[#0D1118] border-r border-white/[0.08] p-4 z-[250]">
         <div className="flex items-center gap-3 mb-6 px-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C6CF2] to-[#5B4AE4] text-white flex items-center justify-center font-medium shadow-md shadow-[#7C6CF2]/20">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#A3FF12] to-[#52E0D4] text-white flex items-center justify-center font-medium shadow-md shadow-[#A3FF12]/20">
             <Cpu className="w-5 h-5 stroke-[2.2]" />
           </div>
           <div>
@@ -62,7 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all relative min-h-[40px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all relative min-h-[40px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
                 activeTab === tab.id
                   ? 'text-white'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
@@ -71,14 +71,14 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
               {activeTab === tab.id && (
                 <motion.div
                   layoutId="activeTabDesktop"
-                  className="absolute inset-0 bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 rounded-xl"
+                  className="absolute inset-0 bg-[#A3FF12]/10 border-l-2 border-[#A3FF12] rounded-lg"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
-              <tab.icon className={`w-4 h-4 relative z-10 ${activeTab === tab.id ? 'text-[#7C6CF2]' : 'text-zinc-400'}`} />
+              <tab.icon className={`w-4 h-4 relative z-10 ${activeTab === tab.id ? 'text-[#A3FF12]' : 'text-zinc-400'}`} />
               <span className="relative z-10 flex-1 text-left">{tab.label}</span>
               {tab.hasBadge && (
-                <div className="w-2 h-2 rounded-full bg-[#7C6CF2] relative z-10 shadow-sm shadow-[#7C6CF2]/30" />
+                <div className="w-2 h-2 rounded-full bg-[#A3FF12] relative z-10 shadow-sm shadow-[#A3FF12]/30" />
               )}
             </button>
           ))}
@@ -94,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           <button
             type="button"
             onClick={scrollToTop}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
           >
             <ArrowUp className="w-3.5 h-3.5" /> Scroll to Top
           </button>
@@ -112,19 +112,19 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 type="button"
                 onClick={() => handleTabClick(tab.id)}
                 aria-label={tab.label}
-                className={`relative flex flex-col items-center justify-center flex-1 h-11 transition-colors touch-manipulation rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${isActive ? 'text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+                className={`relative flex flex-col items-center justify-center flex-1 h-11 transition-colors touch-manipulation rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${isActive ? 'text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
               >
                 {isActive && (
-                  <motion.div
-                    layoutId="activeTabMobile"
-                    className="absolute inset-0 bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 rounded-xl"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
+                <motion.div
+                  layoutId="activeTabMobile"
+                  className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#A3FF12] rounded-full"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
                 )}
                 <div className="relative z-10 mb-0.5">
-                  <tab.icon className={`w-4 h-4 transition-colors ${isActive ? 'text-[#7C6CF2]' : 'text-zinc-400'}`} />
+                  <tab.icon className={`w-4 h-4 transition-colors ${isActive ? 'text-[#A3FF12]' : 'text-zinc-400'}`} />
                   {tab.hasBadge && (
-                    <div className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-[#7C6CF2] shadow-sm shadow-[#7C6CF2]/30" />
+                    <div className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-[#A3FF12] shadow-sm shadow-[#A3FF12]/30" />
                   )}
                 </div>
                 <span className={`text-[10px] font-medium relative z-10 transition-colors ${isActive ? 'text-white font-semibold' : ''}`}>

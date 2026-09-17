@@ -78,10 +78,10 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
   }, [state]);
 
   return (
-    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl p-3.5 relative overflow-hidden transition-all duration-300 shadow-sm">
+    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl p-3.5 relative overflow-hidden transition-all duration-300 shadow-sm">
       <div className="flex items-center justify-between mb-3 relative z-10 flex-wrap gap-1.5">
         <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-          <Activity className="w-3.5 h-3.5 text-[#7C6CF2]" /> At a Glance
+          <Activity className="w-3.5 h-3.5 text-[#A3FF12]" /> At a Glance
         </h3>
       </div>
 
@@ -89,16 +89,16 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
         {/* 1. Listed Builds */}
         <div 
           onClick={() => onNavigateToBuilds('Available')}
-          className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between hover:border-[#7C6CF2]/40 transition-all cursor-pointer group"
+          className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between hover:border-[#A3FF12]/40 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-1">
             <p className="text-[11px] font-semibold text-zinc-400 leading-tight">
               Listed Builds
             </p>
-            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#7C6CF2] transition-colors" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#A3FF12] transition-colors" />
           </div>
           <div>
-            <p className="text-base sm:text-lg font-bold font-mono text-[#9D91FA] leading-tight">
+            <p className="text-base sm:text-lg font-bold font-mono text-[#67E8F9] leading-tight">
               {stats.listedCount}
             </p>
             <p className="text-[11px] text-zinc-500 mt-0.5">Ready for sale</p>
@@ -108,13 +108,13 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
         {/* 2. Pending Sale */}
         <div 
           onClick={() => onNavigateToBuilds('Pending')}
-          className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between hover:border-[#7C6CF2]/40 transition-all cursor-pointer group"
+          className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between hover:border-[#A3FF12]/40 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-1">
             <p className="text-[11px] font-semibold text-zinc-400 leading-tight">
               Pending Sale
             </p>
-            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#7C6CF2] transition-colors" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#A3FF12] transition-colors" />
           </div>
           <div>
             <p className="text-base sm:text-lg font-bold font-mono text-zinc-100 leading-tight group-hover:text-white transition-colors">
@@ -127,13 +127,13 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
         {/* 3. Available Stock */}
         <div 
           onClick={onNavigateToStock}
-          className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between hover:border-[#7C6CF2]/40 transition-all cursor-pointer group"
+          className="border border-white/[0.06] bg-[#121722] rounded-xl p-3 flex flex-col justify-between hover:border-[#A3FF12]/40 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-1">
             <p className="text-[11px] font-semibold text-zinc-400 leading-tight">
               Available Stock
             </p>
-            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#7C6CF2] transition-colors" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-[#A3FF12] transition-colors" />
           </div>
           <div>
             <p className="text-base sm:text-lg font-bold font-mono text-zinc-100 leading-tight group-hover:text-white transition-colors">

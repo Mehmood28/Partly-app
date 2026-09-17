@@ -73,7 +73,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const categoryPresentation = getCategoryPresentation(component.category);
 
   const getCardBorder = () => {
-    return 'border-white/[0.08] hover:border-[#7C6CF2]/40 shadow-sm';
+    return 'border-white/[0.08] hover:border-[#A3FF12]/40 shadow-sm';
   };
 
   return (
@@ -122,7 +122,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                     e.stopPropagation();
                     onAddPurchaseEntry(component.id);
                   }}
-                  className="bg-[#7C6CF2]/15 hover:bg-[#7C6CF2]/25 text-[#9D91FA] border border-[#7C6CF2]/30 transition-colors whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                  className="bg-[#A3FF12]/15 hover:bg-[#A3FF12]/25 text-[#67E8F9] border border-[#A3FF12]/30 transition-colors whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Stock
                 </button>
@@ -158,7 +158,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
               <span className="text-[10px] font-bold text-zinc-400 tracking-wider uppercase">
                 PURCHASE HISTORY · {visibleBatchCount} BATCH{visibleBatchCount === 1 ? '' : 'ES'}
               </span>
-              <span className="font-mono text-[10px] font-semibold text-[#B7AEFF]">{formatCurrency(unassignedVal)}</span>
+              <span className="font-mono text-[10px] font-semibold text-[#A5F3FC]">{formatCurrency(unassignedVal)}</span>
             </div>
 
             {(() => {
@@ -230,7 +230,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                                 e.stopPropagation();
                                 onSellPart(component, entry.id);
                               }}
-                              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-[#B7AEFF] transition-colors hover:bg-[#7C6CF2]/10 hover:text-white"
+                              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-[#A5F3FC] transition-colors hover:bg-[#A3FF12]/10 hover:text-white"
                             >
                               <Tag className="w-3 h-3" /> Sell
                             </button>

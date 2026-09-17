@@ -128,7 +128,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
       {/* Unified Purchases Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-[#0D1118] border border-white/[0.08] p-3 rounded-xl shadow-sm">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center text-[#7C6CF2] shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12] shrink-0">
             <ShoppingBag className="w-4 h-4" />
           </div>
           <div>
@@ -151,7 +151,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
             placeholder="Search purchase logs, vendor, platform..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 pl-9 pr-8 bg-[#121722] border border-white/[0.08] rounded-xl py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors"
+            className="w-full h-9 pl-9 pr-8 bg-[#121722] border border-white/[0.08] rounded-xl py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
           />
           {searchQuery && (
             <button

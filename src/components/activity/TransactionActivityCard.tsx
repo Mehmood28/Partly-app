@@ -246,7 +246,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
 
   return (
     <div 
-      className="bg-[#0D1118] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl transition-all duration-200 overflow-hidden shadow-sm group flex flex-col"
+      className="bg-[#0D1118] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl transition-all duration-200 overflow-hidden shadow-sm group flex flex-col"
     >
       {/* Unexpanded (Collapsed) Header */}
       <TransactionCardHeader

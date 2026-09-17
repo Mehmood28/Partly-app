@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen bg-[#090B10] text-zinc-100 flex items-center justify-center p-4">
           <div className="bg-[#0D1118] border border-white/[0.08] rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
-            <div className="w-12 h-12 rounded-xl bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 text-[#7C6CF2] flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#A3FF12] flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <h2 className="text-lg font-bold text-zinc-100 font-display">Something went wrong</h2>
@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 this.setState({ hasError: false, error: undefined });
                 window.location.reload();
               }}
-              className="px-4 py-2.5 bg-[#7C6CF2] hover:bg-[#8D7FF5] text-white font-semibold text-xs rounded-xl shadow-lg shadow-[#7C6CF2]/20 transition-all inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+              className="px-4 py-2.5 bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold text-xs rounded-xl shadow-lg shadow-[#A3FF12]/20 transition-all inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Reload App</span>

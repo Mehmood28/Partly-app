@@ -351,7 +351,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
       <div className="w-full">
         <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center text-[#7C6CF2]">
+            <div className="w-10 h-10 rounded-xl bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12]">
               {saleMode === 'bulk' ? <Layers className="w-5 h-5" /> : <Tag className="w-5 h-5" />}
             </div>
             <div>
@@ -373,7 +373,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
               handleCloseAndReset();
             }}
             aria-label="Close modal"
-            className="text-zinc-400 hover:text-white rounded-lg p-1 hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+            className="text-zinc-400 hover:text-white rounded-lg p-1 hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -387,7 +387,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
               onClick={() => setSaleMode('single')}
               className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold font-sans flex items-center justify-center gap-1.5 transition-all ${
                 saleMode === 'single'
-                  ? 'bg-[#7C6CF2] text-white shadow-sm'
+                  ? 'bg-[#A3FF12] text-white shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
               }`}
             >
@@ -399,7 +399,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
               onClick={() => setSaleMode('bulk')}
               className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold font-sans flex items-center justify-center gap-1.5 transition-all ${
                 saleMode === 'bulk'
-                  ? 'bg-[#7C6CF2] text-white shadow-sm'
+                  ? 'bg-[#A3FF12] text-white shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
               }`}
             >
@@ -419,7 +419,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
           </div>
         ) : hasNoInStockParts ? (
           <div className="p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 text-[#7C6CF2] flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#A3FF12] flex items-center justify-center mx-auto">
               <Package className="w-6 h-6" />
             </div>
             <div className="space-y-1">
@@ -437,7 +437,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                   e.stopPropagation();
                   onClose();
                 }}
-                className="px-4 py-2 rounded-xl border border-white/[0.08] text-zinc-400 hover:text-white text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+                className="px-4 py-2 rounded-xl border border-white/[0.08] text-zinc-400 hover:text-white text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
               >
                 Close
               </button>
@@ -452,7 +452,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                       onOpenAddComponent();
                     }, 50);
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#7C6CF2] hover:bg-[#8D7FF5] text-white font-semibold text-xs shadow-sm shadow-[#7C6CF2]/20 transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+                  className="px-4 py-2 rounded-xl bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold text-xs shadow-sm shadow-[#A3FF12]/20 transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add New Component</span>
@@ -603,7 +603,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                         e.stopPropagation();
                         handleCloseAndReset();
                       }}
-                      className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+                      className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
                     >
                       Cancel
                     </button>

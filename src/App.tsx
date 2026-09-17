@@ -211,7 +211,7 @@ function AppContent() {
   );
 
   return (
-    <div className="min-h-dvh bg-[#090B10] text-zinc-100 font-sans selection:bg-[#7C6CF2]/30 selection:text-white flex flex-col md:flex-row">
+    <div className="min-h-dvh bg-[#090B10] text-zinc-100 font-sans selection:bg-[#A3FF12]/30 selection:text-white flex flex-col md:flex-row">
       <Sidebar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
@@ -227,7 +227,7 @@ function AppContent() {
 
       {/* Main Container */}
       <main className="max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 pt-2 pb-20 md:pb-6 flex-1 flex flex-col w-full">
-        <React.Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-8 h-8 border-4 border-[#7C6CF2]/30 border-t-[#7C6CF2] rounded-full animate-spin"></div></div>}>
+        <React.Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-8 h-8 border-4 border-[#A3FF12]/30 border-t-[#A3FF12] rounded-full animate-spin"></div></div>}>
           {/* Launchpad Tab */}
           <div className={activeTab === 'launchpad' || (activeTab as string) === 'home' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
             <LaunchpadView

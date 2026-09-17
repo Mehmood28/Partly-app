@@ -95,7 +95,7 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
           isExchange
             ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400'
             : isPCSale 
-            ? 'bg-[#7C6CF2]/15 border-[#7C6CF2]/30 text-[#9D91FA]'
+            ? 'bg-[#A3FF12]/15 border-[#A3FF12]/30 text-[#67E8F9]'
             : isPartSale 
             ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
             : isPurchase
@@ -180,7 +180,7 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
               <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                 BUILD COST: {formatCurrency(partsCost)}
               </span>
-              <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+              <span className="bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                 SOLD: {formatCurrency(salePrice)}
               </span>
               <span className={`${getProfitBadgeClasses(netProfit)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
@@ -223,7 +223,7 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
               <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                 COST: {formatCurrency(partsCost)}
               </span>
-              <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+              <span className="bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                 SOLD: {formatCurrency(salePrice)}
               </span>
               <span className={`${getProfitBadgeClasses(netProfit)} border px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
@@ -312,7 +312,7 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
           {isBuildAllocation && (
             <>
               {/* Financials */}
-              <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+              <span className="bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                 BUILD COST: {formatCurrency(tx.totalAmount)}
               </span>
               {/* Item details */}

@@ -48,7 +48,7 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
       <div className="grid grid-cols-2 gap-2">
         <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Sale Price</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-[#9D91FA] mt-0.5 leading-tight">{formatCurrency(salePrice)}</div>
+          <div className="text-sm sm:text-base font-bold font-mono text-[#67E8F9] mt-0.5 leading-tight">{formatCurrency(salePrice)}</div>
         </div>
         <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Build Cost</div>
@@ -66,9 +66,9 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
 
       {/* 2. Trade-in Breakdown Banner (if present) */}
       {hasTradeIn && (
-        <div className="bg-purple-950/25 border border-purple-500/30 rounded-xl p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
+        <div className="bg-purple-950/25 border border-cyan-400/30 rounded-xl p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider">
+            <span className="bg-purple-500/20 text-purple-300 border border-cyan-400/30 px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider">
               Trade-In Included
             </span>
             <span className="text-zinc-300 text-xs">
@@ -77,7 +77,7 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
             </span>
           </div>
           <div className="text-[11px] text-zinc-400 font-mono">
-            Total Effective: <span className="text-[#9D91FA] font-semibold">{formatCurrency(salePrice)}</span>
+            Total Effective: <span className="text-[#67E8F9] font-semibold">{formatCurrency(salePrice)}</span>
           </div>
         </div>
       )}
@@ -87,11 +87,11 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
         <div className="grid grid-cols-2 divide-x divide-white/[0.08]">
           <div className="p-2.5 min-w-0">
             <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-[#7C6CF2] shrink-0" /> Buyer
+              <User className="w-3.5 h-3.5 text-[#A3FF12] shrink-0" /> Buyer
             </div>
             <div className="text-zinc-200 font-medium truncate">{buyerName || 'Not recorded'}</div>
             {buyerPhone && (
-              <a href={phoneHref(buyerPhone)} className="mt-1 inline-flex items-center gap-1 text-[#9D91FA] font-mono text-[11px] hover:text-violet-300 transition-colors">
+              <a href={phoneHref(buyerPhone)} className="mt-1 inline-flex items-center gap-1 text-[#67E8F9] font-mono text-[11px] hover:text-violet-300 transition-colors">
                 <Phone className="w-3 h-3 shrink-0" /> {formatPhoneForDisplay(buyerPhone)}
               </a>
             )}

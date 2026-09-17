@@ -75,12 +75,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                 }}
                 className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer flex items-center justify-between font-sans ${
                   isSelected
-                    ? 'text-white bg-[#7C6CF2]/15 font-semibold border border-[#7C6CF2]/30'
+                    ? 'text-white bg-[#A3FF12]/15 font-semibold border border-[#A3FF12]/30'
                     : 'text-zinc-300 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 <span className="truncate pr-2 min-w-0 flex-1">{opt.label}</span>
-                {isSelected && <Check className="w-3.5 h-3.5 text-[#7C6CF2] shrink-0" />}
+                {isSelected && <Check className="w-3.5 h-3.5 text-[#A3FF12] shrink-0" />}
               </button>
             );
           })}
@@ -97,9 +97,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         aria-expanded={isOpen}
         aria-label={selectedOption ? selectedOption.label : placeholder}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full min-h-[44px] h-11 bg-[#121722] border rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-200 flex items-center justify-between font-sans transition-all gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
+        className={`w-full min-h-[44px] h-11 bg-[#121722] border rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-200 flex items-center justify-between font-sans transition-all gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
           isOpen
-            ? 'border-[#7C6CF2] ring-1 ring-[#7C6CF2]/40 bg-[#161C2A]'
+            ? 'border-[#A3FF12] ring-1 ring-[#A3FF12]/40 bg-[#161C2A]'
             : 'border-white/[0.08] hover:border-white/[0.15]'
         } ${className}`}
       >
@@ -110,7 +110,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           </span>
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-zinc-400 transition-transform shrink-0 ${isOpen ? 'rotate-180 text-[#7C6CF2]' : ''}`}
+          className={`w-4 h-4 text-zinc-400 transition-transform shrink-0 ${isOpen ? 'rotate-180 text-[#A3FF12]' : ''}`}
         />
       </button>
 

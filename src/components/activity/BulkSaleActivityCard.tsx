@@ -55,7 +55,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
   };
 
   return (
-    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl transition-all duration-200 overflow-hidden shadow-sm group flex flex-col">
+    <div className="bg-[#0D1118] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl transition-all duration-200 overflow-hidden shadow-sm group flex flex-col">
       {/* Collapsed Header */}
       <div 
         className="p-3 cursor-pointer hover:bg-white/[0.02] transition-colors flex items-start gap-3"
@@ -105,7 +105,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
             </span>
 
             {/* Total Revenue */}
-            <span className="bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+            <span className="bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30 px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
               SOLD: {formatCurrency(group.totalRevenue)}
             </span>
 

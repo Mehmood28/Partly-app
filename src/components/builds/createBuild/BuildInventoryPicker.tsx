@@ -58,7 +58,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
     <div className="space-y-3">
       <div className="border-b border-white/[0.08] pb-2">
         <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-2 mb-1 font-display">
-          <Tag className="w-3.5 h-3.5 text-[#7C6CF2]" /> Pick Parts from Inventory
+          <Tag className="w-3.5 h-3.5 text-[#A3FF12]" /> Pick Parts from Inventory
         </h4>
         <span className="text-xs text-zinc-400 font-sans">Filter by category or view all available stock</span>
       </div>
@@ -108,7 +108,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                     return (
                       <div
                         key={comp.id}
-                        className="bg-[#121722] border border-white/[0.08] hover:border-[#7C6CF2]/40 rounded-xl flex flex-col text-xs overflow-hidden transition-all"
+                        className="bg-[#121722] border border-white/[0.08] hover:border-[#A3FF12]/40 rounded-xl flex flex-col text-xs overflow-hidden transition-all"
                       >
                         <div
                           className="px-3 py-2 flex items-center justify-between cursor-pointer"
@@ -130,7 +130,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                                     {tag}
                                   </span>
                                 ))}
-                              <span className="bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 text-[#9D91FA] px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
+                              <span className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#67E8F9] px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
                                 {totalUnassigned} in stock
                               </span>
                               <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
@@ -158,13 +158,13 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                               {batches.map(({ entry, remainingUnassigned }) => (
                                 <div
                                   key={entry.id}
-                                  className="bg-[#121722] border border-white/[0.08] hover:border-[#7C6CF2]/30 rounded-xl px-3 py-2 flex items-center justify-between gap-2 transition-all"
+                                  className="bg-[#121722] border border-white/[0.08] hover:border-[#A3FF12]/30 rounded-xl px-3 py-2 flex items-center justify-between gap-2 transition-all"
                                 >
                                   <div className="flex items-center gap-2 flex-wrap flex-1">
                                     <span className="bg-white/[0.04] text-zinc-200 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold leading-none inline-flex items-center justify-center">
                                       {remainingUnassigned} available @ {formatCurrency(entry.unitPrice)}
                                     </span>
-                                    <span className="bg-[#7C6CF2]/10 text-[#9D91FA] border border-[#7C6CF2]/20 shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-medium leading-none inline-flex items-center justify-center">
+                                    <span className="bg-[#A3FF12]/10 text-[#67E8F9] border border-[#A3FF12]/20 shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-medium leading-none inline-flex items-center justify-center">
                                       {entry.condition}
                                     </span>
                                     <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px] font-mono">
@@ -183,9 +183,9 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                                       e.stopPropagation();
                                       handleAddPartClick(comp, entry.id);
                                     }}
-                                    className={`font-semibold px-3 py-1.5 rounded-lg text-xs transition-all shrink-0 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
+                                    className={`font-semibold px-3 py-1.5 rounded-lg text-xs transition-all shrink-0 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
                                       remainingUnassigned > 0
-                                        ? 'bg-[#7C6CF2] hover:bg-[#8D7FF5] text-white shadow-sm shadow-[#7C6CF2]/20'
+                                        ? 'bg-[#A3FF12] hover:bg-[#C2FF5C] text-white shadow-sm shadow-[#A3FF12]/20'
                                         : 'opacity-40 pointer-events-none bg-white/[0.04] text-zinc-500 border border-white/[0.06]'
                                     }`}
                                   >

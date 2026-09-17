@@ -52,8 +52,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     }
     if (variant === 'amber' || variant === 'violet') {
       return (
-        <div className="w-8 h-8 rounded-xl bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0">
-          <HelpCircle className="w-4 h-4 text-[#7C6CF2]" />
+        <div className="w-8 h-8 rounded-xl bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center shrink-0">
+          <HelpCircle className="w-4 h-4 text-[#A3FF12]" />
         </div>
       );
     }
@@ -69,7 +69,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       return 'bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-emerald-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500';
     }
     if (variant === 'amber' || variant === 'violet') {
-      return 'bg-[#7C6CF2] hover:bg-[#8D7FF5] text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-[#7C6CF2]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]';
+      return 'bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-[#A3FF12]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]';
     }
     return 'bg-red-500 hover:bg-red-600 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500';
   };
@@ -114,7 +114,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 type="button"
                 onClick={onCancel}
                 disabled={isBusy}
-                className="px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] disabled:cursor-wait disabled:opacity-60"
+                className="px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] disabled:cursor-wait disabled:opacity-60"
               >
                 {cancelText}
               </button>

@@ -201,7 +201,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       <div className="bg-[#0D1118] border border-white/[0.08] p-3 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center text-[#7C6CF2]">
+            <div className="w-6 h-6 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12]">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
             PC SALES & PORTFOLIO ANALYTICS
@@ -247,11 +247,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between mb-3 relative z-10 flex-wrap gap-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-[#7C6CF2]" /> {selectedMonthName} {selectedYear} Performance
+              <Calendar className="w-3.5 h-3.5 text-[#A3FF12]" /> {selectedMonthName} {selectedYear} Performance
             </h3>
             <div className="flex items-center gap-2">
               {selectedMonthIdx === currentMonthIdx && selectedYear === currentYearNum && (
-                <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap bg-[#7C6CF2]/15 text-[#9D91FA] border border-[#7C6CF2]/30">
+                <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap bg-[#A3FF12]/15 text-[#67E8F9] border border-[#A3FF12]/30">
                   Current Month
                 </span>
               )}
@@ -261,7 +261,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div className="grid grid-cols-2 gap-2 relative z-10">
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Revenue</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-[#9D91FA] mt-0.5 leading-tight">{formatCurrency(selectedMonthRevenue)}</p>
+              <p className="text-sm sm:text-base font-bold font-mono text-[#67E8F9] mt-0.5 leading-tight">{formatCurrency(selectedMonthRevenue)}</p>
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Cost</p>
@@ -290,7 +290,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between mb-3 relative z-10 flex-wrap gap-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <BarChart2 className="w-3.5 h-3.5 text-[#7C6CF2]" /> {selectedYear} Full Year Totals
+              <BarChart2 className="w-3.5 h-3.5 text-[#A3FF12]" /> {selectedYear} Full Year Totals
             </h3>
             <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
               12 Month Aggregate
@@ -300,7 +300,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div className="grid grid-cols-2 gap-2 relative z-10">
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Revenue</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-[#9D91FA] mt-0.5 leading-tight">{formatCurrency(totalYearlyRevenue)}</p>
+              <p className="text-sm sm:text-base font-bold font-mono text-[#67E8F9] mt-0.5 leading-tight">{formatCurrency(totalYearlyRevenue)}</p>
             </div>
             <div className="border border-white/[0.08] bg-[#121722] rounded-xl p-2.5 flex flex-col justify-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Cost</p>
@@ -331,7 +331,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-[#121722] px-3.5 py-2.5 border-b border-white/[0.08] flex items-center justify-between">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-              <PackageCheck className="w-3.5 h-3.5 text-[#7C6CF2]" /> Sales Tracking — {selectedYear}
+              <PackageCheck className="w-3.5 h-3.5 text-[#A3FF12]" /> Sales Tracking — {selectedYear}
             </h3>
             <p className="text-[10px] sm:text-[11px] text-zinc-400 mt-0.5">
               Revenue and profit include PC and loose-part sales. PCs Sold counts PC sales only.
@@ -360,9 +360,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                     onClick={() => setSelectedMonthIdx(row.monthIndex)}
                     className={`cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-[#7C6CF2]/15 text-white'
+                        ? 'bg-[#A3FF12]/15 text-white'
                         : isCurrent
-                        ? 'bg-white/[0.02] text-zinc-100 font-semibold border-l-2 border-[#7C6CF2] hover:bg-white/[0.04]'
+                        ? 'bg-white/[0.02] text-zinc-100 font-semibold border-l-2 border-[#A3FF12] hover:bg-white/[0.04]'
                         : 'hover:bg-white/[0.02] border-l-2 border-transparent'
                     }`}
                   >
@@ -372,17 +372,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                         <span className="flex items-center gap-1.5">
                           <span className="truncate">{row.monthName.substring(0, 3)}<span className="hidden sm:inline">{row.monthName.substring(3)}</span></span>
                           {isCurrent && (
-                            <span className="text-[#9D91FA] bg-[#7C6CF2]/20 border border-[#7C6CF2]/40 flex items-center justify-center w-4 h-4 rounded-full">
+                            <span className="text-[#67E8F9] bg-[#A3FF12]/20 border border-[#A3FF12]/40 flex items-center justify-center w-4 h-4 rounded-full">
                               <CheckCircle2 className="w-2.5 h-2.5" />
                             </span>
                           )}
                         </span>
-                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#7C6CF2] hidden sm:block" />}
+                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#A3FF12] hidden sm:block" />}
                       </div>
                     </td>
 
                     {/* Revenue Cell */}
-                    <td className="py-2 px-3 text-[#9D91FA] border-r border-white/[0.06] font-mono font-medium">
+                    <td className="py-2 px-3 text-[#67E8F9] border-r border-white/[0.06] font-mono font-medium">
                       {formatCurrency(row.revenue)}
                     </td>
 
@@ -401,11 +401,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </tbody>
             {/* TOTAL Row */}
             <tfoot>
-              <tr className="bg-[#121722] border-t-2 border-[#7C6CF2]/40 font-mono text-xs font-bold">
+              <tr className="bg-[#121722] border-t-2 border-[#A3FF12]/40 font-mono text-xs font-bold">
                 <td className="py-2.5 px-3 font-sans text-zinc-200 tracking-wider uppercase border-r border-white/[0.06]">
                   TOTAL
                 </td>
-                <td className="py-2.5 px-3 text-[#9D91FA] border-r border-white/[0.06]">
+                <td className="py-2.5 px-3 text-[#67E8F9] border-r border-white/[0.06]">
                   {formatCurrency(totalYearlyRevenue)}
                 </td>
                 <td className={`py-2.5 px-3 border-r border-white/[0.06] ${getProfitTextColor(totalYearlyProfit)}`}>
@@ -426,7 +426,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 space-y-3 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <TrendingUp className="w-3.5 h-3.5 text-[#7C6CF2]" /> {selectedYear} Monthly Total Revenue & Profit
+              <TrendingUp className="w-3.5 h-3.5 text-[#A3FF12]" /> {selectedYear} Monthly Total Revenue & Profit
             </h3>
           </div>
 
@@ -462,7 +462,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       name,
                     ]}
                   />
-                  <Bar dataKey="revenue" fill="#7C6CF2" name="Revenue" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="#A3FF12" name="Revenue" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="profit" fill="#10b981" name="Profit" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -476,7 +476,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 space-y-3 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <PieIcon className="w-3.5 h-3.5 text-[#7C6CF2]" /> Inventory Valuation by Category
+              <PieIcon className="w-3.5 h-3.5 text-[#A3FF12]" /> Inventory Valuation by Category
             </h3>
           </div>
           <div className="h-52 w-full">
@@ -520,7 +520,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-[#0D1118] border border-white/[0.08] rounded-xl p-3.5 space-y-3 lg:col-span-2 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <TrendingUp className="w-3.5 h-3.5 text-[#7C6CF2]" /> PC Profit Margin Trend
+              <TrendingUp className="w-3.5 h-3.5 text-[#A3FF12]" /> PC Profit Margin Trend
             </h3>
             <span className="text-[11px] font-mono text-zinc-400 font-medium">%</span>
           </div>
@@ -554,7 +554,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                     }}
                     formatter={(value: number) => [`${value.toFixed(2)}%`, 'Profit Margin']}
                   />
-                  <Line type="monotone" dataKey="pcProfitMargin" stroke="#7C6CF2" strokeWidth={2.5} dot={{ fill: '#7C6CF2', strokeWidth: 2, r: 3.5 }} activeDot={{ r: 5 }} />
+                  <Line type="monotone" dataKey="pcProfitMargin" stroke="#A3FF12" strokeWidth={2.5} dot={{ fill: '#A3FF12', strokeWidth: 2, r: 3.5 }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (

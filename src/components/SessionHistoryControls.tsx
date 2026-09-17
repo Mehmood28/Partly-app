@@ -28,7 +28,7 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
   };
 
   const sharedButtonClasses =
-    'min-h-[36px] flex items-center justify-center gap-1.5 rounded-xl border text-[10px] sm:text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] touch-manipulation';
+    'min-h-[36px] flex items-center justify-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.025] text-zinc-300 text-[10px] sm:text-xs font-semibold transition-colors hover:border-[#67E8F9]/40 hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] touch-manipulation';
 
   return (
     <div className="relative w-full">
@@ -40,13 +40,13 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
           aria-label={undoCount > 0 ? `Undo ${getItemLabel(undoHistory[0]) || 'action'}` : 'Undo unavailable'}
           className={`${sharedButtonClasses} ${
             undoCount > 0
-              ? 'bg-[#7C6CF2]/15 hover:bg-[#7C6CF2]/25 text-white border-[#7C6CF2]/30 active:scale-[0.98]'
+              ? 'text-white active:scale-[0.98]'
               : 'bg-white/[0.02] text-zinc-600 border-white/[0.04] cursor-not-allowed opacity-45'
           }`}
         >
           <RotateCcw className="w-3.5 h-3.5 shrink-0" />
           <span>Undo</span>
-          {undoCount > 0 && <span className="font-mono text-[9px] text-[#C4BCFC]">{undoCount}</span>}
+          {undoCount > 0 && <span className="font-mono text-[9px] text-[#CFFAFE]">{undoCount}</span>}
         </button>
 
         <button
@@ -56,7 +56,7 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
           aria-label={redoCount > 0 ? `Redo ${getItemLabel(redoHistory[0]) || 'action'}` : 'Redo unavailable'}
           className={`${sharedButtonClasses} ${
             redoCount > 0
-              ? 'bg-white/[0.05] hover:bg-white/[0.1] text-zinc-200 hover:text-white border-white/[0.1] active:scale-[0.98]'
+              ? 'text-white active:scale-[0.98]'
               : 'bg-white/[0.02] text-zinc-600 border-white/[0.04] cursor-not-allowed opacity-45'
           }`}
         >
@@ -73,11 +73,11 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
           aria-label={`History log with ${undoCount} undo and ${redoCount} redo actions`}
           className={`${sharedButtonClasses} cursor-pointer ${placement === 'desktop' ? 'col-span-2' : ''} ${
             isSessionHistoryOpen
-              ? 'bg-[#7C6CF2]/20 text-white border-[#7C6CF2]/40'
-              : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border-white/[0.06]'
+              ? 'bg-[#A3FF12]/12 text-white border-[#A3FF12]/45'
+              : ''
           }`}
         >
-          <History className="w-3.5 h-3.5 shrink-0 text-[#7C6CF2]" />
+          <History className="w-3.5 h-3.5 shrink-0 text-[#A3FF12]" />
           <span>History Log</span>
         </button>
       </div>

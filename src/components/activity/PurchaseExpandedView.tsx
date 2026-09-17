@@ -36,7 +36,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
         </div>
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
           <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Quantity Purchased</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-[#9D91FA]">
+          <div className="text-sm sm:text-base font-bold font-mono text-[#67E8F9]">
             {tx.purchaseKind === 'PC'
               ? `${purchasedQuantity} ${purchasedQuantity === 1 ? 'PC' : 'PCs'}`
               : `${purchasedQuantity} ${purchasedQuantity === 1 ? 'unit' : 'units'}`}
@@ -46,7 +46,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
         {!isBulkPurchase && tx.quantity && tx.quantity > 1 && (
           <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08] col-span-2 sm:col-span-1">
             <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Unit Price</div>
-            <div className="text-sm sm:text-base font-bold font-mono text-[#9D91FA]">
+            <div className="text-sm sm:text-base font-bold font-mono text-[#67E8F9]">
               {formatCurrency(tx.totalAmount / tx.quantity)}
             </div>
           </div>
@@ -72,7 +72,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
                   className="bg-[#121722] border border-white/[0.08] rounded-xl p-2.5 flex items-start gap-2.5 text-xs shadow-sm"
                 >
                   {/* Square Category Icon */}
-                  <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center shrink-0 mt-0.5">
                     {renderCategoryIcon(item.category)}
                   </div>
 
@@ -83,7 +83,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
                         {item.itemName}
                       </span>
                       {item.totalPrice > 0 && (
-                        <span className="font-mono font-medium text-[#9D91FA] shrink-0 ml-2">
+                        <span className="font-mono font-medium text-[#67E8F9] shrink-0 ml-2">
                           {formatCurrency(item.totalPrice)}
                         </span>
                       )}
@@ -105,7 +105,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
                       {/* Quantity & Unit/Total Price Pills */}
                       {item.quantity === 1 ? (
                         <>
-                          <span className="bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 text-[#9D91FA] px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+                          <span className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#67E8F9] px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                             Qty: 1
                           </span>
                           {item.unitPrice > 0 && (
@@ -116,7 +116,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
                         </>
                       ) : (
                         <>
-                          <span className="bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 text-[#9D91FA] px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+                          <span className="bg-[#A3FF12]/15 border border-[#A3FF12]/30 text-[#67E8F9] px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                             Qty: {item.quantity}
                           </span>
                           {item.unitPrice > 0 && (
@@ -125,7 +125,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({
                             </span>
                           )}
                           {item.totalPrice > 0 && (
-                            <span className="bg-[#7C6CF2]/20 text-[#9D91FA] border border-[#7C6CF2]/40 whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+                            <span className="bg-[#A3FF12]/20 text-[#67E8F9] border border-[#A3FF12]/40 whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
                               {formatCurrency(item.totalPrice)} total
                             </span>
                           )}

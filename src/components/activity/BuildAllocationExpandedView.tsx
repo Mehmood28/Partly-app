@@ -12,7 +12,7 @@ export const BuildAllocationExpandedView: React.FC<BuildAllocationExpandedViewPr
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
           <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Total Build Cost</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-[#9D91FA]">{formatCurrency(tx.totalAmount)}</div>
+          <div className="text-sm sm:text-base font-bold font-mono text-[#67E8F9]">{formatCurrency(tx.totalAmount)}</div>
         </div>
         <div className="bg-[#121722] p-2.5 rounded-xl border border-white/[0.08]">
           <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-0.5">Total Parts Allocated</div>

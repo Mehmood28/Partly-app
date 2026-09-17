@@ -18,7 +18,7 @@ export const getCategoryIcon = (cat: ComponentCategory) => {
     case 'CPU':
       return <Cpu className="w-3.5 h-3.5 text-amber-400" />;
     case 'GPU':
-      return <Monitor className="w-3.5 h-3.5 text-purple-400" />;
+      return <Monitor className="w-3.5 h-3.5 text-cyan-300" />;
     case 'RAM':
       return <HardDrive className="w-3.5 h-3.5 text-emerald-400" />;
     case 'Storage':

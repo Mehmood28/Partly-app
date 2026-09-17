@@ -238,7 +238,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0D1118] border border-white/[0.08] p-3 rounded-xl shadow-sm">
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center text-[#7C6CF2]">
+            <div className="w-6 h-6 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12]">
               <Hammer className="w-3.5 h-3.5" />
             </div>
             PC BUILDS
@@ -251,13 +251,13 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
           <button
             onClick={onOpenBuyPC}
-            className="bg-[#121722] hover:bg-white/[0.06] border border-[#7C6CF2]/30 text-[#9D91FA] font-semibold shadow-sm text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
+            className="bg-[#121722] hover:bg-white/[0.06] border border-[#A3FF12]/30 text-[#67E8F9] font-semibold shadow-sm text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
           >
             <ShoppingCart className="w-3.5 h-3.5" /> Buy PC
           </button>
           <button
             onClick={() => onOpenAddBuild()}
-            className="bg-[#7C6CF2] hover:bg-[#6A58EA] text-white font-semibold shadow-sm text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
+            className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold shadow-sm text-xs px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Create New PC Build
           </button>
@@ -267,11 +267,11 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       {/* Filter Tabs & Search Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 bg-[#0D1118] border border-white/[0.08] p-2.5 rounded-xl shadow-sm">
         {/* Status Filter Tabs: Available, Pending, Sold */}
-        <div className="flex items-center gap-1.5 flex-nowrap sm:flex-wrap pb-0.5 md:pb-0 text-xs">
+        <div className="flex items-center gap-1.5 flex-nowrap sm:flex-wrap border-b border-white/[0.10] pb-0 md:pb-0 text-xs">
           <button 
             type="button"
             onClick={() => handleTabChange('Available')} 
-            className={`px-2.5 py-1.5 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-all shrink-0 cursor-pointer ${statusFilter === 'Available' ? 'bg-[#7C6CF2] text-white shadow-sm shadow-[#7C6CF2]/20' : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08]'}`}
+            className={`relative px-2.5 py-1.5 sm:py-1 rounded-t-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors shrink-0 cursor-pointer ${statusFilter === 'Available' ? 'text-[#A3FF12] border-b-2 border-[#A3FF12]' : 'text-zinc-500 hover:text-zinc-200'}`}
           >
             AVAILABLE ({availableCount})
           </button>
@@ -279,7 +279,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           <button 
             type="button"
             onClick={() => handleTabChange('Pending')} 
-            className={`px-2.5 py-1.5 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-all shrink-0 cursor-pointer ${statusFilter === 'Pending' ? 'bg-[#7C6CF2] text-white shadow-sm shadow-[#7C6CF2]/20' : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08]'}`}
+            className={`relative px-2.5 py-1.5 sm:py-1 rounded-t-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors shrink-0 cursor-pointer ${statusFilter === 'Pending' ? 'text-[#A3FF12] border-b-2 border-[#A3FF12]' : 'text-zinc-500 hover:text-zinc-200'}`}
           >
             PENDING ({pendingCount})
           </button>
@@ -287,7 +287,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           <button 
             type="button"
             onClick={() => handleTabChange('Trade-Ins')} 
-            className={`px-2.5 py-1.5 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-all shrink-0 cursor-pointer ${statusFilter === 'Trade-Ins' ? 'bg-[#7C6CF2] text-white shadow-sm shadow-[#7C6CF2]/20' : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08]'}`}
+            className={`relative px-2.5 py-1.5 sm:py-1 rounded-t-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors shrink-0 cursor-pointer ${statusFilter === 'Trade-Ins' ? 'text-[#A3FF12] border-b-2 border-[#A3FF12]' : 'text-zinc-500 hover:text-zinc-200'}`}
           >
             TRADE-INS ({tradeInCount})
           </button>
@@ -295,7 +295,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           <button 
             type="button"
             onClick={() => handleTabChange('Sold')} 
-            className={`px-2.5 py-1.5 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-all shrink-0 cursor-pointer ${statusFilter === 'Sold' ? 'bg-[#7C6CF2] text-white shadow-sm shadow-[#7C6CF2]/20' : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08]'}`}
+            className={`relative px-2.5 py-1.5 sm:py-1 rounded-t-lg text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors shrink-0 cursor-pointer ${statusFilter === 'Sold' ? 'text-[#A3FF12] border-b-2 border-[#A3FF12]' : 'text-zinc-500 hover:text-zinc-200'}`}
           >
             SOLD ({soldCount})
           </button>
@@ -330,7 +330,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
               placeholder="Search builds..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full max-w-full box-border h-9 pl-9 pr-8 bg-[#121722] border border-white/[0.08] rounded-xl py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors"
+              className="w-full max-w-full box-border h-9 pl-9 pr-8 bg-[#121722] border border-white/[0.08] rounded-xl py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
             />
             {searchQuery && (
               <button

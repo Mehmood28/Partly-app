@@ -32,7 +32,7 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
       <div className="flex flex-col gap-2 border-b border-white/[0.08] pb-3">
         <div className="flex items-center justify-between gap-2">
           <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-2 whitespace-nowrap shrink-0 font-display">
-            <Box className="w-4 h-4 text-[#7C6CF2] shrink-0" /> Selected Parts ({selectedParts.length})
+            <Box className="w-4 h-4 text-[#A3FF12] shrink-0" /> Selected Parts ({selectedParts.length})
           </h4>
           <div className="flex flex-col items-end gap-1 shrink-0">
             <span className="bg-white/[0.06] border border-white/[0.08] text-zinc-300 whitespace-nowrap px-2 py-0.5 rounded-lg text-xs font-mono font-medium leading-none inline-flex items-center justify-center">
@@ -51,7 +51,7 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
                 key={cat}
                 className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors ${
                   isSelected
-                    ? 'bg-[#7C6CF2]/20 text-[#9D91FA] border border-[#7C6CF2]/40'
+                    ? 'bg-[#A3FF12]/20 text-[#67E8F9] border border-[#A3FF12]/40'
                     : 'bg-[#121722] text-zinc-500 border border-white/[0.06]'
                 }`}
               >

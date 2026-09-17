@@ -37,9 +37,9 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
           <button
             type="button"
             onClick={onAutoFillTitle}
-            className="text-[#9D91FA] hover:text-white text-xs font-semibold flex items-center gap-1 bg-[#7C6CF2]/15 hover:bg-[#7C6CF2]/25 px-2 py-0.5 rounded-lg border border-[#7C6CF2]/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+            className="text-[#67E8F9] hover:text-white text-xs font-semibold flex items-center gap-1 bg-[#A3FF12]/15 hover:bg-[#A3FF12]/25 px-2 py-0.5 rounded-lg border border-[#A3FF12]/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
           >
-            <Wand2 className="w-3 h-3 text-[#7C6CF2]" /> Auto-Fill Title
+            <Wand2 className="w-3 h-3 text-[#A3FF12]" /> Auto-Fill Title
           </button>
         </div>
         <input
@@ -47,7 +47,7 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
           required
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
-          className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-sans"
+          className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
           placeholder="e.g. 7700 + 4070 CUSTOM"
         />
       </div>
@@ -60,7 +60,7 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
             inputMode="decimal"
             value={salePrice}
             onChange={(e) => onSalePriceChange(e.target.value)}
-            className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors pl-7"
+            className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors pl-7"
             placeholder="0.00"
           />
         </div>
@@ -90,7 +90,7 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
                 step="1"
                 value={customWarrantyDays}
                 onChange={(e) => onCustomWarrantyDaysChange?.(e.target.value)}
-                className="w-20 h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors"
+                className="w-20 h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
                 placeholder="Days"
                 required
               />
@@ -104,7 +104,7 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
           rows={2}
-          className="w-full bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors resize-y font-sans"
+          className="w-full bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors resize-y font-sans"
           placeholder="Case fans layout, thermal paste used, OS details..."
         />
       </div>

@@ -57,7 +57,7 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
     <div className="flex flex-col gap-2">
       {/* Sub-tab Switcher Header */}
       <div className="flex justify-center mb-1 w-full">
-        <div className="border border-white/[0.08] bg-[#0D1118] p-1 rounded-xl grid grid-cols-3 gap-1 shadow-sm w-full max-w-lg backdrop-blur-md h-10 items-center">
+        <div className="border-b border-white/[0.10] bg-transparent grid grid-cols-3 gap-1 w-full max-w-lg h-9 items-center">
           {subTabs.map((tab) => {
             const isSelected = activeSubTab === tab.id;
             const Icon = tab.icon;
@@ -65,18 +65,18 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
               <button
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id)}
-                className={`relative flex items-center justify-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors z-10 h-full whitespace-nowrap overflow-hidden ${
-                  isSelected ? 'text-white font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                className={`relative flex items-center justify-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors z-10 h-full whitespace-nowrap overflow-hidden ${
+                  isSelected ? 'text-white font-semibold' : 'text-zinc-500 hover:text-zinc-200'
                 }`}
               >
                 {isSelected && (
                   <motion.div
                     layoutId="stock-subtab-bg"
-                    className="absolute inset-0 bg-[#7C6CF2]/20 border border-[#7C6CF2]/50 shadow-sm shadow-[#7C6CF2]/20 rounded-lg"
+                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#A3FF12] rounded-full"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   />
                 )}
-                <Icon className={`w-3.5 h-3.5 shrink-0 relative z-10 ${isSelected ? 'text-[#7C6CF2]' : 'text-zinc-400'}`} />
+                <Icon className={`w-3.5 h-3.5 shrink-0 relative z-10 ${isSelected ? 'text-[#A3FF12]' : 'text-zinc-500'}`} />
                 <span className="relative z-10 truncate">{tab.label}</span>
                 <span className="text-[10px] font-mono opacity-80 shrink-0 relative z-10">({tab.count})</span>
               </button>

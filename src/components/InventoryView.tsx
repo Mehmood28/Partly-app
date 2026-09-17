@@ -159,7 +159,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         </div>
         <div className="border border-white/[0.08] bg-[#0D1118] rounded-xl p-2.5 flex flex-col justify-center shadow-sm">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Assigned</div>
-          <div className="text-[#9D91FA] font-bold text-sm sm:text-base font-mono mt-0.5 leading-tight">{formatCurrency(activeBuildsCost)}</div>
+          <div className="text-[#67E8F9] font-bold text-sm sm:text-base font-mono mt-0.5 leading-tight">{formatCurrency(activeBuildsCost)}</div>
         </div>
         <div className="border border-white/[0.08] bg-[#0D1118] rounded-xl p-2.5 flex flex-col justify-center shadow-sm">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Value</div>
@@ -170,7 +170,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
       {/* Unified In Stock Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-[#0D1118] border border-white/[0.08] p-2.5 sm:p-3 rounded-xl shadow-sm">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-[#7C6CF2]/15 border border-[#7C6CF2]/30 flex items-center justify-center text-[#7C6CF2] shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#A3FF12]/15 border border-[#A3FF12]/30 flex items-center justify-center text-[#A3FF12] shrink-0">
             <Layers className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -187,17 +187,17 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             <button
               type="button"
               onClick={onOpenBulkEntry}
-              className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all bg-[#121722] hover:bg-[#182030] border border-white/[0.08] hover:border-[#7C6CF2]/40 text-zinc-100 flex items-center justify-center gap-1.5 cursor-pointer"
+              className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all bg-[#121722] hover:bg-[#182030] border border-white/[0.08] hover:border-[#A3FF12]/40 text-zinc-100 flex items-center justify-center gap-1.5 cursor-pointer"
               title="Fast Bulk Stock Entry via AI Text or Image Scan"
             >
-              <Zap className="w-3.5 h-3.5 text-[#7C6CF2] shrink-0" />
+              <Zap className="w-3.5 h-3.5 text-[#A3FF12] shrink-0" />
               <span>AI Import</span>
             </button>
           )}
           <button
             type="button"
             onClick={() => onOpenAddComponent()}
-            className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all bg-[#7C6CF2] hover:bg-[#6C5CE7] text-white shadow-sm shadow-[#7C6CF2]/20 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+            className="min-h-[44px] sm:min-h-0 px-3 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all bg-[#A3FF12] hover:bg-[#C2FF5C] text-white shadow-sm shadow-[#A3FF12]/20 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
             title="Add a new component"
           >
             <Plus className="w-3.5 h-3.5 shrink-0" />
@@ -239,7 +239,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             <button
               type="button"
               onClick={() => onOpenAddComponent()}
-              className="bg-[#7C6CF2] hover:bg-[#6C5CE7] text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-all inline-flex items-center gap-1.5 shadow-sm shadow-[#7C6CF2]/20"
+              className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-all inline-flex items-center gap-1.5 shadow-sm shadow-[#A3FF12]/20"
             >
               <Plus className="w-4 h-4" /> Add New Component
             </button>
@@ -253,7 +253,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                 <div key={row.key} className="pt-1.5 pb-0.5">
                   <div className="flex items-center justify-between text-xs font-mono px-1">
                     <span className="font-semibold text-zinc-200 tracking-wider uppercase text-xs sm:text-sm flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-[#7C6CF2]" />
+                      <Layers className="w-3.5 h-3.5 text-[#A3FF12]" />
                       {row.category}
                     </span>
                     <div className="flex items-center gap-2.5 text-zinc-400 text-xs">
@@ -329,7 +329,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                   >
                     <div className="flex items-center justify-between text-xs font-mono px-1">
                       <span className="font-semibold text-zinc-200 tracking-wider uppercase text-xs sm:text-sm flex items-center gap-1.5">
-                        <Layers className="w-3.5 h-3.5 text-[#7C6CF2]" />
+                        <Layers className="w-3.5 h-3.5 text-[#A3FF12]" />
                         {row.category}
                       </span>
                       <div className="flex items-center gap-2.5 text-zinc-400 text-xs">

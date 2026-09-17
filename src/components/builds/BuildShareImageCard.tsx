@@ -17,14 +17,14 @@ interface SpecItemConfig {
 }
 
 const SPEC_CONFIGS: SpecItemConfig[] = [
-  { category: 'GPU', key: 'GPU', colorClass: 'text-[#9D91FA]', bulletColor: 'bg-[#7C6CF2]' },
+  { category: 'GPU', key: 'GPU', colorClass: 'text-[#67E8F9]', bulletColor: 'bg-[#A3FF12]' },
   { category: 'CPU', key: 'CPU', colorClass: 'text-blue-400', bulletColor: 'bg-blue-400' },
   { category: 'Motherboard', key: 'Motherboard', colorClass: 'text-indigo-400', bulletColor: 'bg-indigo-400' },
   { category: 'RAM', key: 'RAM', colorClass: 'text-emerald-400', bulletColor: 'bg-emerald-400' },
   { category: 'Cooler', key: 'Cooler', colorClass: 'text-cyan-400', bulletColor: 'bg-cyan-400' },
   { category: 'Storage', key: 'Storage', colorClass: 'text-teal-400', bulletColor: 'bg-teal-400' },
   { category: 'PSU', key: 'PSU', colorClass: 'text-violet-400', bulletColor: 'bg-violet-400' },
-  { category: 'Case', key: 'Case', colorClass: 'text-purple-400', bulletColor: 'bg-purple-400' },
+  { category: 'Case', key: 'Case', colorClass: 'text-cyan-300', bulletColor: 'bg-purple-400' },
 ];
 
 export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCardProps>(({ build, components }, ref) => {
@@ -38,14 +38,14 @@ export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCar
       ref={ref}
       className="w-[580px] bg-[#090B10] text-zinc-100 p-6 rounded-2xl border border-white/[0.12] shadow-2xl flex flex-col font-sans"
       style={{
-        boxShadow: '0 0 40px rgba(124, 108, 242, 0.15)',
+        boxShadow: '0 0 40px rgba(163, 255, 18, 0.14)',
       }}
     >
       {/* Top Header / Branding */}
       <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-5">
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#7C6CF2] shadow-[0_0_10px_rgba(124,108,242,0.9)]" />
-          <span className="text-xs font-mono font-bold tracking-wider text-[#9D91FA]">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#A3FF12] shadow-[0_0_10px_rgba(163,255,18,0.9)]" />
+          <span className="text-xs font-mono font-bold tracking-wider text-[#67E8F9]">
             Partly // PC Showcase
           </span>
         </div>
@@ -79,7 +79,7 @@ export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCar
           <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold block mb-0.5">
             Total Build Cost
           </span>
-          <span className="text-2xl font-mono font-bold text-[#9D91FA]">
+          <span className="text-2xl font-mono font-bold text-[#67E8F9]">
             {formatCurrency(partsCost)}
           </span>
         </div>

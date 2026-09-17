@@ -125,7 +125,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
             max={maxQty > 0 ? maxQty : 1}
             value={quantity}
             onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-            className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-mono"
+            className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-mono"
           />
         </div>
       </div>
@@ -143,7 +143,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               step="any"
               value={unitSalePrice}
               onChange={(e) => handleUnitSalePriceChange(e.target.value)}
-              className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-mono"
+              className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-mono"
             />
           </div>
         </div>
@@ -159,7 +159,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               step="any"
               value={totalSalePrice}
               onChange={(e) => handleTotalSalePriceChange(e.target.value)}
-              className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-mono"
+              className="w-full h-9 bg-[#121722] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-mono"
             />
           </div>
         </div>
@@ -176,7 +176,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               type="date"
               value={saleDate}
               onChange={(e) => setSaleDate(e.target.value)}
-              className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-mono"
+              className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-mono"
             />
           </div>
           <div>
@@ -187,7 +187,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               type="text"
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
-              className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-sans"
+              className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
               placeholder="e.g. Amazon, Kijiji"
             />
           </div>
@@ -213,7 +213,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
             placeholder="e.g. Alex"
             value={buyerName}
             onChange={(e) => setBuyerName(e.target.value)}
-            className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors font-sans"
+            className="w-full h-9 bg-[#0D1118] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors font-sans"
           />
         </div>
       </div>

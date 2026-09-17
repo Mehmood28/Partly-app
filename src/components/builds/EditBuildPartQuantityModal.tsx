@@ -85,13 +85,13 @@ export const EditBuildPartQuantityModal: React.FC<EditBuildPartQuantityModalProp
       <form className="space-y-4 w-full" onSubmit={handleSubmit}>
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-            <Hash className="w-4 h-4 text-[#7C6CF2]" /> Change Part Quantity
+            <Hash className="w-4 h-4 text-[#A3FF12]" /> Change Part Quantity
           </h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close quantity editor"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -129,7 +129,7 @@ export const EditBuildPartQuantityModal: React.FC<EditBuildPartQuantityModalProp
               setQuantityInput(event.target.value);
               setErrorMessage(null);
             }}
-            className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors"
+            className="w-full h-11 bg-[#121722] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors"
           />
           <p className="text-[11px] text-zinc-500 mt-1.5">
             {exactBatchAvailability === null
@@ -148,14 +148,14 @@ export const EditBuildPartQuantityModal: React.FC<EditBuildPartQuantityModalProp
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!isValidQuantity || isUnchanged}
-            className="bg-[#7C6CF2] hover:bg-[#8D7FF5] text-white font-semibold shadow-md shadow-[#7C6CF2]/20 px-4 py-2.5 rounded-xl text-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-[#A3FF12] hover:bg-[#C2FF5C] text-white font-semibold shadow-md shadow-[#A3FF12]/20 px-4 py-2.5 rounded-xl text-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Save Quantity
           </button>

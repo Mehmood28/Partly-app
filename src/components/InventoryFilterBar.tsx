@@ -48,9 +48,9 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
             onCategoryChange('ALL');
             onSubCategoryChange?.('');
           }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
             activeCategory === 'ALL'
-              ? 'bg-[#7C6CF2] text-white font-bold shadow-sm shadow-[#7C6CF2]/30'
+              ? 'bg-[#A3FF12] text-white font-bold shadow-sm shadow-[#A3FF12]/30'
               : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08] hover:bg-white/[0.04]'
           }`}
         >
@@ -69,9 +69,9 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 onCategoryChange(cat);
                 onSubCategoryChange?.('');
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
                 isActive
-                  ? 'bg-[#7C6CF2] text-white border border-[#7C6CF2] shadow-sm shadow-[#7C6CF2]/30'
+                  ? 'bg-[#A3FF12] text-white border border-[#A3FF12] shadow-sm shadow-[#A3FF12]/30'
                   : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08] hover:bg-white/[0.04]'
               }`}
             >
@@ -91,9 +91,9 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 key={sub}
                 type="button"
                 onClick={() => onSubCategoryChange?.(activeSubCategory === sub ? '' : sub)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C6CF2] ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A3FF12] ${
                 isActive
-                  ? 'bg-[#7C6CF2]/15 text-[#B7AEFF] border border-[#7C6CF2]/40 shadow-sm'
+                  ? 'bg-[#A3FF12]/15 text-[#A5F3FC] border border-[#A3FF12]/40 shadow-sm'
                     : 'bg-[#121722] text-zinc-400 hover:text-zinc-200 border border-white/[0.08] hover:bg-white/[0.04]'
                 }`}
               >
@@ -113,7 +113,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
             placeholder="Search parts by name or model..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full h-11 max-w-full box-border bg-[#121722] border border-white/[0.08] rounded-xl pl-10 pr-9 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#7C6CF2] focus:ring-1 focus:ring-[#7C6CF2]/40 transition-colors focus-visible:ring-2 focus-visible:ring-[#7C6CF2]"
+            className="w-full h-11 max-w-full box-border bg-[#121722] border border-white/[0.08] rounded-xl pl-10 pr-9 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A3FF12] focus:ring-1 focus:ring-[#A3FF12]/40 transition-colors focus-visible:ring-2 focus-visible:ring-[#A3FF12]"
           />
           {searchQuery && (
             <button
@@ -140,7 +140,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 { value: 'highest-stock', label: 'Highest Units in Stock' },
                 { value: 'lowest-stock', label: 'Lowest Units in Stock' }
               ]}
-              icon={<ArrowDownWideNarrow className="w-4 h-4 text-[#7C6CF2]" />}
+              icon={<ArrowDownWideNarrow className="w-4 h-4 text-[#A3FF12]" />}
               className="w-full sm:min-w-[210px]"
               dropdownClassName="shadow-2xl min-w-[230px] py-1.5"
             />
