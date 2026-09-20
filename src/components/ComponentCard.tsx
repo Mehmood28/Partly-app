@@ -153,11 +153,11 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
             </div>
           )}
 
-          {/* PURCHASE HISTORY Section */}
+          {/* Inventory on hand: each row is an available purchase batch. */}
           <div>
-            <div className="mb-2.5 flex items-center justify-between gap-3">
+            <div className="stock-batch-heading">
               <span className="text-sm font-semibold text-zinc-200">
-                Purchase History · {visibleBatchCount} batch{visibleBatchCount === 1 ? '' : 'es'}
+                Inventory on Hand · {visibleBatchCount} batch{visibleBatchCount === 1 ? '' : 'es'}
               </span>
               <span className="font-mono text-[11px] font-bold text-[#83E5DF] sm:text-xs">{formatCurrency(unassignedVal)}</span>
             </div>
@@ -182,7 +182,18 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
               }
 
               return (
-                <div className="app-ledger">
+                <div className="stock-batch-table-wrap">
+                  <div className="stock-batch-table" role="table" aria-label="Inventory batches on hand">
+                    <div className="stock-batch-table-head" role="row">
+                      <span role="columnheader">Date</span>
+                      <span role="columnheader">Condition</span>
+                      <span role="columnheader">Source</span>
+                      <span role="columnheader">Payment</span>
+                      <span role="columnheader">Available</span>
+                      <span role="columnheader">Unit cost</span>
+                      <span role="columnheader">Value</span>
+                      <span role="columnheader" className="stock-batch-table-actions">Actions</span>
+                    </div>
                   {visibleBatches.map((batch) => {
                     const entry = batch.entry;
                     const entryUnitPrice = batch.unitCost;
@@ -199,22 +210,21 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                       ? resolvePartedOutEntryOrigin(entry, state.transactions, state.builds)
                       : null;
 
-                    return (
-                      <div key={entry.id} className="app-ledger-row batch-row">
+                    const source = isPartedOutTradeInBatch
+                      ? (tradeInOrigin?.buyerName ? `Trade-in: ${tradeInOrigin.buyerName}` : 'Trade-in')
+                      : (!hideSupplierNames && entry.platform ? normalizePlatform(String(entry.platform)) : '—');
 
-                        <div className="batch-identity">
-                          <strong className="batch-date">{formatReadableDate(entry.date) || entry.date}</strong>
-                          <span className="inline-flex items-center gap-1.5"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}</span>
-                          {isTradeUpBatch && <span>Trade-up</span>}
-                        </div>
-                        <dl className="batch-source">
-                          {isPartedOutTradeInBatch ? <div><dt>Source</dt><dd>{tradeInOrigin?.buyerName ? `Trade-in: ${tradeInOrigin.buyerName}` : 'Trade-in'}</dd></div> : <>
-                            {!hideSupplierNames && entry.platform && <div><dt>Supplier</dt><dd>{normalizePlatform(String(entry.platform))}</dd></div>}
-                            {entry.paymentMethod && <div><dt>Payment</dt><dd>{String(entry.paymentMethod)}</dd></div>}
-                          </>}
-                        </dl>
-                        <div className="batch-value"><span>{batch.availableQuantity} × {formatCurrency(entryUnitPrice)} each</span><strong>{formatCurrency(entryTotal)}</strong>{(entry.taxPercent ?? 0) > 0 && <span>Includes tax</span>}</div>
-                        <div className="batch-actions">
+                    return (
+                      <React.Fragment key={entry.id}>
+                        <div className="stock-batch-table-row" role="row">
+                          <span role="cell">{formatReadableDate(entry.date) || entry.date}</span>
+                          <span role="cell" className="inline-flex items-center gap-1.5"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}</span>
+                          <span role="cell">{source}{isTradeUpBatch && <em>Trade-up</em>}</span>
+                          <span role="cell">{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}</span>
+                          <span role="cell" className="font-mono">{batch.availableQuantity}</span>
+                          <span role="cell" className="font-mono">{formatCurrency(entryUnitPrice)}</span>
+                          <strong role="cell" className="font-mono">{formatCurrency(entryTotal)}</strong>
+                          <div role="cell" className="batch-actions stock-batch-table-actions">
                           {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
                             <button
                               onClick={(e) => {
@@ -238,11 +248,18 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           )}
+                          </div>
                         </div>
-                        {entry.notes && <p className="batch-notes">{entry.notes}</p>}
-                      </div>
+                        {(entry.notes || (entry.taxPercent ?? 0) > 0) && (
+                          <div className="stock-batch-table-note">
+                            {entry.notes && <span>{entry.notes}</span>}
+                            {(entry.taxPercent ?? 0) > 0 && <span>Includes {entry.taxPercent}% tax</span>}
+                          </div>
+                        )}
+                      </React.Fragment>
                     );
                   })}
+                  </div>
                 </div>
               );
             })()}

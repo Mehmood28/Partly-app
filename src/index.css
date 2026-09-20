@@ -417,6 +417,21 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .stock-summary { display:flex; flex-wrap:wrap; gap:3px 5px; margin-top:4px; font-size:13px; color:#a6b3be; }
 .stock-expanded { padding:0 16px 16px; margin-left:4px; }
 .stock-expanded > div:first-child { border-top:1px solid var(--app-line); padding-top:12px; margin-bottom:20px; }
+.stock-batch-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:16px 0 9px; }
+.stock-batch-table-wrap { overflow-x:auto; border:1px solid var(--app-line); border-radius:6px; background:#101719; }
+.stock-batch-table { min-width:720px; }
+.stock-batch-table-head,.stock-batch-table-row { display:grid; grid-template-columns:92px 120px minmax(110px,1fr) 92px 72px 100px 102px 98px; align-items:center; column-gap:10px; }
+.stock-batch-table-head { min-height:34px; padding:0 12px; border-bottom:1px solid var(--app-line); color:var(--app-muted); font-size:10px; font-weight:650; letter-spacing:.05em; text-transform:uppercase; }
+.stock-batch-table-row { min-height:48px; padding:8px 12px; border-bottom:1px solid var(--app-line); color:#dbe4e8; font-size:12px; }
+.stock-batch-table-row > span,.stock-batch-table-row > strong { min-width:0; overflow-wrap:anywhere; }
+.stock-batch-table-row strong { color:#f1f5f5; font-size:13px; }
+.stock-batch-table-row em { display:block; margin-top:2px; color:var(--app-aqua); font-size:10px; font-style:normal; }
+.stock-batch-table-actions { text-align:right; }
+.stock-batch-table-row .batch-actions { justify-content:flex-end; }
+.stock-batch-table-row .batch-actions button { min-height:30px; }
+.stock-batch-table-row .batch-actions button:first-child { padding:4px 9px; }
+.stock-batch-table-note { display:flex; gap:12px; padding:7px 12px 8px 244px; border-bottom:1px solid var(--app-line); color:var(--app-muted); font-size:11px; }
+.stock-batch-table-note:last-child { border-bottom:0; }
 .batch-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 16px; padding:14px 0; }
 .batch-date { flex:1; font-size:13px; font-weight:650; color:#ecf0f0; }
 .batch-details { display:flex; flex-wrap:wrap; gap:4px 6px; margin-top:6px; font-size:12px; color:#acbac4; }
@@ -560,6 +575,21 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
   .stock-total { font-size:14px; }
   .stock-summary { font-size:12px; }
   .stock-expanded { padding:0 12px 12px; }
+  .stock-layout { gap:9px; }
+  .stock-inventory-layout { gap:11px; }
+  .stock-layout .app-segmented > button { min-height:38px; font-size:11px; }
+  .stock-inventory-layout .inventory-capital { padding:0; }
+  .stock-inventory-layout .inventory-capital > div { padding:5px 3px; }
+  .stock-inventory-layout .app-metric-label { font-size:10px; }
+  .stock-inventory-layout .app-metric-value { font-size:15px; letter-spacing:-.03em; }
+  .stock-inventory-layout .inventory-actions { gap:7px; }
+  .stock-inventory-layout .inventory-actions > button { min-height:40px; font-size:12px; }
+  .stock-inventory-layout .inventory-filters > div { gap:8px; }
+  .stock-inventory-layout .category-filters { gap:5px; }
+  .stock-inventory-layout .app-chip { min-height:31px; padding-inline:9px; font-size:11px; }
+  .stock-inventory-layout .app-field { min-height:42px; height:42px; font-size:12px; }
+  .stock-inventory-layout .inventory-group { padding:8px 0 3px; }
+  .stock-inventory-layout .inventory-group > div { font-size:14px; }
   .batch-row { grid-template-columns:1fr; gap:7px; }
   .batch-details { font-size:12px; }
   .batch-actions { justify-content:flex-end; }
@@ -702,6 +732,17 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .batch-notes { grid-column:1/-1; color:var(--app-muted); font-size:12px; }
 @media(max-width:639px) {
  .batch-row { grid-template-columns:1fr 1fr; gap:12px; }
+ .stock-batch-heading { margin:12px 0 8px; }
+ .stock-batch-table-wrap { margin-right:-1px; }
+ .stock-batch-table { min-width:670px; }
+ .stock-batch-table-head,.stock-batch-table-row { grid-template-columns:82px 110px minmax(95px,1fr) 78px 60px 86px 94px 86px; column-gap:8px; }
+ .stock-batch-table-head { min-height:31px; padding-inline:9px; font-size:9px; }
+ .stock-batch-table-row { min-height:42px; padding:6px 9px; font-size:11px; }
+ .stock-batch-table-row strong { font-size:11px; }
+ .stock-batch-table-row .batch-actions { gap:4px; }
+ .stock-batch-table-row .batch-actions button { min-height:27px; min-width:27px; font-size:10px; }
+ .stock-batch-table-row .batch-actions button:first-child { padding:3px 7px; }
+ .stock-batch-table-note { padding:5px 9px 6px 218px; font-size:10px; }
  .batch-source { border:0; padding:0; }
  .batch-source > div { flex-wrap:wrap; gap:0 6px; }
  .batch-actions { align-self:end; }
