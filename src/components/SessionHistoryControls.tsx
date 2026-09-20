@@ -46,7 +46,7 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
         >
           <RotateCcw className="w-5 h-5 shrink-0" />
           <span>Undo</span>
-          {undoCount > 0 && <span className="font-mono text-[11px] text-[#9FF8F4]">{undoCount}</span>}
+          {undoCount > 0 && <span className="session-history-count font-mono text-[11px] text-[#9FF8F4]">{undoCount}</span>}
         </button>
 
         <button
@@ -62,7 +62,7 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
         >
           <RotateCw className="w-5 h-5 shrink-0" />
           <span>Redo</span>
-          {redoCount > 0 && <span className="font-mono text-[11px] text-zinc-400">{redoCount}</span>}
+          {redoCount > 0 && <span className="session-history-count font-mono text-[11px] text-zinc-400">{redoCount}</span>}
         </button>
 
         <button

@@ -196,9 +196,15 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                         <div className="stock-batch-compact">
                           <div className="stock-batch-line stock-batch-line-primary">
                             <strong>{formatReadableDate(entry.date) || entry.date}</strong>
-                            <span>{source}</span>
+                            <span><em>Supplier</em>{source}</span>
                             <span>{batch.availableQuantity} × {formatCurrency(entryUnitPrice)}</span>
-                            <div className="batch-actions">
+                          </div>
+                          <div className="stock-batch-line stock-batch-line-secondary">
+                            <span>{entry.condition}</span>
+                            <span><em>Payment</em>{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span>
+                            <strong>{formatCurrency(entryTotal)}</strong>
+                          </div>
+                          <div className="batch-actions">
                             {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
                               <button
                                 onClick={(e) => {
@@ -222,12 +228,6 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             )}
-                            </div>
-                          </div>
-                          <div className="stock-batch-line stock-batch-line-secondary">
-                            <span>{entry.condition}</span>
-                            <span>{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span>
-                            <strong>{formatCurrency(entryTotal)}</strong>
                           </div>
                         </div>
                       </React.Fragment>
