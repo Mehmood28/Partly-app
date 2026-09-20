@@ -227,7 +227,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     : [];
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="max-w-lg">
+    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="stock-modal max-w-lg">
       <form 
         className="space-y-4 w-full"
         onSubmit={handleSubmit}

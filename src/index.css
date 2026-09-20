@@ -810,6 +810,38 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .purchase-history-view .purchase-item { font-size:12px; }
 .purchase-history-view .purchase-item-name strong { font-size:12px; font-weight:600; }
 .purchase-history-view .purchase-item-name span { margin-top:2px; font-size:10px; }
+.sold-parts-heading { display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:2px 0; }
+.sold-parts-heading h2 { color:#f3f7f7; font-size:25px; line-height:1.2; font-weight:650; letter-spacing:-.025em; }
+.sold-parts-heading p { color:var(--app-muted); font-size:14px; }
+.sold-parts-toolbar { display:grid; grid-template-columns:minmax(0,1fr) 220px; align-items:center; gap:12px; }
+.sold-parts-toolbar .app-field, .sold-parts-toolbar > div:last-child > div > button { height:42px; min-height:42px; font-size:13px; }
+.sold-parts-view .transaction-card, .sold-parts-view > .space-y-2 > .app-panel { border-radius:7px; }
+.sold-parts-view .record-header { padding:13px 15px; }
+.sold-parts-view .record-topline { gap:7px; margin-bottom:7px; font-size:11px; font-weight:500; }
+.sold-parts-view .record-topline svg { width:15px; height:15px; }
+.sold-parts-view .record-topline > svg:last-child { width:17px; height:17px; }
+.sold-parts-view .record-header h3 { font-size:16px; line-height:1.3; font-weight:600; }
+.sold-parts-view .record-finances { margin:10px 0 0; }
+.sold-parts-view .record-finances dt { font-size:10px; }
+.sold-parts-view .record-finances dd { font-size:15px; font-weight:650; }
+.sold-parts-view .record-metadata { margin-top:8px; font-size:11px; }
+.sold-parts-view .record-expanded { padding:11px 15px; }
+.sold-parts-view .record-actions, .sold-parts-view .record-expanded > .flex { gap:8px; }
+.sold-parts-view .record-expanded .app-button { min-height:32px; font-size:11px; }
+.sold-parts-view .record-expanded .overflow-hidden { border-radius:6px; }
+.sold-parts-view .record-expanded .overflow-hidden > div:first-child { padding:7px 9px; font-size:10px; }
+.sold-parts-view .record-expanded .overflow-hidden > .divide-y > div { padding:8px 9px; font-size:11px; }
+
+/* The Stock workflow uses the same compact controls as its ledger cards. */
+[data-bottom-sheet-modal] .stock-modal { padding:14px; }
+[data-bottom-sheet-modal] .stock-modal .h-11 { height:38px; }
+[data-bottom-sheet-modal] .stock-modal .rounded-xl { border-radius:7px; }
+[data-bottom-sheet-modal] .stock-modal .space-y-4 { gap:12px; }
+[data-bottom-sheet-modal] .stock-modal .space-y-3 { gap:9px; }
+[data-bottom-sheet-modal] .stock-modal .p-5 { padding:14px; }
+[data-bottom-sheet-modal] .stock-modal .px-5 { padding-left:14px; padding-right:14px; }
+[data-bottom-sheet-modal] .stock-modal .py-4 { padding-top:11px; padding-bottom:11px; }
+[data-bottom-sheet-modal] .stock-modal .font-bold { font-weight:600; }
 
 @media(max-width:639px) {
   .partly-navigation button { min-height:56px; gap:3px; font-size:10px; }
@@ -840,4 +872,23 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
   .purchase-history-view .purchase-item-name span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:9px; }
   .purchase-history-view .purchase-item { font-size:10px; }
   .purchase-history-view .purchase-item [data-label]::before { content:none; }
+  .sold-parts-view { gap:10px; }
+  .sold-parts-heading h2 { font-size:18px; }
+  .sold-parts-heading p { font-size:10px; text-align:right; }
+  .sold-parts-toolbar { grid-template-columns:minmax(0,1fr) 135px; gap:7px; }
+  .sold-parts-toolbar .app-field, .sold-parts-toolbar > div:last-child > div > button { height:34px; min-height:34px; font-size:10px; }
+  .sold-parts-view .record-header { padding:10px 11px; }
+  .sold-parts-view .record-header h3 { font-size:13px; }
+  .sold-parts-view .record-finances { margin-top:8px; }
+  .sold-parts-view .record-finances > div { padding:0 6px; }
+  .sold-parts-view .record-finances dt { font-size:8px; }
+  .sold-parts-view .record-finances dd { font-size:12px; }
+  .sold-parts-view .record-metadata { font-size:10px; gap:4px 10px; }
+  .sold-parts-view .record-expanded { padding:9px 11px; }
+  .sold-parts-view .record-expanded .app-button { min-height:29px; font-size:10px; }
+  [data-bottom-sheet-modal] .stock-modal { padding:11px; }
+  [data-bottom-sheet-modal] .stock-modal .h-11 { height:36px; }
+  [data-bottom-sheet-modal] .stock-modal .p-5 { padding:11px; }
+  [data-bottom-sheet-modal] .stock-modal .px-5 { padding-left:11px; padding-right:11px; }
+  [data-bottom-sheet-modal] .stock-modal .py-4 { padding-top:9px; padding-bottom:9px; }
 }

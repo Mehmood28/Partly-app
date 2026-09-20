@@ -108,7 +108,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
   if (!isOpen) return null;
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleClose} className="max-w-4xl">
+    <BottomSheetModal isOpen={isOpen} onClose={handleClose} className="stock-modal max-w-4xl">
       <div className="w-full flex flex-col relative h-full">
         <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
           <div className="flex items-center gap-3">

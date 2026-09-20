@@ -2,7 +2,7 @@ import React, { useState, useDeferredValue, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useInventory } from '../../context/InventoryContext';
 import { TransactionLogItem } from '../../types';
-import { Search, X, Tag, Filter } from 'lucide-react';
+import { Search, X, Filter } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
 import { EditTransactionModal } from '../activity/EditTransactionModal';
 import { TransactionActivityCard } from '../activity/TransactionActivityCard';
@@ -98,18 +98,13 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
   }, [sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-start gap-3 px-1 pt-1">
-        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#B9EF68]/25 bg-[#B9EF68]/[0.08] text-[#B9EF68]">
-          <Tag className="h-4 w-4" />
-        </div>
-        <div>
-          <h2 className="text-lg font-extrabold tracking-[-0.035em] text-white sm:text-xl">Sold Parts</h2>
-          <p className="app-page-copy mt-1">Individual component sales and trade-ups outside complete builds.</p>
-        </div>
+    <div className="sold-parts-view space-y-4">
+      <header className="sold-parts-heading">
+        <h2>Sold Parts</h2>
+        <p>Track loose-part sales and trade-ups</p>
       </header>
 
-      <div className="records-toolbar flex flex-col items-center justify-between gap-2.5 p-3 sm:flex-row">
+      <div className="sold-parts-toolbar">
         <div className="relative w-full sm:flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -117,7 +112,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
             placeholder="Search sold parts, trade-ups, platform, payment method..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="app-field h-12 pl-9 pr-8 text-xs placeholder:text-zinc-600 sm:text-sm"
+            className="app-field pl-9 pr-8 placeholder:text-zinc-600"
           />
           {searchQuery && (
             <button
@@ -131,11 +126,11 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
           )}
         </div>
 
-        <div className="w-full sm:w-48 shrink-0">
+        <div>
           <CustomSelect
             options={[
-              { value: 'date-desc', label: 'Newest First' },
-              { value: 'date-asc', label: 'Oldest First' },
+              { value: 'date-desc', label: 'Newest' },
+              { value: 'date-asc', label: 'Oldest' },
               { value: 'amount-desc', label: 'Highest Revenue' },
               { value: 'amount-asc', label: 'Lowest Revenue' },
               { value: 'profit-desc', label: 'Highest Profit' },

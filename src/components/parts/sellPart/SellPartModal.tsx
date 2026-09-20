@@ -346,7 +346,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
     <BottomSheetModal
       isOpen={isOpen}
       onClose={handleCloseAndReset}
-      className={saleMode === 'bulk' ? 'max-w-2xl' : 'max-w-lg'}
+      className={`stock-modal ${saleMode === 'bulk' ? 'max-w-2xl' : 'max-w-lg'}`}
     >
       <div className="w-full">
         <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">

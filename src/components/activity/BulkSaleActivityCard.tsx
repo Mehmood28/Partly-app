@@ -90,30 +90,6 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
             </button>
           </div>
 
-          {/* Aggregate Financial Metrics */}
-          <div className="detail-metrics grid grid-cols-2 sm:grid-cols-4">
-            <div className="p-2.5 bg-[#0B1113]">
-              <div className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Total Revenue</div>
-              <div className="text-sm sm:text-base font-bold font-mono text-[#83E5DF]">{formatCurrency(group.totalRevenue)}</div>
-            </div>
-            <div className="p-2.5 bg-[#0B1113]">
-              <div className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Total Cost</div>
-              <div className="text-sm sm:text-base font-bold font-mono text-zinc-300">{formatCurrency(group.totalCost)}</div>
-            </div>
-            <div className="p-2.5 bg-[#0B1113]">
-              <div className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Total Profit</div>
-              <div className={`text-sm sm:text-base font-bold font-mono ${
-                group.totalProfit > 0 ? 'text-emerald-400' : group.totalProfit < 0 ? 'text-rose-400' : 'text-zinc-300'
-              }`}>
-                {formatSignedProfit(group.totalProfit)}
-              </div>
-            </div>
-            <div className="p-2.5 bg-[#0B1113]">
-              <div className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Profit Margin</div>
-              <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(group.profitMarginPercent)}`}>{group.profitMarginPercent.toFixed(1)}%</div>
-            </div>
-          </div>
-
           {/* Buyer / Notes when present */}
           {group.buyerName && (
             <div className="border-y border-white/[0.08] px-1 py-2.5 flex items-center justify-between text-xs">

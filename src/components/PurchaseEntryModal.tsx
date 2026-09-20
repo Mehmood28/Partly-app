@@ -48,7 +48,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="max-w-md">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="stock-modal max-w-md">
       <form 
         className="space-y-4 w-full"
         onSubmit={handleSubmit}
