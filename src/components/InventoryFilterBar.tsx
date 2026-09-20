@@ -17,6 +17,8 @@ interface InventoryFilterBarProps {
   onSortByChange?: (sort: SortOption) => void;
   activeSubCategory?: string;
   onSubCategoryChange?: (sub: string) => void;
+  showSearch?: boolean;
+  showSort?: boolean;
 }
 
 export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
@@ -30,7 +32,9 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
   sortBy = 'newest-purchase',
   onSortByChange,
   activeSubCategory = '',
-  onSubCategoryChange
+  onSubCategoryChange,
+  showSearch = true,
+  showSort = true,
 }) => {
   const isAvailable = (c: InventoryComponent) => !onlyAvailable || calculateUnassignedQuantityStrict(c, builds) > 0;
   
@@ -104,7 +108,8 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       )}
 
       {/* Controls Row: Search & Sort */}
-      <div className="flex w-full min-w-0 max-w-full flex-col gap-2.5 sm:flex-row">
+      {(showSearch || (showSort && onSortByChange)) && <div className="flex w-full min-w-0 max-w-full flex-col gap-2.5 sm:flex-row">
+        {showSearch && (
         <div className="relative flex-1 min-w-0 w-full max-w-full group">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
           <input
@@ -126,8 +131,9 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
             </button>
           )}
         </div>
+        )}
         
-        {onSortByChange && (
+        {showSort && onSortByChange && (
           <div className="w-full sm:w-auto shrink-0 z-30 relative min-w-0 max-w-full">
             <CustomSelect
               value={sortBy}
@@ -145,7 +151,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
             />
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 };

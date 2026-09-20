@@ -11,7 +11,6 @@ import {
   formatCurrency,
   formatReadableDate,
   getCategoryPresentation,
-  getConditionDotColor,
   getUnassignedBatches,
 } from '../utils/helpers';
 import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin } from '../utils/tradeInOrigin';
@@ -186,13 +185,10 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                   <div className="stock-batch-table" role="table" aria-label="Inventory batches on hand">
                     <div className="stock-batch-table-head" role="row">
                       <span role="columnheader">Date</span>
-                      <span role="columnheader">Condition</span>
-                      <span role="columnheader">Source</span>
-                      <span role="columnheader">Payment</span>
-                      <span role="columnheader">Available</span>
-                      <span role="columnheader">Unit cost</span>
-                      <span role="columnheader">Value</span>
-                      <span role="columnheader" className="stock-batch-table-actions">Actions</span>
+                      <span role="columnheader">Details</span>
+                      <span role="columnheader">Qty</span>
+                      <span role="columnheader">Unit</span>
+                      <span role="columnheader" className="stock-batch-table-actions">Value / actions</span>
                     </div>
                   {visibleBatches.map((batch) => {
                     const entry = batch.entry;
@@ -218,13 +214,12 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                       <React.Fragment key={entry.id}>
                         <div className="stock-batch-table-row" role="row">
                           <span role="cell">{formatReadableDate(entry.date) || entry.date}</span>
-                          <span role="cell" className="inline-flex items-center gap-1.5"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}</span>
-                          <span role="cell">{source}{isTradeUpBatch && <em>Trade-up</em>}</span>
-                          <span role="cell">{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}</span>
+                          <span role="cell" className="stock-batch-details">{entry.condition} · {source} · {isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch && <em>Trade-up</em>}</span>
                           <span role="cell" className="font-mono">{batch.availableQuantity}</span>
                           <span role="cell" className="font-mono">{formatCurrency(entryUnitPrice)}</span>
-                          <strong role="cell" className="font-mono">{formatCurrency(entryTotal)}</strong>
-                          <div role="cell" className="batch-actions stock-batch-table-actions">
+                          <div role="cell" className="stock-batch-value">
+                            <strong className="font-mono">{formatCurrency(entryTotal)}</strong>
+                            <div className="batch-actions stock-batch-table-actions">
                           {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
                             <button
                               onClick={(e) => {
@@ -248,12 +243,12 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           )}
+                            </div>
                           </div>
                         </div>
-                        {(entry.notes || (entry.taxPercent ?? 0) > 0) && (
+                        {(entry.notes && entry.notes.trim().toLowerCase() !== 'bulk imported') && (
                           <div className="stock-batch-table-note">
-                            {entry.notes && <span>{entry.notes}</span>}
-                            {(entry.taxPercent ?? 0) > 0 && <span>Includes {entry.taxPercent}% tax</span>}
+                            <span>{entry.notes}</span>
                           </div>
                         )}
                       </React.Fragment>
