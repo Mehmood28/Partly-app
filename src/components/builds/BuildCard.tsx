@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
-import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, MoreVertical } from 'lucide-react';
+import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, List } from 'lucide-react';
 import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getCategoryPresentation, getConditionDotColor } from '../../utils/helpers';
 import { generateInvoice } from '../../utils/invoiceGenerator';
 import { executeCopyAdConfirmation } from '../../utils/copyAdHelper';
@@ -22,6 +22,7 @@ import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
 import { calculateProfitMarginPercent, formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
 import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils/acquiredPC';
+import { renderCategoryIcon } from '../activity/activityHelpers';
 
 interface BuildCardProps {
   isExpanded?: boolean;
@@ -501,20 +502,18 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     const category = getCategoryPresentation(part.category);
                     const totalCost = part.quantity * part.unitCost;
                     return (
-                      <div key={part.id || idx} className="relative px-3 py-2.5 pr-4 text-xs">
-
-                        <div className="allocated-part-main">
-                          <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[11px] font-bold tracking-wide ${category.textClass}`}>
-                            {category.label}
+                      <div key={part.id || idx} className="allocated-part allocated-part-static">
+                        <span className={`allocated-type ${category.textClass}`}>
+                          {renderCategoryIcon(part.category, 'allocated-type-icon')}
+                          <span>{category.label}</span>
+                        </span>
+                        <span className="allocated-details">
+                          <strong className="allocated-name">{part.name}</strong>
+                          <span className="allocated-meta">
+                            {part.quantity > 1 ? `${part.quantity} × ${formatCurrency(part.unitCost)} each` : 'Base component'}
                           </span>
-                          <span className="min-w-0 flex-1 font-medium leading-snug text-zinc-200 break-words">{part.name}</span>
-                          <span className="shrink-0 font-mono text-xs font-bold text-zinc-100 whitespace-nowrap">
-                            {formatCurrency(totalCost)}
-                          </span>
-                        </div>
-                        <div className="ml-[4.3rem] mt-1 font-mono text-[11px] leading-snug text-zinc-500">
-                          {part.quantity > 1 ? `${part.quantity} × ${formatCurrency(part.unitCost)} each` : 'Base component'}
-                        </div>
+                        </span>
+                        <span className="allocated-cost">{formatCurrency(totalCost)}</span>
                       </div>
                     );
                   })}
@@ -524,11 +523,11 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
 
             <div className="app-ledger">
               <div className="parts-heading">
-                <span className="">
-                  Allocated Parts · {build.parts.length} items
+                <span>
+                  <List aria-hidden="true" /> Allocated Parts · {build.parts.length} items
                 </span>
                 <span className="whitespace-nowrap font-mono text-[11px] font-bold text-[#83E5DF] sm:text-xs">
-                  Build Cost {formatCurrency(partsCost)}
+                  Total Cost: {formatCurrency(partsCost)}
                 </span>
               </div>
               {build.parts.length === 0 ? (
@@ -557,33 +556,27 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     ].filter(Boolean) as string[];
 
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={`${part.componentId}-${part.purchaseEntryId || partIdx}-${part.unitCostAtAssignment}`}
                         className="allocated-part"
+                        onClick={(e) => { e.stopPropagation(); setPartActionsData(part); }}
+                        title={`Manage ${part.componentName}`}
                       >
-
-                        <div className="allocated-part-main">
-                          <span className={`allocated-type ${category.textClass}`}>
-                            {category.label}
+                        <span className={`allocated-type ${category.textClass}`}>
+                          {renderCategoryIcon(part.category, 'allocated-type-icon')}
+                          <span>{category.label}</span>
+                        </span>
+                        <span className="allocated-details">
+                          <strong className="allocated-name">{part.componentName}</strong>
+                          <span className="allocated-meta">
+                            {purchaseEntry?.condition && <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(purchaseEntry.condition)}`} />{purchaseEntry.condition}</span>}
+                            {metadata.slice(purchaseEntry?.condition ? 1 : 0).map((item, index) => <span key={`${item}-${index}`}>· {item}</span>)}
+                            {part.quantity > 1 && <span>· {part.quantity} × {formatCurrency(unitCost)} each</span>}
                           </span>
-                          <span className="allocated-name">{part.componentName}</span>
-                          <span className="allocated-cost">{formatCurrency(totalCost)}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setPartActionsData(part); }}
-                            className="-mr-1 -mt-1 shrink-0 rounded-lg p-1 text-zinc-500 transition-colors hover:bg-white/[0.05] hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
-                            title={`Actions for ${part.componentName}`}
-                            aria-label={`Actions for ${part.componentName}`}
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <div className="allocated-meta">
-                          {purchaseEntry?.condition && <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(purchaseEntry.condition)}`} />{purchaseEntry.condition}</span>}
-                          {metadata.slice(purchaseEntry?.condition ? 1 : 0).map((item, index) => <span key={`${item}-${index}`}>· {item}</span>)}
-                          {part.quantity > 1 && <span>· {part.quantity} × {formatCurrency(unitCost)} each</span>}
-                        </div>
-                      </div>
+                        </span>
+                        <span className="allocated-cost">{formatCurrency(totalCost)}</span>
+                      </button>
                     );
                   })}
                 </div>
