@@ -52,7 +52,9 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
     return sortSoldPartDisplayItems(filteredDisplayItems, sortBy);
   }, [filteredDisplayItems, sortBy]);
 
-  const isVirtualized = sortedDisplayItems.length > 12;
+  // Let the page own scrolling on mobile. The former 12-row nested scroller
+  // created a large dead zone above the fixed bottom navigation.
+  const isVirtualized = sortedDisplayItems.length > 250;
   const parentRef = useRef<HTMLDivElement>(null);
   const scrollOffsetRef = useRef<number>(0);
 

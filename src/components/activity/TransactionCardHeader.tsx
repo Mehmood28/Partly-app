@@ -81,6 +81,39 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
     { label: 'Supplier', value: !hideSupplierNames && platform ? normalizePlatform(platform) : '—' },
     { label: 'Payment', value: paymentMethod || '—' },
   ];
+
+  if (isPartSale) {
+    const condition = conditionStr || tx.originalPurchaseEntrySnapshot?.condition ||
+      matchedComp?.purchaseHistory.find((entry) => entry.id === tx.relatedPurchaseEntryId)?.condition;
+    return (
+      <button type="button" className="record-header sold-part-header" onClick={onToggle} aria-expanded={isExpanded}>
+        <div className="sold-part-title-row">
+          <h3>{displayTitle}</h3>
+          <time>{String(recordedDate || '').split('T')[0]}</time>
+          {isExpanded ? <ChevronUp /> : <ChevronDown />}
+        </div>
+        <div className="sold-part-status-row">
+          <CheckCircle2 />
+          <strong>{subCategoryLabel}</strong>
+          {matchedComp?.category && <span>{matchedComp.category}</span>}
+          {condition && <span>{condition}</span>}
+          {!!tx.tradeInCredit && tx.tradeInCredit > 0 && <em>Trade-in included</em>}
+        </div>
+        <dl className="record-finances">
+          <div><dt>Cost</dt><dd>{formatCurrency(partsCost)}</dd></div>
+          <div><dt>Sold</dt><dd>{formatCurrency(salePrice)}</dd></div>
+          <div><dt>Profit</dt><dd className={getProfitTextColor(netProfit)}>{formatSignedCurrency(netProfit)}</dd></div>
+          <div><dt>Margin</dt><dd className={getProfitTextColor(netProfit)}>{profitMarginPercent.toFixed(1)}%</dd></div>
+        </dl>
+        <div className="sold-part-contact-row">
+          {buyerName && <span>{buyerName}</span>}
+          {platform && <span>{normalizePlatform(platform)}</span>}
+          {paymentMethod && <span>{paymentMethod}</span>}
+        </div>
+      </button>
+    );
+  }
+
   return (
     <button type="button" className="record-header" onClick={onToggle} aria-expanded={isExpanded}>
       <div className="record-topline"><StatusIcon className="h-4 w-4" /><span>{subCategoryLabel}</span><time>{String(recordedDate || '').split('T')[0]}</time>{isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}</div>

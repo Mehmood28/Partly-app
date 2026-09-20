@@ -9,22 +9,31 @@ import { parseBatchItem } from './activityHelpers';
 interface PurchaseExpandedViewProps {
   tx: TransactionLogItem;
   isBulkPurchase: boolean;
+  isPCPurchase: boolean;
   matchedComp?: InventoryComponent;
   purchasedBuild?: PCBuild;
   components: InventoryComponent[];
 }
 
-export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, isBulkPurchase, matchedComp, purchasedBuild, components }) => {
+export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, isBulkPurchase, isPCPurchase, matchedComp, purchasedBuild, components }) => {
   const { hideSupplierNames } = usePrivacy();
   // A purchased PC can later be parted out to Stock. Those entries preserve the
   // original purchase transaction, so prefer them for the purchase ledger. If
   // it has not been parted out yet, fall back to the immutable PC breakdown.
-  const partedOutItems = purchasedBuild
+  const purchaseNames = [
+    purchasedBuild?.name,
+    tx.itemNameOrSummary,
+    tx.title?.replace(/^Purchased:\s*/i, ''),
+  ].filter(Boolean).map((value) => String(value).trim().toLowerCase());
+  const sourceBuildId = purchasedBuild?.id || tx.relatedComponentId;
+  const partedOutItems = isPCPurchase
     ? components.flatMap((component) => component.purchaseHistory
       .filter((entry) =>
         entry.sourcePurchaseTransactionId === tx.id ||
-        entry.sourcePurchasedBuildId === purchasedBuild.id ||
-        entry.notes?.includes(`purchased PC: ${purchasedBuild.name}`)
+        (!!sourceBuildId && entry.sourcePurchasedBuildId === sourceBuildId) ||
+        (!!entry.notes && purchaseNames.some((name) =>
+          entry.notes!.toLowerCase().includes(`purchased pc: ${name}`)
+        ))
       )
       .map((entry) => ({
         category: component.category,
@@ -60,7 +69,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
           {purchasedItems.map((item, index) => <div key={index} className="purchase-item">
             <div className="purchase-item-name"><strong>{item.itemName}</strong><span>{[
               ...(item.tags || []),
-              (isBulkPurchase || purchasedBuild) ? item.condition : undefined,
+              (isBulkPurchase || isPCPurchase) ? item.condition : undefined,
               !hideSupplierNames && item.platform ? normalizePlatform(item.platform) : undefined,
             ].filter(Boolean).join(' · ')}</span></div>
             <div data-label="Qty">{item.quantity}</div>

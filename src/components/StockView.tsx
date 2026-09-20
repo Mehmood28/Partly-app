@@ -55,7 +55,7 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
   return (
     <div className="stock-layout flex flex-col gap-4">
       {/* Sub-tab Switcher Header */}
-      <div className="w-full">
+      <div className="stock-subtabs w-full">
         <div className="app-segmented grid-cols-3">
           {subTabs.map((tab) => {
             const isSelected = activeSubTab === tab.id;

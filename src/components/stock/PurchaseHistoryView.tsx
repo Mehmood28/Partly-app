@@ -78,7 +78,10 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
     });
   }, [filteredTransactions, sortBy]);
 
-  const isVirtualized = sortedTransactions.length > 12;
+  // A nested viewport makes the compact ledger stop well above the fixed
+  // navigation on phones. Keep ordinary histories in the document scroll and
+  // reserve virtualization for unusually large datasets only.
+  const isVirtualized = sortedTransactions.length > 250;
   const parentRef = useRef<HTMLDivElement>(null);
   const scrollOffsetRef = useRef<number>(0);
 

@@ -414,7 +414,18 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
 
           {/* Part Sale Expanded View */}
           {isPartSale && (
-            <PartSaleExpandedView tx={tx} />
+            <PartSaleExpandedView
+              tx={tx}
+              matchedComp={matchedComp}
+              partsCost={partsCost}
+              salePrice={salePrice}
+              netProfit={netProfit}
+              profitMarginPercent={profitMarginPercent}
+              platform={platform}
+              paymentMethod={paymentMethod}
+              buyerName={buyerName}
+              saleDate={saleDate}
+            />
           )}
 
           {/* Purchase Expanded View */}
@@ -422,6 +433,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
             <PurchaseExpandedView
               tx={tx}
               isBulkPurchase={isBulkPurchase}
+              isPCPurchase={isPCPurchase}
               matchedComp={matchedComp}
               purchasedBuild={purchasedBuild}
               components={state.components}
