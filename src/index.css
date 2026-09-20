@@ -531,7 +531,6 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
   .overview-stat > svg:not(.overview-arrow) { width:19px; height:19px; margin-bottom:7px; }
   .overview-stat span { font-size:10px; line-height:1.25; }
   .overview-stat strong { margin:5px 0 7px; font-size:18px; line-height:1.1; letter-spacing:-.035em; overflow-wrap:anywhere; }
-  .overview-sale-age { font-size:clamp(15px,4vw,18px); }
   .overview-stat em { display:none; }
   .overview-stat small { min-height:38px; padding-top:7px; font-size:10px; line-height:1.25; }
   .overview-arrow { bottom:7px; right:7px; width:13px; height:13px; }
