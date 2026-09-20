@@ -21,7 +21,11 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
   // it has not been parted out yet, fall back to the immutable PC breakdown.
   const partedOutItems = purchasedBuild
     ? components.flatMap((component) => component.purchaseHistory
-      .filter((entry) => entry.sourcePurchaseTransactionId === tx.id || entry.sourcePurchasedBuildId === purchasedBuild.id)
+      .filter((entry) =>
+        entry.sourcePurchaseTransactionId === tx.id ||
+        entry.sourcePurchasedBuildId === purchasedBuild.id ||
+        entry.notes?.includes(`purchased PC: ${purchasedBuild.name}`)
+      )
       .map((entry) => ({
         category: component.category,
         itemName: component.name,

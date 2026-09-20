@@ -67,10 +67,12 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
   const isPartSale = isSale && !isPCSale;
 
   const isBulkPurchase = classification.isBulkPurchase;
-  const isPCPurchase = isPurchase && tx.purchaseKind === 'PC';
-  const purchasedBuild: PCBuild | undefined = isPCPurchase
+  // Older purchased-PC records did not always save purchaseKind. The linked
+  // build is still authoritative, so use it to recover their item breakdown.
+  const purchasedBuild: PCBuild | undefined = isPurchase
     ? state.builds.find((build) => build.purchaseTransactionId === tx.id || build.id === tx.relatedComponentId)
     : undefined;
+  const isPCPurchase = isPurchase && (tx.purchaseKind === 'PC' || !!purchasedBuild);
   const singletonPurchaseItem =
     isPurchase && !isBulkPurchase && tx.detailsList?.length === 1
       ? parseBatchItem(tx.detailsList[0], state.components, tx)
@@ -412,14 +414,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
 
           {/* Part Sale Expanded View */}
           {isPartSale && (
-            <PartSaleExpandedView
-              tx={tx}
-              matchedComp={matchedComp}
-              partsCost={partsCost}
-              salePrice={salePrice}
-              netProfit={netProfit}
-              profitMarginPercent={profitMarginPercent}
-            />
+            <PartSaleExpandedView tx={tx} />
           )}
 
           {/* Purchase Expanded View */}
