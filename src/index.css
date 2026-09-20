@@ -403,6 +403,8 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .inventory-capital { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); text-align:center; padding:6px 0; }
 .inventory-capital > div+div { border-left:1px solid var(--app-line); }
 .inventory-actions { display:flex; gap:10px; }
+.stock-gradient-action { border-color:transparent; color:#101709; background:linear-gradient(95deg,#b9ef68,#83e5df); font-weight:600; }
+.stock-gradient-action:hover { filter:brightness(1.04); }
 .inventory-filters { padding:0; }
 .category-filters { display:flex; flex-wrap:wrap; gap:8px; }
 .inventory-group { padding:15px 0 5px; }
@@ -416,20 +418,21 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .stock-type::before { content:''; display:inline-block; height:7px; width:7px; background:var(--app-aqua); border-radius:50%; margin-right:7px; }
 .stock-toggle { width:17px; height:17px; flex-shrink:0; margin-top:1px; color:#b8c5cf; transform:rotate(-90deg); transition:transform 150ms ease; }
 .stock-toggle-expanded { transform:rotate(0deg); }
-.stock-name { flex:1; min-width:0; font-size:16px; line-height:1.4; font-weight:650; overflow-wrap:anywhere; }
-.stock-total { font-size:17px; line-height:1.4; font-weight:700; flex-shrink:0; white-space:nowrap; }
+.stock-name { flex:1; min-width:0; font-size:16px; line-height:1.4; font-weight:600; overflow-wrap:anywhere; }
+.stock-total { font-size:17px; line-height:1.4; font-weight:650; flex-shrink:0; white-space:nowrap; }
 .stock-summary { display:flex; flex-wrap:wrap; gap:3px 5px; margin-top:4px; font-size:13px; color:#a6b3be; }
 .stock-expanded { padding:0 16px 16px; margin-left:4px; }
 .stock-expanded > div:first-child { border-top:1px solid var(--app-line); padding-top:12px; margin-bottom:12px; }
 .stock-batch-compact-list { border-top:1px solid var(--app-line); }
 .stock-batch-compact { position:relative; padding:7px 86px 7px 0; border-bottom:1px solid var(--app-line); }
 .stock-batch-compact:last-child { border-bottom:0; }
-.stock-batch-line { display:grid; grid-template-columns:100px minmax(0,1fr) 124px; align-items:center; gap:10px; font-size:12px; line-height:1.2; }
+.stock-batch-line { display:grid; grid-template-columns:100px minmax(0,1fr) 124px; align-items:center; gap:0; font-size:12px; line-height:1.2; }
 .stock-batch-line-primary { color:#dde6e8; }
-.stock-batch-line-primary > strong { color:#f2f6f6; font-size:13px; }
+.stock-batch-line-primary > strong { color:#f2f6f6; font-size:13px; font-weight:600; }
 .stock-batch-line-secondary { margin-top:2px; color:var(--app-muted); }
-.stock-batch-line-secondary > strong { color:#f2f6f6; font-size:14px; }
-.stock-batch-line > :nth-child(3) { justify-self:end; white-space:nowrap; text-align:right; }
+.stock-batch-line-secondary > strong { color:#f2f6f6; font-size:14px; font-weight:600; }
+.stock-batch-line > :nth-child(2), .stock-batch-line > :nth-child(3) { min-width:0; padding-left:10px; border-left:1px solid rgba(174,190,202,.18); }
+.stock-batch-line > :nth-child(3) { white-space:nowrap; text-align:left; }
 .stock-batch-line em { margin-right:4px; color:#8997a2; font-size:10px; font-style:normal; }
 .stock-batch-compact .batch-actions { position:absolute; top:50%; right:0; gap:5px; transform:translateY(-50%); }
 .stock-batch-compact .batch-actions button { min-height:28px; min-width:27px; }
@@ -588,10 +591,10 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
   .stock-inventory-layout .app-metric-label { font-size:9px; }
   .stock-inventory-layout .app-metric-value { font-size:14px; letter-spacing:-.03em; }
   .stock-inventory-layout .inventory-actions { gap:6px; }
-  .stock-inventory-layout .inventory-actions > button { flex:0 0 122px; min-height:34px; font-size:11px; white-space:nowrap; }
+  .stock-inventory-layout .inventory-actions > button { flex:0 0 118px; min-height:32px; font-size:10px; white-space:nowrap; }
   .stock-actions-row { align-items:center; }
   .stock-sort-control { margin-left:auto; width:160px; }
-  .stock-sort-control > div > button { height:34px; min-height:34px; padding-inline:9px; font-size:11px; }
+  .stock-sort-control > div > button { height:32px; min-height:32px; padding-inline:9px; font-size:10px; }
   .stock-inventory-layout .inventory-filters > div { gap:7px; }
   .stock-inventory-layout .category-filters { gap:4px; }
   .stock-inventory-layout .app-chip { min-height:29px; padding-inline:8px; font-size:10px; }
@@ -742,16 +745,17 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 @media(max-width:639px) {
  .batch-row { grid-template-columns:1fr 1fr; gap:12px; }
  .stock-batch-compact { padding:5px 76px 5px 0; }
- .stock-batch-line { grid-template-columns:78px minmax(0,1fr) 88px; gap:7px; font-size:10px; }
+ .stock-batch-line { grid-template-columns:110px minmax(0,1fr) 96px; font-size:10px; }
  .stock-batch-line-primary > strong { font-size:11px; }
  .stock-batch-line-secondary { margin-top:1px; }
  .stock-batch-line-secondary > strong { font-size:12px; }
+ .stock-batch-line > :nth-child(2), .stock-batch-line > :nth-child(3) { padding-left:7px; }
  .stock-batch-line em { margin-right:3px; font-size:9px; }
  .stock-batch-compact .batch-actions { gap:3px; }
  .stock-batch-compact .batch-actions button { min-height:24px; min-width:22px; }
  .stock-batch-compact .batch-actions button:first-child { padding:2px 6px; font-size:10px; }
  .stock-expanded > .grid { gap:6px; }
- .stock-expanded > .grid button { min-height:32px; font-size:10px; }
+ .stock-expanded > .grid button { min-height:29px; font-size:10px; }
  .batch-source { border:0; padding:0; }
  .batch-source > div { flex-wrap:wrap; gap:0 6px; }
  .batch-actions { align-self:end; }

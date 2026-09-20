@@ -169,26 +169,26 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
       </div>
 
       <div className="inventory-actions stock-actions-row">
-        {onOpenBulkEntry && (
-          <button
-            type="button"
-            onClick={onOpenBulkEntry}
-            className="app-button flex items-center justify-center gap-1.5 px-4"
-            title="Fast Bulk Stock Entry via AI Text or Image Scan"
-          >
-            <Zap className="h-3.5 w-3.5 shrink-0 text-[#B9EF68]" />
-            <span>AI Import</span>
-          </button>
-        )}
         <button
           type="button"
           onClick={() => onOpenAddComponent()}
-          className="app-button app-button-primary flex shrink-0 items-center justify-center gap-1.5 px-5"
+          className="app-button app-button-primary stock-gradient-action flex shrink-0 items-center justify-center gap-1.5 px-4"
           title="Add a new component"
         >
           <Plus className="w-3.5 h-3.5 shrink-0" />
           <span>Add Part</span>
         </button>
+        {onOpenBulkEntry && (
+          <button
+            type="button"
+            onClick={onOpenBulkEntry}
+            className="app-button stock-gradient-action flex items-center justify-center gap-1.5 px-4"
+            title="Fast Bulk Stock Entry via AI Text or Image Scan"
+          >
+            <Zap className="h-3.5 w-3.5 shrink-0" />
+            <span>AI Import</span>
+          </button>
+        )}
         <div className="stock-sort-control">
           <CustomSelect
             value={sortBy}
