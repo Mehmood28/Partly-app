@@ -139,7 +139,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
               value={sortBy}
               onChange={(val) => onSortByChange(val as SortOption)}
               options={[
-                { value: 'newest-purchase', label: 'Recently Bought (Newest)' },
+                { value: 'newest-purchase', label: 'Recently Bought' },
                 { value: 'highest-price', label: 'Highest Price Per Unit' },
                 { value: 'lowest-price', label: 'Lowest Price Per Unit' },
                 { value: 'highest-stock', label: 'Highest Units in Stock' },

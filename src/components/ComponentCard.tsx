@@ -17,7 +17,6 @@ import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin } from '../utils/t
 import { normalizePlatform } from '../utils/platformDisplay';
 import {
   ChevronDown,
-  ChevronUp,
   Plus,
   Pencil,
   Trash2,
@@ -88,16 +87,14 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
           <span className={`stock-type ${categoryPresentation.textClass}`}>
             {categoryPresentation.label}
           </span>
+          <ChevronDown className={`stock-toggle ${isExpanded ? 'stock-toggle-expanded' : ''}`} aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
               <h3 className="stock-name">
                 {String(component.name || '')}
               </h3>
               <span className="stock-total">{formatCurrency(unassignedVal)}</span>
-              <div className="-mr-1 -mt-0.5 flex items-center gap-1 text-zinc-500">
-                {actionOverride ? actionOverride : null}
-                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </div>
+              {actionOverride ? <div className="-mr-1 -mt-0.5 flex items-center text-zinc-500">{actionOverride}</div> : null}
             </div>
             <div className="stock-summary">
               {(component.tags || []).filter((tag): tag is string => typeof tag === 'string' && Boolean(tag)).map((tag, idx) => <span key={`${tag}-${idx}`}>{idx > 0 && '· '}{tag}</span>)}
@@ -181,15 +178,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
               }
 
               return (
-                <div className="stock-batch-table-wrap">
-                  <div className="stock-batch-table" role="table" aria-label="Inventory batches on hand">
-                    <div className="stock-batch-table-head" role="row">
-                      <span role="columnheader">Date</span>
-                      <span role="columnheader">Details</span>
-                      <span role="columnheader">Qty</span>
-                      <span role="columnheader">Unit</span>
-                      <span role="columnheader" className="stock-batch-table-actions">Value / actions</span>
-                    </div>
+                <div className="app-ledger stock-batch-ledger">
                   {visibleBatches.map((batch) => {
                     const entry = batch.entry;
                     const entryUnitPrice = batch.unitCost;
@@ -212,49 +201,51 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
                     return (
                       <React.Fragment key={entry.id}>
-                        <div className="stock-batch-table-row" role="row">
-                          <span role="cell">{formatReadableDate(entry.date) || entry.date}</span>
-                          <span role="cell" className="stock-batch-details">{entry.condition} · {source} · {isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch && <em>Trade-up</em>}</span>
-                          <span role="cell" className="font-mono">{batch.availableQuantity}</span>
-                          <span role="cell" className="font-mono">{formatCurrency(entryUnitPrice)}</span>
-                          <div role="cell" className="stock-batch-value">
-                            <strong className="font-mono">{formatCurrency(entryTotal)}</strong>
-                            <div className="batch-actions stock-batch-table-actions">
-                          {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSellPart(component, entry.id);
-                              }}
-                              className="flex min-h-8 items-center gap-1 rounded-lg border border-[#83E5DF]/25 px-2.5 text-xs font-semibold text-[#9FF8F4] transition-colors hover:bg-[#83E5DF]/10 hover:text-white"
-                            >
-                              <Tag className="w-3 h-3" /> Sell
-                            </button>
-                          )}
-                          {!readonlyMode && onDeletePurchaseEntry && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeletingEntryId(entry.id);
-                              }}
-                              className="rounded-lg p-1 text-rose-400 transition-colors hover:bg-rose-500/10 hover:text-rose-300"
-                              title="Delete entry"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                            </div>
+                        <div className="app-ledger-row batch-row">
+                          <div className="batch-identity">
+                            <strong className="batch-date">{formatReadableDate(entry.date) || entry.date}</strong>
+                            <span>{entry.condition}</span>
+                          </div>
+                          <dl className="batch-source">
+                            <div><dt>{isPartedOutTradeInBatch ? 'Source' : 'Supplier'}</dt><dd>{source}</dd></div>
+                            <div><dt>Payment</dt><dd>{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}</dd></div>
+                            {isTradeUpBatch && <div><dt>Type</dt><dd>Trade-up</dd></div>}
+                          </dl>
+                          <div className="batch-value"><span>{batch.availableQuantity} × {formatCurrency(entryUnitPrice)} each</span><strong>{formatCurrency(entryTotal)}</strong></div>
+                          <div className="batch-actions">
+                            {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSellPart(component, entry.id);
+                                }}
+                                className="flex min-h-8 items-center gap-1 rounded-lg border border-[#83E5DF]/25 px-2.5 text-xs font-semibold text-[#9FF8F4] transition-colors hover:bg-[#83E5DF]/10 hover:text-white"
+                              >
+                                <Tag className="w-3 h-3" /> Sell
+                              </button>
+                            )}
+                            {!readonlyMode && onDeletePurchaseEntry && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeletingEntryId(entry.id);
+                                }}
+                                className="rounded-lg p-1 text-rose-400 transition-colors hover:bg-rose-500/10 hover:text-rose-300"
+                                title="Delete entry"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
                         {(entry.notes && entry.notes.trim().toLowerCase() !== 'bulk imported') && (
-                          <div className="stock-batch-table-note">
+                          <div className="batch-notes">
                             <span>{entry.notes}</span>
                           </div>
                         )}
                       </React.Fragment>
                     );
                   })}
-                  </div>
                 </div>
               );
             })()}
