@@ -14,7 +14,7 @@ import { getAllBatchesWithRemaining } from '../../../utils/helpers';
 export { generateBuildTitleFromParts } from '../../../utils/buildTitle';
 
 export const getCategoryIcon = (cat: ComponentCategory) => {
-  const iconClass = 'w-3.5 h-3.5 text-[#62E6E6]';
+  const iconClass = 'w-3.5 h-3.5 text-[#83E5DF]';
   switch (cat) {
     case 'CPU':
       return <Cpu className={iconClass} />;

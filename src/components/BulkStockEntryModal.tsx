@@ -112,7 +112,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
       <div className="w-full flex flex-col relative h-full">
         <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 text-[#A8FF3E] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#B9EF68] flex items-center justify-center">
               <Zap className="w-4 h-4" />
             </div>
             <div>
@@ -123,7 +123,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
           <button 
             onClick={handleClose} 
             aria-label="Close modal"
-            className="p-1.5 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="p-1.5 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -137,8 +137,8 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                 <button
                   type="button"
                   onClick={() => setActiveTab('text')}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
-                    activeTab === 'text' ? 'bg-[#A8FF3E] text-[#07100B] shadow-md shadow-[#A8FF3E]/20 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
+                    activeTab === 'text' ? 'bg-[#B9EF68] text-[#07100B] shadow-md shadow-[#B9EF68]/20 font-bold' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <FileText className="w-3.5 h-3.5" /> AI RAW TEXT
@@ -146,8 +146,8 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                 <button
                   type="button"
                   onClick={() => setActiveTab('image')}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
-                    activeTab === 'image' ? 'bg-[#A8FF3E] text-[#07100B] shadow-md shadow-[#A8FF3E]/20 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
+                    activeTab === 'image' ? 'bg-[#B9EF68] text-[#07100B] shadow-md shadow-[#B9EF68]/20 font-bold' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <Upload className="w-3.5 h-3.5" /> BATCH SCANNER
@@ -165,10 +165,10 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                   />
                 ) : (
                   <div className="space-y-4">
-                    <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-white/[0.1] border-dashed rounded-xl cursor-pointer hover:bg-white/[0.02] hover:border-[#A8FF3E]/50 transition-colors">
+                    <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-white/[0.1] border-dashed rounded-xl cursor-pointer hover:bg-white/[0.02] hover:border-[#B9EF68]/50 transition-colors">
                       <div className="flex flex-col items-center justify-center pt-4 pb-5">
                         <Upload className="w-7 h-7 text-zinc-400 mb-2" />
-                        <p className="mb-1 text-xs text-zinc-300"><span className="font-semibold text-[#62E6E6]">Click to upload</span> or drag and drop</p>
+                        <p className="mb-1 text-xs text-zinc-300"><span className="font-semibold text-[#83E5DF]">Click to upload</span> or drag and drop</p>
                         <p className="text-[11px] text-zinc-500">Photos of component box labels, paper receipts, invoices</p>
                       </div>
                       <input type="file" className="hidden" multiple accept="image/*" onChange={handleImageUpload} />
@@ -199,7 +199,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                   type="button"
                   onClick={handleParse}
                   disabled={isParsing || (activeTab === 'text' ? !textInput.trim() : images.length === 0)}
-                  className="bg-[#A8FF3E] hover:bg-[#C4FF79] disabled:opacity-50 text-[#07100B] font-semibold shadow-md shadow-[#A8FF3E]/20 px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                  className="bg-[#B9EF68] hover:bg-[#C4FF79] disabled:opacity-50 text-[#07100B] font-semibold shadow-md shadow-[#B9EF68]/20 px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
                 >
                   {isParsing ? (
                     <>
@@ -245,14 +245,14 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                             type="text"
                             value={item.name || ''}
                             onChange={(e) => updateParsedItem(idx, 'name', e.target.value)}
-                            className="w-full min-w-[180px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#A8FF3E] rounded-lg px-2 py-1 text-zinc-100 outline-none"
+                            className="w-full min-w-[180px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg px-2 py-1 text-zinc-100 outline-none"
                           />
                         </td>
                         <td className="px-3.5 py-2">
                           <select
                             value={item.category || 'Other'}
                             onChange={(e) => updateParsedItem(idx, 'category', e.target.value as ComponentCategory)}
-                            className="w-full min-w-[110px] bg-[#0B1113] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#A8FF3E]"
+                            className="w-full min-w-[110px] bg-[#0B1113] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#B9EF68]"
                           >
                             {['GPU', 'CPU', 'Motherboard', 'RAM', 'Cooling', 'Storage', 'PSU', 'Case', 'Fans', 'Accessories', 'Other'].map(cat => (
                               <option key={cat} value={cat}>{cat}</option>
@@ -265,7 +265,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                             min="1"
                             value={item.quantity || 1}
                             onChange={(e) => updateParsedItem(idx, 'quantity', parseInt(e.target.value) || 1)}
-                            className="w-full min-w-[50px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#A8FF3E] rounded-lg px-2 py-1 text-zinc-100 font-mono outline-none"
+                            className="w-full min-w-[50px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg px-2 py-1 text-zinc-100 font-mono outline-none"
                           />
                         </td>
                         <td className="px-3.5 py-2">
@@ -277,7 +277,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                               step="0.01"
                               value={item.unitCost || 0}
                               onChange={(e) => updateParsedItem(idx, 'unitCost', parseFloat(e.target.value) || 0)}
-                              className="w-full min-w-[70px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#A8FF3E] rounded-lg pr-2 py-1 text-zinc-100 font-mono outline-none pl-6"
+                              className="w-full min-w-[70px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg pr-2 py-1 text-zinc-100 font-mono outline-none pl-6"
                             />
                           </div>
                         </td>
@@ -285,7 +285,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                           <select
                             value={item.condition || 'New Open Box'}
                             onChange={(e) => updateParsedItem(idx, 'condition', e.target.value as Condition)}
-                            className="w-full min-w-[120px] bg-[#0B1113] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#A8FF3E]"
+                            className="w-full min-w-[120px] bg-[#0B1113] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#B9EF68]"
                           >
                             <option value="Sealed">Sealed</option>
                             <option value="New Open Box">New Open Box</option>
@@ -300,7 +300,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                             autoComplete="off"
                             value={item.vendor || ''}
                             onChange={(e) => updateParsedItem(idx, 'vendor', e.target.value as Platform)}
-                            className="w-full min-w-[90px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#A8FF3E] rounded-lg px-2 py-1 text-zinc-100 outline-none"
+                            className="w-full min-w-[90px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg px-2 py-1 text-zinc-100 outline-none"
                             placeholder={hideSupplierNames ? "••••••••" : "Vendor"}
                           />
                         </td>
@@ -309,14 +309,14 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                             type="date"
                             value={item.date || ''}
                             onChange={(e) => updateParsedItem(idx, 'date', e.target.value)}
-                            className="w-full min-w-[110px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#A8FF3E] rounded-lg px-2 py-1 text-zinc-100 outline-none [color-scheme:dark]"
+                            className="w-full min-w-[110px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg px-2 py-1 text-zinc-100 outline-none [color-scheme:dark]"
                           />
                         </td>
                         <td className="px-3.5 py-2">
                           <select
                             value={item.paymentMethod || 'Cash'}
                             onChange={(e) => updateParsedItem(idx, 'paymentMethod', e.target.value as PaymentMethod)}
-                            className="w-full min-w-[100px] bg-[#0B1113] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#A8FF3E]"
+                            className="w-full min-w-[100px] bg-[#0B1113] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#B9EF68]"
                           >
                             <option value="Cash">Cash</option>
                             <option value="E-Transfer">E-Transfer</option>
@@ -349,7 +349,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
             >
               Cancel
             </button>

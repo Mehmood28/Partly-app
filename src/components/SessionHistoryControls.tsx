@@ -28,11 +28,11 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
   };
 
   const sharedButtonClasses =
-    'min-h-[44px] flex min-w-0 items-center justify-center gap-1.5 bg-transparent px-2 text-[11px] sm:text-xs font-semibold transition-colors hover:bg-white/[0.04] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#A8FF3E] touch-manipulation';
+    'min-h-[44px] flex min-w-0 items-center justify-center gap-2 bg-transparent px-2 text-sm font-medium transition-colors hover:bg-white/[0.04] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#B9EF68] touch-manipulation';
 
   return (
     <div className="relative w-full">
-      <div className="app-segmented grid-cols-3">
+      <div className="session-toolbar">
         <button
           type="button"
           onClick={undo}
@@ -41,12 +41,12 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
           className={`${sharedButtonClasses} ${
             undoCount > 0
               ? 'text-zinc-100 active:scale-[0.98]'
-              : 'cursor-not-allowed text-zinc-700 opacity-55'
+              : 'cursor-not-allowed text-zinc-500 opacity-60'
           }`}
         >
-          <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+          <RotateCcw className="w-5 h-5 shrink-0" />
           <span>Undo</span>
-          {undoCount > 0 && <span className="font-mono text-[9px] text-[#9FF8F4]">{undoCount}</span>}
+          {undoCount > 0 && <span className="font-mono text-[11px] text-[#9FF8F4]">{undoCount}</span>}
         </button>
 
         <button
@@ -57,12 +57,12 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
           className={`${sharedButtonClasses} ${
             redoCount > 0
               ? 'text-zinc-100 active:scale-[0.98]'
-              : 'cursor-not-allowed text-zinc-700 opacity-55'
+              : 'cursor-not-allowed text-zinc-500 opacity-60'
           }`}
         >
-          <RotateCw className="w-3.5 h-3.5 shrink-0" />
+          <RotateCw className="w-5 h-5 shrink-0" />
           <span>Redo</span>
-          {redoCount > 0 && <span className="font-mono text-[9px] text-zinc-400">{redoCount}</span>}
+          {redoCount > 0 && <span className="font-mono text-[11px] text-zinc-400">{redoCount}</span>}
         </button>
 
         <button
@@ -73,11 +73,11 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
           aria-label={`History log with ${undoCount} undo and ${redoCount} redo actions`}
           className={`${sharedButtonClasses} cursor-pointer ${
             isSessionHistoryOpen
-              ? 'bg-[#A8FF3E]/10 text-white'
+              ? 'bg-[#B9EF68]/10 text-white'
               : 'text-zinc-300'
           }`}
         >
-          <History className="w-3.5 h-3.5 shrink-0 text-[#A8FF3E]" />
+          <History className="w-5 h-5 shrink-0 text-[#B9EF68]" />
           <span>History Log</span>
         </button>
       </div>

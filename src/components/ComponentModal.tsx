@@ -236,7 +236,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-              <Package className="w-4 h-4 text-[#A8FF3E]" />
+              <Package className="w-4 h-4 text-[#B9EF68]" />
               {initialComponent ? 'Edit Component & Purchases' : 'Add Inventory Part'}
             </h3>
             <p className="text-xs text-zinc-400 mt-0.5 font-sans">
@@ -247,7 +247,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
             type="button"
             onClick={handleCloseAndReset}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -256,7 +256,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         {/* SECTION 1: COMPONENT MODEL INFO */}
         <div className="space-y-3 pt-1">
           <div className="text-xs font-bold text-zinc-300 flex items-center gap-1.5 font-sans">
-            <Tag className="w-3.5 h-3.5 text-[#A8FF3E]" /> 1. Part / Model Details
+            <Tag className="w-3.5 h-3.5 text-[#B9EF68]" /> 1. Part / Model Details
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -268,7 +268,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={selectedCompId !== 'NEW' && !initialComponent}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
                 placeholder="e.g. ASUS Prime RTX 5080"
               />
             </div>
@@ -290,7 +290,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                 value={tagsRaw}
                 onChange={(e) => setTagsRaw(e.target.value)}
                 disabled={selectedCompId !== 'NEW' && !initialComponent}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
                 placeholder="e.g. AM5, DDR5, White"
               />
             </div>
@@ -301,7 +301,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         {liveComponent && availablePurchaseBatches.length > 0 && !editingPurchaseId && (
           <div className="space-y-2 pt-3 border-t border-white/[0.08]">
             <div className="text-xs font-bold text-zinc-300 flex items-center gap-1.5 font-sans">
-              <ShoppingCart className="w-3.5 h-3.5 text-[#A8FF3E]" /> Existing Purchases
+              <ShoppingCart className="w-3.5 h-3.5 text-[#B9EF68]" /> Existing Purchases
             </div>
             <div className="space-y-1.5">
               {availablePurchaseBatches.map(({ entry: ph, availableQuantity }) => {
@@ -321,7 +321,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                       <div className="text-zinc-200 font-medium flex items-center gap-1.5 flex-wrap">
                         <span>{ph.date}{!hideSupplierNames ? ` · ${purchaseSeller || 'Unknown'}` : ''}</span>
                         {isTradeUp && (
-                          <span className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-medium uppercase leading-none inline-flex items-center">
+                          <span className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0 px-1.5 py-0.5 rounded text-[11px] font-mono font-medium uppercase leading-none inline-flex items-center">
                             TRADE UP
                           </span>
                         )}
@@ -347,7 +347,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         <div className="space-y-3 pt-3 border-t border-white/[0.08]">
           <div className="flex items-center justify-between">
             <div className="text-xs font-bold text-zinc-300 flex items-center gap-1.5 font-sans">
-              <ShoppingCart className="w-3.5 h-3.5 text-[#A8FF3E]" /> {editingPurchaseId ? 'Edit Purchase Record' : '2. Purchase Entry Details'}
+              <ShoppingCart className="w-3.5 h-3.5 text-[#B9EF68]" /> {editingPurchaseId ? 'Edit Purchase Record' : '2. Purchase Entry Details'}
             </div>
             {initialComponent && !editingPurchaseId && (
               <label className="flex items-center gap-2 cursor-pointer text-xs text-zinc-400 hover:text-zinc-200 transition-colors">
@@ -355,7 +355,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                   type="checkbox"
                   checked={includePurchase}
                   onChange={(e) => setIncludePurchase(e.target.checked)}
-                  className="rounded bg-[#101719] border-white/[0.1] text-[#A8FF3E] focus:ring-0 focus:ring-offset-0"
+                  className="rounded bg-[#101719] border-white/[0.1] text-[#B9EF68] focus:ring-0 focus:ring-offset-0"
                 />
                 Add new purchase record
               </label>
@@ -372,7 +372,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-zinc-300 font-medium mb-1 text-xs flex items-center gap-1">
-                    <DollarSign className="w-3 h-3 text-[#A8FF3E]" /> Price Paid / Unit ($) *
+                    <DollarSign className="w-3 h-3 text-[#B9EF68]" /> Price Paid / Unit ($) *
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xs pointer-events-none font-mono">$</span>
@@ -382,7 +382,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                       required={includePurchase}
                       value={unitPrice}
                       onChange={(e) => setUnitPrice(e.target.value)}
-                      className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors pr-3 pl-7"
+                      className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors pr-3 pl-7"
                       placeholder="750.00"
                     />
                   </div>
@@ -395,7 +395,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                     required={includePurchase}
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors"
+                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
                     placeholder="1"
                   />
                 </div>
@@ -404,27 +404,27 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-zinc-300 font-medium mb-1 text-xs flex items-center gap-1">
-                    <User className="w-3 h-3 text-[#A8FF3E]" /> Seller / Platform
+                    <User className="w-3 h-3 text-[#B9EF68]" /> Seller / Platform
                   </label>
                   <input
                     type={hideSupplierNames ? "password" : "text"}
                     autoComplete="off"
                     value={platform}
                     onChange={(e) => setPlatform(e.target.value)}
-                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
+                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
                     placeholder={hideSupplierNames ? "••••••••" : "e.g. Amazon, Best Buy, Daniel"}
                   />
                 </div>
                 <div>
                   <label className="block text-zinc-300 font-medium mb-1 text-xs flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-[#A8FF3E]" /> Date Bought
+                    <Calendar className="w-3 h-3 text-[#B9EF68]" /> Date Bought
                   </label>
                   <input
                     type="date"
                     required={includePurchase}
                     value={purchaseDate}
                     onChange={(e) => setPurchaseDate(e.target.value)}
-                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors [color-scheme:dark]"
+                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -469,7 +469,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                     step="any"
                     value={taxPercent}
                     onChange={(e) => setTaxPercent(e.target.value)}
-                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors"
+                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
                     placeholder="0"
                   />
                 </div>
@@ -483,13 +483,13 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold shadow-md shadow-[#A8FF3E]/20 text-xs px-4 py-2.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] font-semibold shadow-md shadow-[#B9EF68]/20 text-xs px-4 py-2.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             {editingPurchaseId 
               ? 'Update Purchase Record' 

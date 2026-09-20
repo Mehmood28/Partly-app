@@ -30,13 +30,13 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
   const margin = targetPrice > 0 ? (profit / targetPrice) * 100 : 0;
 
   return (
-    <div className="app-panel space-y-3 p-3.5 sm:p-4">
+    <div className="form-section space-y-3">
       <div className="flex flex-col gap-2 border-b border-white/[0.08] pb-3">
         <div className="flex items-center justify-between gap-2">
           <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-2 whitespace-nowrap shrink-0 font-display">
-            <Box className="w-4 h-4 text-[#A8FF3E] shrink-0" /> Selected Parts ({selectedParts.length})
+            <Box className="w-4 h-4 text-[#B9EF68] shrink-0" /> Selected Parts ({selectedParts.length})
           </h4>
-          <div className="flex shrink-0 items-center divide-x divide-white/[0.1] font-mono text-[10px]">
+          <div className="flex shrink-0 items-center divide-x divide-white/[0.1] font-mono text-[11px]">
             <span className="pr-2 text-zinc-500">COST <strong className="ml-1 text-zinc-200">{formatCurrency(totalBuildCost)}</strong></span>
             <span className={`pl-2 ${getProfitTextColor(targetPrice > 0 ? profit : 0)}`}>PROFIT <strong className="ml-1">{formatSignedCurrency(targetPrice > 0 ? profit : 0)}</strong>{targetPrice > 0 ? ` · ${Math.round(margin)}%` : ''}</span>
           </div>
@@ -74,11 +74,11 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
                 <span className={`absolute bottom-2.5 right-1 top-2.5 w-0.5 rounded-full ${category.railClass}`} />
                 <div className="min-w-0 flex-1 pr-1">
                   <div className="flex min-w-0 items-start gap-2">
-                    <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold ${category.textClass}`}>{category.label}</span>
+                    <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[11px] font-bold ${category.textClass}`}>{category.label}</span>
                     <span className="min-w-0 flex-1 break-words font-sans text-xs font-semibold leading-snug text-zinc-200">{part.componentName}</span>
                   </div>
                   {metadata.length > 0 && (
-                    <div className="ml-[4.3rem] mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500">
+                    <div className="ml-[4.3rem] mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[11px] leading-snug text-zinc-500">
                       {purchaseEntry?.condition && <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(purchaseEntry.condition)}`} />{purchaseEntry.condition}</span>}
                       {metadata.slice(purchaseEntry?.condition ? 1 : 0).map((item, metaIndex) => <span key={`${item}-${metaIndex}`}>· {item}</span>)}
                     </div>

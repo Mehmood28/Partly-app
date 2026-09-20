@@ -17,13 +17,13 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
   customError,
 }) => {
   return (
-    <section className="app-section relative">
-      <div className="mb-3.5 flex items-center justify-between gap-2">
-        <h3 className="app-section-kicker"><Sparkles /> Custom AI Build Request</h3>
-        <span className="hidden text-[10px] text-zinc-600 sm:inline-block">Describe. Generate. Refine.</span>
+    <section className="home-section ai-request">
+      <div className="section-heading">
+        <h3 className="">Custom AI Build Request</h3>
+        <span className="section-note">Describe. Generate. Refine.</span>
       </div>
-      <div className="app-panel p-2.5 sm:p-3">
-      <div className="relative z-10 flex w-full min-w-0 max-w-full flex-col gap-2.5 lg:flex-row">
+      <div className="ai-request-controls">
+      <div className="relative z-10 flex w-full min-w-0 max-w-full flex-col gap-2.5 ">
         <div className="relative flex-1 min-w-0 w-full max-w-full">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <input
@@ -48,7 +48,7 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
         <button
           onClick={onGenerate}
           disabled={!customPrompt.trim() || isGeneratingCustomBuild}
-          className="app-button app-button-primary h-12 shrink-0 px-6 disabled:cursor-not-allowed disabled:opacity-45"
+          className="app-button app-button-primary app-button-gradient flex items-center justify-center gap-2 h-12 shrink-0 px-6 disabled:cursor-not-allowed disabled:opacity-45"
         >
           {isGeneratingCustomBuild ? (
             <>

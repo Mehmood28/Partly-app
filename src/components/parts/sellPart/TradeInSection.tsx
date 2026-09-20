@@ -58,7 +58,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
     <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ArrowRightLeft className="w-4 h-4 text-[#A8FF3E]" />
+          <ArrowRightLeft className="w-4 h-4 text-[#B9EF68]" />
           <span className="text-xs font-semibold text-zinc-100 font-sans">Trade-In / Trade Up</span>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
@@ -68,7 +68,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
             onChange={(e) => setHasTradeIn(e.target.checked)}
             className="sr-only peer"
           />
-          <div className="w-9 h-5 bg-white/[0.08] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#A8FF3E]"></div>
+          <div className="w-9 h-5 bg-white/[0.08] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#B9EF68]"></div>
         </label>
       </div>
 
@@ -81,15 +81,15 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
               onClick={() => setTradeDirection('CUSTOMER_TRADE_IN')}
               className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 tradeDirection === 'CUSTOMER_TRADE_IN'
-                  ? 'bg-[#A8FF3E]/15 border-[#A8FF3E]/40 text-zinc-100 shadow-sm'
+                  ? 'bg-[#B9EF68]/15 border-[#B9EF68]/40 text-zinc-100 shadow-sm'
                   : 'bg-[#0B1113] border-white/[0.06] text-zinc-400 hover:bg-white/[0.03] hover:text-zinc-200'
               }`}
             >
               <div className="flex items-center gap-1.5 mb-1">
-                <UserCheck className={`w-3.5 h-3.5 ${tradeDirection === 'CUSTOMER_TRADE_IN' ? 'text-[#62E6E6]' : 'text-zinc-500'}`} />
+                <UserCheck className={`w-3.5 h-3.5 ${tradeDirection === 'CUSTOMER_TRADE_IN' ? 'text-[#83E5DF]' : 'text-zinc-500'}`} />
                 <span className="text-xs font-semibold">Customer Trade-In</span>
               </div>
-              <span className="text-[10px] text-zinc-500 leading-tight">
+              <span className="text-[11px] text-zinc-500 leading-tight">
                 Customer traded in a part towards this purchase (Partial credit)
               </span>
             </button>
@@ -107,7 +107,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                 <TrendingUp className={`w-3.5 h-3.5 ${tradeDirection === 'TRADE_UP' ? 'text-cyan-400' : 'text-zinc-500'}`} />
                 <span className="text-xs font-semibold">Trade Up + Cash</span>
               </div>
-              <span className="text-[10px] text-zinc-500 leading-tight">
+              <span className="text-[11px] text-zinc-500 leading-tight">
                 I traded this part and paid cash on top (Cost basis transfer)
               </span>
             </button>
@@ -143,7 +143,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                       required={hasTradeIn}
                       value={tradeInCredit}
                       onChange={(e) => setTradeInCredit(e.target.value)}
-                      className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-mono"
+                      className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-mono"
                       placeholder="40.00"
                     />
                   </div>
@@ -171,7 +171,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                           }}
                           className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-colors border ${
                             isSelected
-                              ? 'bg-[#A8FF3E]/20 text-[#62E6E6] border-[#A8FF3E]/40'
+                              ? 'bg-[#B9EF68]/20 text-[#83E5DF] border-[#B9EF68]/40'
                               : 'bg-[#0B1113] text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
                           }`}
                         >
@@ -192,19 +192,19 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                   required={hasTradeIn}
                   value={tradeInPartName}
                   onChange={(e) => setTradeInPartName(e.target.value)}
-                  className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
+                  className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
                   placeholder="e.g. GTX 1660 Super 6GB"
                 />
               </div>
 
-              <div className="bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 rounded-xl p-3 flex items-center justify-between">
+              <div className="bg-[#B9EF68]/15 border border-[#B9EF68]/30 rounded-xl p-3 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#62E6E6] uppercase tracking-wider font-semibold">Total Effective Sale Price</div>
+                  <div className="text-[11px] text-[#83E5DF] uppercase tracking-wider font-semibold">Total Effective Sale Price</div>
                   <div className="text-xs text-zinc-400">
                     {formatCurrency(parsedCashTotal)} Cash + {formatCurrency(creditAmount)} Trade-In Credit
                   </div>
                 </div>
-                <div className="text-base font-bold font-mono text-[#62E6E6]">
+                <div className="text-base font-bold font-mono text-[#83E5DF]">
                   {formatCurrency(totalEffectiveSalePrice)}
                 </div>
               </div>
@@ -242,7 +242,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                     placeholder="0.00"
                   />
                 </div>
-                <p className="text-[10px] text-zinc-500 mt-1">
+                <p className="text-[11px] text-zinc-500 mt-1">
                   The additional cash you paid to complete the trade up.
                 </p>
               </div>
@@ -313,26 +313,26 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
               {/* Trade Up Transfer Calculation Summary */}
               <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-cyan-400 uppercase tracking-wider font-semibold">
+                  <span className="text-[11px] text-cyan-400 uppercase tracking-wider font-semibold">
                     Trade Up Cost Basis Transfer
                   </span>
-                  <span className="text-[10px] text-zinc-400 font-mono">Realized P/L: $0.00</span>
+                  <span className="text-[11px] text-zinc-400 font-mono">Realized P/L: $0.00</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 pt-1 border-t border-cyan-500/20 text-center">
                   <div className="bg-[#0B1113]/60 rounded-lg p-1.5">
-                    <div className="text-[9px] text-zinc-400 uppercase font-sans">Outgoing Basis</div>
+                    <div className="text-[11px] text-zinc-400 uppercase font-sans">Outgoing Basis</div>
                     <div className="text-xs font-bold font-mono text-zinc-200">{formatCurrency(outgoingCostBasis)}</div>
                   </div>
                   <div className="bg-[#0B1113]/60 rounded-lg p-1.5">
-                    <div className="text-[9px] text-zinc-400 uppercase font-sans">Cash Paid</div>
+                    <div className="text-[11px] text-zinc-400 uppercase font-sans">Cash Paid</div>
                     <div className="text-xs font-bold font-mono text-cyan-400">+{formatCurrency(parsedCashPaid)}</div>
                   </div>
                   <div className="bg-[#0B1113]/60 rounded-lg p-1.5">
-                    <div className="text-[9px] text-cyan-300 uppercase font-sans">New Part Basis</div>
+                    <div className="text-[11px] text-cyan-300 uppercase font-sans">New Part Basis</div>
                     <div className="text-xs font-bold font-mono text-cyan-300">{formatCurrency(incomingCostBasis)}</div>
                   </div>
                 </div>
-                <p className="text-[10px] text-zinc-400 leading-tight">
+                <p className="text-[11px] text-zinc-400 leading-tight">
                   The incoming part will be added to inventory with an exact cost basis of {formatCurrency(incomingCostBasis)}. No loose-part sales revenue or profit is realized.
                 </p>
               </div>

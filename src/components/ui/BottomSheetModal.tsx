@@ -1,4 +1,5 @@
 import React, { ReactNode, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface BottomSheetModalProps {
@@ -9,10 +10,10 @@ interface BottomSheetModalProps {
 }
 
 export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onClose, children, className = '' }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = React.useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    const isHiddenByParent = containerRef.current && containerRef.current.closest('.hidden') !== null;
+    const isHiddenByParent = containerRef.current && containerRef.current.parentElement?.closest('.hidden') !== null;
     if (isOpen && !isHiddenByParent) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -23,13 +24,13 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onCl
     };
   }, [isOpen]);
 
-  return (
+  const isHiddenByParent = Boolean(containerRef.current?.parentElement?.closest('.hidden'));
+  const modal = (
     <AnimatePresence>
-      {isOpen && (
+      {isOpen && !isHiddenByParent && (
         <div 
-          ref={containerRef}
-          data-bottom-sheet-modal="true"
-          className="pointer-events-none fixed inset-0 z-[300] flex items-end justify-center pb-[max(4.5rem,env(safe-area-inset-bottom))] sm:items-center sm:p-5 md:pl-[17rem]"
+          data-bottom-sheet-modal="true" role="dialog" aria-modal="true"
+          className="pointer-events-none fixed inset-0 z-[300] flex items-end justify-center pb-[max(4.5rem,env(safe-area-inset-bottom))] sm:items-center sm:p-5"
           style={{ height: '100dvh', width: '100vw' }}
         >
           <motion.div 
@@ -52,4 +53,5 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onCl
       )}
     </AnimatePresence>
   );
+  return <><span ref={containerRef} hidden aria-hidden="true" />{typeof document !== 'undefined' ? createPortal(modal, document.body) : null}</>;
 };

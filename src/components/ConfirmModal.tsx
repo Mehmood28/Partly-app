@@ -52,8 +52,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     }
     if (variant === 'amber' || variant === 'violet') {
       return (
-        <div className="w-8 h-8 rounded-xl bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 flex items-center justify-center shrink-0">
-          <HelpCircle className="w-4 h-4 text-[#A8FF3E]" />
+        <div className="w-8 h-8 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 flex items-center justify-center shrink-0">
+          <HelpCircle className="w-4 h-4 text-[#B9EF68]" />
         </div>
       );
     }
@@ -69,7 +69,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       return 'bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-emerald-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500';
     }
     if (variant === 'amber' || variant === 'violet') {
-      return 'bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-[#A8FF3E]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]';
+      return 'bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-[#B9EF68]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]';
     }
     return 'bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-rose-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500';
   };
@@ -81,7 +81,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     <AnimatePresence>
       {shouldRender && (
         <div 
-          data-confirm-modal="true"
+          data-confirm-modal="true" role="alertdialog" aria-modal="true" aria-label={title}
           className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-4 pb-[85px] md:pb-4 pointer-events-none" 
           style={{ height: '100dvh', width: '100vw' }}
         >
@@ -114,7 +114,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 type="button"
                 onClick={onCancel}
                 disabled={isBusy}
-                className="px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] disabled:cursor-wait disabled:opacity-60"
+                className="px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] disabled:cursor-wait disabled:opacity-60"
               >
                 {cancelText}
               </button>

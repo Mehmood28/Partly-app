@@ -28,7 +28,7 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
   const isManagedViaBuilds = isPCSale && hasLinkedBuild;
   
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className="record-actions">
       <div className="contents">
         {!isManagedViaBuilds && (
           <button

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
-import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, Cpu, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, MoreVertical } from 'lucide-react';
+import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, MoreVertical } from 'lucide-react';
 import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getCategoryPresentation, getConditionDotColor } from '../../utils/helpers';
 import { generateInvoice } from '../../utils/invoiceGenerator';
 import { executeCopyAdConfirmation } from '../../utils/copyAdHelper';
@@ -85,7 +85,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const [copyAdCustomWarranty, setCopyAdCustomWarranty] = useState<string>('');
   const [imageShareError, setImageShareError] = useState<string | null>(null);
   const imageCardRef = useRef<HTMLDivElement>(null);
-  
+
   const partsCost = calculateBuildPartsCost(build);
   const isSold = build.status === 'Sold';
   const isTradeIn = build.acquisitionSource === 'Trade-In';
@@ -93,6 +93,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const isAcquired = isAcquiredPC(build);
   const acquiredBreakdown = getAcquiredPCBreakdown(build);
   const hasBuildImage = hasShareableBuildImage(build);
+  const buildPartCount = getBuildPresentation(build, state.components).totalQuantity;
   const tradeInOrigin = isTradeIn
     ? resolveTradeInBuildOrigin(build, state.transactions, state.builds)
     : null;
@@ -145,7 +146,6 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     });
   };
 
-  const isListed = build.status === 'Listed for Sale';
   const profit = (build.salePrice || 0) - partsCost;
   const profitMarginPercent = calculateProfitMarginPercent(profit, build.salePrice || 0);
 
@@ -215,142 +215,35 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   };
 
   return (
-    <div className={`app-panel group relative flex flex-col transition-all duration-200 ${isExpanded ? 'border-[#A8FF3E]/25 shadow-[0_22px_55px_rgba(0,0,0,0.32)]' : 'hover:border-[#A8FF3E]/30'}`}>
-      {/* Collapsed Header - Always Visible */}
-      <div 
-        className="flex min-h-[86px] cursor-pointer items-start gap-2.5 p-3.5 transition-colors hover:bg-white/[0.02] sm:p-4"
-        onClick={handleToggle}
-      >
-        <div className="flex-1 min-w-0">
-          <div className="space-y-1 min-w-0">
-            <div className="flex items-start justify-between gap-1.5">
-              <div className="flex items-center gap-1.5 flex-wrap min-w-0 pr-1">
-                <h3 className="break-words text-[13px] font-bold leading-snug tracking-[-0.025em] text-zinc-100 sm:text-[15px]" title={build.name}>
-                  {build.name}
-                </h3>
-                {isAcquired && (
-                  <span className="bg-cyan-500/10 text-cyan-300 border border-cyan-400/30 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase inline-flex items-center">
-                    {isPurchased ? 'PURCHASED' : 'TRADE-IN'}
-                  </span>
-                )}
-              </div>
-              
-              {!(isTradeIn && build.status === 'Trade-In Processing') && (
-                <span
-                  className={`mt-0.5 shrink-0 border-l px-2 py-0.5 font-mono text-[10px] font-bold uppercase leading-none tracking-[0.1em] sm:text-[10px] ${
-                    isSold
-                      ? 'text-emerald-400 border-emerald-500/40'
-                      : isListed
-                      ? 'text-[#A8FF3E] border-[#A8FF3E]/40'
-                      : build.status === 'Trade-In Processing'
-                      ? 'text-[#62E6E6] border-[#62E6E6]/40'
-                      : 'text-[#62E6E6] border-[#62E6E6]/40'
-                  }`}
-                >
-                  {build.status === 'Listed for Sale'
-                    ? 'Available'
-                    : build.status === 'In Progress'
-                    ? 'Pending'
-                    : build.status === 'Trade-In Processing'
-                    ? 'Processing'
-                    : build.status}
-                </span>
-              )}
-            </div>
-
-            {/* Quick Financial Summary (Collapsed) */}
-            {!isExpanded && (
-              <div className="mt-2 flex flex-col gap-1.5 font-mono text-[10px] leading-tight sm:text-[11px]">
-                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-zinc-500">
-                  <span>BUILD COST <strong className="font-semibold text-zinc-300">{formatCurrency(partsCost)}</strong></span>
-                  {isSold ? (
-                    <span>SOLD <strong className="font-semibold text-[#9FF8F4]">{formatCurrency(build.salePrice || 0)}</strong></span>
-                  ) : (
-                    build.salePrice ? <span>TARGET <strong className="font-semibold text-[#9FF8F4]">{formatCurrency(build.salePrice)}</strong></span> : null
-                  )}
-                  {isSold ? (
-                    <span className={getProfitTextColor(profit)}>PROFIT <strong className="font-semibold">{formatSignedCurrency(profit)}</strong></span>
-                  ) : (
-                    build.salePrice ? <span className={getProfitTextColor(build.salePrice - partsCost)}>EST. PROFIT <strong className="font-semibold">{formatSignedCurrency(build.salePrice - partsCost)}</strong></span> : null
-                  )}
-                </div>
-                {isSold && formattedSoldDate && (
-                  <div className="text-zinc-500">
-                    SOLD <span className="font-medium text-zinc-300">{formattedSoldDate}</span>
-                  </div>
-                )}
-                {!isSold && (
-                  <div className="text-zinc-600">
-                    {build.parts.length} PART{build.parts.length === 1 ? '' : 'S'}
-                    <span> · BUILT {formatReadableDate(build.builtDate || build.completionDate || build.createdDate) || build.builtDate || build.completionDate || build.createdDate}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+    <div className={`app-panel build-card group relative flex flex-col transition-all duration-200 ${isExpanded ? 'border-white/20' : 'hover:border-[#B9EF68]/30'}`}>
+      <div className="build-header" onClick={handleToggle} role="button" tabIndex={0} aria-expanded={isExpanded} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggle(); } }}>
+        {!isExpanded && build.imageUrl && <img className="build-thumbnail" src={build.imageUrl} alt={build.name} />}
+        <div className="min-w-0 flex-1">
+          <h3>{build.name}</h3>
+          <span className="build-status">{build.status === 'Listed for Sale' ? 'Available' : build.status === 'In Progress' ? 'Pending' : build.status === 'Trade-In Processing' ? 'Trade-In Processing' : build.status}{isAcquired ? ` · ${isPurchased ? 'Purchased PC' : 'Trade-in PC'}` : ''}</span>
+          {!isExpanded && <>
+            <div className="build-summary"><span>Build Cost<strong>{formatCurrency(partsCost)}</strong></span>{build.salePrice ? <><span>{isSold ? 'Sold' : 'Target'}<strong>{formatCurrency(build.salePrice)}</strong></span><span>Profit<strong className={getProfitTextColor(build.salePrice - partsCost)}>{formatSignedCurrency(build.salePrice - partsCost)}</strong></span></> : null}</div>
+            <p className="mt-1 text-xs text-zinc-400">{buildPartCount} parts · {isSold ? `Sold ${formattedSoldDate || ''}` : `Built ${formatReadableDate(build.builtDate || build.completionDate || build.createdDate) || build.createdDate}`}</p>
+          </>}
         </div>
-
-        {!isExpanded && (
-          build.imageUrl ? (
-            <div className="h-[66px] w-[84px] shrink-0 overflow-hidden rounded-lg border border-white/[0.1] bg-[#070A0B] shadow-[0_8px_24px_rgba(0,0,0,0.3)] sm:h-[76px] sm:w-24">
-              <img src={build.imageUrl} alt={build.name} className="w-full h-full object-cover" />
-            </div>
-          ) : (
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-[#101719]">
-              <Cpu className="w-4 h-4 text-[#A8FF3E]" />
-            </div>
-          )
-        )}
-
-        <div className="pt-0.5 shrink-0">
-          {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-          )}
-        </div>
+        {isExpanded ? <ChevronUp className="h-5 w-5 shrink-0 text-zinc-400" /> : <ChevronDown className="h-5 w-5 shrink-0 text-zinc-400" />}
       </div>
-
-      {/* Expanded Details */}
       {isExpanded && (
-        <div className="space-y-4 border-t border-white/[0.09] bg-[#0d1416]/95 p-3.5 sm:p-4">
-          {/* Build identity stays compact: finance at left, the existing build image at right. */}
-          <div className={`grid gap-3 ${build.imageUrl ? 'grid-cols-[minmax(0,1fr)_42%] sm:grid-cols-[minmax(0,1fr)_minmax(13rem,38%)]' : 'grid-cols-1'}`}>
-            <div className="min-w-0">
-              <div className="app-ledger divide-y divide-white/[0.07]">
-                <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Build Cost</span>
-                  <span className="font-mono text-[13px] font-bold text-zinc-100 sm:text-base">{formatCurrency(partsCost)}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{isSold ? 'Sale Price' : 'Target'}</span>
-                  <span className="font-mono text-[13px] font-bold text-[#62E6E6] sm:text-base">{build.salePrice ? formatCurrency(build.salePrice) : '—'}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{isSold ? 'Net Profit' : 'Est. Profit'}</span>
-                  <span className={`font-mono text-[13px] font-bold sm:text-base ${getProfitTextColor((build.salePrice || 0) - partsCost)}`}>{build.salePrice ? formatSignedCurrency((build.salePrice || 0) - partsCost) : '—'}</span>
-                </div>
-                {isSold && (
-                  <div className="flex items-center justify-between gap-3 px-3 py-2">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Profit Margin</span>
-                    <span className={`font-mono text-[11px] font-bold ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</span>
-                  </div>
-                )}
+        <div className="build-expanded space-y-4 px-3 pb-4 sm:px-5 sm:pb-5">
+          <div className="build-overview">
+            <div>
+              <div className="build-finances">
+                <div><span>Build Cost</span><strong>{formatCurrency(partsCost)}</strong></div>
+                <div><span>{isSold ? 'Sale Price' : 'Target'}</span><strong>{build.salePrice ? formatCurrency(build.salePrice) : '—'}</strong></div>
+                <div><span>{isSold ? 'Net Profit' : 'Est. Profit'}</span><strong className={getProfitTextColor((build.salePrice || 0) - partsCost)}>{build.salePrice ? formatSignedCurrency(build.salePrice - partsCost) : '—'}</strong></div>
               </div>
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] text-zinc-500">
-                {isSold && formattedSoldDate ? <span>Sold {formattedSoldDate}</span> : <span>{build.parts.length} allocated parts</span>}
-                {!isSold && build.status === 'In Progress' && <span className="text-[#62E6E6]">Pending sale</span>}
-              </div>
+              <div className="build-date"><Calendar /><span>Built {formatReadableDate(build.builtDate || build.completionDate || build.createdDate) || build.createdDate}</span>{isSold && <span>· Margin {profitMarginPercent.toFixed(1)}%</span>}</div>
             </div>
-            {build.imageUrl && (
-              <div className="h-full min-h-[138px] overflow-hidden rounded-xl border border-white/[0.1] bg-[#0B1113] shadow-[0_12px_30px_rgba(0,0,0,0.3)] sm:min-h-[170px]">
-                <img src={build.imageUrl} alt={build.name} className="h-full w-full object-cover" />
-              </div>
-            )}
+            {build.imageUrl && <img src={build.imageUrl} alt={build.name} />}
           </div>
           {/* Top Actions in expanded view: Logically sorted */}
           <div className="space-y-3 pt-1">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="build-action-bar">
               {/* Rig Management Group: Edit, Dismantle, Delete, Relist, Move to Trade-Ins */}
               <div className="contents">
                 <button
@@ -415,7 +308,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   </button>
                 )}
               </div>
-              
+
               {/* Sale & Sharing Actions Group */}
               <div className="contents">
                 {isSold && (
@@ -469,7 +362,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                       ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10 cursor-default'
                       : imageShareStatus === 'error'
                       ? 'border-rose-500/40 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20'
-                      : 'border-white/[0.08] text-zinc-200 bg-[#0B1113] hover:border-[#A8FF3E]/40'
+                      : 'border-white/[0.08] text-zinc-200 bg-[#0B1113] hover:border-[#B9EF68]/40'
                   }`}
                   title={
                     !hasBuildImage
@@ -478,7 +371,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   }
                 >
                   {imageShareStatus === 'loading' ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#A8FF3E]" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#B9EF68]" />
                   ) : imageShareStatus === 'success' ? (
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   ) : (
@@ -518,7 +411,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           {isTradeIn && tradeInOrigin && (tradeInOrigin.buyerName || tradeInOriginDate) && (
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-[#0B1113] p-2.5 rounded-xl border border-white/[0.08] min-w-0">
-                <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                <div className="text-[11px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-cyan-300 shrink-0" /> Traded In By
                 </div>
                 <div className="text-zinc-200 font-medium truncate text-xs">
@@ -526,7 +419,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 </div>
               </div>
               <div className="bg-[#0B1113] p-2.5 rounded-xl border border-white/[0.08] min-w-0">
-                <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                <div className="text-[11px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-cyan-300 shrink-0" /> Trade-In Date
                 </div>
                 <div className="text-zinc-200 font-medium truncate font-mono text-xs">
@@ -539,7 +432,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           {isPurchased && (build.purchaseSeller || purchaseDate) && (
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-[#0B1113] p-2.5 rounded-xl border border-white/[0.08] min-w-0">
-                <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                <div className="text-[11px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-cyan-300 shrink-0" /> Purchased From
                 </div>
                 <div className="text-zinc-200 font-medium truncate text-xs">
@@ -547,7 +440,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 </div>
               </div>
               <div className="bg-[#0B1113] p-2.5 rounded-xl border border-white/[0.08] min-w-0">
-                <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                <div className="text-[11px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-cyan-300 shrink-0" /> Purchase Date
                 </div>
                 <div className="text-zinc-200 font-medium truncate font-mono text-xs">
@@ -576,8 +469,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             {isAcquired && acquiredBreakdown.length > 0 && (
               <div className="app-ledger">
                 <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] px-3 py-2.5">
-                  <span className="text-[10px] font-mono font-semibold text-zinc-400 uppercase tracking-wider">
-                    {isPurchased ? 'PURCHASED PC' : 'TRADE-IN'} COMPONENTS · {acquiredBreakdown.length} ITEMS
+                  <span className="text-[11px] font-mono font-semibold text-zinc-400 uppercase tracking-wider">
+                    {isPurchased ? 'PURCHASED PC' : 'TRADE-IN'} COMPONENTS · {acquiredBreakdown.length} items
                   </span>
                   <span className="font-mono text-xs font-semibold text-zinc-200 whitespace-nowrap">
                     {formatCurrency(acquiredBreakdown.reduce((sum, p) => sum + p.quantity * p.unitCost, 0))}
@@ -589,9 +482,9 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     const totalCost = part.quantity * part.unitCost;
                     return (
                       <div key={part.id || idx} className="relative px-3 py-2.5 pr-4 text-xs">
-                        <span className={`absolute right-1.5 top-2.5 bottom-2.5 w-0.5 rounded-full ${category.railClass}`} />
-                        <div className="flex items-start gap-2 min-w-0">
-                          <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold tracking-wide ${category.textClass}`}>
+
+                        <div className="allocated-part-main">
+                          <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[11px] font-bold tracking-wide ${category.textClass}`}>
                             {category.label}
                           </span>
                           <span className="min-w-0 flex-1 font-medium leading-snug text-zinc-200 break-words">{part.name}</span>
@@ -599,7 +492,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                             {formatCurrency(totalCost)}
                           </span>
                         </div>
-                        <div className="ml-[4.3rem] mt-1 font-mono text-[10px] leading-snug text-zinc-500">
+                        <div className="ml-[4.3rem] mt-1 font-mono text-[11px] leading-snug text-zinc-500">
                           {part.quantity > 1 ? `${part.quantity} × ${formatCurrency(part.unitCost)} each` : 'Base component'}
                         </div>
                       </div>
@@ -610,12 +503,12 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             )}
 
             <div className="app-ledger">
-              <div className="flex items-center justify-between gap-3 border-b border-[#A8FF3E]/20 px-3.5 py-3 sm:px-4">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-400 sm:text-[11px]">
-                  ALLOCATED PARTS · {build.parts.length} ITEMS
+              <div className="parts-heading">
+                <span className="">
+                  Allocated Parts · {build.parts.length} items
                 </span>
-                <span className="whitespace-nowrap font-mono text-[11px] font-bold text-[#62E6E6] sm:text-xs">
-                  BUILD COST {formatCurrency(partsCost)}
+                <span className="whitespace-nowrap font-mono text-[11px] font-bold text-[#83E5DF] sm:text-xs">
+                  Build Cost {formatCurrency(partsCost)}
                 </span>
               </div>
               {build.parts.length === 0 ? (
@@ -646,26 +539,26 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     return (
                       <div
                         key={`${part.componentId}-${part.purchaseEntryId || partIdx}-${part.unitCostAtAssignment}`}
-                        className="relative px-3.5 py-3 pr-5 text-xs sm:px-4"
+                        className="allocated-part"
                       >
-                        <span className={`absolute right-1.5 top-2.5 bottom-2.5 w-0.5 rounded-full ${category.railClass}`} />
-                        <div className="flex items-start gap-2 min-w-0">
-                          <span className={`w-[4.2rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold tracking-wide ${category.textClass}`}>
+
+                        <div className="allocated-part-main">
+                          <span className={`allocated-type ${category.textClass}`}>
                             {category.label}
                           </span>
-                          <span className="min-w-0 flex-1 break-words text-[12px] font-semibold leading-snug text-zinc-100 sm:text-[13px]">{part.componentName}</span>
-                          <span className="shrink-0 whitespace-nowrap font-mono text-[12px] font-bold text-zinc-100 sm:text-[13px]">{formatCurrency(totalCost)}</span>
+                          <span className="allocated-name">{part.componentName}</span>
+                          <span className="allocated-cost">{formatCurrency(totalCost)}</span>
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setPartActionsData(part); }}
-                            className="-mr-1 -mt-1 shrink-0 rounded-lg p-1 text-zinc-500 transition-colors hover:bg-white/[0.05] hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                            className="-mr-1 -mt-1 shrink-0 rounded-lg p-1 text-zinc-500 transition-colors hover:bg-white/[0.05] hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
                             title={`Actions for ${part.componentName}`}
                             aria-label={`Actions for ${part.componentName}`}
                           >
                             <MoreVertical className="h-4 w-4" />
                           </button>
                         </div>
-                        <div className="ml-[4.7rem] mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500 sm:text-[11px]">
+                        <div className="allocated-meta">
                           {purchaseEntry?.condition && <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(purchaseEntry.condition)}`} />{purchaseEntry.condition}</span>}
                           {metadata.slice(purchaseEntry?.condition ? 1 : 0).map((item, index) => <span key={`${item}-${index}`}>· {item}</span>)}
                           {part.quantity > 1 && <span>· {part.quantity} × {formatCurrency(unitCost)} each</span>}
@@ -684,7 +577,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 onClick={(e) => { e.stopPropagation(); onAllocate(build); }}
                 className="app-button flex w-full items-center justify-center gap-1.5 px-3"
               >
-                <PlusCircle className="w-3.5 h-3.5 text-[#A8FF3E]" /> Add Part
+                <PlusCircle className="w-3.5 h-3.5 text-[#B9EF68]" /> Add Part
               </button>
             </div>
           )}
@@ -692,10 +585,10 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           {/* Build Financial Summary Footer (for available/pending-sale builds) */}
           {!isSold && (
             <div className="space-y-3 border-t border-white/[0.08] pt-3">
-              <div className="app-panel-quiet grid grid-cols-3 divide-x divide-white/[0.08] font-mono text-[10px] text-zinc-500 sm:text-[11px]">
+              <div className="build-footer-finances grid grid-cols-3 divide-x divide-white/[0.08] text-xs text-zinc-400">
                 <span className="flex min-w-0 flex-col p-2.5">BUILD COST <strong className="mt-0.5 truncate text-[11px] font-bold text-zinc-200 sm:text-sm">{formatCurrency(partsCost)}</strong></span>
                 {build.salePrice && (
-                  <span className="flex min-w-0 flex-col p-2.5">TARGET <strong className="mt-0.5 truncate text-[11px] font-bold text-[#62E6E6] sm:text-sm">{formatCurrency(build.salePrice)}</strong></span>
+                  <span className="flex min-w-0 flex-col p-2.5">TARGET <strong className="mt-0.5 truncate text-[11px] font-bold text-[#83E5DF] sm:text-sm">{formatCurrency(build.salePrice)}</strong></span>
                 )}
                 {build.salePrice && (
                   <span className={`flex min-w-0 flex-col p-2.5 ${getProfitTextColor(build.salePrice - partsCost)}`}>EST. PROFIT <strong className="mt-0.5 truncate text-[11px] font-bold sm:text-sm">{formatSignedCurrency(build.salePrice - partsCost)}</strong></span>
@@ -708,7 +601,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   onClick={(e) => { e.stopPropagation(); onAllocate(build); }}
                   className="app-button flex items-center justify-center gap-1.5 px-3"
                 >
-                  <PlusCircle className="w-3.5 h-3.5 text-[#A8FF3E]" /> Add Part
+                  <PlusCircle className="w-3.5 h-3.5 text-[#B9EF68]" /> Add Part
                 </button>
                 {build.status === 'Listed for Sale' && (
                   <button
@@ -762,7 +655,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                             },
                           });
                         }}
-                        className="bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 text-[#62E6E6] hover:bg-[#A8FF3E]/25 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl text-xs font-medium"
+                        className="bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#83E5DF] hover:bg-[#B9EF68]/25 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl text-xs font-medium"
                         title="Mark build as Available"
                       >
                         <Tag className="w-3.5 h-3.5" /> Mark Available
@@ -786,7 +679,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                         },
                       });
                     }}
-                    className="bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 text-[#62E6E6] hover:bg-[#A8FF3E]/25 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl text-xs font-medium"
+                    className="bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#83E5DF] hover:bg-[#B9EF68]/25 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl text-xs font-medium"
                     title="List trade-in PC for sale"
                   >
                     <Tag className="w-3.5 h-3.5" /> List For Sale
@@ -804,10 +697,10 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
         </div>
       )}
       {swapPartData && (
-        <SwapPartModal 
-          build={build} 
-          currentPart={swapPartData} 
-          onClose={() => setSwapPartData(null)} 
+        <SwapPartModal
+          build={build}
+          currentPart={swapPartData}
+          onClose={() => setSwapPartData(null)}
         />
       )}
       {quantityPartData && (
@@ -827,7 +720,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] pb-3">
               <div className="min-w-0">
-                <div className={`font-mono text-[10px] font-bold uppercase tracking-wider ${getCategoryPresentation(partActionsData.category).textClass}`}>
+                <div className={`font-mono text-[11px] font-bold uppercase tracking-wider ${getCategoryPresentation(partActionsData.category).textClass}`}>
                   {getCategoryPresentation(partActionsData.category).label}
                 </div>
                 <h3 className="mt-1 break-words text-sm font-semibold text-zinc-100">{partActionsData.componentName}</h3>
@@ -836,7 +729,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 type="button"
                 onClick={() => setPartActionsData(null)}
                 aria-label="Close part actions"
-                className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -845,16 +738,16 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               <button
                 type="button"
                 onClick={() => { setSwapPartData(partActionsData); setPartActionsData(null); }}
-                className="flex min-h-11 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#101719] px-3 text-left text-xs font-medium text-zinc-200 transition-colors hover:border-[#A8FF3E]/40 hover:text-white"
+                className="flex min-h-11 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#101719] px-3 text-left text-xs font-medium text-zinc-200 transition-colors hover:border-[#B9EF68]/40 hover:text-white"
               >
-                <ArrowRightLeft className="h-4 w-4 text-[#62E6E6]" /> Swap part
+                <ArrowRightLeft className="h-4 w-4 text-[#83E5DF]" /> Swap part
               </button>
               <button
                 type="button"
                 onClick={() => { setQuantityPartData(partActionsData); setPartActionsData(null); }}
-                className="flex min-h-11 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#101719] px-3 text-left text-xs font-medium text-zinc-200 transition-colors hover:border-[#A8FF3E]/40 hover:text-white"
+                className="flex min-h-11 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#101719] px-3 text-left text-xs font-medium text-zinc-200 transition-colors hover:border-[#B9EF68]/40 hover:text-white"
               >
-                <Pencil className="h-4 w-4 text-[#62E6E6]" /> Change quantity
+                <Pencil className="h-4 w-4 text-[#83E5DF]" /> Change quantity
               </button>
               <button
                 type="button"
@@ -891,13 +784,13 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#A8FF3E]" /> Copy Marketplace Ad
+                <Shield className="w-4 h-4 text-[#B9EF68]" /> Copy Marketplace Ad
               </h3>
               <button
                 type="button"
                 onClick={() => setIsCopyAdModalOpen(false)}
                 aria-label="Close modal"
-                className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -926,9 +819,9 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                         type="button"
                         onClick={() => setCopyAdWarrantyDays(preset.value)}
                         aria-pressed={isSelected}
-                        className={`min-h-[44px] h-11 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
+                        className={`min-h-[44px] h-11 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
                           isSelected
-                            ? 'bg-[#A8FF3E] text-[#07100B] border border-[#A8FF3E] shadow-sm shadow-[#A8FF3E]/25 font-semibold'
+                            ? 'bg-[#B9EF68] text-[#07100B] border border-[#B9EF68] shadow-sm shadow-[#B9EF68]/25 font-semibold'
                             : 'bg-[#101719] text-zinc-300 hover:text-white hover:bg-white/[0.04] border border-white/[0.08]'
                         }`}
                       >
@@ -943,9 +836,9 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   type="button"
                   onClick={() => setCopyAdWarrantyDays('Custom')}
                   aria-pressed={copyAdWarrantyDays === 'Custom'}
-                  className={`w-full min-h-[44px] h-11 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
+                  className={`w-full min-h-[44px] h-11 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
                     copyAdWarrantyDays === 'Custom'
-                      ? 'bg-[#A8FF3E] text-[#07100B] border border-[#A8FF3E] shadow-sm shadow-[#A8FF3E]/25 font-semibold'
+                      ? 'bg-[#B9EF68] text-[#07100B] border border-[#B9EF68] shadow-sm shadow-[#B9EF68]/25 font-semibold'
                       : 'bg-[#101719] text-zinc-300 hover:text-white hover:bg-white/[0.04] border border-white/[0.08]'
                   }`}
                 >
@@ -961,7 +854,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                       step="1"
                       value={copyAdCustomWarranty}
                       onChange={(e) => setCopyAdCustomWarranty(e.target.value)}
-                      className="w-full min-h-[44px] h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-mono"
+                      className="w-full min-h-[44px] h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-mono"
                       placeholder="Enter warranty days (e.g. 14, 45, 180)"
                       aria-label="Custom warranty days"
                       required
@@ -976,14 +869,14 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               <button
                 type="button"
                 onClick={() => setIsCopyAdModalOpen(false)}
-                className="min-h-[44px] px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                className="min-h-[44px] px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleCopyAdConfirm}
-                className="min-h-[44px] bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold shadow-md shadow-[#A8FF3E]/20 px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                className="min-h-[44px] bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] font-semibold shadow-md shadow-[#B9EF68]/20 px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
               >
                 <Copy className="w-3.5 h-3.5" /> Copy Ad
               </button>

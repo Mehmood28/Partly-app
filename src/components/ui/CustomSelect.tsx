@@ -75,12 +75,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                 }}
                 className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer flex items-center justify-between font-sans ${
                   isSelected
-                    ? 'border border-[#A8FF3E]/30 bg-[#A8FF3E]/10 font-semibold text-white'
+                    ? 'border border-[#B9EF68]/30 bg-[#B9EF68]/10 font-semibold text-white'
                     : 'text-zinc-300 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 <span className="truncate pr-2 min-w-0 flex-1">{opt.label}</span>
-                {isSelected && <Check className="w-3.5 h-3.5 text-[#A8FF3E] shrink-0" />}
+                {isSelected && <Check className="w-3.5 h-3.5 text-[#B9EF68] shrink-0" />}
               </button>
             );
           })}
@@ -97,9 +97,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         aria-expanded={isOpen}
         aria-label={selectedOption ? selectedOption.label : placeholder}
         onClick={() => setIsOpen(!isOpen)}
-        className={`app-field flex h-12 min-h-[46px] w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-xs text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] sm:text-sm ${
+        className={`app-field flex h-12 min-h-[46px] w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-xs text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] sm:text-sm ${
           isOpen
-            ? 'border-[#A8FF3E]/65 ring-1 ring-[#A8FF3E]/20'
+            ? 'border-[#B9EF68]/65 ring-1 ring-[#B9EF68]/20'
             : ''
         } ${className}`}
       >
@@ -110,7 +110,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           </span>
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-zinc-400 transition-transform shrink-0 ${isOpen ? 'rotate-180 text-[#A8FF3E]' : ''}`}
+          className={`w-4 h-4 text-zinc-400 transition-transform shrink-0 ${isOpen ? 'rotate-180 text-[#B9EF68]' : ''}`}
         />
       </button>
 

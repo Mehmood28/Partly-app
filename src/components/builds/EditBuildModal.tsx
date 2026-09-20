@@ -95,13 +95,13 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
       >
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-            <Pencil className="w-4 h-4 text-[#A8FF3E]" /> Edit PC Build
+            <Pencil className="w-4 h-4 text-[#B9EF68]" /> Edit PC Build
           </h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -114,7 +114,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
               required
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors font-sans"
+              className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
             />
           </div>
 
@@ -123,14 +123,14 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
               <label className="block text-zinc-300 font-medium mb-1 text-xs">Status</label>
               <div className="w-full h-11 bg-[#101719]/60 border border-white/[0.08] rounded-xl px-3 flex items-center">
                 <span
-                  className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border leading-none ${
+                  className={`text-[11px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border leading-none ${
                     build.status === 'Sold'
                       ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
                       : build.status === 'Listed for Sale'
-                      ? 'bg-[#A8FF3E]/15 text-[#62E6E6] border-[#A8FF3E]/30'
+                      ? 'bg-[#B9EF68]/15 text-[#83E5DF] border-[#B9EF68]/30'
                       : build.status === 'Trade-In Processing'
                       ? 'bg-cyan-500/10 text-cyan-300 border-cyan-400/30'
-                      : 'bg-[#62E6E6]/10 text-[#9FF8F4] border-[#62E6E6]/30'
+                      : 'bg-[#83E5DF]/10 text-[#9FF8F4] border-[#83E5DF]/30'
                   }`}
                 >
                   {build.status === 'Listed for Sale'
@@ -150,7 +150,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                 disabled={build.status === 'Sold'}
                 value={editBuiltDate}
                 onChange={(e) => setEditBuiltDate(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors [color-scheme:dark]"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors [color-scheme:dark]"
               />
             </div>
           </div>
@@ -167,7 +167,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                 step="any"
                 value={editSalePrice}
                 onChange={(e) => setEditSalePrice(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors pr-3 pl-7"
+                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors pr-3 pl-7"
                 placeholder="0.00"
               />
             </div>
@@ -197,7 +197,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                   step="1"
                   value={customWarrantyDays}
                   onChange={(e) => setCustomWarrantyDays(e.target.value)}
-                  className="w-20 h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors"
+                  className="w-20 h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
                   placeholder="Days"
                   required
                 />
@@ -211,7 +211,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
               rows={2}
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
-              className="w-full min-h-[60px] bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40 transition-colors resize-y font-sans"
+              className="w-full min-h-[60px] bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors resize-y font-sans"
               placeholder="Build specs, condition, notes..."
             />
           </div>
@@ -259,13 +259,13 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold shadow-md shadow-[#A8FF3E]/20 px-4 py-2.5 rounded-xl text-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] font-semibold shadow-md shadow-[#B9EF68]/20 px-4 py-2.5 rounded-xl text-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             Save Changes
           </button>

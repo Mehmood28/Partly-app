@@ -100,7 +100,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
   return (
     <div className="space-y-4">
       <header className="flex items-start gap-3 px-1 pt-1">
-        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#A8FF3E]/25 bg-[#A8FF3E]/[0.08] text-[#A8FF3E]">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#B9EF68]/25 bg-[#B9EF68]/[0.08] text-[#B9EF68]">
           <Tag className="h-4 w-4" />
         </div>
         <div>
@@ -109,7 +109,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
         </div>
       </header>
 
-      <div className="app-panel flex flex-col items-center justify-between gap-2.5 p-3 sm:flex-row">
+      <div className="records-toolbar flex flex-col items-center justify-between gap-2.5 p-3 sm:flex-row">
         <div className="relative w-full sm:flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input

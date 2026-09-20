@@ -174,7 +174,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
                 <h2 className="text-sm sm:text-base font-bold text-zinc-100 flex items-center gap-2 truncate font-display">
                   <span className="truncate">{isAcquired ? `Part Out ${getAcquiredPCLabel(build)}` : 'Dismantle PC Build'}</span>
                   {isAcquired && (
-                    <span className="bg-[#A8FF3E]/15 text-[#62E6E6] border border-[#A8FF3E]/30 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium shrink-0">
+                    <span className="bg-[#B9EF68]/15 text-[#83E5DF] border border-[#B9EF68]/30 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium shrink-0">
                       {isTradeIn ? 'TRADE-IN' : 'PURCHASED'}
                     </span>
                   )}
@@ -185,14 +185,14 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
             <button
               onClick={onClose}
               aria-label="Close modal"
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors shrink-0 ml-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors shrink-0 ml-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {isAcquired && build.parts && build.parts.length > 0 && (
-            <div className="mt-2 text-xs text-[#9FF8F4] bg-[#62E6E6]/[0.06] border border-[#62E6E6]/25 rounded-xl p-2.5">
+            <div className="mt-2 text-xs text-[#9FF8F4] bg-[#83E5DF]/[0.06] border border-[#83E5DF]/25 rounded-xl p-2.5">
               Notice: {build.parts.length} allocated upgrade component(s) will automatically return to their original inventory batches upon parting out.
             </div>
           )}
@@ -239,7 +239,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
             >
               Cancel
             </button>

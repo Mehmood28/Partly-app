@@ -15,63 +15,18 @@ export const DashboardQuickActions: React.FC<DashboardQuickActionsProps> = ({
   onOpenBulkEntry,
   onNavigateToStock,
 }) => {
+  const items = [
+    { label: 'New PC Build', copy: 'Create a custom PC build', icon: Hammer, action: onOpenAddBuild },
+    { label: 'Add Component', copy: 'Add a single part to inventory', icon: Plus, action: onOpenAddComponent },
+    ...(onOpenBulkEntry ? [{ label: 'AI Bulk Import', copy: 'Import parts from a list or image', icon: Sparkles, action: onOpenBulkEntry }] : []),
+    { label: 'Inventory Stock', copy: 'View and manage your stock', icon: Database, action: onNavigateToStock },
+  ];
   return (
-    <section className="app-section">
-      <div className="mb-3.5 flex items-center justify-between gap-2">
-        <h3 className="app-section-kicker"><Sparkles /> Quick Actions</h3>
-        <span className="hidden text-[10px] text-zinc-600 sm:block">Build. Stock. Automate.</span>
-      </div>
-
-      <div className="app-panel grid grid-cols-2 lg:grid-cols-4">
-        <button
-          type="button"
-          onClick={() => onOpenAddBuild()}
-          className="group relative min-h-[132px] border-b border-r border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025] lg:border-b-0"
-        >
-          <Hammer className="h-5 w-5 text-[#A8FF3E]" />
-          <ArrowRight className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-[#A8FF3E]" />
-          <span className="mt-5 block text-[12px] font-bold text-zinc-100">New PC Build</span>
-          <span className="mt-1 block text-[10px] leading-relaxed text-zinc-500">Create a custom PC build</span>
-        </button>
-
-        {/* Add Component Action */}
-        <button
-          type="button"
-          onClick={() => onOpenAddComponent && onOpenAddComponent()}
-          className="group relative min-h-[132px] border-b border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025] lg:border-b-0 lg:border-r"
-        >
-          <Plus className="h-5 w-5 text-[#62E6E6]" />
-          <ArrowRight className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-[#62E6E6]" />
-          <span className="mt-5 block text-[12px] font-bold text-zinc-100">Add Component</span>
-          <span className="mt-1 block text-[10px] leading-relaxed text-zinc-500">Add one part to inventory</span>
-        </button>
-
-        {/* AI Bulk Stock Entry */}
-        {onOpenBulkEntry && (
-          <button
-            type="button"
-            onClick={onOpenBulkEntry}
-            className="group relative min-h-[132px] border-r border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025]"
-          >
-            <Sparkles className="h-5 w-5 text-[#62E6E6]" />
-            <ArrowRight className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-[#62E6E6]" />
-            <span className="mt-5 block text-[12px] font-bold text-zinc-100">AI Bulk Import</span>
-            <span className="mt-1 block text-[10px] leading-relaxed text-zinc-500">Import parts from a list or image</span>
-          </button>
-        )}
-
-        {/* View All Inventory */}
-        <button
-          type="button"
-          onClick={onNavigateToStock}
-          className="group relative min-h-[132px] p-3.5 text-left transition-colors hover:bg-white/[0.025]"
-        >
-          <Database className="h-5 w-5 text-[#62E6E6]" />
-          <ArrowRight className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-[#62E6E6]" />
-          <span className="mt-5 block text-[12px] font-bold text-zinc-100">Inventory Stock</span>
-          <span className="mt-1 block text-[10px] leading-relaxed text-zinc-500">View and manage current stock</span>
-        </button>
-      </div>
+    <section className="home-section">
+      <div className="section-heading"><h2>Quick actions</h2><span>Build. Stock. Automate.</span></div>
+      <div className="quick-action-grid">{items.map(item => (
+        <button key={item.label} onClick={item.action}><item.icon /><strong>{item.label}</strong><span>{item.copy}</span><ArrowRight className="action-arrow" /></button>
+      ))}</div>
     </section>
   );
 };

@@ -351,7 +351,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
       <div className="w-full">
         <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 flex items-center justify-center text-[#A8FF3E]">
+            <div className="w-10 h-10 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 flex items-center justify-center text-[#B9EF68]">
               {saleMode === 'bulk' ? <Layers className="w-5 h-5" /> : <Tag className="w-5 h-5" />}
             </div>
             <div>
@@ -373,7 +373,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
               handleCloseAndReset();
             }}
             aria-label="Close modal"
-            className="text-zinc-400 hover:text-white rounded-lg p-1 hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="text-zinc-400 hover:text-white rounded-lg p-1 hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -387,7 +387,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
               onClick={() => setSaleMode('single')}
               className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold font-sans flex items-center justify-center gap-1.5 transition-all ${
                 saleMode === 'single'
-                  ? 'bg-[#A8FF3E] text-[#07100B] shadow-sm'
+                  ? 'bg-[#B9EF68] text-[#07100B] shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
               }`}
             >
@@ -399,7 +399,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
               onClick={() => setSaleMode('bulk')}
               className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold font-sans flex items-center justify-center gap-1.5 transition-all ${
                 saleMode === 'bulk'
-                  ? 'bg-[#A8FF3E] text-[#07100B] shadow-sm'
+                  ? 'bg-[#B9EF68] text-[#07100B] shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
               }`}
             >
@@ -419,7 +419,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
           </div>
         ) : hasNoInStockParts ? (
           <div className="p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 text-[#A8FF3E] flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#B9EF68] flex items-center justify-center mx-auto">
               <Package className="w-6 h-6" />
             </div>
             <div className="space-y-1">
@@ -437,7 +437,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                   e.stopPropagation();
                   onClose();
                 }}
-                className="px-4 py-2 rounded-xl border border-white/[0.08] text-zinc-400 hover:text-white text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                className="px-4 py-2 rounded-xl border border-white/[0.08] text-zinc-400 hover:text-white text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
               >
                 Close
               </button>
@@ -452,7 +452,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                       onOpenAddComponent();
                     }, 50);
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] font-semibold text-xs shadow-sm shadow-[#A8FF3E]/20 transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                  className="px-4 py-2 rounded-xl bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] font-semibold text-xs shadow-sm shadow-[#B9EF68]/20 transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add New Component</span>
@@ -481,7 +481,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                     <div className={`font-medium ${maxQty > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {maxQty} in stock
                     </div>
-                    <div className="text-zinc-500 text-[10px]">
+                    <div className="text-zinc-500 text-[11px]">
                       Cost: {formatCurrency(effectiveUnitCost)}
                     </div>
                   </div>
@@ -564,24 +564,24 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
 
                   {!isTradeUp && (
                     <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-2">
-                      <div className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">
+                      <div className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
                         Sale Summary &amp; Profit Preview
                       </div>
                       <div className="grid grid-cols-3 gap-2 text-xs font-mono">
                         <div>
-                          <span className="text-zinc-500 text-[10px] block">Unit Cost:</span>
+                          <span className="text-zinc-500 text-[11px] block">Unit Cost:</span>
                           <span className="text-zinc-300 font-medium">
                             {formatCurrency(effectiveUnitCost)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 text-[10px] block">Total Cost ({quantity}x):</span>
+                          <span className="text-zinc-500 text-[11px] block">Total Cost ({quantity}x):</span>
                           <span className="text-zinc-300 font-medium">
                             {formatCurrency(totalCost)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 text-[10px] block">Net Profit:</span>
+                          <span className="text-zinc-500 text-[11px] block">Net Profit:</span>
                           <span
                             className={`font-medium ${
                               netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'
@@ -603,7 +603,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                         e.stopPropagation();
                         handleCloseAndReset();
                       }}
-                      className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                      className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
                     >
                       Cancel
                     </button>

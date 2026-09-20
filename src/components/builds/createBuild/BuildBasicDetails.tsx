@@ -37,9 +37,9 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
           <button
             type="button"
             onClick={onAutoFillTitle}
-            className="flex min-h-8 items-center gap-1 rounded-lg border border-[#62E6E6]/25 bg-[#62E6E6]/[0.07] px-2 text-[11px] font-semibold text-[#9FF8F4] transition-colors hover:bg-[#62E6E6]/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="flex min-h-8 items-center gap-1 rounded-lg border border-[#83E5DF]/25 bg-[#83E5DF]/[0.07] px-2 text-[11px] font-semibold text-[#9FF8F4] transition-colors hover:bg-[#83E5DF]/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
-            <Wand2 className="h-3 w-3 text-[#A8FF3E]" /> Auto-Fill Title
+            <Wand2 className="h-3 w-3 text-[#B9EF68]" /> Auto-Fill Title
           </button>
         </div>
         <input

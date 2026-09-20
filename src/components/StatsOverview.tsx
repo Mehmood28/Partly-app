@@ -44,7 +44,7 @@ export const StatsOverview: React.FC = React.memo(() => {
     <div className="flex items-center gap-2 ml-auto shrink-0 whitespace-nowrap">
       {/* Inventory Value */}
       <div 
-        className="gap-1.5 bg-[#A8FF3E]/15 text-[#62E6E6] border border-[#A8FF3E]/30 cursor-pointer relative group px-2 py-1 rounded-lg text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors hover:bg-[#A8FF3E]/25"
+        className="gap-1.5 bg-[#B9EF68]/15 text-[#83E5DF] border border-[#B9EF68]/30 cursor-pointer relative group px-2 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap transition-colors hover:bg-[#B9EF68]/25"
         onClick={() => setShowInventoryPopover(!showInventoryPopover)}
         ref={popoverRef}
       >
@@ -66,8 +66,8 @@ export const StatsOverview: React.FC = React.memo(() => {
                 <span className="text-zinc-200 font-mono font-medium">{formatCurrency(activeBuildsCost)}</span>
               </div>
               <div className="pt-2 border-t border-white/[0.08] flex justify-between items-center">
-                <span className="text-[#A8FF3E] font-semibold uppercase text-[10px] tracking-wider">Total Inventory</span>
-                <span className="text-[#A8FF3E] font-mono font-bold">{formatCurrency(totalStockValuation)}</span>
+                <span className="text-[#B9EF68] font-semibold uppercase text-[11px] tracking-wider">Total Inventory</span>
+                <span className="text-[#B9EF68] font-mono font-bold">{formatCurrency(totalStockValuation)}</span>
               </div>
             </div>
           </div>
@@ -75,12 +75,12 @@ export const StatsOverview: React.FC = React.memo(() => {
       </div>
 
       {/* Active PC Builds */}
-      <div className="gap-1.5 bg-white/[0.06] text-zinc-300 border border-white/[0.1] px-2 py-1 rounded-lg text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+      <div className="gap-1.5 bg-white/[0.06] text-zinc-300 border border-white/[0.1] px-2 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
         <span>RIGS: {activeRigsCount}</span>
       </div>
 
       {/* Current Month Net Profit */}
-      <div className={`gap-1.5 ${getProfitSummaryClasses(monthProfit)} border px-2 py-1 rounded-lg text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
+      <div className={`gap-1.5 ${getProfitSummaryClasses(monthProfit)} border px-2 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
         <span>PROFIT: {formatSignedCurrency(monthProfit)}</span>
       </div>
     </div>

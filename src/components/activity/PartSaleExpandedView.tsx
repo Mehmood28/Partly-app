@@ -1,9 +1,7 @@
 import React from 'react';
 import { InventoryComponent, TransactionLogItem } from '../../types';
-import {
-  formatCurrency,
-  getCategoryPresentation,
-} from '../../utils/helpers';
+import { formatCurrency } from '../../utils/helpers';
+import { normalizePlatform } from '../../utils/platformDisplay';
 import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 
 interface PartSaleExpandedViewProps {
@@ -16,70 +14,46 @@ interface PartSaleExpandedViewProps {
 }
 
 export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
-  tx,
-  matchedComp,
-  partsCost,
-  salePrice,
-  netProfit,
-  profitMarginPercent,
-}) => {
-  return (
-    <div className="space-y-3">
-      <div className="app-ledger grid grid-cols-2 sm:grid-cols-4">
-        <div className="bg-[#0b1113] p-3">
-          <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Sale Price</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-[#62E6E6]">{formatCurrency(salePrice)}</div>
-        </div>
-        <div className="bg-[#0b1113] p-3">
-          <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Unit Cost</div>
-          <div className="text-sm sm:text-base font-bold font-mono text-zinc-300">{formatCurrency(partsCost)}</div>
-        </div>
-        <div className="bg-[#0b1113] p-3">
-          <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Net Profit</div>
-          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(netProfit)}`}>{formatSignedCurrency(netProfit)}</div>
-        </div>
-        <div className="bg-[#0b1113] p-3">
-          <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Profit Margin</div>
-          <div className={`text-sm sm:text-base font-bold font-mono ${getProfitTextColor(profitMarginPercent)}`}>{profitMarginPercent.toFixed(1)}%</div>
-        </div>
-      </div>
-
-      {/* Trade-In Breakdown Banner if present */}
-      {tx?.tradeInCredit !== undefined && tx.tradeInCredit > 0 && (
-        <div className="bg-[#62E6E6]/[0.06] border border-[#62E6E6]/25 rounded-lg p-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[#9FF8F4] border border-[#62E6E6]/30 px-1.5 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider">
-              Trade-In Included
-            </span>
-            <span className="text-zinc-300">
-              Cash: <span className="font-mono font-semibold text-zinc-100">{formatCurrency(tx.cashPortion ?? 0)}</span> + Valuation: <span className="font-mono font-semibold text-[#9FF8F4]">{formatCurrency(tx.tradeInCredit)}</span>
-            </span>
-          </div>
-          <div className="text-[11px] text-zinc-400 font-mono">
-            Total Effective: <span className="text-[#62E6E6] font-semibold">{formatCurrency(salePrice)}</span>
-          </div>
-        </div>
-      )}
-
-      {tx?.buyerName && (
-        <div className="app-panel-quiet flex items-center justify-between p-3 text-xs">
-          <span className="text-zinc-400">Buyer / Contact:</span>
-          <span className="text-[#9FF8F4] font-medium">{tx.buyerName}</span>
-        </div>
-      )}
-
-      {matchedComp && (
-        <div className="relative grid grid-cols-[4.4rem_minmax(0,1fr)] gap-2 border-y border-white/[0.08] px-1 py-2.5">
-          <span className={`pt-0.5 font-mono text-[10px] font-bold uppercase tracking-wide ${getCategoryPresentation(matchedComp.category).textClass}`}>
-            {getCategoryPresentation(matchedComp.category).label}
-          </span>
-          <div className="min-w-0">
-            <div className="break-words text-xs font-medium text-zinc-100">{matchedComp.name}</div>
-            {matchedComp.tags?.length ? <div className="mt-1 font-mono text-[10px] text-zinc-500">{matchedComp.tags.join(' · ')}</div> : null}
-          </div>
-          <span className={`absolute inset-y-2 right-0 w-0.5 rounded-full ${getCategoryPresentation(matchedComp.category).railClass}`} />
-        </div>
-      )}
+  tx, matchedComp, partsCost, salePrice, netProfit, profitMarginPercent,
+}) => (
+  <div className="record-detail">
+    <div className="sale-detail-columns">
+      <section>
+        <h4>Financial details</h4>
+        <dl className="detail-list">
+          <div><dt>Sale price</dt><dd>{formatCurrency(salePrice)}</dd></div>
+          <div><dt>Cost</dt><dd>{formatCurrency(partsCost)}</dd></div>
+          <div><dt>Net profit</dt><dd className={getProfitTextColor(netProfit)}>{formatSignedCurrency(netProfit)}</dd></div>
+          <div><dt>Margin</dt><dd className={getProfitTextColor(netProfit)}>{profitMarginPercent.toFixed(1)}%</dd></div>
+        </dl>
+      </section>
+      <section>
+        <h4>Buyer &amp; payment</h4>
+        <dl className="detail-list">
+          {tx?.buyerName && <div><dt>Buyer</dt><dd>{tx.buyerName}</dd></div>}
+          {tx?.platform && <div><dt>Platform</dt><dd>{normalizePlatform(tx.platform)}</dd></div>}
+          {tx?.paymentMethod && <div><dt>Payment</dt><dd>{tx.paymentMethod}</dd></div>}
+          {tx?.secondaryPaymentMethod && <div><dt>Secondary</dt><dd>{tx.secondaryPaymentMethod}</dd></div>}
+          <div><dt>Sold</dt><dd>{tx?.dateSortable || tx?.timestamp || 'Not recorded'}</dd></div>
+        </dl>
+      </section>
+      {matchedComp && <section>
+        <h4>Component details</h4>
+        <p className="mb-3 text-zinc-100">{matchedComp.name}</p>
+        <dl className="detail-list">
+          <div><dt>Category</dt><dd>{matchedComp.category}</dd></div>
+          {!!matchedComp.tags?.length && <div><dt>Tags</dt><dd>{matchedComp.tags.join(' · ')}</dd></div>}
+          {tx?.originalPurchaseEntrySnapshot?.condition && <div><dt>Condition</dt><dd>{tx.originalPurchaseEntrySnapshot.condition}</dd></div>}
+          {tx?.quantity && <div><dt>Quantity</dt><dd>{tx.quantity}</dd></div>}
+        </dl>
+      </section>}
     </div>
-  );
-};
+    {!!tx?.tradeInCredit && tx.tradeInCredit > 0 && <section className="trade-in-details">
+      <h4>Trade-in included</h4>
+      {tx.tradeInDescription && <p>{tx.tradeInDescription}</p>}
+      <p>Cash <strong>{formatCurrency(tx.cashPortion ?? 0)}</strong> · Trade value <strong>{formatCurrency(tx.tradeInCredit)}</strong> · Effective sale <strong>{formatCurrency(salePrice)}</strong></p>
+      {tx.tradeInNotes && <p>{tx.tradeInNotes}</p>}
+    </section>}
+    {tx?.notes && <p className="record-notes"><strong>Notes</strong> {tx.notes}</p>}
+  </div>
+);

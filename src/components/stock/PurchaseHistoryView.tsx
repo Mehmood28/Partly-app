@@ -126,7 +126,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
   return (
     <div className="space-y-4">
       <header className="flex items-start gap-3 px-1 pt-1">
-        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#62E6E6]/25 bg-[#62E6E6]/[0.08] text-[#62E6E6]">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#83E5DF]/25 bg-[#83E5DF]/[0.08] text-[#83E5DF]">
           <ShoppingBag className="h-4 w-4" />
         </div>
         <div>
@@ -135,7 +135,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
         </div>
       </header>
 
-      <div className="app-panel flex flex-col items-center justify-between gap-2.5 p-3 sm:flex-row">
+      <div className="records-toolbar flex flex-col items-center justify-between gap-2.5 p-3 sm:flex-row">
         <div className="relative w-full sm:flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input

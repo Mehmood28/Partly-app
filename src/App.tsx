@@ -219,14 +219,14 @@ function AppContent() {
         onToggleSessionHistory={() => setIsSessionHistoryOpen((prev) => !prev)}
       />
       
-      <div className="relative z-0 flex min-w-0 flex-1 flex-col bg-transparent md:ml-64">
+      <div className="relative z-0 flex min-w-0 flex-1 flex-col bg-transparent">
         <TopBar
           isSessionHistoryOpen={isSessionHistoryOpen}
           onToggleSessionHistory={() => setIsSessionHistoryOpen((prev) => !prev)}
         />
 
       {/* Main Container */}
-      <main className="app-page flex w-full flex-1 flex-col px-3 pb-24 pt-0 sm:px-5 md:px-7 md:pb-8 lg:px-9">
+      <main className="app-page app-main flex w-full flex-1 flex-col">
         <React.Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-8 h-8 border-4 border-[#A8FF3E]/30 border-t-[#A8FF3E] rounded-full animate-spin"></div></div>}>
           {/* Launchpad Tab */}
           <div className={activeTab === 'launchpad' || (activeTab as string) === 'home' ? 'flex flex-col flex-1 w-full' : 'hidden'}>

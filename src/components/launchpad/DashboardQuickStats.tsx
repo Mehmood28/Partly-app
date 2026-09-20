@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Activity, ArrowUpRight, Boxes, BadgeDollarSign, MonitorCheck, ShoppingCart } from 'lucide-react';
+import { Boxes, BadgeDollarSign, MonitorCheck, ShoppingCart } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
 import { calculateUnassignedQuantityStrict } from '../../utils/helpers';
 
@@ -78,44 +78,13 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
   }, [state]);
 
   return (
-    <section className="app-section">
-      <div className="mb-3.5 flex items-center justify-between">
-        <h3 className="app-section-kicker"><Activity /> Operations snapshot</h3>
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Live</span>
-      </div>
-
-      <div className="app-panel grid grid-cols-2 lg:grid-cols-4">
-        <button type="button" onClick={() => onNavigateToBuilds('Available')} className="group min-h-[122px] border-b border-r border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025] lg:border-b-0">
-          <div className="flex items-center justify-between"><MonitorCheck className="h-4 w-4 text-[#62E6E6]" /><ArrowUpRight className="h-3.5 w-3.5 text-zinc-600 transition-colors group-hover:text-[#A8FF3E]" /></div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-500">Listed Builds</p>
-          <p className="mt-1 font-mono text-2xl font-bold leading-none text-[#62E6E6]">{stats.listedCount}</p>
-          <p className="mt-1.5 text-[11px] text-zinc-500">Ready for sale</p>
-        </button>
-
-        <button type="button" onClick={() => onNavigateToBuilds('Pending')} className="group min-h-[122px] border-b border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025] lg:border-b-0 lg:border-r">
-          <div className="flex items-center justify-between"><ShoppingCart className="h-4 w-4 text-zinc-300" /><ArrowUpRight className="h-3.5 w-3.5 text-zinc-600 transition-colors group-hover:text-[#A8FF3E]" /></div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-500">Pending Sale</p>
-          <p className="mt-1 font-mono text-2xl font-bold leading-none text-zinc-100">{stats.pendingSaleCount}</p>
-          <p className="mt-1.5 text-[11px] text-zinc-500">Awaiting completion</p>
-        </button>
-
-        <button type="button" onClick={onNavigateToStock} className="group min-h-[122px] border-r border-white/[0.09] p-3.5 text-left transition-colors hover:bg-white/[0.025]">
-          <div className="flex items-center justify-between"><Boxes className="h-4 w-4 text-[#62E6E6]" /><ArrowUpRight className="h-3.5 w-3.5 text-zinc-600 transition-colors group-hover:text-[#A8FF3E]" /></div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-500">Available Stock</p>
-          <p className="mt-1 font-mono text-2xl font-bold leading-none text-zinc-100">{stats.availableStockCount}<span className="ml-1 font-sans text-[10px] font-medium text-zinc-500">units</span></p>
-          <p className="mt-1.5 text-[11px] text-zinc-500">Unassigned parts</p>
-        </button>
-
-        <div className="min-h-[122px] p-3.5 text-left">
-          <BadgeDollarSign className="h-4 w-4 text-[#4DE0A4]" />
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-500">Last PC Sale</p>
-          <p className="mt-1 font-mono text-lg font-bold leading-none text-[#4DE0A4] sm:text-xl">{stats.relativeTimeText}</p>
-          {stats.hasSoldBuild && stats.latestBuildName ? (
-            <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-zinc-400" title={stats.latestBuildName}>{stats.latestBuildName}</p>
-          ) : (
-            <p className="mt-1.5 text-[11px] text-zinc-500">No completed builds sold</p>
-          )}
-        </div>
+    <section className="home-section">
+      <div className="section-heading"><h2>At a glance</h2><span>Live overview</span></div>
+      <div className="overview-grid">
+        <button onClick={() => onNavigateToBuilds('Available')}><MonitorCheck /><span>Listed Builds</span><strong>{stats.listedCount}</strong><small>Ready for sale</small></button>
+        <button onClick={() => onNavigateToBuilds('Pending')}><ShoppingCart /><span>Pending Sale</span><strong>{stats.pendingSaleCount}</strong><small>Awaiting sale completion</small></button>
+        <button onClick={onNavigateToStock}><Boxes /><span>Available Stock</span><strong>{stats.availableStockCount} <em>units</em></strong><small>Unassigned components</small></button>
+        <div><BadgeDollarSign /><span>Last PC Sale</span><strong>{stats.relativeTimeText}</strong><small>{stats.latestBuildName || 'No completed builds sold'}</small></div>
       </div>
     </section>
   );

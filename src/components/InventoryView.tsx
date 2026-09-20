@@ -87,8 +87,8 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         totalUnits: group.totalUnits,
         totalVal: group.totalVal,
       });
-      for (let i = 0; i < group.items.length; i += 2) {
-        const slice = group.items.slice(i, i + 2);
+      for (let i = 0; i < group.items.length; i += 1) {
+        const slice = group.items.slice(i, i + 1);
         rows.push({
           type: 'items_row',
           key: `items-${group.category}-${slice.map(c => c.id).join('-')}`,
@@ -151,14 +151,14 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
   return (
     <div className="space-y-4">
-      <div className="app-panel grid grid-cols-3 divide-x divide-white/[0.09]">
+      <div className="inventory-capital">
         <div className="flex min-w-0 flex-col justify-center p-3 sm:p-4">
           <div className="app-metric-label">Unassigned</div>
-          <div className="app-metric-value truncate text-[#4DE0A4]">{formatCurrency(unassignedValue)}</div>
+          <div className="app-metric-value">{formatCurrency(unassignedValue)}</div>
         </div>
         <div className="flex min-w-0 flex-col justify-center p-3 sm:p-4">
           <div className="app-metric-label">Assigned</div>
-          <div className="app-metric-value truncate text-[#62E6E6]">{formatCurrency(activeBuildsCost)}</div>
+          <div className="app-metric-value truncate text-[#83E5DF]">{formatCurrency(activeBuildsCost)}</div>
         </div>
         <div className="flex min-w-0 flex-col justify-center p-3 sm:p-4">
           <div className="app-metric-label">Total Value</div>
@@ -166,7 +166,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         </div>
       </div>
 
-      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:justify-end">
+      <div className="inventory-actions">
         {onOpenBulkEntry && (
           <button
             type="button"
@@ -174,7 +174,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             className="app-button flex items-center justify-center gap-1.5 px-4"
             title="Fast Bulk Stock Entry via AI Text or Image Scan"
           >
-            <Zap className="h-3.5 w-3.5 shrink-0 text-[#A8FF3E]" />
+            <Zap className="h-3.5 w-3.5 shrink-0 text-[#B9EF68]" />
             <span>AI Import</span>
           </button>
         )}
@@ -189,7 +189,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         </button>
       </div>
 
-      <div className="app-panel p-3 sm:p-4">
+      <div className="inventory-filters">
         <InventoryFilterBar
           builds={state.builds}
           components={state.components.filter(c => calculateUnassignedQuantityStrict(c, state.builds) > 0)}
@@ -232,13 +232,13 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           {virtualRows.map((row) => {
             if (row.type === 'header') {
               return (
-                <div key={row.key} className="app-panel-quiet mt-4 px-3.5 py-2.5 first:mt-0">
-                  <div className="flex items-center justify-between gap-3 font-mono text-xs">
-                    <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-zinc-100 sm:text-sm">
-                      <Layers className="h-4 w-4 text-[#A8FF3E]" />
+                <div key={row.key} className="inventory-group mt-4 first:mt-0">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="flex items-center gap-2 text-xs font-bold text-zinc-100 sm:text-sm">
+                      <Layers className="h-4 w-4 text-[#B9EF68]" />
                       {row.category}
                     </span>
-                    <div className="flex items-center gap-2.5 text-[10px] text-zinc-400 sm:text-xs">
+                    <div className="flex items-center gap-2.5 text-[11px] text-zinc-400 sm:text-xs">
                       <span>{row.totalUnits} in stock</span>
                       <span className="font-semibold text-zinc-200">{formatCurrency(row.totalVal)}</span>
                     </div>
@@ -249,7 +249,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
             return (
               <div key={row.key}>
-                <div className={`grid grid-cols-1 gap-2 ${row.items.some((component) => component.id === expandedCardId) ? '' : 'xl:grid-cols-2'}`}>
+                <div className="grid grid-cols-1 gap-2">
                   {row.items.map((component) => (
                     <ComponentCard
                       isExpanded={expandedCardId === component.id}
@@ -276,7 +276,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
               scrollOffsetRef.current = e.currentTarget.scrollTop;
             }
           }}
-          className="h-[calc(100dvh-330px)] overflow-y-auto pr-1 md:h-[calc(100dvh-210px)]"
+          className="max-h-[75dvh] min-h-[360px] overflow-y-auto pr-1"
           style={{
             overflowAnchor: 'none',
             scrollbarWidth: 'thin',
@@ -309,9 +309,9 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                       paddingBottom: '3px',
                     }}
                   >
-                    <div className="app-panel-quiet flex items-center justify-between gap-3 px-3.5 py-2.5 font-mono text-xs">
-                      <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-zinc-100 sm:text-sm">
-                        <Layers className="h-4 w-4 text-[#A8FF3E]" />
+                    <div className="inventory-group flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2 text-xs font-bold text-zinc-100 sm:text-sm">
+                        <Layers className="h-4 w-4 text-[#B9EF68]" />
                         {row.category}
                       </span>
                       <div className="flex items-center gap-2.5 text-zinc-400 text-xs">
@@ -337,7 +337,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                     paddingBottom: '6px',
                   }}
                 >
-                  <div className={`grid grid-cols-1 gap-2 ${row.items.some((component) => component.id === expandedCardId) ? '' : 'xl:grid-cols-2'}`}>
+                  <div className="grid grid-cols-1 gap-2">
                     {row.items.map((component) => (
                       <ComponentCard
                         isExpanded={expandedCardId === component.id}

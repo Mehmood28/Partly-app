@@ -176,11 +176,11 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       });
   }, [state.builds, statusFilter, deferredSearchQuery, sortBy]);
 
-  // Chunk into 2-card rows for dynamic virtualization
+  // Keep each full-width build independently measurable when expanded.
   const buildRows = useMemo(() => {
     const rows: PCBuild[][] = [];
-    for (let i = 0; i < filteredBuilds.length; i += 2) {
-      rows.push(filteredBuilds.slice(i, i + 2));
+    for (let i = 0; i < filteredBuilds.length; i += 1) {
+      rows.push(filteredBuilds.slice(i, i + 1));
     }
     return rows;
   }, [filteredBuilds]);
@@ -235,13 +235,13 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
   return (
     <div className="space-y-4">
       {/* Build workbench */}
-      <div className="app-panel flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+      <div className="builds-toolbar flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="min-w-0">
-          <h2 className="app-page-title flex items-center gap-2.5 text-sm uppercase tracking-[0.08em]">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#A8FF3E]/25 bg-[#A8FF3E]/[0.08] text-[#A8FF3E]">
+          <h2 className="app-page-title flex items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#B9EF68]/25 bg-[#B9EF68]/[0.08] text-[#B9EF68]">
               <Hammer className="h-4 w-4" />
             </div>
-            PC BUILDS
+            PC Builds
           </h2>
           <p className="app-page-copy ml-[46px] mt-[-2px]">Builds, allocation, listings, and completed sales.</p>
         </div>
@@ -265,41 +265,41 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       {/* Filter controls */}
       <div className="app-panel space-y-3 p-3 sm:p-4">
         {/* Status Filter Tabs: Available, Pending, Sold */}
-        <div className="app-segmented grid-cols-4">
+        <div className="app-segmented build-status-tabs grid-cols-4">
           <button 
             type="button"
             onClick={() => handleTabChange('Available')} 
             data-active={statusFilter === 'Available'}
-            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
+            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
           >
-            AVAILABLE ({availableCount})
+            Available ({availableCount})
           </button>
 
           <button 
             type="button"
             onClick={() => handleTabChange('Pending')} 
             data-active={statusFilter === 'Pending'}
-            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
+            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
           >
-            PENDING ({pendingCount})
+            Pending ({pendingCount})
           </button>
 
           <button 
             type="button"
             onClick={() => handleTabChange('Trade-Ins')} 
             data-active={statusFilter === 'Trade-Ins'}
-            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
+            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
           >
-            TRADE-INS ({tradeInCount})
+            Trade-Ins ({tradeInCount})
           </button>
 
           <button 
             type="button"
             onClick={() => handleTabChange('Sold')} 
             data-active={statusFilter === 'Sold'}
-            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
+            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
           >
-            SOLD ({soldCount})
+            Sold ({soldCount})
           </button>
         </div>
 
@@ -365,7 +365,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       ) : !isVirtualized ? (
         <div className="space-y-2.5 pr-1">
           {buildRows.map((rowBuilds, rowIndex) => (
-            <div key={rowBuilds.map(b => b.id).join('-') || rowIndex} className={`grid grid-cols-1 gap-2.5 ${rowBuilds.some((build) => build.id === expandedBuildId) ? '' : 'xl:grid-cols-2'}`}>
+            <div key={rowBuilds.map(b => b.id).join('-') || rowIndex} className="grid grid-cols-1 gap-2.5">
               {rowBuilds.map((build) => (
                 <BuildCard
                   isExpanded={expandedBuildId === build.id}
@@ -422,7 +422,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
                     paddingBottom: '6px',
                   }}
                 >
-                  <div className={`grid grid-cols-1 gap-2.5 ${rowBuilds.some((build) => build.id === expandedBuildId) ? '' : 'xl:grid-cols-2'}`}>
+                  <div className="grid grid-cols-1 gap-2.5">
                     {rowBuilds.map((build) => (
                       <BuildCard
                         isExpanded={expandedBuildId === build.id}

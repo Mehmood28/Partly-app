@@ -18,11 +18,11 @@ export const CustomBuildResultCard: React.FC<CustomBuildResultCardProps> = ({
   onStartBuild,
 }) => {
   return (
-    <div className="bg-[#0B1113] border border-[#A8FF3E]/40 rounded-xl p-3.5 space-y-3 shadow-lg shadow-[#A8FF3E]/5">
+    <div className="bg-[#0B1113] border border-[#B9EF68]/40 rounded-xl p-3.5 space-y-3 shadow-lg shadow-[#B9EF68]/5">
       <div className="flex items-center justify-between border-b border-white/[0.08] pb-2.5">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-[#A8FF3E]/15 border border-[#A8FF3E]/30">
-            <Sparkles className="w-4 h-4 text-[#A8FF3E]" />
+          <div className="p-1.5 rounded-lg bg-[#B9EF68]/15 border border-[#B9EF68]/30">
+            <Sparkles className="w-4 h-4 text-[#B9EF68]" />
           </div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-100">
             Custom AI Recommendation
@@ -38,9 +38,9 @@ export const CustomBuildResultCard: React.FC<CustomBuildResultCardProps> = ({
       </div>
       
       {customBuild.notes && (
-        <div className="bg-[#A8FF3E]/10 border border-[#A8FF3E]/20 text-[#62E6E6] flex items-start gap-2 p-2.5 rounded-lg text-xs">
-          <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-[#A8FF3E]" />
-          <p><span className="font-semibold text-[#A8FF3E]">Synergy Note:</span> {customBuild.notes}</p>
+        <div className="bg-[#B9EF68]/10 border border-[#B9EF68]/20 text-[#83E5DF] flex items-start gap-2 p-2.5 rounded-lg text-xs">
+          <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-[#B9EF68]" />
+          <p><span className="font-semibold text-[#B9EF68]">Synergy Note:</span> {customBuild.notes}</p>
         </div>
       )}
 
@@ -49,7 +49,7 @@ export const CustomBuildResultCard: React.FC<CustomBuildResultCardProps> = ({
           <h3 className="text-sm font-semibold text-zinc-100 leading-tight">
             {customBuild.name}
           </h3>
-          <div className="bg-[#A8FF3E]/20 text-[#62E6E6] border border-[#A8FF3E]/40 shrink-0 px-2 py-0.5 rounded-md text-[10px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+          <div className="bg-[#B9EF68]/20 text-[#83E5DF] border border-[#B9EF68]/40 shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
             CUSTOM REQUEST
           </div>
         </div>
@@ -68,7 +68,7 @@ export const CustomBuildResultCard: React.FC<CustomBuildResultCardProps> = ({
             <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] gap-1 shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
               Cost: {formatCurrency(customBuild.totalCost)}
             </span>
-            <span className="bg-[#A8FF3E]/15 text-[#62E6E6] border border-[#A8FF3E]/30 gap-1 shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
+            <span className="bg-[#B9EF68]/15 text-[#83E5DF] border border-[#B9EF68]/30 gap-1 shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap">
               Value: {formatCurrency(customBuild.estimatedPrice)}
             </span>
             <span className={`${getProfitBadgeClasses(customBuild.projectedProfit)} border gap-1 shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap`}>
@@ -77,7 +77,7 @@ export const CustomBuildResultCard: React.FC<CustomBuildResultCardProps> = ({
           </div>
           <button
             onClick={() => onStartBuild(customBuild)}
-            className="flex items-center justify-center gap-2 bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] px-4 py-2 rounded-lg font-semibold text-xs transition-colors shrink-0 shadow-sm shadow-[#A8FF3E]/20"
+            className="flex items-center justify-center gap-2 bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] px-4 py-2 rounded-lg font-semibold text-xs transition-colors shrink-0 shadow-sm shadow-[#B9EF68]/20"
           >
             <Hammer className="w-3.5 h-3.5" />
             <span>Create PC Build</span>

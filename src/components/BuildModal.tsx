@@ -234,7 +234,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
         <div className="sticky -top-3.5 z-20 -mx-3.5 flex items-start justify-between border-b border-white/[0.09] bg-[#0b1113]/95 px-3.5 pb-3 pt-1 backdrop-blur-xl sm:-top-5 sm:-mx-5 sm:px-5 sm:pt-0">
           <div>
             <h3 className="flex items-center gap-2 text-base font-extrabold text-zinc-100 sm:text-lg">
-              <Hammer className="h-4 w-4 text-[#A8FF3E]" /> Create New PC Build
+              <Hammer className="h-4 w-4 text-[#B9EF68]" /> Create New PC Build
             </h3>
             <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 sm:text-xs">Title the build, set its target, then allocate real inventory batches.</p>
           </div>
@@ -242,7 +242,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -291,7 +291,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
         {/* Footer Actions */}
         <div className="sticky -bottom-3.5 z-20 -mx-3.5 flex flex-col gap-2.5 border-t border-white/[0.09] bg-[#0b1113]/96 px-3.5 pb-1 pt-3 backdrop-blur-xl sm:-bottom-5 sm:-mx-5 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:pb-0">
           <div className="text-xs text-zinc-400 font-sans">
-            Status: <span className="text-[#62E6E6] font-medium">{status === 'Listed for Sale' ? 'Available' : status}</span>
+            Status: <span className="text-[#83E5DF] font-medium">{status === 'Listed for Sale' ? 'Available' : status === 'In Progress' ? 'Pending' : status}</span>
           </div>
           <div className="grid grid-cols-[auto_1fr] items-center gap-2 sm:flex">
             <button

@@ -17,14 +17,14 @@ interface SpecItemConfig {
 }
 
 const SPEC_CONFIGS: SpecItemConfig[] = [
-  { category: 'GPU', key: 'GPU', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#62E6E6]' },
-  { category: 'CPU', key: 'CPU', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#62E6E6]' },
-  { category: 'Motherboard', key: 'Motherboard', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#62E6E6]' },
-  { category: 'RAM', key: 'RAM', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#62E6E6]' },
-  { category: 'Cooling', key: 'Cooler', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#62E6E6]' },
-  { category: 'Storage', key: 'Storage', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#62E6E6]' },
-  { category: 'PSU', key: 'PSU', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#62E6E6]' },
-  { category: 'Case', key: 'Case', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#62E6E6]' },
+  { category: 'GPU', key: 'GPU', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#83E5DF]' },
+  { category: 'CPU', key: 'CPU', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#83E5DF]' },
+  { category: 'Motherboard', key: 'Motherboard', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#83E5DF]' },
+  { category: 'RAM', key: 'RAM', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#83E5DF]' },
+  { category: 'Cooling', key: 'Cooler', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#83E5DF]' },
+  { category: 'Storage', key: 'Storage', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#83E5DF]' },
+  { category: 'PSU', key: 'PSU', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#83E5DF]' },
+  { category: 'Case', key: 'Case', colorClass: 'text-[#9FF8F4]', bulletColor: 'bg-[#83E5DF]' },
 ];
 
 export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCardProps>(({ build, components }, ref) => {
@@ -44,12 +44,12 @@ export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCar
       {/* Top Header / Branding */}
       <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-5">
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#A8FF3E] shadow-[0_0_10px_rgba(168,255,62,0.9)]" />
-          <span className="text-xs font-mono font-bold tracking-wider text-[#62E6E6]">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#B9EF68] shadow-[0_0_10px_rgba(168,255,62,0.9)]" />
+          <span className="text-xs font-mono font-bold tracking-wider text-[#83E5DF]">
             Partly // PC Showcase
           </span>
         </div>
-        <span className="text-[10px] font-mono text-zinc-400 font-semibold px-2 py-0.5 rounded-md bg-[#101719] border border-white/[0.08]">
+        <span className="text-[11px] font-mono text-zinc-400 font-semibold px-2 py-0.5 rounded-md bg-[#101719] border border-white/[0.08]">
           Hardware Specs
         </span>
       </div>
@@ -76,15 +76,15 @@ export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCar
       {/* Purpose-Built Cost Showcase Block (Cost ONLY, never Sold or Est Profit) */}
       <div className="flex items-center justify-between bg-[#0B1113] border border-white/[0.08] rounded-xl px-4 py-3 mb-5">
         <div>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold block mb-0.5">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold block mb-0.5">
             Total Build Cost
           </span>
-          <span className="text-2xl font-mono font-bold text-[#62E6E6]">
+          <span className="text-2xl font-mono font-bold text-[#83E5DF]">
             {formatCurrency(partsCost)}
           </span>
         </div>
         <div className="text-right">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block mb-0.5">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 block mb-0.5">
             Installed Hardware
           </span>
           <span className="text-xs font-mono font-bold text-zinc-200">
@@ -95,7 +95,7 @@ export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCar
 
       {/* Itemized Hardware Specifications Grid */}
       <div className="bg-[#0B1113] border border-white/[0.08] rounded-xl p-4 mb-4">
-        <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold mb-3 flex items-center gap-1.5">
+        <div className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold mb-3 flex items-center gap-1.5">
           <span>Component Breakdown</span>
         </div>
         {activeSpecs.length === 0 ? (
@@ -111,7 +111,7 @@ export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCar
                 >
                   <span className={`w-2 h-2 rounded-full mt-1 shrink-0 ${cfg.bulletColor}`} />
                   <div className="min-w-0 flex-1">
-                    <span className={`text-[10px] font-mono font-semibold block ${cfg.colorClass}`}>
+                    <span className={`text-[11px] font-mono font-semibold block ${cfg.colorClass}`}>
                       {cfg.category}
                     </span>
                     <span className="text-xs font-medium text-zinc-200 break-words block leading-snug">
@@ -133,7 +133,7 @@ export const BuildShareImageCard = forwardRef<HTMLDivElement, BuildShareImageCar
       ) : null}
 
       {/* Footer Branding */}
-      <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between text-[10px] text-zinc-500 font-mono">
+      <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between text-[11px] text-zinc-500 font-mono">
         <span>Showcase generated with Partly</span>
         <span>{new Date().toLocaleDateString()}</span>
       </div>

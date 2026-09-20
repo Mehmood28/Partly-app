@@ -304,7 +304,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="w-4 h-4 text-[#A8FF3E]" />
+            <ShoppingBag className="w-4 h-4 text-[#B9EF68]" />
             <span className="text-xs font-semibold text-zinc-100 font-sans">
               Select In-Stock Batches
             </span>
@@ -323,7 +323,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
               placeholder="Search components or condition..."
               value={batchSearch}
               onChange={(e) => setBatchSearch(e.target.value)}
-              className="w-full h-8 bg-[#0B1113] border border-white/[0.06] rounded-lg pl-8 pr-2.5 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#A8FF3E] transition-colors font-sans"
+              className="w-full h-8 bg-[#0B1113] border border-white/[0.06] rounded-lg pl-8 pr-2.5 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] transition-colors font-sans"
             />
           </div>
           <div>
@@ -355,7 +355,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                   key={key}
                   className={`flex items-center justify-between p-2 rounded-lg border transition-all ${
                     isAdded
-                      ? 'bg-[#A8FF3E]/10 border-[#A8FF3E]/30 text-zinc-300'
+                      ? 'bg-[#B9EF68]/10 border-[#B9EF68]/30 text-zinc-300'
                       : 'bg-[#0B1113] border-white/[0.06] hover:border-white/[0.12] text-zinc-200'
                   }`}
                 >
@@ -364,11 +364,11 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                       <span className="text-xs font-semibold text-zinc-100 truncate">
                         {item.component.name}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.06] text-zinc-400 font-sans">
+                      <span className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.06] text-zinc-400 font-sans">
                         {item.component.category}
                       </span>
                       {item.entry.condition && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-sans">
+                        <span className="text-[11px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-sans">
                           {item.entry.condition}
                         </span>
                       )}
@@ -392,8 +392,8 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                     disabled={isAdded}
                     className={`h-7 px-2.5 rounded-lg text-xs font-medium font-sans flex items-center gap-1 transition-all ${
                       isAdded
-                        ? 'bg-[#A8FF3E]/20 text-[#62E6E6] cursor-default'
-                        : 'bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] shadow-sm'
+                        ? 'bg-[#B9EF68]/20 text-[#83E5DF] cursor-default'
+                        : 'bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] shadow-sm'
                     }`}
                   >
                     {isAdded ? (
@@ -428,7 +428,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
             <button
               type="button"
               onClick={handleSetAllToMax}
-              className="text-[11px] text-[#62E6E6] hover:text-[#9FF8F4] font-medium font-sans transition-colors"
+              className="text-[11px] text-[#83E5DF] hover:text-[#9FF8F4] font-medium font-sans transition-colors"
             >
               Set All to Max Stock
             </button>
@@ -453,7 +453,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                       <span className="text-xs font-bold text-zinc-100 font-sans">
                         {item.component?.name || 'Unknown Component'}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.06] text-zinc-400 font-sans">
+                      <span className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.06] text-zinc-400 font-sans">
                         {item.component?.category}
                       </span>
                     </div>
@@ -481,7 +481,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                       <button
                         type="button"
                         onClick={() => handleLineQtyChange(idx, item.availableQty, item.availableQty)}
-                        className="text-[10px] text-[#62E6E6] hover:text-[#9FF8F4] font-mono"
+                        className="text-[11px] text-[#83E5DF] hover:text-[#9FF8F4] font-mono"
                       >
                         Use All ({item.availableQty})
                       </button>
@@ -495,7 +495,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                       onChange={(e) =>
                         handleLineQtyChange(idx, parseInt(e.target.value) || 1, item.availableQty)
                       }
-                      className="w-full h-8 bg-[#0B1113] border border-white/[0.08] rounded-lg px-2.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#A8FF3E]"
+                      className="w-full h-8 bg-[#0B1113] border border-white/[0.08] rounded-lg px-2.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68]"
                     />
                   </div>
 
@@ -515,7 +515,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                         min="0"
                         value={item.line.unitSalePrice}
                         onChange={(e) => handleLinePriceChange(idx, e.target.value)}
-                        className="w-full h-8 bg-[#0B1113] border border-white/[0.08] rounded-lg pl-6 pr-2.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#A8FF3E]"
+                        className="w-full h-8 bg-[#0B1113] border border-white/[0.08] rounded-lg pl-6 pr-2.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68]"
                       />
                     </div>
                   </div>
@@ -554,7 +554,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
               type="date"
               value={saleDate}
               onChange={(e) => setSaleDate(e.target.value)}
-              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#A8FF3E]"
+              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68]"
             />
           </div>
 
@@ -567,7 +567,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
               placeholder="e.g. John Doe"
               value={buyerName}
               onChange={(e) => setBuyerName(e.target.value)}
-              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-sans focus:outline-none focus:border-[#A8FF3E]"
+              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-sans focus:outline-none focus:border-[#B9EF68]"
             />
           </div>
         </div>
@@ -582,7 +582,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
               placeholder="Facebook, Local, etc."
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
-              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-sans focus:outline-none focus:border-[#A8FF3E]"
+              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-sans focus:outline-none focus:border-[#B9EF68]"
             />
           </div>
 
@@ -607,7 +607,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
             placeholder="Optional sale notes, customer handle, or serial numbers..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-sans focus:outline-none focus:border-[#A8FF3E]"
+            className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-sans focus:outline-none focus:border-[#B9EF68]"
           />
         </div>
       </div>
@@ -623,25 +623,25 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
           <div className="bg-[#0B1113]/80 border border-white/[0.04] rounded-lg p-2">
-            <span className="text-[10px] text-zinc-500 uppercase font-mono block">Revenue</span>
+            <span className="text-[11px] text-zinc-500 uppercase font-mono block">Revenue</span>
             <span className="text-xs font-bold text-zinc-100 font-mono">
               {formatCurrency(totalRevenue)}
             </span>
           </div>
           <div className="bg-[#0B1113]/80 border border-white/[0.04] rounded-lg p-2">
-            <span className="text-[10px] text-zinc-500 uppercase font-mono block">Exact Cost</span>
+            <span className="text-[11px] text-zinc-500 uppercase font-mono block">Exact Cost</span>
             <span className="text-xs font-semibold text-zinc-300 font-mono">
               {formatCurrency(totalCost)}
             </span>
           </div>
           <div className="bg-[#0B1113]/80 border border-white/[0.04] rounded-lg p-2">
-            <span className="text-[10px] text-zinc-500 uppercase font-mono block">Net Profit</span>
+            <span className="text-[11px] text-zinc-500 uppercase font-mono block">Net Profit</span>
             <div className="flex items-center gap-1 font-mono">
               <span className={`text-xs font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {netProfit >= 0 ? '+' : ''}
                 {formatCurrency(netProfit)}
               </span>
-              <span className="text-[10px] text-zinc-500">
+              <span className="text-[11px] text-zinc-500">
                 · Margin {profitMarginPercent.toFixed(1)}%
               </span>
             </div>
@@ -664,7 +664,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
           className={`px-5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 font-sans ${
             selectedLines.length === 0
               ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-              : 'bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] shadow-lg shadow-[#A8FF3E]/20'
+              : 'bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] shadow-lg shadow-[#B9EF68]/20'
           }`}
         >
           <TrendingUp className="w-3.5 h-3.5" />

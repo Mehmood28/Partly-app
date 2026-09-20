@@ -67,9 +67,9 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
                 data-active={isSelected}
                 className="flex items-center justify-center gap-1.5 overflow-hidden px-1.5 whitespace-nowrap"
               >
-                <Icon className={`relative z-10 h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-[#A8FF3E]' : 'text-zinc-600'}`} />
+                <Icon className={`relative z-10 h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-[#B9EF68]' : 'text-zinc-600'}`} />
                 <span className="relative z-10 truncate">{tab.label}</span>
-                <span className="relative z-10 shrink-0 font-mono text-[9px] opacity-75 sm:text-[10px]">({tab.count})</span>
+                <span className="relative z-10 shrink-0 font-mono text-[11px] opacity-75 sm:text-[11px]">({tab.count})</span>
               </button>
             );
           })}

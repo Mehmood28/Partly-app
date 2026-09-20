@@ -1,9 +1,8 @@
 import React from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Receipt, CheckCircle2, ArrowRightLeft } from 'lucide-react';
 import { InventoryComponent, TransactionLogItem } from '../../types';
 import {
   formatCurrency,
-  getConditionDotColor,
 } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { usePrivacy } from '../../context/PrivacyContext';
@@ -72,86 +71,30 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
   const { hideSupplierNames } = usePrivacy();
   const recordedDate = saleDate || tx.dateSortable || tx.timestamp;
   const quantity = tx.quantity || tx.itemCount || tx.detailsList?.length || 1;
-  const statusTone = isPurchase
-    ? 'text-[#62E6E6] border-[#62E6E6]/35'
-    : isPCSale || isPartSale
-      ? 'text-[#A8FF3E] border-[#A8FF3E]/35'
-      : 'text-zinc-300 border-white/[0.12]';
-  const railTone = isPurchase ? 'bg-[#62E6E6]' : isPCSale || isPartSale ? 'bg-[#A8FF3E]' : 'bg-zinc-500';
-
+  const isSale = isPCSale || isPartSale;
+  const StatusIcon = isSale ? CheckCircle2 : isExchange ? ArrowRightLeft : Receipt;
+  const fields = [
+    { label: 'Category', value: matchedComp?.category || (isBulkPurchase ? `${tx.itemCount || quantity} items` : undefined) },
+    { label: 'Condition', value: conditionStr },
+    { label: 'Supplier', value: !hideSupplierNames && platform ? normalizePlatform(platform) : undefined },
+    { label: 'Payment', value: paymentMethod },
+  ].filter(f => f.value);
   return (
-    <button
-      type="button"
-      className="relative w-full cursor-pointer px-3.5 py-3.5 pl-4 text-left transition-colors hover:bg-white/[0.022] sm:px-4 sm:pl-5"
-      onClick={onToggle}
-      aria-expanded={isExpanded}
-    >
-      <span className={`absolute bottom-3 left-0 top-3 w-0.5 rounded-r-full ${railTone}`} />
-
-      <div className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-2.5">
-            <h3 className="min-w-0 flex-1 break-words text-[13px] font-bold leading-snug tracking-[-0.02em] text-zinc-100 sm:text-[15px]">
-              {displayTitle}
-            </h3>
-            <span className={`mt-0.5 shrink-0 border-l pl-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] ${statusTone}`}>
-              {subCategoryLabel}
-            </span>
-            <span className="mt-0.5 shrink-0 text-zinc-500">
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </span>
-          </div>
-
-          <div className="mt-2.5 grid divide-x divide-white/[0.09] rounded-lg border border-white/[0.07] bg-black/[0.12] font-mono" style={{ gridTemplateColumns: isExchange ? 'repeat(3,minmax(0,1fr))' : (isPCSale || isPartSale) ? 'repeat(4,minmax(0,1fr))' : 'repeat(2,minmax(0,1fr))' }}>
-            {isExchange && (
-              <>
-                <span className="min-w-0 p-2"><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">OUTGOING</small><strong className="mt-0.5 block truncate text-[12px] text-zinc-300 sm:text-sm">{formatCurrency(outgoingCostBasis)}</strong></span>
-                <span className="min-w-0 p-2"><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">CASH</small><strong className="mt-0.5 block truncate text-[12px] text-[#62E6E6] sm:text-sm">{formatCurrency(cashPaidOnTop)}</strong></span>
-                <span className="min-w-0 p-2"><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">INCOMING</small><strong className="mt-0.5 block truncate text-[12px] text-zinc-100 sm:text-sm">{formatCurrency(incomingCostBasis)}</strong></span>
-              </>
-            )}
-
-            {(isPCSale || isPartSale) && (
-              <>
-                <span className="min-w-0 p-2"><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">COST</small><strong className="mt-0.5 block truncate text-[12px] text-zinc-300 sm:text-sm">{formatCurrency(partsCost)}</strong></span>
-                <span className="min-w-0 p-2"><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">SOLD</small><strong className="mt-0.5 block truncate text-[12px] text-[#62E6E6] sm:text-sm">{formatCurrency(salePrice)}</strong></span>
-                <span className={`min-w-0 p-2 ${getProfitTextColor(netProfit)}`}><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">PROFIT</small><strong className="mt-0.5 block truncate text-[12px] sm:text-sm">{formatSignedCurrency(netProfit)}</strong></span>
-                <span className={`min-w-0 p-2 ${getProfitTextColor(profitMarginPercent)}`}><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">MARGIN</small><strong className="mt-0.5 block truncate text-[12px] sm:text-sm">{profitMarginPercent.toFixed(1)}%</strong></span>
-              </>
-            )}
-
-            {isPurchase && (
-              <>
-                <span className="min-w-0 p-2"><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">PAID</small><strong className="mt-0.5 block truncate text-[12px] text-zinc-100 sm:text-sm">{formatCurrency(tx.totalAmount)}</strong></span>
-                <span className="min-w-0 p-2"><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">QUANTITY</small><strong className="mt-0.5 block truncate text-[12px] text-[#62E6E6] sm:text-sm">{(isBulkPurchase || quantity > 1) ? quantity : 1} {quantity === 1 ? 'unit' : 'units'}</strong></span>
-              </>
-            )}
-
-            {isBuildAllocation && (
-              <>
-                <span className="min-w-0 p-2"><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">BUILD COST</small><strong className="mt-0.5 block truncate text-[12px] text-[#62E6E6] sm:text-sm">{formatCurrency(tx.totalAmount)}</strong></span>
-                <span className="min-w-0 p-2"><small className="block text-[10px] font-semibold tracking-[.1em] text-zinc-600">ALLOCATED</small><strong className="mt-0.5 block truncate text-[12px] text-zinc-200 sm:text-sm">{tx.itemCount || quantity} items</strong></span>
-              </>
-            )}
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-[10px] leading-snug text-zinc-500 sm:text-[12px]">
-            {matchedComp?.category && <span className="font-semibold text-[#9FF8F4]">{matchedComp.category}</span>}
-            {conditionStr && (
-              <span className="inline-flex items-center gap-1">
-                <span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(conditionStr)}`} />
-                {conditionStr}
-              </span>
-            )}
-            {!hideSupplierNames && platform && <span>· {normalizePlatform(platform)}</span>}
-            {buyerName && <span>· {buyerName}</span>}
-            {paymentMethod && <span>· {paymentMethod}</span>}
-            {recordedDate && <span>· {recordedDate}</span>}
-            {daysOnMarket !== undefined && <span>· {daysOnMarket === 0 ? 'same day' : `${daysOnMarket} days`}</span>}
-          </div>
-        </div>
-
-      </div>
+    <button type="button" className="record-header" onClick={onToggle} aria-expanded={isExpanded}>
+      <div className="record-topline"><StatusIcon className="h-4 w-4" /><span>{subCategoryLabel}</span><time>{String(recordedDate || '').split('T')[0]}</time>{isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}</div>
+      <h3>{displayTitle}</h3>
+      {isPurchase ? (
+        <dl className="record-purchase-fields">{fields.map(f => <div key={f.label}><dt>{f.label}</dt><dd>{f.value}</dd></div>)}<div className="record-paid"><dt>Paid</dt><dd>{formatCurrency(tx.totalAmount)}</dd></div></dl>
+      ) : (
+        <>
+          <dl className="record-finances" style={!isSale ? {gridTemplateColumns:`repeat(${isExchange ? 3 : 2},minmax(0,1fr))`} : undefined}>
+            {isSale && <><div><dt>Cost</dt><dd>{formatCurrency(partsCost)}</dd></div><div><dt>Sold</dt><dd>{formatCurrency(salePrice)}</dd></div><div><dt>Profit</dt><dd className={getProfitTextColor(netProfit)}>{formatSignedCurrency(netProfit)}</dd></div><div><dt>Margin</dt><dd className={getProfitTextColor(netProfit)}>{profitMarginPercent.toFixed(1)}%</dd></div></>}
+            {isExchange && <><div><dt>Outgoing</dt><dd>{formatCurrency(outgoingCostBasis)}</dd></div><div><dt>Cash</dt><dd>{formatCurrency(cashPaidOnTop)}</dd></div><div><dt>Incoming</dt><dd>{formatCurrency(incomingCostBasis)}</dd></div></>}
+            {isBuildAllocation && <><div><dt>Build Cost</dt><dd>{formatCurrency(tx.totalAmount)}</dd></div><div><dt>Allocated</dt><dd>{tx.itemCount || quantity} items</dd></div></>}
+          </dl>
+          <div className="record-metadata">{matchedComp?.category && <span>{matchedComp.category}</span>}{conditionStr && <span>{conditionStr}</span>}{buyerName && <span>{buyerName}</span>}{platform && <span>{normalizePlatform(platform)}</span>}{paymentMethod && <span>{paymentMethod}</span>}{daysOnMarket !== undefined && <span>{daysOnMarket === 0 ? 'Sold same day' : `Sold in ${daysOnMarket} days`}</span>}</div>
+        </>
+      )}
     </button>
   );
 };

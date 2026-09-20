@@ -39,7 +39,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
   } | null>(null);
 
   const renderCategoryIcon = (category: string) => {
-    const className = 'w-4 h-4 text-[#A8FF3E]';
+    const className = 'w-4 h-4 text-[#B9EF68]';
     switch (category) {
       case 'GPU': return <Monitor className={className} />;
       case 'CPU': return <Cpu className={className} />;
@@ -71,12 +71,12 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
       <div className="space-y-3.5 w-full">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-            <Box className="w-4 h-4 text-[#A8FF3E]" /> Allocate Inventory Component
+            <Box className="w-4 h-4 text-[#B9EF68]" /> Allocate Inventory Component
           </h3>
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -123,13 +123,13 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
             return (
               <div 
                 key={comp.id} 
-                className="bg-[#101719] border border-white/[0.08] hover:border-[#A8FF3E]/40 rounded-xl mb-2 transition-all overflow-hidden"
+                className="bg-[#101719] border border-white/[0.08] hover:border-[#B9EF68]/40 rounded-xl mb-2 transition-all overflow-hidden"
               >
                 <div 
                   onClick={() => setExpandedPartId(isExpanded ? null : comp.id)}
                   className="p-3 cursor-pointer flex items-start gap-2.5 group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#B9EF68]/15 border border-[#B9EF68]/30 flex items-center justify-center shrink-0 mt-0.5">
                     {renderCategoryIcon(comp.category)}
                   </div>
                   <div className="flex flex-col gap-1 min-w-0 flex-1">
@@ -140,7 +140,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                           {comp.tags[0]}
                         </span>
                       )}
-                      <span className="bg-[#A8FF3E]/15 border border-[#A8FF3E]/30 text-[#62E6E6] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
+                      <span className="bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#83E5DF] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
                         {unassignedQty} in stock
                       </span>
                       <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
@@ -161,7 +161,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                       return (
                         <div
                           key={entry.id}
-                          className="bg-[#101719] border border-white/[0.08] hover:border-[#A8FF3E]/40 rounded-xl p-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all"
+                          className="bg-[#101719] border border-white/[0.08] hover:border-[#B9EF68]/40 rounded-xl p-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all"
                         >
                           <div className="flex items-center gap-2 flex-wrap flex-1">
                             <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px] font-mono">
@@ -195,7 +195,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                                 }));
                               }}
                               aria-label={`Quantity of ${comp.name} to assign`}
-                              className="w-16 h-8 bg-[#0B1113] border border-white/[0.1] rounded-lg px-2 text-center text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#A8FF3E] focus:ring-1 focus:ring-[#A8FF3E]/40"
+                              className="w-16 h-8 bg-[#0B1113] border border-white/[0.1] rounded-lg px-2 text-center text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40"
                             />
                             <button
                                 type="button"
@@ -224,7 +224,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                                     quantity: requestedQuantity,
                                   });
                                 }}
-                                className="bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] shadow-sm shadow-[#A8FF3E]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E]"
+                                className="bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] shadow-sm shadow-[#B9EF68]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
                               >
                                 Assign
                               </button>

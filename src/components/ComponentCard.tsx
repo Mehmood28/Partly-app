@@ -73,33 +73,34 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const categoryPresentation = getCategoryPresentation(component.category);
 
   const getCardBorder = () => {
-    return 'border-white/[0.08] hover:border-[#A8FF3E]/40';
+    return 'border-white/[0.08] hover:border-[#B9EF68]/40';
   };
 
   return (
-    <div className={`app-panel transition-colors ${getCardBorder()} ${isExpanded ? 'border-l-2 border-l-[#A8FF3E] shadow-[0_18px_45px_rgba(0,0,0,0.28)]' : ''}`} style={{ contain: 'content', willChange: 'transform' }}>
+    <div className={`app-panel stock-card transition-colors ${getCardBorder()} ${isExpanded ? 'stock-card-expanded' : ''}`}>
       {/* Collapsed Header Bar - Clickable for mobile */}
-      <div 
-        className="relative min-h-[70px] cursor-pointer px-3.5 py-3 pr-5 transition-colors hover:bg-white/[0.018]"
+      <div
+        className="stock-card-header" role="button" tabIndex={0} aria-expanded={isExpanded}
+        onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); handleToggle(); } }}
         onClick={handleToggle}
       >
-        <span className={`absolute bottom-3 right-1.5 top-3 w-0.5 rounded-full ${categoryPresentation.railClass}`} />
+
         <div className="flex min-w-0 items-start gap-2.5">
-          <span className={`w-[4.1rem] shrink-0 pt-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.08em] ${categoryPresentation.textClass}`}>
+          <span className={`stock-type ${categoryPresentation.textClass}`}>
             {categoryPresentation.label}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
-              <h3 className="min-w-0 flex-1 break-words text-[13px] font-bold leading-snug tracking-[-0.02em] text-zinc-100 sm:text-[15px]">
+              <h3 className="stock-name">
                 {String(component.name || '')}
               </h3>
-              <span className="shrink-0 whitespace-nowrap font-mono text-[13px] font-bold text-white sm:text-sm">{formatCurrency(unassignedVal)}</span>
+              <span className="stock-total">{formatCurrency(unassignedVal)}</span>
               <div className="-mr-1 -mt-0.5 flex items-center gap-1 text-zinc-500">
                 {actionOverride ? actionOverride : null}
                 {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </div>
             </div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] leading-snug text-zinc-500 sm:text-[11px]">
+            <div className="stock-summary">
               {(component.tags || []).filter((tag): tag is string => typeof tag === 'string' && Boolean(tag)).map((tag, idx) => <span key={`${tag}-${idx}`}>{idx > 0 && '· '}{tag}</span>)}
               {(component.tags || []).some((tag) => typeof tag === 'string' && Boolean(tag)) && <span>·</span>}
               <span>{unassignedQty} in stock</span>
@@ -111,8 +112,8 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
       {/* Expanded Content Section */}
       {isExpanded && (
-        <div className="space-y-4 border-t border-white/[0.09] bg-[#0d1416]/95 p-3.5 sm:p-4">
-          
+        <div className="stock-expanded">
+
           {/* Expanded Action Toolbar */}
           {!readonlyMode && (
             <div className="grid grid-cols-3 gap-2">
@@ -122,7 +123,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                     e.stopPropagation();
                     onAddPurchaseEntry(component.id);
                   }}
-                  className="app-button flex items-center justify-center gap-1.5 whitespace-nowrap px-2 text-[#BFFF72]"
+                  className="app-button app-button-outline flex items-center justify-center gap-1.5 whitespace-nowrap px-2"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Stock
                 </button>
@@ -155,10 +156,10 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
           {/* PURCHASE HISTORY Section */}
           <div>
             <div className="mb-2.5 flex items-center justify-between gap-3">
-              <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-zinc-400 sm:text-[11px]">
-                PURCHASE HISTORY · {visibleBatchCount} BATCH{visibleBatchCount === 1 ? '' : 'ES'}
+              <span className="text-sm font-semibold text-zinc-200">
+                Purchase History · {visibleBatchCount} batch{visibleBatchCount === 1 ? '' : 'es'}
               </span>
-              <span className="font-mono text-[11px] font-bold text-[#62E6E6] sm:text-xs">{formatCurrency(unassignedVal)}</span>
+              <span className="font-mono text-[11px] font-bold text-[#83E5DF] sm:text-xs">{formatCurrency(unassignedVal)}</span>
             </div>
 
             {(() => {
@@ -186,7 +187,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                     const entry = batch.entry;
                     const entryUnitPrice = batch.unitCost;
                     const entryTotal = entryUnitPrice * batch.availableQuantity;
-                    
+
                     const isTradeUpBatch = state.transactions.some(
                       (tx) =>
                         tx.type === 'EXCHANGE' &&
@@ -199,38 +200,28 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                       : null;
 
                     return (
-                      <div key={entry.id} className="app-ledger-row relative bg-[#0b1113] px-3 py-3 pr-5 sm:px-4">
-                        <span className={`absolute bottom-3 right-1.5 top-3 w-0.5 rounded-full ${categoryPresentation.railClass}`} />
-                        <div className="flex items-start gap-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start gap-2">
-                              <span className="min-w-0 flex-1 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 sm:text-[11px]">{formatReadableDate(entry.date) || entry.date}</span>
-                              <span className="shrink-0 whitespace-nowrap font-mono text-[13px] font-bold text-zinc-100">{formatCurrency(entryTotal)}</span>
-                            </div>
-                            <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-[10px] leading-snug text-zinc-500 sm:text-[11px]">
-                              <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}</span>
-                              {isTradeUpBatch && <span>· Trade-up</span>}
-                              {isPartedOutTradeInBatch ? (
-                                <span>· {tradeInOrigin?.buyerName ? `Trade-in: ${tradeInOrigin.buyerName}` : 'Trade-in'}</span>
-                              ) : (
-                                <>
-                                  {!hideSupplierNames && entry.platform && <span>· {normalizePlatform(String(entry.platform))}</span>}
-                                  {entry.paymentMethod && <span>· {String(entry.paymentMethod)}</span>}
-                                </>
-                              )}
-                              <span>· {batch.availableQuantity} × {formatCurrency(entryUnitPrice)} each</span>
-                              {(entry.taxPercent ?? 0) > 0 && <span className="text-rose-400">· +Tax</span>}
-                            </div>
-                          </div>
+                      <div key={entry.id} className="app-ledger-row batch-row">
+
+                        <div className="batch-identity">
+                          <strong className="batch-date">{formatReadableDate(entry.date) || entry.date}</strong>
+                          <span className="inline-flex items-center gap-1.5"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}</span>
+                          {isTradeUpBatch && <span>Trade-up</span>}
                         </div>
-                        <div className="mt-2 flex items-center justify-end gap-2 border-t border-white/[0.06] pt-2">
+                        <dl className="batch-source">
+                          {isPartedOutTradeInBatch ? <div><dt>Source</dt><dd>{tradeInOrigin?.buyerName ? `Trade-in: ${tradeInOrigin.buyerName}` : 'Trade-in'}</dd></div> : <>
+                            {!hideSupplierNames && entry.platform && <div><dt>Supplier</dt><dd>{normalizePlatform(String(entry.platform))}</dd></div>}
+                            {entry.paymentMethod && <div><dt>Payment</dt><dd>{String(entry.paymentMethod)}</dd></div>}
+                          </>}
+                        </dl>
+                        <div className="batch-value"><span>{batch.availableQuantity} × {formatCurrency(entryUnitPrice)} each</span><strong>{formatCurrency(entryTotal)}</strong>{(entry.taxPercent ?? 0) > 0 && <span>Includes tax</span>}</div>
+                        <div className="batch-actions">
                           {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onSellPart(component, entry.id);
                               }}
-                              className="flex min-h-8 items-center gap-1 rounded-lg border border-[#62E6E6]/25 px-2.5 text-xs font-semibold text-[#9FF8F4] transition-colors hover:bg-[#62E6E6]/10 hover:text-white"
+                              className="flex min-h-8 items-center gap-1 rounded-lg border border-[#83E5DF]/25 px-2.5 text-xs font-semibold text-[#9FF8F4] transition-colors hover:bg-[#83E5DF]/10 hover:text-white"
                             >
                               <Tag className="w-3 h-3" /> Sell
                             </button>
@@ -248,6 +239,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                             </button>
                           )}
                         </div>
+                        {entry.notes && <p className="batch-notes">{entry.notes}</p>}
                       </div>
                     );
                   })}

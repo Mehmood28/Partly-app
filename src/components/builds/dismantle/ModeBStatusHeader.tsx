@@ -28,26 +28,26 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
     <div className="mt-3 space-y-2">
       <div className="grid grid-cols-3 gap-2 p-2.5 bg-[#101719] border border-white/[0.08] rounded-xl text-xs">
         <div>
-          <div className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider font-sans">Target Value</div>
+          <div className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider font-sans">Target Value</div>
           <div className="text-xs sm:text-sm font-bold font-mono text-zinc-100 mt-0.5">
             {formatCurrency(targetCost)}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider font-sans">Total Allocated</div>
+          <div className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider font-sans">Total Allocated</div>
           <div
             className={`text-xs sm:text-sm font-bold font-mono mt-0.5 ${
-              isExactMatch ? 'text-emerald-400' : 'text-[#62E6E6]'
+              isExactMatch ? 'text-emerald-400' : 'text-[#83E5DF]'
             }`}
           >
             {formatCurrency(totalAllocated)}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider font-sans flex items-center justify-between">
+          <div className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider font-sans flex items-center justify-between">
             <span>Remaining</span>
             {lockedParts.length > 0 && (
-              <span className="text-[9px] text-[#62E6E6] font-mono lowercase">
+              <span className="text-[11px] text-[#83E5DF] font-mono lowercase">
                 {lockedParts.length} locked
               </span>
             )}
@@ -58,7 +58,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
                 ? 'text-emerald-400'
                 : remainingBalance < 0
                 ? 'text-rose-400'
-                : 'text-[#62E6E6]'
+                : 'text-[#83E5DF]'
             }`}
           >
             {remainingBalance < 0
@@ -69,9 +69,9 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
       </div>
 
       {!isExactMatch ? (
-        <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#A8FF3E]/10 border border-[#A8FF3E]/25 text-xs text-zinc-200">
+        <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#B9EF68]/10 border border-[#B9EF68]/25 text-xs text-zinc-200">
           <div className="flex items-center gap-2 min-w-0">
-            <AlertCircle className="w-4 h-4 shrink-0 text-[#A8FF3E]" />
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#B9EF68]" />
             <div className="min-w-0">
               {unlockedParts.length === 0 ? (
                 <span className="text-[11px] sm:text-xs text-zinc-300">
@@ -81,14 +81,14 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
                 <div className="text-[11px] sm:text-xs truncate">
                   <span>
                     Re-distribute {remainingBalance > 0 ? 'remaining ' : 'balance '}
-                    <span className="font-mono font-bold text-[#62E6E6]">
+                    <span className="font-mono font-bold text-[#83E5DF]">
                       {remainingBalance < 0
                         ? `-${formatCurrency(Math.abs(remainingBalance))}`
                         : formatCurrency(remainingBalance)}
                     </span>{' '}
                     across {unlockedParts.length} unlocked {unlockedParts.length === 1 ? 'part' : 'parts'}
                   </span>
-                  <span className="text-zinc-400 block text-[10px] truncate">
+                  <span className="text-zinc-400 block text-[11px] truncate">
                     (keeping {lockedNamesSummary} fixed)
                   </span>
                 </div>
@@ -105,9 +105,9 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
             type="button"
             onClick={handleAutoDistribute}
             disabled={unlockedParts.length === 0}
-            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8FF3E] ${
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
               unlockedParts.length > 0
-                ? 'bg-[#A8FF3E] hover:bg-[#C4FF79] text-[#07100B] shadow-sm shadow-[#A8FF3E]/20 cursor-pointer'
+                ? 'bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] shadow-sm shadow-[#B9EF68]/20 cursor-pointer'
                 : 'bg-white/[0.04] text-zinc-500 border border-white/[0.06] cursor-not-allowed'
             }`}
           >
@@ -122,7 +122,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
             <span className="text-[11px] sm:text-xs truncate">
               Exact target valuation matched!
               {lockedParts.length > 0 && (
-                <span className="text-emerald-400/80 text-[10px] ml-1">
+                <span className="text-emerald-400/80 text-[11px] ml-1">
                   ({lockedParts.length} custom locked)
                 </span>
               )}

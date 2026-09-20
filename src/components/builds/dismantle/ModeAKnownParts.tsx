@@ -16,7 +16,7 @@ export const ModeAKnownParts: React.FC<ModeAKnownPartsProps> = ({ build }) => {
         </div>
         <div className="flex items-center justify-between text-xs pt-1.5 border-t border-white/[0.06]">
           <span className="text-zinc-400 font-medium font-sans">Total Assembled Value:</span>
-          <span className="font-mono text-[#62E6E6] font-bold text-sm">
+          <span className="font-mono text-[#83E5DF] font-bold text-sm">
             {formatCurrency(calculateBuildPartsCost(build))}
           </span>
         </div>
@@ -32,7 +32,7 @@ export const ModeAKnownParts: React.FC<ModeAKnownPartsProps> = ({ build }) => {
             >
               <div className="min-w-0 pr-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/[0.04] text-zinc-300 border border-white/[0.08]">
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/[0.04] text-zinc-300 border border-white/[0.08]">
                     {p.category}
                   </span>
                   <span className="font-medium text-zinc-200 truncate">{p.componentName}</span>
@@ -49,7 +49,7 @@ export const ModeAKnownParts: React.FC<ModeAKnownPartsProps> = ({ build }) => {
         </div>
       </div>
 
-      <p className="text-xs text-zinc-300 bg-[#A8FF3E]/10 border border-[#A8FF3E]/20 rounded-xl p-3 leading-relaxed">
+      <p className="text-xs text-zinc-300 bg-[#B9EF68]/10 border border-[#B9EF68]/20 rounded-xl p-3 leading-relaxed">
         Dismantling this rig will return all {build.parts.length} allocated parts back to their original
         inventory batches without altering their condition or cost basis.
       </p>
