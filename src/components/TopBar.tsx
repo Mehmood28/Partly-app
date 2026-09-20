@@ -42,7 +42,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({ isSessionHistoryOpen,
       <div className="partly-masthead">
         <div className="partly-brand">
           <svg className="partly-mark" viewBox="0 0 40 44" aria-hidden="true"><path d="M20 2 38 12 20 22 2 12Z" fill="#a3e98c"/><path d="m2 16 16 9v17L2 33Z" fill="#b9ef68"/><path d="m22 25 16-9v17L22 42Z" fill="#83e5df"/></svg>
-          <div><h1>Partly</h1><span>PC builder &amp; reseller</span></div>
+          <div><h1>Partly</h1></div>
         </div>
         <div className="masthead-metrics">
           <div><PackageOpen /><span>Inventory<strong>{formatCurrency(totalStockValuation)}</strong></span></div>

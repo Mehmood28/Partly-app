@@ -158,7 +158,7 @@ export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({
   };
 
   return (
-    <div className="space-y-5 pb-2">
+    <div className="launchpad-layout pb-2">
       {/* Monthly Profit Goal */}
       <GoalBar />
       

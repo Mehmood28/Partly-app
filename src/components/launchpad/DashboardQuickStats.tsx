@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Boxes, BadgeDollarSign, MonitorCheck, ShoppingCart } from 'lucide-react';
+import { ArrowRight, Boxes, BadgeDollarSign, MonitorCheck, ShoppingCart } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
 import { calculateUnassignedQuantityStrict } from '../../utils/helpers';
 
@@ -81,10 +81,10 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
     <section className="home-section">
       <div className="section-heading"><h2>At a glance</h2><span>Live overview</span></div>
       <div className="overview-grid">
-        <button onClick={() => onNavigateToBuilds('Available')}><MonitorCheck /><span>Listed Builds</span><strong>{stats.listedCount}</strong><small>Active listings<br />on marketplace</small></button>
-        <button onClick={() => onNavigateToBuilds('Pending')}><ShoppingCart /><span>Pending Sale</span><strong>{stats.pendingSaleCount}</strong><small>Awaiting payment<br />or fulfillment</small></button>
-        <button onClick={onNavigateToStock}><Boxes /><span>Available Stock</span><strong>{stats.availableStockCount} <em>units</em></strong><small>Components<br />in inventory</small></button>
-        <div><BadgeDollarSign /><span>Last PC Sale</span><strong>{stats.relativeTimeText}</strong><small>{stats.latestBuildName || 'No completed builds sold'}</small></div>
+        <button className="overview-stat overview-stat-action" onClick={() => onNavigateToBuilds('Available')}><MonitorCheck /><span>Listed Builds</span><strong>{stats.listedCount}</strong><small>Active listings<br />on marketplace</small><ArrowRight className="overview-arrow" /></button>
+        <button className="overview-stat overview-stat-action" onClick={() => onNavigateToBuilds('Pending')}><ShoppingCart /><span>Pending Sale</span><strong>{stats.pendingSaleCount}</strong><small>Awaiting payment<br />or fulfillment</small><ArrowRight className="overview-arrow" /></button>
+        <button className="overview-stat overview-stat-action" onClick={onNavigateToStock}><Boxes /><span>Available Stock</span><strong>{stats.availableStockCount} <em>units</em></strong><small>Components<br />in inventory</small><ArrowRight className="overview-arrow" /></button>
+        <div className="overview-stat"><BadgeDollarSign /><span>Last PC Sale</span><strong>{stats.relativeTimeText}</strong><small>{stats.latestBuildName || 'No completed builds sold'}</small></div>
       </div>
     </section>
   );
