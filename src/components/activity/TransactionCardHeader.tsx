@@ -18,6 +18,7 @@ interface TransactionCardHeaderProps {
   isPurchase: boolean;
   isBuildAllocation: boolean;
   isBulkPurchase: boolean;
+  isPCPurchase?: boolean;
   isExchange?: boolean;
   outgoingCostBasis?: number;
   cashPaidOnTop?: number;
@@ -50,6 +51,7 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
   isPurchase,
   isBuildAllocation,
   isBulkPurchase,
+  isPCPurchase = false,
   isExchange = false,
   outgoingCostBasis = 0,
   cashPaidOnTop = 0,
@@ -74,7 +76,7 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
   const isSale = isPCSale || isPartSale;
   const StatusIcon = isSale ? CheckCircle2 : isExchange ? ArrowRightLeft : Receipt;
   const fields = [
-    { label: 'Category', value: isBulkPurchase ? 'Bulk' : (matchedComp?.category || '—') },
+    { label: 'Category', value: isBulkPurchase ? 'Bulk' : isPCPurchase ? 'PC' : (matchedComp?.category || '—') },
     { label: 'Condition', value: conditionStr || '—' },
     { label: 'Supplier', value: !hideSupplierNames && platform ? normalizePlatform(platform) : '—' },
     { label: 'Payment', value: paymentMethod || '—' },

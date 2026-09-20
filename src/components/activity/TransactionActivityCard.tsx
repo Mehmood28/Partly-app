@@ -68,6 +68,9 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
 
   const isBulkPurchase = classification.isBulkPurchase;
   const isPCPurchase = isPurchase && tx.purchaseKind === 'PC';
+  const purchasedBuild: PCBuild | undefined = isPCPurchase
+    ? state.builds.find((build) => build.purchaseTransactionId === tx.id || build.id === tx.relatedComponentId)
+    : undefined;
   const singletonPurchaseItem =
     isPurchase && !isBulkPurchase && tx.detailsList?.length === 1
       ? parseBatchItem(tx.detailsList[0], state.components, tx)
@@ -283,6 +286,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
         isPurchase={isPurchase}
         isBuildAllocation={isBuildAllocation}
         isBulkPurchase={isBulkPurchase}
+        isPCPurchase={isPCPurchase}
         isExchange={isExchange}
         outgoingCostBasis={outgoingCostBasis}
         cashPaidOnTop={cashPaidOnTop}
@@ -424,6 +428,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
               tx={tx}
               isBulkPurchase={isBulkPurchase}
               matchedComp={matchedComp}
+              purchasedBuild={purchasedBuild}
               components={state.components}
             />
           )}

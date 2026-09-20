@@ -509,7 +509,7 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 [data-bottom-sheet-modal] input:not([type=checkbox]):not([type=radio]), [data-bottom-sheet-modal] select, [data-bottom-sheet-modal] textarea { font-size:14px; min-height:42px; border-radius:6px; background-color:#191f22; }
 [data-bottom-sheet-modal] button:not([role=checkbox]) { min-height:36px; }
 @media (max-width:639px) {
-  .app-main { padding:0 12px 64px; }
+  .app-main { padding:0 12px 32px; }
   .partly-header { margin-bottom:0; }
   .partly-masthead { padding:7px 16px; gap:10px; }
   .partly-brand { gap:8px; }
@@ -794,6 +794,7 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .purchase-history-view .record-purchase-fields > div { padding:0 10px; }
 .purchase-history-view .record-purchase-fields dt { font-size:10px; }
 .purchase-history-view .record-purchase-fields dd { margin-top:3px; font-size:12px; line-height:1.25; }
+.purchase-history-view .record-purchase-fields > div:nth-child(3) dd { overflow-wrap:normal; word-break:normal; white-space:nowrap; font-size:11px; letter-spacing:-.025em; }
 .purchase-history-view .record-purchase-fields .record-paid dd { font-size:15px; font-weight:650; }
 .purchase-history-view .record-expanded { padding:11px 15px; }
 .purchase-history-view .record-actions { gap:8px; padding-bottom:10px; }
@@ -804,7 +805,7 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .purchase-history-view .purchase-totals dt { font-size:11px; }
 .purchase-history-view .purchase-totals dd { margin-top:3px; font-size:17px; font-weight:600; }
 .purchase-history-view .record-detail h4 { margin-bottom:7px; font-size:13px; font-weight:600; }
-.purchase-history-view .purchase-item,.purchase-history-view .purchase-item-head { grid-template-columns:minmax(0,2fr) .45fr .8fr; gap:10px; padding:8px 9px; }
+.purchase-history-view .purchase-item,.purchase-history-view .purchase-item-head { grid-template-columns:minmax(0,1.8fr) .4fr .8fr .8fr; gap:10px; padding:8px 9px; }
 .purchase-history-view .purchase-item-head { font-size:10px; }
 .purchase-history-view .purchase-item { font-size:12px; }
 .purchase-history-view .purchase-item-name strong { font-size:12px; font-weight:600; }
@@ -833,7 +834,7 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
   .purchase-history-view .purchase-totals { padding-bottom:8px; }
   .purchase-history-view .purchase-totals dd { font-size:15px; }
   .purchase-history-view .purchase-item-head { display:grid; }
-  .purchase-history-view .purchase-item,.purchase-history-view .purchase-item-head { grid-template-columns:minmax(0,2fr) .45fr .8fr; gap:6px; padding:7px 6px; }
+  .purchase-history-view .purchase-item,.purchase-history-view .purchase-item-head { grid-template-columns:minmax(0,1.8fr) .4fr .8fr .8fr; gap:6px; padding:7px 6px; }
   .purchase-history-view .purchase-item-name { grid-column:auto; }
   .purchase-history-view .purchase-item-name strong { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:10px; }
   .purchase-history-view .purchase-item-name span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:9px; }
