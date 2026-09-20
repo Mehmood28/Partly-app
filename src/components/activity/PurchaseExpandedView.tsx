@@ -18,32 +18,23 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
   const purchasedQuantity = tx.quantity || tx.itemCount || tx.detailsList?.length || 1;
   const purchasedItems = sortByCategory((tx.detailsList || []).map(detail => parseBatchItem(detail, components, tx)));
   return (
-    <div className="record-detail space-y-5">
+    <div className="record-detail purchase-expanded-detail space-y-4">
       <dl className="purchase-totals">
-        <div><dt>Total spent</dt><dd>{formatCurrency(tx.totalAmount)}</dd></div>
         <div><dt>Quantity purchased</dt><dd>{purchasedQuantity} {tx.purchaseKind === 'PC' ? (purchasedQuantity === 1 ? 'PC' : 'PCs') : (purchasedQuantity === 1 ? 'unit' : 'units')}</dd></div>
         {!isBulkPurchase && purchasedQuantity > 1 && <div><dt>Unit price</dt><dd>{formatCurrency(tx.totalAmount / purchasedQuantity)}</dd></div>}
       </dl>
       {purchasedItems.length > 0 ? <section>
         <h4>Purchase items <span>· {purchasedItems.length} {purchasedItems.length === 1 ? 'item' : 'items'}</span></h4>
         <div className="purchase-items">
-          <div className="purchase-item-head"><span>Item / details</span><span>Category</span><span>Qty</span><span>Unit price</span><span>Condition</span></div>
+          <div className="purchase-item-head"><span>Item / details</span><span>Qty</span><span>Unit price</span></div>
           {purchasedItems.map((item, index) => <div key={index} className="purchase-item">
             <div className="purchase-item-name"><strong>{item.itemName}</strong><span>{[...(item.tags || []), !hideSupplierNames && item.platform ? normalizePlatform(item.platform) : undefined].filter(Boolean).join(' · ')}</span></div>
-            <div data-label="Category">{item.category || 'Other'}</div>
             <div data-label="Qty">{item.quantity}</div>
             <div data-label="Unit price">{formatCurrency(item.unitPrice)}</div>
-            <div data-label="Condition">{item.condition || 'Not recorded'}</div>
           </div>)}
         </div>
       </section> : matchedComp ? <section><h4>Purchased component</h4><p className="text-zinc-100">{matchedComp.name}</p><p>{[matchedComp.category, ...(matchedComp.tags || [])].join(' · ')}</p></section> : null}
-      <dl className="purchase-record-details detail-list">
-        <div><dt>Purchase date</dt><dd>{tx.dateSortable || tx.timestamp}</dd></div>
-        {!hideSupplierNames && tx.platform && <div><dt>Supplier / vendor</dt><dd>{normalizePlatform(tx.platform)}</dd></div>}
-        {tx.paymentMethod && <div><dt>Payment method</dt><dd>{tx.paymentMethod}</dd></div>}
-        {tx.secondaryPaymentMethod && <div><dt>Secondary payment</dt><dd>{tx.secondaryPaymentMethod}</dd></div>}
-        {tx.notes && <div><dt>Notes</dt><dd>{tx.notes}</dd></div>}
-      </dl>
+      {tx.notes && <dl className="purchase-record-details detail-list"><div><dt>Notes</dt><dd>{tx.notes}</dd></div></dl>}
     </div>
   );
 };

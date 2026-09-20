@@ -2,7 +2,7 @@ import React, { useState, useDeferredValue, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useInventory } from '../../context/InventoryContext';
 import { TransactionLogItem } from '../../types';
-import { Search, X, ShoppingBag, Filter } from 'lucide-react';
+import { Search, X, Filter, ArrowDownWideNarrow } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
 import { EditTransactionModal } from '../activity/EditTransactionModal';
 import { TransactionActivityCard } from '../activity/TransactionActivityCard';
@@ -124,18 +124,13 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
   }, [sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-start gap-3 px-1 pt-1">
-        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#83E5DF]/25 bg-[#83E5DF]/[0.08] text-[#83E5DF]">
-          <ShoppingBag className="h-4 w-4" />
-        </div>
-        <div>
-          <h2 className="text-lg font-extrabold tracking-[-0.035em] text-white sm:text-xl">Purchases</h2>
-          <p className="app-page-copy mt-1">Component purchases and acquisition batches.</p>
-        </div>
+    <div className="purchase-history-view space-y-4">
+      <header className="purchase-page-heading">
+        <h2>Purchases</h2>
+        <p>Log and track all inventory purchases</p>
       </header>
 
-      <div className="records-toolbar flex flex-col items-center justify-between gap-2.5 p-3 sm:flex-row">
+      <div className="records-toolbar purchase-records-toolbar">
         <div className="relative w-full sm:flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -167,6 +162,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
             ]}
             value={sortBy}
             onChange={(val) => setSortBy(val as SortOption)}
+            icon={<ArrowDownWideNarrow className="h-3.5 w-3.5 text-[#B9EF68]" />}
           />
         </div>
       </div>
