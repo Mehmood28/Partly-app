@@ -7,6 +7,7 @@ import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialD
 interface PartSaleExpandedViewProps {
   tx: TransactionLogItem;
   matchedComp?: InventoryComponent;
+  matchedTradeInComp?: InventoryComponent;
   partsCost: number;
   salePrice: number;
   netProfit: number;
@@ -18,11 +19,14 @@ interface PartSaleExpandedViewProps {
 }
 
 export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
-  tx, matchedComp, partsCost, salePrice, netProfit, profitMarginPercent,
+  tx, matchedComp, matchedTradeInComp, partsCost, salePrice, netProfit, profitMarginPercent,
   platform, paymentMethod, buyerName, saleDate,
 }) => {
   const sourceBatch = tx.originalPurchaseEntrySnapshot ||
     matchedComp?.purchaseHistory.find((entry) => entry.id === tx.relatedPurchaseEntryId);
+  const tradeInBatch = matchedTradeInComp?.purchaseHistory.find(
+    (entry) => entry.id === tx.incomingPurchaseEntryId,
+  );
 
   return (
   <div className="record-detail sold-part-detail">
@@ -59,7 +63,16 @@ export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
     {!!tx.tradeInCredit && tx.tradeInCredit > 0 && (
       <div className="trade-in-details sold-trade-in">
         <h4>Trade-in included</h4>
-        {tx.tradeInDescription && <p>{tx.tradeInDescription}</p>}
+        {matchedTradeInComp ? (
+          <div className="sold-trade-in-part">
+            <strong>{matchedTradeInComp.name}</strong>
+            <span>{[
+              matchedTradeInComp.category,
+              ...(matchedTradeInComp.tags || []),
+              tradeInBatch?.condition,
+            ].filter(Boolean).join(' · ')}</span>
+          </div>
+        ) : tx.tradeInDescription ? <p>{tx.tradeInDescription}</p> : null}
         <p>Cash <strong>{formatCurrency(tx.cashPortion ?? 0)}</strong> · Trade value <strong>{formatCurrency(tx.tradeInCredit)}</strong> · Effective sale <strong>{formatCurrency(tx.totalAmount ?? 0)}</strong></p>
         {tx.tradeInNotes && <p>{tx.tradeInNotes}</p>}
       </div>

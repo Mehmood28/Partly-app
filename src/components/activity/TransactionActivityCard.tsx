@@ -152,6 +152,10 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
     ? state.components.find(c => c.id === tx.incomingComponentId)
     : undefined;
 
+  const matchedTradeInComp: InventoryComponent | undefined = isPartSale && tx.incomingComponentId
+    ? state.components.find(c => c.id === tx.incomingComponentId)
+    : undefined;
+
   // Financial Calculations
   let partsCost = 0;
   let salePrice = tx.totalAmount ?? 0;
@@ -417,6 +421,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
             <PartSaleExpandedView
               tx={tx}
               matchedComp={matchedComp}
+              matchedTradeInComp={matchedTradeInComp}
               partsCost={partsCost}
               salePrice={salePrice}
               netProfit={netProfit}

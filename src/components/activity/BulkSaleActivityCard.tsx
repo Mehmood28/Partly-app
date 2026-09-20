@@ -49,24 +49,28 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
   };
 
   return (
-    <div className="app-panel group flex flex-col transition-colors">
-      <button type="button" className="record-header" onClick={handleToggle} aria-expanded={isExpanded}>
-        <div className="record-topline"><Layers className="h-4 w-4" /><span>Bulk sale</span><time>{group.saleDate}</time>{isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}</div>
-        <h3>Bulk Part Sale</h3>
+    <div className="app-panel transaction-card bulk-sale-card group flex flex-col transition-colors">
+      <button type="button" className="record-header bulk-sale-header" onClick={handleToggle} aria-expanded={isExpanded}>
+        <div className="sold-part-title-row"><h3>Bulk Part Sale</h3><time>{group.saleDate}</time>{isExpanded ? <ChevronUp /> : <ChevronDown />}</div>
+        <div className="sold-part-status-row"><Layers /><strong>Bulk sale</strong><span>{group.lineCount} lines · {group.totalUnits} units</span></div>
         <dl className="record-finances">
           <div><dt>Cost</dt><dd>{formatCurrency(group.totalCost)}</dd></div>
           <div><dt>Sold</dt><dd>{formatCurrency(group.totalRevenue)}</dd></div>
           <div><dt>Profit</dt><dd className={getProfitTextColor(group.totalProfit)}>{formatSignedProfit(group.totalProfit)}</dd></div>
           <div><dt>Margin</dt><dd className={getProfitTextColor(group.totalProfit)}>{group.profitMarginPercent.toFixed(1)}%</dd></div>
         </dl>
-        <div className="record-metadata"><span>{group.lineCount} lines · {group.totalUnits} units</span>{group.buyerName && <span>{group.buyerName}</span>}{group.platform && <span>{normalizePlatform(group.platform)}</span>}{group.paymentMethod && <span>{group.paymentMethod}</span>}</div>
+        <div className="sold-part-contact-row">
+          {group.buyerName && <span><em>Buyer</em>{group.buyerName}</span>}
+          {group.platform && <span><em>Platform</em>{normalizePlatform(group.platform)}</span>}
+          {group.paymentMethod && <span><em>Payment</em>{group.paymentMethod}</span>}
+        </div>
       </button>
 
       {/* Expanded Details Section */}
       {isExpanded && (
         <div className="record-expanded record-detail space-y-4">
           {/* Action Buttons Row */}
-          <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="record-actions bulk-sale-actions">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -105,11 +109,12 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
           )}
 
           {/* Itemized Sale Lines Breakdown */}
-          <div className="overflow-hidden rounded-lg border-x border-y border-white/[0.08]">
-            <div className="border-b border-white/[0.08] px-2.5 py-2 text-[11px] text-zinc-500 font-medium uppercase tracking-wider">
-              Sale Lines ({group.lineCount})
+          <div className="bulk-sale-lines">
+            <div className="bulk-sale-lines-title">Sale lines <span>· {group.lineCount}</span></div>
+            <div className="bulk-sale-line-head">
+              <span>Part / details</span><span>Qty</span><span>Sold</span><span>Profit</span><span aria-hidden="true" />
             </div>
-            <div className="divide-y divide-white/[0.06]">
+            <div>
               {group.transactions.map((tx) => {
                 const qty = getSafeDisplayQuantity(tx);
                 const lineCost = getTransactionRecordedCost(tx);
@@ -123,41 +128,24 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
                   : (tx.title ? String(tx.title).replace(/^(Sold \(Part\)|Part Sold):\s*/i, '') : 'Part');
 
                 return (
-                  <div
-                    key={tx.id}
-                    className="px-2.5 py-2.5 flex items-center justify-between gap-2 text-xs transition-colors hover:bg-white/[0.025]"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium text-zinc-100 break-words">{partName}</div>
-                      <div className="text-[11px] text-zinc-400 font-mono mt-0.5 flex items-center gap-2 flex-wrap">
-                        <span className="text-zinc-300 font-semibold">{qty}x</span>
-                        <span>@ {formatCurrency(unitCost)}/ea</span>
-                        <span className="text-zinc-500">|</span>
-                        <span>Cost: <span className="text-zinc-300">{formatCurrency(lineCost)}</span></span>
-                      </div>
+                  <div key={tx.id} className="bulk-sale-line">
+                    <div className="bulk-sale-line-part">
+                      <strong>{partName}</strong>
+                      <span>@ {formatCurrency(unitCost)}/ea · Cost {formatCurrency(lineCost)}</span>
                     </div>
-
-                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 font-mono">
-                      <div className="text-right">
-                        <div className="text-[#83E5DF] font-semibold">{formatCurrency(lineRev)}</div>
-                        <div className={`text-[11px] ${
-                          lineProfit > 0 ? 'text-emerald-400' : lineProfit < 0 ? 'text-rose-400' : 'text-zinc-400'
-                        }`}>
-                          {formatSignedProfit(lineProfit)}
-                        </div>
-                      </div>
-
+                    <span>{qty}</span>
+                    <strong className="bulk-sale-line-revenue">{formatCurrency(lineRev)}</strong>
+                    <strong className={getProfitTextColor(lineProfit)}>{formatSignedProfit(lineProfit)}</strong>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onEditLine(tx);
                         }}
-                        className="p-1.5 text-zinc-400 hover:text-[#83E5DF] hover:bg-[#83E5DF]/10 rounded-lg border border-transparent hover:border-[#83E5DF]/30 transition-colors"
+                        className="bulk-sale-line-edit"
                         title="Edit this sale line"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                    </div>
                   </div>
                 );
               })}

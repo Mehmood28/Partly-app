@@ -106,9 +106,9 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
           <div><dt>Margin</dt><dd className={getProfitTextColor(netProfit)}>{profitMarginPercent.toFixed(1)}%</dd></div>
         </dl>
         <div className="sold-part-contact-row">
-          {buyerName && <span>{buyerName}</span>}
-          {platform && <span>{normalizePlatform(platform)}</span>}
-          {paymentMethod && <span>{paymentMethod}</span>}
+          {buyerName && <span><em>Buyer</em>{buyerName}</span>}
+          {platform && <span><em>Platform</em>{normalizePlatform(platform)}</span>}
+          {paymentMethod && <span><em>Payment</em>{paymentMethod}</span>}
         </div>
       </button>
     );
