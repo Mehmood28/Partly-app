@@ -20,6 +20,7 @@ export interface ParsedBatchItem {
   tags: string[];
   condition: string;
   platform: string;
+  paymentMethod: string;
   comp?: InventoryComponent;
 }
 
@@ -75,12 +76,15 @@ export const parseBatchItem = (
   const tags = comp?.tags || [];
   
   // Find purchase entry for condition, platform, etc.
-  const purchaseEntry = comp?.purchaseHistory?.find(p => 
+  const purchaseEntry = comp?.purchaseHistory?.find(p =>
     (p.date === tx.dateSortable || p.date === tx.timestamp) && (unitPrice === 0 || Math.abs((p.unitPrice || 0) - unitPrice) < 1)
+  ) || comp?.purchaseHistory?.find(p =>
+    unitPrice > 0 && Math.abs((p.unitPrice || 0) - unitPrice) < 1
   ) || comp?.purchaseHistory?.[0];
 
   const condition = purchaseEntry?.condition || (comp?.purchaseHistory?.[0]?.condition) || '';
   const itemPlatform = purchaseEntry?.platform || tx.platform || '';
+  const itemPaymentMethod = purchaseEntry?.paymentMethod || tx.paymentMethod || '';
   const totalPrice = unitPrice > 0 ? unitPrice * quantity : 0;
 
   return {
@@ -92,6 +96,7 @@ export const parseBatchItem = (
     tags,
     condition,
     platform: itemPlatform,
+    paymentMethod: itemPaymentMethod,
     comp
   };
 };

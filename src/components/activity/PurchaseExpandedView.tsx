@@ -15,20 +15,20 @@ interface PurchaseExpandedViewProps {
 
 export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, isBulkPurchase, matchedComp, components }) => {
   const { hideSupplierNames } = usePrivacy();
-  const purchasedQuantity = tx.quantity || tx.itemCount || tx.detailsList?.length || 1;
   const purchasedItems = sortByCategory((tx.detailsList || []).map(detail => parseBatchItem(detail, components, tx)));
   return (
     <div className="record-detail purchase-expanded-detail space-y-4">
-      <dl className="purchase-totals">
-        <div><dt>Quantity purchased</dt><dd>{purchasedQuantity} {tx.purchaseKind === 'PC' ? (purchasedQuantity === 1 ? 'PC' : 'PCs') : (purchasedQuantity === 1 ? 'unit' : 'units')}</dd></div>
-        {!isBulkPurchase && purchasedQuantity > 1 && <div><dt>Unit price</dt><dd>{formatCurrency(tx.totalAmount / purchasedQuantity)}</dd></div>}
-      </dl>
       {purchasedItems.length > 0 ? <section>
         <h4>Purchase items <span>· {purchasedItems.length} {purchasedItems.length === 1 ? 'item' : 'items'}</span></h4>
         <div className="purchase-items">
           <div className="purchase-item-head"><span>Item / details</span><span>Qty</span><span>Unit price</span></div>
           {purchasedItems.map((item, index) => <div key={index} className="purchase-item">
-            <div className="purchase-item-name"><strong>{item.itemName}</strong><span>{[...(item.tags || []), !hideSupplierNames && item.platform ? normalizePlatform(item.platform) : undefined].filter(Boolean).join(' · ')}</span></div>
+            <div className="purchase-item-name"><strong>{item.itemName}</strong><span>{[
+              ...(item.tags || []),
+              isBulkPurchase ? item.condition : undefined,
+              !hideSupplierNames && item.platform ? normalizePlatform(item.platform) : undefined,
+              isBulkPurchase ? item.paymentMethod : undefined,
+            ].filter(Boolean).join(' · ')}</span></div>
             <div data-label="Qty">{item.quantity}</div>
             <div data-label="Unit price">{formatCurrency(item.unitPrice)}</div>
           </div>)}

@@ -155,8 +155,8 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
         <div className="w-full sm:w-48 shrink-0">
           <CustomSelect
             options={[
-              { value: 'date-desc', label: 'Newest First' },
-              { value: 'date-asc', label: 'Oldest First' },
+              { value: 'date-desc', label: 'Newest' },
+              { value: 'date-asc', label: 'Oldest' },
               { value: 'amount-desc', label: 'Highest Cost' },
               { value: 'amount-asc', label: 'Lowest Cost' },
             ]}

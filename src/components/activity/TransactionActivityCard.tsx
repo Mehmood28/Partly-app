@@ -211,6 +211,32 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
     }
   }
 
+  const parsedPurchaseItems = isPurchase
+    ? (tx.detailsList || []).map((detail) => parseBatchItem(detail, state.components, tx))
+    : [];
+  const usablePurchaseValue = (value?: string) => {
+    const normalized = String(value || '').trim();
+    return normalized && !/^(n\/?a|unknown|none|—|-)$/i.test(normalized) ? normalized : undefined;
+  };
+  const resolvedPurchaseValue = (
+    values: Array<string | undefined>,
+    fallback?: string,
+  ) => {
+    const uniqueValues = [...new Set(values.map(usablePurchaseValue).filter(Boolean) as string[])];
+    if (uniqueValues.length === 1) return uniqueValues[0];
+    if (uniqueValues.length > 1) return 'Mixed';
+    return usablePurchaseValue(fallback);
+  };
+  const purchasePlatform = isPurchase
+    ? resolvedPurchaseValue(parsedPurchaseItems.map((item) => item.platform), tx.platform)
+    : platform;
+  const purchasePaymentMethod = isPurchase
+    ? resolvedPurchaseValue(parsedPurchaseItems.map((item) => item.paymentMethod), tx.paymentMethod)
+    : paymentMethod;
+  const purchaseCondition = isPurchase
+    ? resolvedPurchaseValue(parsedPurchaseItems.map((item) => item.condition), conditionStr)
+    : conditionStr;
+
   const executeDownloadInvoice = () => {
     if (matchedBuild) {
       generateInvoice(matchedBuild, state.components);
@@ -267,13 +293,13 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
         salePrice={salePrice}
         netProfit={netProfit}
         profitMarginPercent={profitMarginPercent}
-        platform={isPurchase && hideSupplierNames ? undefined : platform}
-        paymentMethod={paymentMethod}
+        platform={isPurchase && hideSupplierNames ? undefined : purchasePlatform}
+        paymentMethod={isPurchase ? purchasePaymentMethod : paymentMethod}
         buyerName={buyerName}
         saleDate={saleDate}
         daysOnMarket={daysOnMarket}
         matchedComp={matchedComp}
-        conditionStr={conditionStr}
+        conditionStr={purchaseCondition}
       />
 
       {/* Expanded Details Section */}

@@ -74,11 +74,11 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
   const isSale = isPCSale || isPartSale;
   const StatusIcon = isSale ? CheckCircle2 : isExchange ? ArrowRightLeft : Receipt;
   const fields = [
-    { label: 'Category', value: matchedComp?.category || (isBulkPurchase ? `${tx.itemCount || quantity} items` : undefined) },
-    { label: 'Condition', value: conditionStr },
-    { label: 'Supplier', value: !hideSupplierNames && platform ? normalizePlatform(platform) : undefined },
-    { label: 'Payment', value: paymentMethod },
-  ].filter(f => f.value);
+    { label: 'Category', value: isBulkPurchase ? 'Bulk' : (matchedComp?.category || '—') },
+    { label: 'Condition', value: conditionStr || '—' },
+    { label: 'Supplier', value: !hideSupplierNames && platform ? normalizePlatform(platform) : '—' },
+    { label: 'Payment', value: paymentMethod || '—' },
+  ];
   return (
     <button type="button" className="record-header" onClick={onToggle} aria-expanded={isExpanded}>
       <div className="record-topline"><StatusIcon className="h-4 w-4" /><span>{subCategoryLabel}</span><time>{String(recordedDate || '').split('T')[0]}</time>{isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}</div>
