@@ -228,7 +228,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="max-w-4xl">
+    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="build-modal stock-modal max-w-4xl">
       <form className="w-full space-y-4" onSubmit={handleSubmit}>
         {/* Header */}
         <div className="sticky -top-3.5 z-20 -mx-3.5 flex items-start justify-between border-b border-white/[0.09] bg-[#0b1113]/95 px-3.5 pb-3 pt-1 backdrop-blur-xl sm:-top-5 sm:-mx-5 sm:px-5 sm:pt-0">

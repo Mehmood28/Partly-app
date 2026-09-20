@@ -67,7 +67,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
   if (!build) return null;
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="max-w-lg">
+    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal max-w-lg">
       <div className="space-y-3.5 w-full">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">

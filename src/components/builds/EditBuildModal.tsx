@@ -88,7 +88,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="max-w-md">
+    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal max-w-md">
       <form 
         className="space-y-4 w-full"
         onSubmit={handleSaveEdit}

@@ -265,7 +265,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={handleClose} className="max-w-md">
+    <BottomSheetModal isOpen={true} onClose={handleClose} className="build-modal stock-modal max-w-md">
       <form 
         className="space-y-4 w-full"
         onSubmit={handleSubmit}

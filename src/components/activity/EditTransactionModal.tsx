@@ -106,8 +106,8 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="max-w-lg">
-      <div className="space-y-4 w-full">
+    <BottomSheetModal isOpen={true} onClose={onClose} className="stock-modal max-w-lg">
+      <div className="transaction-edit-modal space-y-4 w-full">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
             <Pencil className="w-4 h-4 text-[#B9EF68]" /> Edit Transaction Record

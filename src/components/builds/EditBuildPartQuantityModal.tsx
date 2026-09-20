@@ -81,7 +81,7 @@ export const EditBuildPartQuantityModal: React.FC<EditBuildPartQuantityModalProp
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="max-w-sm">
+    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal max-w-sm">
       <form className="space-y-4 w-full" onSubmit={handleSubmit}>
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">

@@ -93,7 +93,6 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const isAcquired = isAcquiredPC(build);
   const acquiredBreakdown = getAcquiredPCBreakdown(build);
   const hasBuildImage = hasShareableBuildImage(build);
-  const buildPartCount = getBuildPresentation(build, state.components).totalQuantity;
   const tradeInOrigin = isTradeIn
     ? resolveTradeInBuildOrigin(build, state.transactions, state.builds)
     : null;
@@ -146,9 +145,6 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     });
   };
 
-  const profit = (build.salePrice || 0) - partsCost;
-  const profitMarginPercent = calculateProfitMarginPercent(profit, build.salePrice || 0);
-
   const exactTransaction = React.useMemo(() => {
     if (!isSold) return null;
     const matches = state.transactions.filter(
@@ -162,6 +158,12 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
       return b.id.localeCompare(a.id);
     })[0];
   }, [isSold, state.transactions, build.id]);
+
+  const displayedPrice = isSold
+    ? (exactTransaction?.totalAmount ?? build.salePrice)
+    : build.salePrice;
+  const profit = (displayedPrice || 0) - partsCost;
+  const profitMarginPercent = calculateProfitMarginPercent(profit, displayedPrice || 0);
 
   const handleCopyAdClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -190,7 +192,16 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     });
   };
 
-  const formattedSoldDate = build.saleDate ? formatReadableDate(build.saleDate) : null;
+  const soldDate = exactTransaction?.dateSortable || exactTransaction?.timestamp || build.saleDate;
+  const formattedSoldDate = soldDate ? formatReadableDate(soldDate) : null;
+  const formattedBuiltDate = formatReadableDate(build.builtDate || build.completionDate || build.createdDate) || build.createdDate;
+  const displayStatus = build.status === 'Listed for Sale'
+    ? 'Available'
+    : build.status === 'In Progress'
+      ? 'Pending'
+      : build.status === 'Trade-In Processing'
+        ? 'Trade-In'
+        : build.status;
 
   const openRemovePartConfirm = (part: PCBuildPart) => {
     setPartActionsData(null);
@@ -216,39 +227,46 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
 
   return (
     <div className={`app-panel build-card group relative flex flex-col transition-all duration-200 ${isExpanded ? 'border-white/20' : 'hover:border-[#B9EF68]/30'}`}>
-      <div className="build-header" onClick={handleToggle} role="button" tabIndex={0} aria-expanded={isExpanded} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggle(); } }}>
-        {!isExpanded && build.imageUrl && <img className="build-thumbnail" src={build.imageUrl} alt={build.name} />}
-        <div className="min-w-0 flex-1">
-          <h3>{build.name}</h3>
-          <span className="build-status">{build.status === 'Listed for Sale' ? 'Available' : build.status === 'In Progress' ? 'Pending' : build.status === 'Trade-In Processing' ? 'Trade-In Processing' : build.status}{isAcquired ? ` · ${isPurchased ? 'Purchased PC' : 'Trade-in PC'}` : ''}</span>
-          {!isExpanded && <>
-            <div className="build-summary"><span>Build Cost<strong>{formatCurrency(partsCost)}</strong></span>{build.salePrice ? <><span>{isSold ? 'Sold' : 'Target'}<strong>{formatCurrency(build.salePrice)}</strong></span><span>Profit<strong className={getProfitTextColor(build.salePrice - partsCost)}>{formatSignedCurrency(build.salePrice - partsCost)}</strong></span></> : null}</div>
-            <p className="mt-1 text-xs text-zinc-400">{buildPartCount} parts · {isSold ? `Sold ${formattedSoldDate || ''}` : `Built ${formatReadableDate(build.builtDate || build.completionDate || build.createdDate) || build.createdDate}`}</p>
-          </>}
-        </div>
-        {isExpanded ? <ChevronUp className="h-5 w-5 shrink-0 text-zinc-400" /> : <ChevronDown className="h-5 w-5 shrink-0 text-zinc-400" />}
-      </div>
-      {isExpanded && (
-        <div className="build-expanded space-y-4 px-3 pb-4 sm:px-5 sm:pb-5">
-          <div className="build-overview">
-            <div>
-              <div className="build-finances">
-                <div><span>Build Cost</span><strong>{formatCurrency(partsCost)}</strong></div>
-                <div><span>{isSold ? 'Sale Price' : 'Target'}</span><strong>{build.salePrice ? formatCurrency(build.salePrice) : '—'}</strong></div>
-                <div><span>{isSold ? 'Net Profit' : 'Est. Profit'}</span><strong className={getProfitTextColor((build.salePrice || 0) - partsCost)}>{build.salePrice ? formatSignedCurrency(build.salePrice - partsCost) : '—'}</strong></div>
-              </div>
-              <div className="build-date"><Calendar /><span>Built {formatReadableDate(build.builtDate || build.completionDate || build.createdDate) || build.createdDate}</span>{isSold && <span>· Margin {profitMarginPercent.toFixed(1)}%</span>}</div>
+      {!isExpanded && (
+        <div className="build-header build-header-collapsed" onClick={handleToggle} role="button" tabIndex={0} aria-expanded={false} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggle(); } }}>
+          {build.imageUrl ? (
+            <img className="build-thumbnail" src={build.imageUrl} alt={build.name} />
+          ) : (
+            <div className="build-thumbnail build-thumbnail-placeholder" aria-hidden="true"><ImageIcon /></div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="build-collapsed-title-row">
+              <h3>{build.name}</h3>
+              {isSold && <time>{formattedSoldDate || 'Date N/A'}</time>}
             </div>
-            {build.imageUrl && <img src={build.imageUrl} alt={build.name} />}
+            <div className="build-summary build-summary-columns">
+              <span><em>Cost</em><strong>{formatCurrency(partsCost)}</strong></span>
+              <span><em>{isSold ? 'Sold' : 'Target'}</em><strong>{displayedPrice !== undefined ? formatCurrency(displayedPrice) : '—'}</strong></span>
+              <span><em>Profit</em><strong className={getProfitTextColor(profit)}>{displayedPrice !== undefined ? formatSignedCurrency(profit) : '—'}</strong></span>
+            </div>
           </div>
-          {/* Top Actions in expanded view: Logically sorted */}
-          <div className="space-y-3 pt-1">
-            <div className="build-action-bar">
-              {/* Rig Management Group: Edit, Dismantle, Delete, Relist, Move to Trade-Ins */}
-              <div className="contents">
+          <ChevronDown className="h-5 w-5 shrink-0 text-zinc-400" />
+        </div>
+      )}
+      {isExpanded && (
+        <div className="build-expanded space-y-4 px-3 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-5">
+          <div className="build-overview">
+            <div className="build-overview-copy">
+              <button type="button" className="build-expanded-toggle" onClick={handleToggle} aria-label={`Collapse ${build.name}`}>
+                <ChevronUp />
+              </button>
+              <h3 className="build-expanded-title">{build.name}</h3>
+              <span className="build-status">{displayStatus}{isAcquired ? ` · ${isPurchased ? 'Purchased PC' : 'Trade-in PC'}` : ''}</span>
+              <div className="build-finances">
+                <div><span>Cost</span><strong>{formatCurrency(partsCost)}</strong></div>
+                <div><span>{isSold ? 'Sold' : 'Target'}</span><strong>{displayedPrice !== undefined ? formatCurrency(displayedPrice) : '—'}</strong></div>
+                <div><span>Profit</span><strong className={getProfitTextColor(profit)}>{displayedPrice !== undefined ? formatSignedCurrency(profit) : '—'}</strong></div>
+              </div>
+              <div className="build-date"><Calendar /><span>Built {formattedBuiltDate}</span>{isSold && <span>· {profitMarginPercent.toFixed(1)}% margin</span>}</div>
+              <div className="build-action-bar">
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(build); }}
-                  className="app-button flex items-center justify-center gap-1 px-2"
+                  className="app-button"
                   title="Edit Build Details"
                 >
                   <Pencil className="w-3.5 h-3.5" /> Edit
@@ -256,7 +274,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 {!isSold && isAcquired && onItemize && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onItemize(build); }}
-                    className="app-button flex items-center justify-center gap-1 px-2"
+                    className="app-button"
                     title={acquiredBreakdown.length > 0 ? 'Edit acquired PC component breakdown' : 'Itemize acquired PC into components'}
                   >
                     <FileText className="w-3.5 h-3.5" /> {acquiredBreakdown.length > 0 ? 'Edit Breakdown' : 'Itemize'}
@@ -265,7 +283,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 {!isSold && onDismantle && (isAcquired ? canPartOutAcquiredPC(build) : canDismantleBuild(build)) && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onDismantle(build); }}
-                    className="app-button flex items-center justify-center gap-1 px-2"
+                    className="app-button"
                     title={isAcquired ? 'Part out acquired PC into inventory parts' : 'Dismantle rig and return parts to stock'}
                   >
                     <Wrench className="w-3.5 h-3.5" /> {isAcquired ? 'Part Out' : 'Dismantle'}
@@ -292,7 +310,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                         },
                       });
                     }}
-                    className="app-button flex items-center justify-center gap-1 px-2"
+                    className="app-button"
                     title="Relist Build"
                   >
                     <ArrowRightLeft className="w-3.5 h-3.5" /> Relist
@@ -301,21 +319,17 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 {canDeleteBuildDraft(build) && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onDelete(build); }}
-                    className="app-button app-button-danger flex items-center justify-center gap-1 px-2"
+                    className="app-button app-button-danger"
                     title="Delete empty draft build"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Delete Draft
                   </button>
                 )}
-              </div>
-
-              {/* Sale & Sharing Actions Group */}
-              <div className="contents">
                 {isSold && (
                   <>
                     <button
                       onClick={(e) => { e.stopPropagation(); onSell(build); }}
-                      className="app-button flex items-center justify-center gap-1 px-2"
+                      className="app-button"
                       title="Edit Sale Details"
                     >
                       <Tag className="w-3.5 h-3.5" /> Edit Sale
@@ -335,7 +349,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                           },
                         });
                       }}
-                      className="app-button flex items-center justify-center gap-1 px-2"
+                      className="app-button"
                       title="Download Invoice PDF"
                     >
                       <FileText className="w-3.5 h-3.5" /> Invoice
@@ -345,7 +359,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 {!isSold && (
                   <button
                     onClick={handleCopyAdClick}
-                    className="app-button flex items-center justify-center gap-1 px-2"
+                    className="app-button"
                   >
                     {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     {copied ? 'Copied!' : 'Copy Ad'}
@@ -355,7 +369,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   type="button"
                   onClick={handleShareImageDiscord}
                   disabled={!hasBuildImage || imageShareStatus === 'loading' || imageShareStatus === 'success'}
-                  className={`border px-2.5 py-1 rounded-lg text-xs transition-colors flex items-center gap-1 font-medium ${
+                  className={`app-button ${
                     !hasBuildImage
                       ? 'border-white/[0.05] text-zinc-600 bg-[#0B1113]/60 cursor-not-allowed opacity-60'
                       : imageShareStatus === 'success'
@@ -385,8 +399,14 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 </button>
               </div>
             </div>
+            {build.imageUrl ? (
+              <img src={build.imageUrl} alt={build.name} />
+            ) : (
+              <div className="build-hero-placeholder"><ImageIcon /></div>
+            )}
+          </div>
 
-            {/* Error notifications */}
+          <div className="space-y-3">
             {imageShareError && (
               <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs px-3 py-1.5 rounded-lg flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -582,21 +602,10 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             </div>
           )}
 
-          {/* Build Financial Summary Footer (for available/pending-sale builds) */}
+          {/* Primary build workflow actions. Financials live only in the hero above. */}
           {!isSold && (
-            <div className="space-y-3 border-t border-white/[0.08] pt-3">
-              <div className="build-footer-finances grid grid-cols-3 divide-x divide-white/[0.08] text-xs text-zinc-400">
-                <span className="flex min-w-0 flex-col p-2.5">BUILD COST <strong className="mt-0.5 truncate text-[11px] font-bold text-zinc-200 sm:text-sm">{formatCurrency(partsCost)}</strong></span>
-                {build.salePrice && (
-                  <span className="flex min-w-0 flex-col p-2.5">TARGET <strong className="mt-0.5 truncate text-[11px] font-bold text-[#83E5DF] sm:text-sm">{formatCurrency(build.salePrice)}</strong></span>
-                )}
-                {build.salePrice && (
-                  <span className={`flex min-w-0 flex-col p-2.5 ${getProfitTextColor(build.salePrice - partsCost)}`}>EST. PROFIT <strong className="mt-0.5 truncate text-[11px] font-bold sm:text-sm">{formatSignedCurrency(build.salePrice - partsCost)}</strong></span>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="grid grid-cols-2 gap-2 pt-0.5 sm:grid-cols-3">
+            <div className="border-t border-white/[0.08] pt-3">
+              <div className="build-workflow-actions grid grid-cols-3 gap-2 pt-0.5">
                 <button
                   onClick={(e) => { e.stopPropagation(); onAllocate(build); }}
                   className="app-button flex items-center justify-center gap-1.5 px-3"
@@ -715,7 +724,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
         <BottomSheetModal
           isOpen={Boolean(partActionsData)}
           onClose={() => setPartActionsData(null)}
-          className="max-w-sm"
+          className="build-modal stock-modal max-w-sm"
         >
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] pb-3">
@@ -779,7 +788,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
         <BottomSheetModal
           isOpen={isCopyAdModalOpen}
           onClose={() => setIsCopyAdModalOpen(false)}
-          className="max-w-md"
+          className="build-modal stock-modal max-w-md"
         >
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
