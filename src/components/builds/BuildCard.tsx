@@ -585,10 +585,10 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           </div>
 
           {isSold && (
-            <div className="border-t border-white/[0.08] pt-3">
+            <div className="build-sold-footer border-t border-white/[0.08] pt-3">
               <button
                 onClick={(e) => { e.stopPropagation(); onAllocate(build); }}
-                className="app-button flex w-full items-center justify-center gap-1.5 px-3"
+                className="app-button sold-add-part flex items-center justify-center gap-1.5 px-4"
               >
                 <PlusCircle className="w-3.5 h-3.5 text-[#B9EF68]" /> Add Part
               </button>

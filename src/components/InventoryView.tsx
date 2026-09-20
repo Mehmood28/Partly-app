@@ -304,7 +304,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         >
           <div
             style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
+              height: `${rowVirtualizer.getTotalSize() + 76}px`,
               width: '100%',
               position: 'relative',
             }}

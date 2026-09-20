@@ -195,7 +195,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
         >
           <div
             style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
+              height: `${rowVirtualizer.getTotalSize() + 76}px`,
               width: '100%',
               position: 'relative',
             }}

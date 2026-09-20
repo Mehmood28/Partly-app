@@ -206,7 +206,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
         >
           <div
             style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
+              height: `${rowVirtualizer.getTotalSize() + 76}px`,
               width: '100%',
               position: 'relative',
             }}

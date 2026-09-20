@@ -233,29 +233,29 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
   }, [statusFilter, sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
 
   return (
-    <div className="space-y-4">
+    <div className="builds-view space-y-3">
       {/* Build workbench */}
-      <div className="builds-toolbar flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+      <div className="builds-toolbar">
         <div className="min-w-0">
-          <h2 className="app-page-title flex items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#B9EF68]/25 bg-[#B9EF68]/[0.08] text-[#B9EF68]">
+          <h2 className="app-page-title flex items-center gap-2">
+            <div className="builds-title-icon">
               <Hammer className="h-4 w-4" />
             </div>
             PC Builds
           </h2>
-          <p className="app-page-copy ml-[46px] mt-[-2px]">Builds, allocation, listings, and completed sales.</p>
+          <p className="app-page-copy builds-page-copy">Builds, allocation, listings, and completed sales.</p>
         </div>
 
-        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
+        <div className="builds-primary-actions">
           <button
             onClick={onOpenBuyPC}
-            className="app-button flex shrink-0 items-center justify-center gap-1.5 px-4 text-[#9FF8F4]"
+            className="app-button flex shrink-0 items-center justify-center gap-1.5 px-3 text-[#9FF8F4]"
           >
             <ShoppingCart className="w-3.5 h-3.5" /> Buy PC
           </button>
           <button
             onClick={() => onOpenAddBuild()}
-            className="app-button app-button-primary flex shrink-0 items-center justify-center gap-1.5 px-4"
+            className="app-button app-button-primary flex shrink-0 items-center justify-center gap-1.5 px-3"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Create New PC Build
           </button>
@@ -263,7 +263,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       </div>
 
       {/* Filter controls */}
-      <div className="app-panel space-y-3 p-3 sm:p-4">
+      <div className="app-panel builds-controls">
         {/* Status Filter Tabs: Available, Pending, Sold */}
         <div className="app-segmented build-status-tabs grid-cols-4">
           <button 
@@ -304,9 +304,9 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         </div>
 
         {/* Controls: Sort dropdown & Search Input */}
-        <div className="flex w-full min-w-0 max-w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+        <div className="build-controls-row" data-has-sort={statusFilter === 'Sold'}>
           {statusFilter === 'Sold' && (
-            <div className="w-full sm:w-auto min-w-0 shrink-0">
+            <div className="build-sort-control">
               <CustomSelect
                 value={sortBy}
                 onChange={(val) => setSortBy(val as SortOption)}
@@ -319,7 +319,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
                   { value: 'profit_high', label: 'Sort: Profit (High to Low)' },
                   { value: 'name_asc', label: 'Sort: Build Name (A-Z)' },
                 ]}
-                className="py-0.5 w-full sm:min-w-[170px]"
+                className="builds-sort-select w-full"
               />
             </div>
           )}
@@ -332,7 +332,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
               placeholder="Search builds..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="app-field h-12 max-w-full box-border pl-9 pr-8 text-xs placeholder:text-zinc-600 sm:text-sm"
+              className="app-field builds-search max-w-full box-border pl-9 pr-8 text-xs placeholder:text-zinc-600"
             />
             {searchQuery && (
               <button
@@ -401,7 +401,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         >
           <div
             style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
+              height: `${rowVirtualizer.getTotalSize() + 76}px`,
               width: '100%',
               position: 'relative',
             }}
