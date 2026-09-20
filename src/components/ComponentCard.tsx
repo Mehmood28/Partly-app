@@ -66,7 +66,6 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const unassignedQty = unassignedQuantityOverride !== undefined ? unassignedQuantityOverride : calculateUnassignedQuantityStrict(component, state.builds);
   const unassignedVal = calculateUnassignedValueStrict(component, state.builds);
   const avgCost = unassignedQty > 0 ? unassignedVal / unassignedQty : calculateAverageUnitCost(component);
-  const visibleBatchCount = getUnassignedBatches(component, state.builds).length;
 
   const categoryPresentation = getCategoryPresentation(component.category);
 
@@ -149,15 +148,8 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
             </div>
           )}
 
-          {/* Inventory on hand: each row is an available purchase batch. */}
+          {/* Available inventory batches. */}
           <div>
-            <div className="stock-batch-heading">
-              <span className="text-sm font-semibold text-zinc-200">
-                Inventory on Hand · {visibleBatchCount} batch{visibleBatchCount === 1 ? '' : 'es'}
-              </span>
-              <span className="font-mono text-[11px] font-bold text-[#83E5DF] sm:text-xs">{formatCurrency(unassignedVal)}</span>
-            </div>
-
             {(() => {
               const visibleBatches = getUnassignedBatches(component, state.builds);
 
@@ -178,7 +170,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
               }
 
               return (
-                <div className="app-ledger stock-batch-ledger">
+                <div className="stock-batch-compact-list">
                   {visibleBatches.map((batch) => {
                     const entry = batch.entry;
                     const entryUnitPrice = batch.unitCost;
@@ -201,18 +193,12 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
                     return (
                       <React.Fragment key={entry.id}>
-                        <div className="app-ledger-row batch-row">
-                          <div className="batch-identity">
-                            <strong className="batch-date">{formatReadableDate(entry.date) || entry.date}</strong>
-                            <span>{entry.condition}</span>
-                          </div>
-                          <dl className="batch-source">
-                            <div><dt>{isPartedOutTradeInBatch ? 'Source' : 'Supplier'}</dt><dd>{source}</dd></div>
-                            <div><dt>Payment</dt><dd>{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}</dd></div>
-                            {isTradeUpBatch && <div><dt>Type</dt><dd>Trade-up</dd></div>}
-                          </dl>
-                          <div className="batch-value"><span>{batch.availableQuantity} × {formatCurrency(entryUnitPrice)} each</span><strong>{formatCurrency(entryTotal)}</strong></div>
-                          <div className="batch-actions">
+                        <div className="stock-batch-compact">
+                          <div className="stock-batch-line stock-batch-line-primary">
+                            <strong>{formatReadableDate(entry.date) || entry.date}</strong>
+                            <span>{source}</span>
+                            <span>{batch.availableQuantity} × {formatCurrency(entryUnitPrice)}</span>
+                            <div className="batch-actions">
                             {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
                               <button
                                 onClick={(e) => {
@@ -236,13 +222,14 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             )}
+                            </div>
+                          </div>
+                          <div className="stock-batch-line stock-batch-line-secondary">
+                            <span>{entry.condition}</span>
+                            <span>{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span>
+                            <strong>{formatCurrency(entryTotal)}</strong>
                           </div>
                         </div>
-                        {(entry.notes && entry.notes.trim().toLowerCase() !== 'bulk imported') && (
-                          <div className="batch-notes">
-                            <span>{entry.notes}</span>
-                          </div>
-                        )}
                       </React.Fragment>
                     );
                   })}

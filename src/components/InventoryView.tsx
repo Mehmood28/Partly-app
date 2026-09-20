@@ -253,15 +253,15 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             if (row.type === 'header') {
               return (
                 <div key={row.key} className="inventory-group mt-4 first:mt-0">
-                  <div className="flex items-center justify-between gap-3 text-sm">
+                  <div className="inventory-group-heading">
                     <span className="flex items-center gap-2 text-xs font-bold text-zinc-100 sm:text-sm">
                       <Layers className="h-4 w-4 text-[#B9EF68]" />
                       {row.category}
                     </span>
-                    <div className="flex items-center gap-2.5 text-[11px] text-zinc-400 sm:text-xs">
-                      <span>{row.totalUnits} in stock</span>
-                      <span className="font-semibold text-zinc-200">{formatCurrency(row.totalVal)}</span>
-                    </div>
+                    <span>—</span>
+                    <span>{row.totalUnits} in stock</span>
+                    <span>—</span>
+                    <span className="font-semibold text-zinc-200">{formatCurrency(row.totalVal)}</span>
                   </div>
                 </div>
               );
@@ -329,15 +329,15 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                       paddingBottom: '3px',
                     }}
                   >
-                    <div className="inventory-group flex items-center justify-between gap-3">
+                    <div className="inventory-group inventory-group-heading">
                       <span className="flex items-center gap-2 text-xs font-bold text-zinc-100 sm:text-sm">
                         <Layers className="h-4 w-4 text-[#B9EF68]" />
                         {row.category}
                       </span>
-                      <div className="flex items-center gap-2.5 text-zinc-400 text-xs">
-                        <span>{row.totalUnits} in stock</span>
-                        <span className="font-semibold text-zinc-200">{formatCurrency(row.totalVal)}</span>
-                      </div>
+                      <span>—</span>
+                      <span>{row.totalUnits} in stock</span>
+                      <span>—</span>
+                      <span className="font-semibold text-zinc-200">{formatCurrency(row.totalVal)}</span>
                     </div>
                   </div>
                 );
