@@ -387,7 +387,8 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .overview-stat-action:hover { border-color:var(--app-aqua); background:#141c1e; }
 .overview-stat > svg:not(.overview-arrow) { width:25px; height:25px; color:var(--app-aqua); margin-bottom:12px; }
 .overview-stat span { font-size:14px; color:#aab7c4; }
-.overview-stat strong { font-size:28px; margin:7px 0 12px; color:white; line-height:1.2; }
+.overview-stat strong { font-size:28px; margin:7px 0 12px; line-height:1.2; background:linear-gradient(95deg,#b9ef68,#83e5df); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.overview-sale-age { text-wrap:balance; }
 .overview-stat em { font-size:13px; font-style:normal; font-weight:400; color:var(--app-muted); }
 .overview-stat small { font-size:13px; color:#a0adba; border-top:1px solid var(--app-line); width:100%; padding-top:12px; line-height:1.5; }
 .overview-arrow { position:absolute; bottom:14px; right:10px; width:15px; height:15px; color:#a8b8c6; }
@@ -529,7 +530,8 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
   .overview-stat { min-width:0; min-height:130px; padding:10px 8px 23px; border-radius:5px; }
   .overview-stat > svg:not(.overview-arrow) { width:19px; height:19px; margin-bottom:7px; }
   .overview-stat span { font-size:10px; line-height:1.25; }
-  .overview-stat strong { margin:5px 0 7px; font-size:20px; line-height:1.1; letter-spacing:-.035em; overflow-wrap:anywhere; }
+  .overview-stat strong { margin:5px 0 7px; font-size:18px; line-height:1.1; letter-spacing:-.035em; overflow-wrap:anywhere; }
+  .overview-sale-age { font-size:clamp(15px,4vw,18px); }
   .overview-stat em { display:none; }
   .overview-stat small { min-height:38px; padding-top:7px; font-size:10px; line-height:1.25; }
   .overview-arrow { bottom:7px; right:7px; width:13px; height:13px; }

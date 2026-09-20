@@ -84,7 +84,7 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
         <button className="overview-stat overview-stat-action" onClick={() => onNavigateToBuilds('Available')}><MonitorCheck /><span>Listed Builds</span><strong>{stats.listedCount}</strong><small>Active listings<br />on marketplace</small><ArrowRight className="overview-arrow" /></button>
         <button className="overview-stat overview-stat-action" onClick={() => onNavigateToBuilds('Pending')}><ShoppingCart /><span>Pending Sale</span><strong>{stats.pendingSaleCount}</strong><small>Awaiting payment<br />or fulfillment</small><ArrowRight className="overview-arrow" /></button>
         <button className="overview-stat overview-stat-action" onClick={onNavigateToStock}><Boxes /><span>Available Stock</span><strong>{stats.availableStockCount} <em>units</em></strong><small>Components<br />in inventory</small><ArrowRight className="overview-arrow" /></button>
-        <div className="overview-stat"><BadgeDollarSign /><span>Last PC Sale</span><strong>{stats.relativeTimeText}</strong><small>{stats.latestBuildName || 'No completed builds sold'}</small></div>
+        <div className="overview-stat"><BadgeDollarSign /><span>Last PC Sale</span><strong className="overview-sale-age">{stats.relativeTimeText}</strong><small>{stats.latestBuildName || 'No completed builds sold'}</small></div>
       </div>
     </section>
   );
