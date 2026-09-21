@@ -73,9 +73,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   onChange(opt.value);
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer flex items-center justify-between font-sans ${
+                className={`w-full cursor-pointer rounded-md border border-transparent px-2.5 py-1.5 text-left text-[11px] transition-colors flex items-center justify-between font-sans ${
                   isSelected
-                    ? 'border border-[#B9EF68]/30 bg-[#B9EF68]/10 font-semibold text-white'
+                    ? 'custom-select-option-selected font-semibold'
                     : 'text-zinc-300 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
