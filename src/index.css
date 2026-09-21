@@ -1435,7 +1435,7 @@ button.app-button-primary:hover { filter:brightness(1.05); }
   .analytics-month-select { width:105px; }
   .analytics-date-filters .custom-select-trigger { height:34px; min-height:34px; padding-inline:7px; font-size:10px; }
   .analytics-scope-copy { font-size:10px; line-height:1.35; }
-  .analytics-summary-stack { gap:0; }
+  .analytics-summary-stack { gap:8px; }
   .analytics-view .report-section { padding:7px 0; }
   .analytics-view .report-section h3 { font-size:11.5px; }
   .analytics-summary-header h3 svg { width:13px; height:13px; }
