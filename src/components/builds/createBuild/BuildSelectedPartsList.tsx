@@ -30,8 +30,8 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
   const margin = targetPrice > 0 ? (profit / targetPrice) * 100 : 0;
 
   return (
-    <div className="form-section space-y-3">
-      <div className="flex flex-col gap-2 border-b border-white/[0.08] pb-3">
+    <div className="form-section selected-parts-section space-y-2">
+      <div className="flex flex-col gap-1 border-b border-white/[0.08] pb-2">
         <div className="flex items-center justify-between gap-2">
           <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-2 whitespace-nowrap shrink-0 font-display">
             <Box className="w-4 h-4 text-[#B9EF68] shrink-0" /> Selected Parts ({selectedParts.length})
@@ -48,7 +48,7 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
           No parts selected yet. Pick parts from the categories below to include in this build.
         </div>
       ) : (
-        <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+        <div className="build-selected-list">
           {sortByCategory(selectedParts).map((part, idx) => {
             const comp = components.find((c) => c.id === part.componentId);
             let purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
@@ -69,44 +69,44 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
             return (
               <div
                 key={idx}
-                className="app-panel-quiet relative flex items-start justify-between gap-2 px-3 py-2.5 pr-4"
+                className="selected-part-row relative"
               >
-                <span className={`absolute bottom-2.5 right-1 top-2.5 w-0.5 rounded-full ${category.railClass}`} />
-                <div className="min-w-0 flex-1 pr-1">
-                  <div className="flex min-w-0 items-start gap-2">
-                    <span className={`w-[3.8rem] shrink-0 pt-0.5 font-mono text-[11px] font-bold ${category.textClass}`}>{category.label}</span>
-                    <span className="min-w-0 flex-1 break-words font-sans text-xs font-semibold leading-snug text-zinc-200">{part.componentName}</span>
+                <span className={`selected-part-rail absolute bottom-1.5 right-0 top-1.5 w-0.5 rounded-full ${category.railClass}`} />
+                <div className="selected-part-content">
+                  <div className="selected-part-identity">
+                    <span className={`selected-part-category font-mono font-bold ${category.textClass}`}>{category.label}</span>
+                    <span className="selected-part-name">{part.componentName}</span>
                   </div>
                   {metadata.length > 0 && (
-                    <div className="ml-[4.3rem] mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[11px] leading-snug text-zinc-500">
+                    <div className="selected-part-meta">
                       {purchaseEntry?.condition && <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(purchaseEntry.condition)}`} />{purchaseEntry.condition}</span>}
                       {metadata.slice(purchaseEntry?.condition ? 1 : 0).map((item, metaIndex) => <span key={`${item}-${metaIndex}`}>· {item}</span>)}
                     </div>
                   )}
                 </div>
 
-                <div className="flex shrink-0 flex-col items-end gap-1.5">
-                  <span className="whitespace-nowrap font-mono text-xs font-bold text-zinc-100">
+                <div className="selected-part-actions">
+                  <span className="selected-part-price">
                     {formatCurrency(purchaseEntry ? purchaseEntry.unitPrice : part.unitCostAtAssignment)}{part.quantity > 1 ? '/ea' : ''}
                   </span>
-                  <div className="flex items-center gap-1">
-                    <div className="flex items-center gap-1 rounded-lg border border-white/[0.08] bg-[#0B1113] px-1.5 py-1 text-zinc-200">
+                  <div className="selected-part-tools">
+                    <div className="selected-part-quantity">
                     <button
                       type="button"
                       onClick={() => onUpdatePartQty(part.componentId, part.purchaseEntryId, -1)}
-                      className="p-0.5 text-zinc-400 hover:text-white transition-colors"
+                      className="text-zinc-400 transition-colors hover:text-white"
                       aria-label="Decrease quantity"
                     >
-                      <Dash className="w-3.5 h-3.5" />
+                      <Dash className="h-3 w-3" />
                     </button>
-                    <span className="w-4 text-center font-mono font-bold text-xs">{part.quantity}</span>
+                    <span>{part.quantity}</span>
                     <button
                       type="button"
                       onClick={() => onUpdatePartQty(part.componentId, part.purchaseEntryId, 1)}
-                      className="p-0.5 text-zinc-400 hover:text-white transition-colors"
+                      className="text-zinc-400 transition-colors hover:text-white"
                       aria-label="Increase quantity"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="h-3 w-3" />
                     </button>
                     </div>
                     <button
@@ -116,9 +116,9 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
                         onRemovePart(part.componentId, part.purchaseEntryId);
                       }}
                       aria-label="Remove part"
-                      className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-rose-500/10 hover:text-rose-400"
+                      className="selected-part-remove text-zinc-400 transition-colors hover:text-rose-400"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>

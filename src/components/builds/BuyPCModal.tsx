@@ -16,6 +16,7 @@ import {
 
 interface BuyPCModalProps {
   isOpen: boolean;
+  isVisible?: boolean;
   onClose: () => void;
   onConfirm: (purchase: PurchasePCData) => { success: boolean; error?: string };
 }
@@ -23,7 +24,7 @@ interface BuyPCModalProps {
 const torontoToday = () =>
   new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
 
-export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, onClose, onConfirm }) => {
+export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, isVisible = true, onClose, onConfirm }) => {
   const { showToast } = useToast();
   const [name, setName] = useState('');
   const [purchasePrice, setPurchasePrice] = useState('');
@@ -163,12 +164,12 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, onClose, onConfi
 
   return (
     <BottomSheetModal
-      isOpen={isOpen}
+      isOpen={isOpen && isVisible}
       onClose={onClose}
-      className="build-modal stock-modal modal-workspace w-full max-w-2xl !p-0 !overflow-hidden"
+      className="build-modal stock-modal modal-workspace buy-pc-modal w-full max-w-2xl !p-0 !overflow-hidden"
     >
-      <form onSubmit={handleSubmit} className="flex flex-col h-full w-full bg-[#070A0B] text-zinc-100">
-        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-white/[0.08] shrink-0 bg-[#0B1113]/95">
+      <form onSubmit={handleSubmit} className="flex h-full w-full flex-col bg-[#0B1113] text-zinc-100">
+        <div className="buy-pc-header shrink-0 border-b border-white/[0.08] bg-[#0B1113]/95 px-3 py-2.5 sm:px-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-sm sm:text-base font-bold text-zinc-100 flex items-center gap-2 font-display">
@@ -184,9 +185,9 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, onClose, onConfi
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-3 sm:px-5 sm:py-4 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div className="sm:col-span-2">
+        <div className="buy-pc-body flex-1 overflow-y-auto px-3 py-2.5 sm:px-4">
+          <div className="buy-pc-fields grid grid-cols-2 gap-2 text-xs">
+            <div className="col-span-2">
               <label className="block text-zinc-300 font-medium mb-1">PC Name / Listing Title (Optional)</label>
               <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Auto-generated from CPU + GPU if left blank" className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68]" />
             </div>
@@ -207,13 +208,13 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, onClose, onConfi
             </div>
             <div>
               <label className="block text-zinc-300 font-medium mb-1">Payment Method *</label>
-              <CustomSelect value={paymentMethod} onChange={(value) => setPaymentMethod(value as PaymentMethod)} options={PAYMENT_METHODS.map((method) => ({ value: method, label: method }))} />
+              <CustomSelect value={paymentMethod} onChange={(value) => setPaymentMethod(value as PaymentMethod)} options={PAYMENT_METHODS.map((method) => ({ value: method, label: method }))} className="buy-pc-select" />
             </div>
-            <div className="sm:col-span-2">
+            <div className="col-span-2">
               <label className="block text-zinc-300 font-medium mb-1">Notes (Optional)</label>
               <textarea rows={2} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Condition, damage, parts you will not keep, listing details…" className="w-full bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] resize-y" />
             </div>
-            <div className="sm:col-span-2">
+            <div className="col-span-2">
               <label className="block text-zinc-300 font-medium mb-1">PC Image (Optional)</label>
               {imageUrl ? (
                 <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-[#101719] p-2.5">
@@ -231,11 +232,11 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, onClose, onConfi
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#B9EF68]/25 bg-[#B9EF68]/10 p-3 text-xs text-zinc-300">
+          <div className="buy-pc-note rounded-xl border border-[#B9EF68]/25 bg-[#B9EF68]/10 text-zinc-300">
             Leave any component blank if it is missing, damaged, or not being kept. Unlocked component costs are automatically split so the saved parts equal the total PC cost without recording the purchase twice.
           </div>
 
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#0B1113] p-3 text-xs">
+          <div className="buy-pc-summary flex items-center justify-between gap-3 border-y border-white/[0.08] text-xs">
             <div>
               <span className="text-zinc-400">Included:</span>{' '}
               <span className="font-mono text-zinc-100">{activeParts.length}</span>
@@ -259,7 +260,7 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, onClose, onConfi
           />
         </div>
 
-        <div className="px-4 py-3 sm:px-5 border-t border-white/[0.08] shrink-0 bg-[#0B1113]/95 space-y-2">
+        <div className="buy-pc-footer shrink-0 space-y-2 border-t border-white/[0.08] bg-[#0B1113]/95 px-3 py-2 sm:px-4">
           {formError && <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">{formError}</p>}
           <div className="flex items-center justify-end gap-2.5">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04]">Cancel</button>

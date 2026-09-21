@@ -36,8 +36,8 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
     : manualParts.length;
 
   return (
-    <div className="space-y-2.5 pb-8">
-      <div className="flex items-center justify-between px-1">
+    <div className="manual-parts-editor space-y-2.5">
+      <div className="manual-parts-heading flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <label className="text-xs font-semibold text-zinc-200 font-sans">
             {heading} ({includedCount} {includedCount === 1 ? 'Part' : 'Parts'})
@@ -62,14 +62,14 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
           <div
             key={part.id}
             style={{ zIndex: manualParts.length - index + 20 }}
-            className={`relative p-2.5 sm:p-3 rounded-xl bg-[#101719] border text-xs space-y-2.5 transition-colors ${
+            className={`manual-part-row relative rounded-xl border bg-[#101719] p-2.5 text-xs transition-colors sm:p-3 ${
               part.isLocked
                 ? 'border-[#B9EF68]/40 shadow-sm shadow-[#B9EF68]/10'
                 : 'border-white/[0.08] hover:border-white/[0.15]'
             }`}
           >
-            <div className="flex items-center gap-2">
-              <div className="w-28 sm:w-32 shrink-0">
+            <div className="manual-part-identity flex items-center gap-2">
+              <div className="manual-part-category w-28 shrink-0 sm:w-32">
                 <CustomSelect
                   options={categoryOptions}
                   value={part.category}
@@ -119,7 +119,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
               )}
             </div>
 
-            <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/[0.06]">
+            <div className="manual-part-costs flex items-center justify-between gap-2 border-t border-white/[0.06] pt-1">
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] text-zinc-400 shrink-0 font-sans">Qty:</span>
                 <input
@@ -198,7 +198,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
               </div>
             </div>
             {SUB_CATEGORIES[part.category] && SUB_CATEGORIES[part.category].length > 0 && (
-              <div className="pt-1.5 border-t border-white/[0.06]">
+              <div className="manual-part-tags border-t border-white/[0.06] pt-1.5">
                 <div className="flex flex-wrap gap-1.5">
                   {SUB_CATEGORIES[part.category].map(tag => {
                     const isSelected = (part.tags || []).includes(tag);

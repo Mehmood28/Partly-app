@@ -1118,8 +1118,10 @@ button[class*="bg-emerald-600"]:hover,
 .sold-build-contact-lines { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px 18px; padding:7px 10px; color:#909da7; font-size:10px; }
 .sold-build-contact-lines > div { min-width:0; overflow-wrap:anywhere; }
 .sold-build-contact-lines strong { color:#edf2f3; font-weight:650; }
-.sold-build-timeline { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px 18px; padding:7px 10px; border-top:1px solid var(--app-line); font-size:9px; }
-.sold-build-timeline > span { min-width:0; overflow-wrap:anywhere; }
+.sold-build-timeline { display:grid; gap:5px; padding:7px 10px; border-top:1px solid var(--app-line); font-size:9px; }
+.sold-build-dates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.sold-build-dates > span,.sold-build-warranty { min-width:0; overflow-wrap:anywhere; }
+.sold-build-warranty { display:block; }
 .sold-build-timeline svg { width:12px; height:12px; }
 .build-sold-footer { display:flex; justify-content:flex-end; }
 .sold-add-part { width:auto; min-width:132px; min-height:34px; font-size:10px; }
@@ -1135,10 +1137,27 @@ button[class*="bg-emerald-600"]:hover,
 .sell-build-form-footer { padding-top:9px; }
 .build-editor-form { gap:0; }
 .build-editor-header { margin-bottom:8px; }
-.build-editor-body { display:grid; gap:10px; padding-right:3px; padding-bottom:2px; overscroll-behavior:contain; }
-.build-editor-footer { margin-top:0; background:#0b1113; }
+.build-editor-body { display:block; overflow-x:hidden; padding-right:3px; padding-bottom:0; overscroll-behavior:contain; }
+.build-editor-footer { margin-top:0; background:transparent; }
 .build-editor-body > .form-section:last-child { padding-bottom:0; }
-.build-editor-status { padding:2px 0 5px; line-height:1.2; }
+.build-basic-details { padding:1px 1px 10px; }
+.build-basic-details .app-field,.build-basic-details button { min-height:32px !important; height:32px; }
+.build-basic-details textarea.app-field { min-height:44px !important; height:44px; }
+.selected-parts-section { padding-block:10px; }
+.build-selected-list { border-bottom:1px solid var(--app-line); }
+.selected-part-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:7px; min-height:48px; padding:6px 7px 6px 1px; border-top:1px solid var(--app-line); }
+.selected-part-content { min-width:0; }
+.selected-part-identity { display:grid; grid-template-columns:42px minmax(0,1fr); align-items:start; gap:4px; }
+.selected-part-category { padding-top:1px; font-size:9px; }
+.selected-part-name { color:#edf2f3; font-size:11px; font-weight:600; line-height:1.25; overflow-wrap:anywhere; }
+.selected-part-meta { display:flex; flex-wrap:wrap; align-items:center; gap:1px 5px; margin:2px 0 0 46px; color:var(--app-muted); font-size:8.5px; line-height:1.25; }
+.selected-part-actions { display:flex; min-width:64px; flex-direction:column; align-items:flex-end; gap:3px; padding-right:3px; }
+.selected-part-price { color:#edf2f3; font-family:var(--font-mono); font-size:10px; font-weight:650; white-space:nowrap; }
+.selected-part-tools { display:flex; align-items:center; gap:3px; }
+.selected-part-quantity { display:grid; grid-template-columns:16px 18px 16px; align-items:center; height:22px; border:1px solid var(--app-line); border-radius:6px; background:#0b1113; text-align:center; font-family:var(--font-mono); font-size:9px; }
+.selected-part-quantity button { display:grid; min-height:20px !important; place-items:center; padding:0; }
+.selected-part-remove { display:grid; min-height:22px !important; width:22px; place-items:center; padding:0; }
+.build-inventory-list { padding-bottom:1px; }
 .inventory-filter-bar.is-compact .inventory-filter-controls { display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,190px); gap:7px; }
 .inventory-filter-bar.is-compact .inventory-sort-control { width:auto; }
 .inventory-filter-bar.is-compact .inventory-filter-controls .app-field,
@@ -1169,6 +1188,31 @@ button[class*="bg-emerald-600"]:hover,
 .dismantle-part-value strong { display:block; color:#edf2f3; font-size:11px; font-weight:650; }
 .dismantle-part-value span { display:block; margin-top:2px; color:var(--app-muted); font-size:9px; }
 .dismantle-note { margin:0; padding:7px 9px; border:1px solid rgba(185,239,104,.2); border-radius:7px; background:rgba(185,239,104,.05); color:#bdc8c8; font-size:10px; line-height:1.35; }
+
+/* Buy PC follows the same compact field and ledger rhythm as the Stock workspace. */
+.buy-pc-body { display:grid; gap:8px; overscroll-behavior:contain; }
+.buy-pc-fields label { margin-bottom:3px; font-size:10px; }
+.buy-pc-fields input,.buy-pc-fields .h-11,.buy-pc-select { min-height:32px !important; height:32px !important; border-radius:7px; font-size:11px; }
+.buy-pc-fields textarea { min-height:44px; height:44px; border-radius:7px; font-size:11px; }
+.buy-pc-note { padding:7px 9px; font-size:9.5px; line-height:1.35; }
+.buy-pc-summary { min-height:38px; padding:5px 2px; }
+.buy-pc-summary button { min-height:28px !important; padding-block:3px; }
+.buy-pc-modal .manual-parts-editor { display:grid; gap:7px; }
+.buy-pc-modal .manual-parts-heading { padding-inline:1px; }
+.buy-pc-modal .manual-parts-heading label { font-size:10px; }
+.buy-pc-modal .manual-parts-heading button { min-height:26px !important; padding:2px 4px; }
+.buy-pc-modal .manual-part-row { display:grid; gap:6px; padding:7px; border-radius:7px; box-shadow:none; }
+.buy-pc-modal .manual-part-identity { gap:6px; }
+.buy-pc-modal .manual-part-category { width:86px; }
+.buy-pc-modal .manual-part-identity input,.buy-pc-modal .manual-part-category button { min-height:30px !important; height:30px !important; border-radius:6px; font-size:10px; }
+.buy-pc-modal .manual-part-costs { gap:5px; padding-top:5px; }
+.buy-pc-modal .manual-part-costs > div { gap:3px; }
+.buy-pc-modal .manual-part-costs input { min-height:26px !important; height:26px !important; font-size:9px; }
+.buy-pc-modal .manual-part-costs span { font-size:9px; }
+.buy-pc-modal .manual-part-tags { padding-top:5px; }
+.buy-pc-modal .manual-part-tags > div { gap:4px; }
+.buy-pc-modal .manual-part-tags button { min-height:23px !important; padding:1px 6px; font-size:9px; }
+.buy-pc-footer button { min-height:30px !important; padding-block:4px; }
 
 /* Sale dialogs use the same compact ledgers and field rhythm as Stock. */
 .sell-part-shell { display:grid; }
@@ -1224,7 +1268,8 @@ button[class*="bg-emerald-600"]:hover,
   .build-sort-control { width:100%; min-width:0; max-width:none; }
   .builds-controls .builds-sort-select,
   .builds-controls .builds-search { height:31px; min-height:31px !important; font-size:9px; }
-  .sold-build-contact-lines,.sold-build-timeline { gap:4px 10px; padding:6px 7px; font-size:9px; }
+  .sold-build-contact-lines,.sold-build-timeline { gap:4px; padding:6px 7px; font-size:9px; }
+  .sold-build-dates { gap:5px; }
   [data-bottom-sheet-modal] .modal-workspace { height:calc(100dvh - 5.75rem); max-height:calc(100dvh - 5.75rem); }
   .swap-filter-row { grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); }
   .swap-filter-row .app-field,.swap-sort-select { height:31px; min-height:31px !important; font-size:9px; }
@@ -1236,9 +1281,14 @@ button[class*="bg-emerald-600"]:hover,
   .bulk-sale-overview > div:last-child > div { padding:5px; }
   .bulk-sale-overview > div:last-child span { font-size:9px; }
   .build-editor-header { padding-bottom:7px; }
-  .build-editor-body { gap:8px; }
   .build-editor-footer { padding-top:5px; }
-  .build-editor-status { padding:1px 0 4px; font-size:10px; }
+  .build-basic-details { gap:7px; padding-bottom:8px; }
+  .build-basic-details .app-field,.build-basic-details button { min-height:30px !important; height:30px; font-size:10px; }
+  .build-basic-details textarea.app-field { min-height:40px !important; height:40px; }
+  .selected-parts-section { padding-block:8px; }
+  .selected-part-row { min-height:44px; padding-block:5px; }
+  .selected-part-identity { grid-template-columns:38px minmax(0,1fr); gap:3px; }
+  .selected-part-meta { margin-left:41px; }
   .inventory-filter-bar.is-compact .inventory-filter-controls { grid-template-columns:minmax(0,1fr) 138px; gap:6px; }
   .inventory-filter-bar.is-compact .inventory-filter-controls .app-field,
   .inventory-filter-bar.is-compact .inventory-sort-control button { min-height:31px !important; height:31px; font-size:9px; }

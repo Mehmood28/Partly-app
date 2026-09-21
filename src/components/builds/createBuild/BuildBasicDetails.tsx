@@ -30,8 +30,8 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
   onCustomWarrantyDaysChange,
 }) => {
   return (
-    <div className="app-panel grid grid-cols-1 gap-3 p-3.5 text-xs sm:grid-cols-3 sm:p-4">
-      <div className="sm:col-span-2">
+    <div className="build-basic-details grid grid-cols-2 gap-2.5 border-b border-white/[0.09] pb-3 text-xs">
+      <div className="col-span-2">
         <div className="flex items-center justify-between mb-1">
           <label className="block text-zinc-300 font-medium text-xs">Build Title *</label>
           <button
@@ -47,7 +47,7 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
           required
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
-          className="app-field h-12 px-3 text-xs placeholder:text-zinc-600 sm:text-sm"
+          className="app-field px-3 text-xs placeholder:text-zinc-600"
           placeholder="e.g. 7700 + 4070 CUSTOM"
         />
       </div>
@@ -60,13 +60,13 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
             inputMode="decimal"
             value={salePrice}
             onChange={(e) => onSalePriceChange(e.target.value)}
-            className="app-field h-12 px-3 pl-7 font-mono text-xs placeholder:text-zinc-600 sm:text-sm"
+            className="app-field px-3 pl-7 font-mono text-xs placeholder:text-zinc-600"
             placeholder="0.00"
           />
         </div>
       </div>
-      <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="sm:col-span-2">
+      <div>
+        <div>
           <label className="block text-zinc-300 font-medium mb-1 text-xs">Warranty Provided</label>
           <div className="flex gap-2">
             <div className="flex-1">
@@ -90,7 +90,7 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
                 step="1"
                 value={customWarrantyDays}
                 onChange={(e) => onCustomWarrantyDaysChange?.(e.target.value)}
-                className="app-field h-12 w-20 px-2 text-center text-xs placeholder:text-zinc-600 sm:text-sm"
+                className="app-field w-16 px-2 text-center text-xs placeholder:text-zinc-600"
                 placeholder="Days"
                 required
               />
@@ -98,13 +98,13 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
           </div>
         </div>
       </div>
-      <div className="sm:col-span-3">
+      <div className="col-span-2">
         <label className="block text-zinc-300 font-medium mb-1 text-xs">Notes / Description (Optional)</label>
         <textarea
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
           rows={2}
-          className="app-field min-h-20 resize-y px-3 py-2 text-xs placeholder:text-zinc-600 sm:text-sm"
+          className="app-field min-h-12 resize-y px-3 py-2 text-xs placeholder:text-zinc-600"
           placeholder="Case fans layout, thermal paste used, OS details..."
         />
       </div>

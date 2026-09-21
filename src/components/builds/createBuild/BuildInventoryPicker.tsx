@@ -76,9 +76,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
       />
 
       <div
-        className="space-y-2 max-h-64 overflow-y-auto pr-1"
-        onPointerDownCapture={(e) => e.stopPropagation()}
-        onWheelCapture={(e) => e.stopPropagation()}
+        className="build-inventory-list space-y-2"
       >
         {filteredComponents.length === 0 ? (
           <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-4 text-center text-xs text-zinc-400 font-sans">

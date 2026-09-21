@@ -319,7 +319,8 @@ function AppContent() {
         onSave={addBuild}
       />
       <BuyPCModal
-        isOpen={isBuyPCModalOpen && activeTab === 'builds'}
+        isOpen={isBuyPCModalOpen}
+        isVisible={activeTab === 'builds'}
         onClose={() => setIsBuyPCModalOpen(false)}
         onConfirm={(purchase) => {
           const result = purchasePC(purchase);

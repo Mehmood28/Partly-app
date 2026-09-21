@@ -297,11 +297,8 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
         </div>
 
         {/* Footer Actions */}
-        <div className="build-editor-footer flex shrink-0 flex-col border-t border-white/[0.09] pt-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="build-editor-status text-xs text-zinc-400 font-sans">
-            Status: <span className="font-semibold text-[#B9EF68]">{status === 'Listed for Sale' ? 'Available' : status === 'In Progress' ? 'Pending' : status}</span>
-          </div>
-          <div className="grid grid-cols-[auto_1fr] items-center gap-2 sm:flex">
+        <div className="build-editor-footer shrink-0 border-t border-white/[0.09] pt-2">
+          <div className="grid grid-cols-[auto_1fr] items-center gap-2 sm:flex sm:justify-end">
             <button
               type="button"
               onClick={handleCloseAndReset}
