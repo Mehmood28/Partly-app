@@ -262,7 +262,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
         </div>
       )}
       {isExpanded && (
-        <div className="build-expanded space-y-4 px-3 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-5">
+        <div className="build-expanded px-3 pb-3 pt-3 sm:px-5 sm:pb-4 sm:pt-4">
           <div className="build-overview">
             <div className="build-overview-copy">
               <button type="button" className="build-expanded-heading" onClick={handleToggle} aria-label={`Collapse ${build.name}`}>
@@ -285,6 +285,13 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   title="Edit Build Details"
                 >
                   <Pencil className="w-3.5 h-3.5" /> Edit
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onAllocate(build); }}
+                  className="app-button"
+                  title="Add Part"
+                >
+                  <PlusCircle className="w-3.5 h-3.5 text-[#B9EF68]" /> Add Part
                 </button>
                 {!isSold && isAcquired && onItemize && (
                   <button
@@ -421,8 +428,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             )}
           </div>
 
-          <div className="build-expanded-body">
-            {imageShareError && (
+          {imageShareError && (
+            <div className="build-expanded-body">
               <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs px-3 py-1.5 rounded-lg flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
@@ -440,8 +447,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {isTradeIn && tradeInOrigin && (tradeInOrigin.buyerName || tradeInOriginDate) && (
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -623,27 +630,10 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             </div>
           </div>
 
-          {isSold && (
-            <div className="build-sold-footer border-t border-white/[0.08] pt-3">
-              <button
-                onClick={(e) => { e.stopPropagation(); onAllocate(build); }}
-                className="app-button sold-add-part flex items-center justify-center gap-1.5 px-4"
-              >
-                <PlusCircle className="w-3.5 h-3.5 text-[#B9EF68]" /> Add Part
-              </button>
-            </div>
-          )}
-
           {/* Primary build workflow actions. Financials live only in the hero above. */}
           {!isSold && (
             <div className="border-t border-white/[0.08] pt-3">
-              <div className="build-workflow-actions grid grid-cols-3 gap-2 pt-0.5">
-                <button
-                  onClick={(e) => { e.stopPropagation(); onAllocate(build); }}
-                  className="app-button flex items-center justify-center gap-1.5 px-3"
-                >
-                  <PlusCircle className="w-3.5 h-3.5 text-[#B9EF68]" /> Add Part
-                </button>
+              <div className="build-workflow-actions grid grid-cols-2 gap-2 pt-0.5">
                 {build.status === 'Listed for Sale' && (
                   <button
                     onClick={(e) => {

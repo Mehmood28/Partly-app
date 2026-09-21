@@ -483,12 +483,13 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .build-action-bar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
 .build-action-bar button { display:flex; align-items:center; justify-content:center; gap:5px; min-height:37px; padding:5px 8px; border:1px solid var(--app-line); border-radius:6px; background:#0e1518; font-size:12px; line-height:1.15; }
 .build-action-bar button:last-child:nth-child(odd) { grid-column:1/-1; }
+.build-expanded { display:grid; gap:7px; }
 .build-workflow-actions button { min-width:0; justify-content:center; white-space:normal; text-align:center; }
-.parts-heading { display:flex; justify-content:space-between; gap:8px; padding:14px 0; border-bottom:1px solid var(--app-line); font-size:15px; font-weight:600; }
+.parts-heading { display:flex; justify-content:space-between; gap:8px; padding:9px 0; border-bottom:1px solid var(--app-line); font-size:15px; font-weight:600; }
 .parts-heading > span:first-child { display:inline-flex; align-items:center; gap:8px; }
 .parts-heading > span:first-child svg { width:18px; height:18px; color:#83e5df; }
 .parts-heading > span:last-child { font-size:13px; color:#b5c3cc; }
-.allocated-part { display:grid; grid-template-columns:92px minmax(0,1fr) auto; gap:12px; align-items:center; width:100%; padding:11px 8px; color:inherit; text-align:left; }
+.allocated-part { display:grid; grid-template-columns:92px minmax(0,1fr) auto; gap:12px; align-items:center; width:100%; padding:8px; color:inherit; text-align:left; }
 .allocated-part-managed { position:relative; grid-template-columns:92px minmax(0,1fr) auto 28px; }
 button.allocated-part { cursor:pointer; transition:background-color 150ms ease; }
 button.allocated-part:hover { background:rgba(255,255,255,.025); }
@@ -673,7 +674,7 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .build-workflow-actions button svg { width:12px; height:12px; flex-shrink:0; }
   .parts-heading { font-size:13px; }
   .parts-heading > span:last-child { font-size:11px; }
-  .allocated-part { grid-template-columns:65px minmax(0,1fr) auto; gap:7px; padding:10px 0; }
+  .allocated-part { grid-template-columns:65px minmax(0,1fr) auto; gap:7px; padding:7px 0; }
   .allocated-part-managed { grid-template-columns:58px minmax(0,1fr) auto 24px; gap:5px; }
   .allocated-type { gap:5px; font-size:9px; }
   .allocated-type-icon { width:16px; height:16px; }
@@ -1110,21 +1111,19 @@ button[class*="bg-emerald-600"]:hover,
 .builds-controls .builds-sort-select { padding-block:3px; }
 
 /* Sold build details follow the same compact ledger language as allocated parts. */
-.build-expanded-body { display:grid; gap:8px; min-width:0; }
-.build-parts-section { display:grid; gap:8px; min-width:0; }
-.sold-build-details { display:grid; gap:7px; padding:7px 0 0; border-top:1px solid var(--app-line); }
+.build-expanded-body { display:grid; gap:6px; min-width:0; }
+.build-parts-section { display:grid; gap:6px; min-width:0; }
+.sold-build-details { display:grid; gap:5px; padding:5px 0 0; border-top:1px solid var(--app-line); }
 .sold-build-trade-in { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 10px; padding:7px 0; border-bottom:1px solid var(--app-line); font-size:11px; }
 .sold-build-info { border-bottom:1px solid var(--app-line); }
 .sold-build-contact-lines { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px 18px; padding:7px 10px; color:#909da7; font-size:10px; }
 .sold-build-contact-lines > div { min-width:0; overflow-wrap:anywhere; }
 .sold-build-contact-lines strong { color:#edf2f3; font-weight:650; }
-.sold-build-timeline { display:grid; gap:5px; padding:7px 10px; border-top:1px solid var(--app-line); font-size:9px; }
+.sold-build-timeline { display:grid; gap:4px; padding:6px 10px; border-top:1px solid var(--app-line); color:#909da7; font-size:10px; }
 .sold-build-dates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
-.sold-build-dates > span,.sold-build-warranty { min-width:0; overflow-wrap:anywhere; }
+.sold-build-dates > div,.sold-build-warranty { min-width:0; overflow-wrap:anywhere; }
+.sold-build-dates strong,.sold-build-warranty strong { color:#edf2f3; font-weight:650; }
 .sold-build-warranty { display:block; }
-.sold-build-timeline svg { width:12px; height:12px; }
-.build-sold-footer { display:flex; justify-content:flex-end; }
-.sold-add-part { width:auto; min-width:132px; min-height:34px; font-size:10px; }
 
 /* Consistent modal workspace: inset from the viewport, above navigation, with one internal scroll area. */
 [data-bottom-sheet-modal] .modal-workspace { height:min(760px,calc(100dvh - 6rem)); max-height:calc(100dvh - 6rem); overflow:hidden; }

@@ -1,6 +1,5 @@
 import React from 'react';
 import { PCBuild, TransactionLogItem } from '../../types';
-import { Calendar, Clock, RefreshCw } from 'lucide-react';
 import { formatCurrency, formatReadableDate } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { getBuildWarrantyInfo } from '../../utils/warranty';
@@ -66,14 +65,15 @@ export const SoldBuildTransactionPanel: React.FC<SoldBuildTransactionPanelProps>
         </div>
         <div className="sold-build-timeline">
           <div className="sold-build-dates">
-            {displayBuiltDate && <span className="inline-flex items-center gap-1 text-[#9FF8F4]"><Clock className="w-3.5 h-3.5 text-[#83E5DF]" /> Built {displayBuiltDate}</span>}
-            <span className="inline-flex items-center gap-1 text-zinc-300"><Calendar className="w-3.5 h-3.5 text-zinc-400" /> Sold {displaySaleDate}</span>
-            {daysOnMarket !== undefined && <span className="inline-flex items-center gap-1 text-emerald-300"><RefreshCw className="w-3.5 h-3.5 text-emerald-400" /> {daysOnMarket === 0 ? 'Sold same day' : `Sold in ${daysOnMarket} ${daysOnMarket === 1 ? 'day' : 'days'}`}</span>}
+            {displayBuiltDate && <div><span>Built:</span> <strong>{displayBuiltDate}</strong></div>}
+            <div><span>Sold:</span> <strong>{displaySaleDate}</strong></div>
+            {daysOnMarket !== undefined && <div><span>Sold in:</span> <strong>{daysOnMarket === 0 ? 'Same day' : `${daysOnMarket} ${daysOnMarket === 1 ? 'day' : 'days'}`}</strong></div>}
           </div>
           {warrantyInfo && (
-            <span className={`sold-build-warranty ${warrantyInfo.isActive ? 'text-emerald-300' : 'text-rose-300'}`}>
-              Warranty: {warrantyInfo.isActive ? `Active (${warrantyInfo.daysLeft} days remaining)` : `Expired (${warrantyInfo.expiryFormatted})`}
-            </span>
+            <div className="sold-build-warranty">
+              <span>Warranty:</span>{' '}
+              <strong>{warrantyInfo.isActive ? `Active (${warrantyInfo.daysLeft} days remaining)` : `Expired (${warrantyInfo.expiryFormatted})`}</strong>
+            </div>
           )}
         </div>
       </div>
