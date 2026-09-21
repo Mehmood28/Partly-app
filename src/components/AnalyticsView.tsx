@@ -2,33 +2,15 @@ import React, { useState } from 'react';
 import { GoalBar } from './GoalBar';
 import { CustomSelect } from './ui/CustomSelect';
 import { useInventory } from '../context/InventoryContext';
-import { CATEGORIES } from '../types';
 import {
-  calculateUnassignedValueStrict,
-  calculateUnassignedQuantityStrict,
-  precomputeAssignedBatches,
-  formatCurrency, 
+  formatCurrency,
   calculateMonthlyMetrics,
   parseDateLocal,
 } from '../utils/helpers';
 import { calculateProfitMarginPercent, formatSignedCurrency, getProfitTextColor } from '../utils/financialDisplay';
 import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import {
-  TrendingUp,
-  PieChart as PieIcon,
   Calendar,
   BarChart2,
-  CheckCircle2,
   PackageCheck,
 } from 'lucide-react';
 
@@ -47,13 +29,7 @@ const MONTH_NAMES = [
   'December',
 ];
 
-interface AnalyticsViewProps {
-  isActive?: boolean;
-}
-
-export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
-  isActive = true,
-}) => {
+export const AnalyticsView: React.FC = () => {
   const { state } = useInventory();
 
   const currentYearNum = new Date().getFullYear(); // e.g. 2026
@@ -90,15 +66,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       pcsSold,
       cost,
       pcRevenue,
-      pcCost,
       pcProfit,
-      partRevenue,
-      partCost,
-      partProfit,
     } = calculateMonthlyMetrics(state, selectedYear, idx);
-
-    const pcProfitMargin = pcsSold > 0 ? calculateProfitMarginPercent(pcProfit, pcRevenue) : 0;
-    const profitMargin = calculateProfitMarginPercent(profit, revenue);
 
     return {
       monthIndex: idx,
@@ -107,14 +76,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       profit,
       pcsSold,
       cost: cost !== undefined ? cost : Math.max(0, revenue - profit),
-      profitMargin,
       pcRevenue,
-      pcCost,
       pcProfit,
-      pcProfitMargin,
-      partRevenue,
-      partCost,
-      partProfit,
     };
   }), [state, selectedYear]);
 
@@ -165,83 +128,51 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     ? calculateProfitMarginPercent(selectedMonthPcProfit, selectedMonthPcRevenue)
     : 0;
 
-  // In-stock loose inventory value by category
-  const categoryData = React.useMemo(() => {
-    const precomputedMap = precomputeAssignedBatches(state.builds);
-    return CATEGORIES
-      .map((cat) => {
-        const items = state.components.filter((c) => c.category === cat);
-        const value = items.reduce((sum, c) => sum + calculateUnassignedValueStrict(c, state.builds, precomputedMap), 0);
-        const units = items.reduce((sum, c) => sum + calculateUnassignedQuantityStrict(c, state.builds, precomputedMap), 0);
-        return {
-          name: cat,
-          value,
-          units,
-        };
-      })
-      .filter((c) => c.value > 0);
-  }, [state.components, state.builds]);
-
   return (
-    <div className="analytics-view w-full space-y-5">
+    <div className="analytics-view w-full">
       <GoalBar />
 
       {/* Reporting controls */}
-      <section className="report-toolbar flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <h2 className="app-page-title">
-            PC Sales & Portfolio Analytics
-          </h2>
-          <p className="app-page-copy">
-            Full annual tracking, monthly breakdowns, revenue, profit, and inventory metrics.
-          </p>
-        </div>
+      <section className="report-toolbar analytics-toolbar">
+        <div className="analytics-toolbar-row">
+          <h2 className="app-page-title">PC Sales &amp; Portfolio Analysis</h2>
 
-        {/* Date Filters */}
-        <div className="flex items-center gap-2 self-stretch sm:self-auto">
-          {/* Year Picker */}
-          <div className="flex-1 sm:flex-initial w-32 sm:w-36">
-            <CustomSelect
-              value={String(selectedYear)}
-              onChange={(val) => setSelectedYear(Number(val))}
-              options={availableYears.map(yr => ({ label: yr + ' Stats', value: String(yr) }))}
-            />
-          </div>
+          <div className="analytics-date-filters">
+            <div className="analytics-year-select">
+              <CustomSelect
+                value={String(selectedYear)}
+                onChange={(val) => setSelectedYear(Number(val))}
+                options={availableYears.map((year) => ({ label: String(year), value: String(year) }))}
+                fitLongestOption={false}
+              />
+            </div>
 
-          {/* Month Picker */}
-          <div className="flex-1 sm:flex-initial w-48 sm:w-56">
-            <CustomSelect
-              value={String(selectedMonthIdx)}
-              onChange={(val) => setSelectedMonthIdx(Number(val))}
-              options={MONTH_NAMES.map((mName, i) => ({
-                label: `${mName} ${selectedYear} ${i === currentMonthIdx && selectedYear === currentYearNum ? '(Current)' : ''}`,
-                value: String(i)
-              }))}
-            />
+            <div className="analytics-month-select">
+              <CustomSelect
+                value={String(selectedMonthIdx)}
+                onChange={(val) => setSelectedMonthIdx(Number(val))}
+                options={MONTH_NAMES.map((mName, i) => ({
+                  label: mName,
+                  value: String(i)
+                }))}
+                fitLongestOption={false}
+              />
+            </div>
           </div>
         </div>
+        <p className="app-page-copy analytics-scope-copy">
+          Totals include PC and loose-part sales. Per-PC averages and Profit Margin use PC sales only; Profit Margin = PC profit ÷ PC revenue.
+        </p>
       </section>
 
-      {/* Scope Explainer Helper Text */}
-      <p className="text-[11px] text-zinc-400 px-1">
-        Totals include PC and loose-part sales. Per-PC averages and Profit Margin use PC sales only; Profit Margin = PC profit ÷ PC revenue.
-      </p>
-
       {/* Month and annual ledgers */}
-      <div className="space-y-0">
+      <div className="analytics-summary-stack">
         {/* Selected Month Performance Card */}
         <section className="report-section">
-          <div className="flex items-center justify-between mb-3 relative z-10 flex-wrap gap-2">
+          <div className="analytics-summary-header">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5 text-[#B9EF68]" /> {selectedMonthName} {selectedYear} Performance
             </h3>
-            <div className="flex items-center gap-2">
-              {selectedMonthIdx === currentMonthIdx && selectedYear === currentYearNum && (
-                <span className="px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold tracking-wider uppercase leading-none inline-flex items-center justify-center whitespace-nowrap bg-[#B9EF68]/15 text-[#83E5DF] border border-[#B9EF68]/30">
-                  Current Month
-                </span>
-              )}
-            </div>
           </div>
 
           <div className="report-metrics">
@@ -274,7 +205,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
         {/* Yearly Stats Card */}
         <section className="report-section">
-          <div className="flex items-center justify-between mb-3 relative z-10 flex-wrap gap-2">
+          <div className="analytics-summary-header">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
               <BarChart2 className="w-3.5 h-3.5 text-[#B9EF68]" /> {selectedYear} Full Year Totals
             </h3>
@@ -313,13 +244,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       </div>
 
       {/* Monthly Sales Tracking Spreadsheet Table */}
-      <section className="report-section overflow-hidden">
-        <div className="px-3.5 py-2.5 border-b border-white/[0.08] flex items-center justify-between">
+      <section className="report-section sales-tracking-section overflow-hidden">
+        <div className="sales-tracking-heading">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
               <PackageCheck className="w-3.5 h-3.5 text-[#B9EF68]" /> Sales Tracking — {selectedYear}
             </h3>
-            <p className="text-[11px] sm:text-[11px] text-zinc-400 mt-0.5">
+            <p className="sales-tracking-copy text-zinc-400">
               Revenue and profit include PC and loose-part sales. PCs Sold counts PC sales only.
             </p>
           </div>
@@ -328,11 +259,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#101719]/80 text-zinc-400 text-[11px] sm:text-[11px] font-mono font-bold uppercase tracking-wider border-b border-white/[0.08]">
-                <th className="py-2.5 px-3 w-[28%] border-r border-white/[0.06]">Month</th>
-                <th className="py-2.5 px-3 w-[24%] border-r border-white/[0.06]">Revenue</th>
-                <th className="py-2.5 px-3 w-[24%] border-r border-white/[0.06] text-emerald-400">Profit</th>
-                <th className="py-2.5 px-3 w-[24%] text-[#83E5DF]">PCs Sold</th>
+              <tr className="bg-[#101719]/80 text-zinc-400 font-mono font-bold uppercase tracking-wider border-b border-white/[0.08]">
+                <th className="w-[28%] border-r border-white/[0.06]">Month</th>
+                <th className="w-[24%] border-r border-white/[0.06]">Revenue</th>
+                <th className="w-[24%] border-r border-white/[0.06] text-emerald-400">Profit</th>
+                <th className="w-[24%] text-[#83E5DF]">PCs Sold</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04] font-mono text-xs">
@@ -353,32 +284,24 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                     }`}
                   >
                     {/* Month Cell */}
-                    <td className="py-2 px-3 font-sans font-medium text-zinc-200 border-r border-white/[0.06]">
+                    <td className="font-sans font-medium text-zinc-200 border-r border-white/[0.06]">
                       <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <span className="truncate">{row.monthName.substring(0, 3)}<span className="hidden sm:inline">{row.monthName.substring(3)}</span></span>
-                          {isCurrent && (
-                            <span className="text-[#83E5DF] bg-[#B9EF68]/20 border border-[#B9EF68]/40 flex items-center justify-center w-4 h-4 rounded-full">
-                              <CheckCircle2 className="w-2.5 h-2.5" />
-                            </span>
-                          )}
-                        </span>
-                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#B9EF68] hidden sm:block" />}
+                        <span>{row.monthName.substring(0, 3)}<span className="hidden sm:inline">{row.monthName.substring(3)}</span></span>
                       </div>
                     </td>
 
                     {/* Revenue Cell */}
-                    <td className="py-2 px-3 text-[#83E5DF] border-r border-white/[0.06] font-mono font-medium">
+                    <td className="text-[#83E5DF] border-r border-white/[0.06] font-mono font-medium">
                       {formatCurrency(row.revenue)}
                     </td>
 
                     {/* Profit Cell */}
-                    <td className={`py-2 px-3 border-r border-white/[0.06] font-mono font-medium ${getProfitTextColor(row.profit)}`}>
+                    <td className={`border-r border-white/[0.06] font-mono font-medium ${getProfitTextColor(row.profit)}`}>
                       {formatCurrency(row.profit)}
                     </td>
 
                     {/* PCs Sold Cell */}
-                    <td className="py-2 px-3 text-[#83E5DF] font-mono font-medium text-center sm:text-left">
+                    <td className="text-[#83E5DF] font-mono font-medium text-center sm:text-left">
                       {row.pcsSold}
                     </td>
                   </tr>
@@ -388,16 +311,16 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {/* TOTAL Row */}
             <tfoot>
               <tr className="bg-[#101719] border-t-2 border-[#B9EF68]/40 font-mono text-xs font-bold">
-                <td className="py-2.5 px-3 font-sans text-zinc-200 tracking-wider uppercase border-r border-white/[0.06]">
+                <td className="font-sans text-zinc-200 tracking-wider uppercase border-r border-white/[0.06]">
                   TOTAL
                 </td>
-                <td className="py-2.5 px-3 text-[#83E5DF] border-r border-white/[0.06]">
+                <td className="text-[#83E5DF] border-r border-white/[0.06]">
                   {formatCurrency(totalYearlyRevenue)}
                 </td>
-                <td className={`py-2.5 px-3 border-r border-white/[0.06] ${getProfitTextColor(totalYearlyProfit)}`}>
+                <td className={`border-r border-white/[0.06] ${getProfitTextColor(totalYearlyProfit)}`}>
                   {formatSignedCurrency(totalYearlyProfit)}
                 </td>
-                <td className="py-2.5 px-3 text-[#83E5DF] text-center sm:text-left">
+                <td className="text-[#83E5DF] text-center sm:text-left">
                   {totalYearlyPcsSold}
                 </td>
               </tr>
@@ -405,150 +328,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </table>
         </div>
       </section>
-
-      {/* Visual Analytics Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {/* Monthly Revenue & Profit Chart */}
-        <section className="report-section space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <TrendingUp className="w-3.5 h-3.5 text-[#B9EF68]" /> {selectedYear} Monthly Total Revenue & Profit
-            </h3>
-          </div>
-
-          <div className="h-56 w-full sm:h-64">
-            {isActive ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                  <XAxis
-                    dataKey="monthName"
-                    stroke="#71717a"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={{ stroke: '#27272a' }}
-                    tickFormatter={(val) => val.substring(0, 3)}
-                  />
-                  <YAxis
-                    stroke="#71717a"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={{ stroke: '#27272a' }}
-                    tickFormatter={(val) => `$${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#0B1113',
-                      borderColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '0.75rem',
-                      color: '#f4f4f5',
-                      fontSize: '12px',
-                    }}
-                    formatter={(value: number, name: string) => [
-                      formatCurrency(value),
-                      name,
-                    ]}
-                  />
-                  <Bar dataKey="revenue" fill="#83E5DF" name="Revenue" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="profit" fill="#B9EF68" name="Profit" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full w-full" />
-            )}
-          </div>
-        </section>
-
-        {/* Inventory Value by Category Bar Chart */}
-        <section className="report-section space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <PieIcon className="w-3.5 h-3.5 text-[#B9EF68]" /> Inventory Valuation by Category
-            </h3>
-          </div>
-          <div className="h-56 w-full sm:h-64">
-            {isActive ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                  <XAxis
-                    dataKey="name"
-                    stroke="#71717a"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={{ stroke: '#27272a' }}
-                  />
-                  <YAxis
-                    stroke="#71717a"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={{ stroke: '#27272a' }}
-                    tickFormatter={(val) => `$${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#0B1113',
-                      borderColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '0.75rem',
-                      color: '#f4f4f5',
-                      fontSize: '12px',
-                    }}
-                    formatter={(value: number) => [formatCurrency(value), 'Inventory Value']}
-                  />
-                  <Bar dataKey="value" fill="#83E5DF" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full w-full" />
-            )}
-          </div>
-        </section>
-
-        {/* PC Profit Margin Trend Line Chart */}
-        <section className="report-section space-y-3 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <TrendingUp className="w-3.5 h-3.5 text-[#B9EF68]" /> PC Profit Margin Trend
-            </h3>
-            <span className="text-[11px] font-mono text-zinc-400 font-medium">%</span>
-          </div>
-          <div className="h-56 w-full sm:h-64">
-            {isActive ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis
-                    dataKey="monthName"
-                    stroke="#71717a"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={{ stroke: '#27272a' }}
-                    tickFormatter={(val) => val.substring(0, 3)}
-                  />
-                  <YAxis
-                    stroke="#71717a"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={{ stroke: '#27272a' }}
-                    tickFormatter={(val) => `${val.toFixed(0)}%`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#0B1113',
-                      borderColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '0.75rem',
-                      color: '#f4f4f5',
-                      fontSize: '12px',
-                    }}
-                    formatter={(value: number) => [`${value.toFixed(2)}%`, 'Profit Margin']}
-                  />
-                  <Line type="monotone" dataKey="pcProfitMargin" stroke="#B9EF68" strokeWidth={2.5} dot={{ fill: '#B9EF68', strokeWidth: 2, r: 3.5 }} activeDot={{ r: 5 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full w-full" />
-            )}
-          </div>
-        </section>
-      </div>
 
     </div>
   );

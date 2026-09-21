@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { ConfirmModal } from './ConfirmModal';
+import { CustomSelect } from './ui/CustomSelect';
 import {
   extractAvailableYears,
   filterTransactionsByYear,
@@ -205,9 +206,9 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
   };
 
   return (
-    <div className="data-view w-full space-y-5">
+    <div className="data-view w-full">
       <section className="data-heading">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-10">
+        <div className="data-heading-row">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#B9EF68]/25 bg-[#B9EF68]/[0.08] text-[#B9EF68]">
               <FolderSync className="w-4 h-4" />
@@ -222,7 +223,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
             </div>
           </div>
 
-          <div className="gap-2 text-zinc-400 shrink-0 text-[11px] font-mono font-medium tracking-wider uppercase inline-flex items-center justify-center whitespace-nowrap">
+          <div className="data-database-summary">
             <Database className="w-3.5 h-3.5 text-[#B9EF68]" />
             <span>Database: {totalComponentsCount} parts · {totalBuildsCount} builds</span>
           </div>
@@ -232,7 +233,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
       {/* Status Feedback Message */}
       {importStatus.type && (
         <div
-          className={`p-3 rounded-xl border text-xs flex items-center justify-between gap-2 ${
+          className={`data-status-message border flex items-center justify-between gap-2 ${
             importStatus.type === 'success'
               ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
               : 'bg-rose-950/20 border-rose-500/30 text-rose-300'
@@ -257,9 +258,9 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
       <div className="grid grid-cols-1 gap-3">
         {/* JSON Backup & Restore */}
-        <section className="data-section flex flex-col justify-between space-y-3">
+        <section className="data-section data-backup-section flex flex-col justify-between">
           <div>
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-white/[0.08] mb-2.5">
+            <div className="data-section-heading">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-md bg-[#B9EF68]/10 border border-[#B9EF68]/25 flex items-center justify-center text-[#B9EF68] shrink-0">
                   <FileJson className="w-3.5 h-3.5" />
@@ -331,7 +332,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
       {/* CSV Reports Export */}
       <section className="data-section">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-white/[0.08] mb-2.5">
+        <div className="data-section-heading data-report-heading">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-[#B9EF68]/10 border border-[#B9EF68]/25 flex items-center justify-center text-[#B9EF68] shrink-0">
               <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -344,22 +345,18 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-            <label htmlFor="financial-activity-year-select" className="text-xs text-zinc-400 font-medium">
+          <div className="data-year-control">
+            <label className="text-zinc-400 font-medium">
               Year:
             </label>
-            <select
-              id="financial-activity-year-select"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="h-8 bg-[#101719] border border-white/[0.08] rounded-lg px-2.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40"
-            >
-              {availableYears.map((yr) => (
-                <option key={yr} value={yr}>
-                  {yr}
-                </option>
-              ))}
-            </select>
+            <div className="data-year-select">
+              <CustomSelect
+                value={String(selectedYear)}
+                onChange={(value) => setSelectedYear(Number(value))}
+                options={availableYears.map((year) => ({ value: String(year), label: String(year) }))}
+                fitLongestOption={false}
+              />
+            </div>
           </div>
         </div>
 
@@ -372,7 +369,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
                 setIsExportFinancialConfirmOpen(true);
               }
             }}
-            className={`p-3 bg-[#101719] border border-white/[0.08] rounded-lg text-left flex items-center justify-between group transition-colors ${
+            className={`data-report-action bg-[#101719] border border-white/[0.08] rounded-lg text-left flex items-center justify-between group transition-colors ${
               yearTransactions.length === 0
                 ? 'opacity-50 cursor-not-allowed'
                 : 'hover:bg-white/[0.04] hover:border-[#B9EF68]/40'
@@ -397,7 +394,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
       </section>
 
       {/* Read-only data relationship diagnostics */}
-      <section className="data-section">
+      <section className="data-section data-health-section">
         <button
           type="button"
           aria-expanded={isDataHealthOpen}
@@ -484,8 +481,8 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
       </section>
 
       {/* Reset & Maintenance */}
-      <section className="data-section">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-white/[0.08] mb-2.5">
+      <section className="data-section data-reset-section">
+        <div className="data-section-heading">
           <div className="w-6 h-6 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
             <RotateCcw className="w-3.5 h-3.5" />
           </div>
@@ -497,7 +494,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#101719] border border-white/[0.08] rounded-lg p-3">
+        <div className="data-reset-action bg-[#101719] border border-white/[0.08] rounded-lg">
           <div>
             <div className="text-xs font-semibold text-zinc-200">Reset All Database Data</div>
             <p className="text-[11px] text-zinc-400 mt-0.5">

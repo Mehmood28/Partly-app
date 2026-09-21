@@ -273,7 +273,7 @@ function AppContent() {
 
           {/* Analytics Tab */}
           <div className={activeTab === 'analytics' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
-            <AnalyticsView isActive={activeTab === 'analytics'} />
+            <AnalyticsView />
           </div>
 
           {/* Data Tab */}

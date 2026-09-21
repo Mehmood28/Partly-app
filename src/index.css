@@ -1316,3 +1316,133 @@ button[class*="bg-emerald-600"]:hover,
   .dismantle-part-main strong,.dismantle-part-value strong { font-size:10px; }
   .dismantle-part-main span,.dismantle-part-value span { font-size:8px; }
 }
+
+/* Compact Analytics workspace. Keep the full year visible without chart-only overflow. */
+.analytics-view { display:grid; gap:7px; }
+.analytics-view .goal-section { padding:4px 0 7px; }
+.analytics-view .goal-section .section-heading { margin-bottom:2px; }
+.analytics-view .goal-section .section-heading h2 { font-size:13px; }
+.analytics-view .goal-section .section-heading > span { font-size:9px; }
+.analytics-view .goal-amount { gap:5px; margin:0 0 3px; }
+.analytics-view .goal-amount strong { font-size:19px; }
+.analytics-view .goal-amount > span { font-size:12px; }
+.analytics-view .goal-amount svg { width:12px; height:12px; }
+.analytics-view .goal-details { margin:3px 0 5px; font-size:9px; }
+.analytics-view .goal-details > * { padding:0 8px; }
+.analytics-view .goal-track { height:4px; }
+.analytics-toolbar { display:grid; gap:3px; padding:1px 0 5px; border-bottom:1px solid var(--app-line); }
+.analytics-toolbar-row { display:flex; min-width:0; align-items:center; justify-content:space-between; gap:8px; }
+.analytics-toolbar .app-page-title { min-width:0; font-size:17px; line-height:1.15; white-space:nowrap; }
+.analytics-date-filters { display:flex; flex-shrink:0; align-items:center; gap:6px; }
+.analytics-year-select { width:72px; }
+.analytics-month-select { width:112px; }
+.analytics-date-filters .custom-select-trigger { height:30px; min-height:30px; padding-inline:8px; font-size:10px; }
+.analytics-scope-copy { font-size:9px; line-height:1.25; }
+.analytics-summary-stack { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.analytics-view .report-section { min-width:0; padding:6px 0; }
+.analytics-summary-stack .report-section { border-bottom:0; }
+.analytics-summary-header { display:flex; min-height:18px; align-items:center; justify-content:space-between; gap:6px; }
+.analytics-view .report-section h3 { font-size:12px; line-height:1.2; }
+.analytics-summary-header > span { font-size:8px; }
+.analytics-view .report-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:4px; }
+.analytics-view .report-metrics > div { min-width:0; padding:5px 7px; }
+.analytics-view .report-metrics p:first-child { font-size:8.5px; line-height:1.1; }
+.analytics-view .report-metrics p:last-child { margin-top:2px; font-size:11px; line-height:1.1; overflow-wrap:anywhere; }
+.sales-tracking-section { padding-bottom:0 !important; border-bottom:0 !important; }
+.sales-tracking-heading { padding:5px 7px; border-bottom:1px solid var(--app-line); }
+.sales-tracking-copy { margin-top:1px; font-size:9px; line-height:1.2; }
+.analytics-view table { table-layout:fixed; font-size:10px; }
+.analytics-view th,.analytics-view td { padding:4px 7px; font-size:10px; line-height:1.05; white-space:nowrap; }
+.analytics-view thead th { font-size:9px; }
+.analytics-view tfoot td { padding-block:5px; }
+
+/* Compact Data workspace. Preserve every action while removing legacy card bulk. */
+.data-view { display:grid; gap:7px; }
+.data-view > div.grid { gap:0; }
+.data-heading { padding:1px 0 4px; border-bottom:1px solid var(--app-line); }
+.data-heading-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; }
+.data-heading-row > div:first-child { min-width:0; }
+.data-heading-row > div:first-child > div:first-child { width:30px; height:30px; border-radius:7px; }
+.data-heading .app-page-title { font-size:18px; line-height:1.15; }
+.data-heading .app-page-copy { margin-top:1px; font-size:9px; line-height:1.2; }
+.data-database-summary { display:flex; align-items:center; justify-content:center; gap:5px; color:var(--app-muted); font-family:var(--font-mono); font-size:9px; font-weight:500; white-space:nowrap; }
+.data-database-summary svg { width:12px; height:12px; color:var(--app-lime); }
+.data-status-message { padding:7px 9px; border-radius:8px; font-size:10px; }
+.data-view .data-section { margin-top:0; padding:8px 9px; border-radius:8px; }
+.data-view .data-section h3 { font-size:12px; line-height:1.2; }
+.data-view .data-section p { font-size:9px; line-height:1.25; }
+.data-section-heading { display:flex; align-items:center; justify-content:space-between; gap:7px; margin-bottom:5px; padding-bottom:5px; border-bottom:1px solid var(--app-line); }
+.data-section-heading > div:first-child { display:flex; min-width:0; align-items:center; gap:7px; }
+.data-section-heading > div:first-child > div:first-child { width:22px; height:22px; }
+.data-backup-section > div:first-child > p { margin-bottom:6px; }
+.data-actions { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+.data-action { min-height:43px; gap:7px; padding:7px 24px 7px 8px; border-radius:7px; }
+.data-action > div:first-child > svg:first-child { width:16px; height:16px; }
+.data-action > div:first-child > svg:last-child { right:7px; top:calc(50% - 6px); width:12px; height:12px; }
+.data-action > div:last-child > div:first-child { font-size:10px; line-height:1.15; }
+.data-action > div:last-child > div:last-child { margin-top:1px; font-size:8px; line-height:1.15; }
+.data-backup-section > div:last-child { margin-top:5px; padding-top:5px; font-size:8.5px; }
+.data-backup-section > div:last-child svg { width:11px; height:11px; }
+.data-report-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; }
+.data-report-heading > div:first-child > div:last-child { min-width:0; }
+.data-year-control { display:flex; align-items:center; gap:5px; flex-shrink:0; }
+.data-year-control label { font-size:9px; }
+.data-year-select { width:68px; }
+.data-year-select .custom-select-trigger { height:28px; min-height:28px; padding-inline:7px; font-size:9px; }
+.data-report-action { min-height:39px; padding:6px 8px; }
+.data-report-action > div > div:first-child { font-size:10px; line-height:1.15; }
+.data-report-action > div > div:not(:first-child) { margin-top:1px; font-size:8px; line-height:1.15; }
+.data-health-section > button { min-height:34px; }
+.data-health-section > button > div:first-child { gap:7px; }
+.data-health-section > button > div:first-child > div:first-child { width:23px; height:23px; border-radius:6px; }
+.data-health-section > button p { margin-top:1px; }
+.data-health-section > button > div:last-child { gap:5px; }
+.data-health-section > button > div:last-child span { padding:2px 6px; border-radius:6px; font-size:8.5px; }
+.data-reset-action { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px; padding:7px 8px; }
+.data-reset-action > div:first-child > div { font-size:10px; }
+.data-reset-action button { min-height:28px; padding:4px 8px; border-radius:6px; font-size:9px; }
+.data-reset-action button svg { width:12px; height:12px; }
+
+@media(max-width:639px) {
+  .analytics-view { gap:5px; }
+  .analytics-toolbar { padding-bottom:4px; }
+  .analytics-toolbar-row { gap:5px; }
+  .analytics-toolbar .app-page-title { font-size:12px; letter-spacing:-.025em; }
+  .analytics-date-filters { gap:4px; }
+  .analytics-year-select { width:66px; }
+  .analytics-month-select { width:94px; }
+  .analytics-date-filters .custom-select-trigger { height:27px; min-height:27px; padding-inline:6px; font-size:8.5px; }
+  .analytics-scope-copy { font-size:8px; }
+  .analytics-summary-stack { gap:6px; }
+  .analytics-view .report-section { padding:4px 0; }
+  .analytics-view .report-section h3 { font-size:9.5px; }
+  .analytics-summary-header h3 svg { width:11px; height:11px; }
+  .analytics-summary-header > span { display:none; }
+  .analytics-view .report-metrics { margin-top:3px; }
+  .analytics-view .report-metrics > div { padding:4px 4px; }
+  .analytics-view .report-metrics p:first-child { font-size:7px; }
+  .analytics-view .report-metrics p:last-child { font-size:9px; }
+  .sales-tracking-heading { padding:4px 5px; }
+  .sales-tracking-copy { display:none; }
+  .analytics-view th,.analytics-view td { padding:3px 5px; font-size:9px; }
+  .analytics-view thead th { font-size:8px; }
+  .analytics-view tfoot td { padding-block:4px; }
+
+  .data-view { gap:5px; }
+  .data-heading-row { gap:6px; }
+  .data-heading-row > div:first-child { gap:6px; }
+  .data-heading-row > div:first-child > div:first-child { width:26px; height:26px; }
+  .data-heading .app-page-title { font-size:14px; }
+  .data-heading .app-page-copy { font-size:8px; }
+  .data-database-summary { gap:3px; font-size:7.5px; }
+  .data-database-summary svg { display:none; }
+  .data-view .data-section { padding:7px; }
+  .data-view .data-section h3 { font-size:10px; }
+  .data-view .data-section p { font-size:8px; }
+  .data-section-heading { margin-bottom:4px; padding-bottom:4px; }
+  .data-backup-section > div:first-child > p { margin-bottom:5px; }
+  .data-action { min-height:39px; padding-block:6px; }
+  .data-report-action { min-height:35px; padding-block:5px; }
+  .data-health-section > button { min-height:31px; }
+  .data-reset-action { padding:6px; }
+}
