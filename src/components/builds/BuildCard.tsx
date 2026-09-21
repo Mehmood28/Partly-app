@@ -272,12 +272,13 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 </span>
                 <ChevronUp />
               </button>
-              <div className="build-finances">
+              <div className={`build-finances ${isSold ? 'build-finances-sold' : ''}`}>
                 <div><span>Cost</span><strong>{formatCurrency(partsCost)}</strong></div>
                 <div><span>{isSold ? 'Sold' : 'Target'}</span><strong>{displayedPrice !== undefined ? formatCurrency(displayedPrice) : '—'}</strong></div>
                 <div><span>Profit</span><strong className={getProfitTextColor(profit)}>{displayedPrice !== undefined ? formatSignedCurrency(profit) : '—'}</strong></div>
+                {isSold && <div><span>Margin</span><strong>{profitMarginPercent.toFixed(1)}%</strong></div>}
               </div>
-              <div className="build-date"><Calendar /><span>Built {formattedBuiltDate}</span>{isSold && <span>· {profitMarginPercent.toFixed(1)}% margin</span>}</div>
+              {!isSold && <div className="build-date"><Calendar /><span>Built {formattedBuiltDate}</span></div>}
               <div className="build-action-bar">
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(build); }}
@@ -686,7 +687,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                             },
                           });
                         }}
-                        className="bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#83E5DF] hover:bg-[#B9EF68]/25 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl text-xs font-medium"
+                        className="mark-available-action flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl text-xs font-medium"
                         title="Mark build as Available"
                       >
                         <Tag className="w-3.5 h-3.5" /> Mark Available

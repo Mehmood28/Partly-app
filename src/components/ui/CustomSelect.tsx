@@ -79,7 +79,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                     : 'text-zinc-300 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
-                <span className="truncate pr-2 min-w-0 flex-1">{opt.label}</span>
+                <span className="min-w-0 flex-1 whitespace-normal break-words pr-2">{opt.label}</span>
                 {isSelected && <Check className="w-3.5 h-3.5 text-[#B9EF68] shrink-0" />}
               </button>
             );
@@ -97,7 +97,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         aria-expanded={isOpen}
         aria-label={selectedOption ? selectedOption.label : placeholder}
         onClick={() => setIsOpen(!isOpen)}
-        className={`app-field flex h-12 min-h-[46px] w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-xs text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] sm:text-sm ${
+        className={`app-field custom-select-trigger flex h-10 min-h-10 w-full cursor-pointer items-center justify-between gap-1.5 px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
           isOpen
             ? 'border-[#B9EF68]/65 ring-1 ring-[#B9EF68]/20'
             : ''
@@ -117,7 +117,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       {isOpen && (
         <div
           role="listbox"
-          className={`absolute left-0 right-0 top-full z-50 mt-1.5 w-full min-w-full overflow-hidden rounded-xl border border-white/[0.12] bg-[#0b1113]/98 shadow-2xl shadow-black/80 backdrop-blur-xl ${dropdownClassName}`}
+          className={`absolute left-0 right-0 top-full z-50 mt-1.5 w-full min-w-full overflow-hidden rounded-lg border border-white/[0.12] bg-[#0b1113]/98 shadow-2xl shadow-black/80 backdrop-blur-xl ${dropdownClassName}`}
         >
           <div className="max-h-60 overflow-y-auto hide-scrollbar">
             {renderOptions()}

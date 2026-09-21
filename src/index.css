@@ -325,6 +325,7 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .app-button-outline { border-color:var(--app-lime); color:var(--app-lime); background:transparent; }
 .app-button-danger { color:#f18885; border-color:#e77572; background:rgba(229,101,101,.045); }
 .app-field { border-radius:7px; min-height:44px; font-size:14px; background:#171d20; }
+.custom-select-trigger { height:38px !important; min-height:38px !important; font-size:11px; }
 .app-chip { min-height:36px; font-size:13px; color:#bbc5ce; border-radius:8px; }
 .app-chip-active { color:var(--app-lime); border-color:var(--app-lime); background:rgba(185,239,104,.045); box-shadow:none; }
 .app-ledger { background:transparent; border:0; border-radius:0; }
@@ -478,6 +479,9 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .build-finances > div:first-child { padding-left:0; border:0; }
 .build-finances span { display:block; font-size:13px; color:#adbac6; margin-bottom:5px; }
 .build-finances strong { display:block; overflow:hidden; font-size:clamp(17px,2vw,23px); text-overflow:ellipsis; white-space:nowrap; }
+.build-finances-sold { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 0; }
+.build-finances-sold > div:nth-child(odd) { padding-left:0; border-left:0; }
+.build-finances-sold > div:nth-child(even) { border-left:1px solid var(--app-line); }
 .build-date { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:13px; color:#a9ccd5; margin:13px 0; }
 .build-date svg { width:17px; height:17px; }
 .build-action-bar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
@@ -485,6 +489,8 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .build-action-bar button:last-child:nth-child(odd) { grid-column:1/-1; }
 .build-expanded { display:grid; gap:7px; }
 .build-workflow-actions button { min-width:0; justify-content:center; white-space:normal; text-align:center; }
+.mark-available-action { border:1px solid rgba(185,239,104,.3); background:rgba(185,239,104,.06); color:#b9ef68; }
+.mark-available-action:hover { background:rgba(185,239,104,.11); }
 .parts-heading { display:flex; justify-content:space-between; gap:8px; padding:9px 0; border-bottom:1px solid var(--app-line); font-size:15px; font-weight:600; }
 .parts-heading > span:first-child { display:inline-flex; align-items:center; gap:8px; }
 .parts-heading > span:first-child svg { width:18px; height:18px; color:#83e5df; }
@@ -1129,7 +1135,7 @@ button[class*="bg-emerald-600"]:hover,
 [data-bottom-sheet-modal] .modal-workspace { height:min(760px,calc(100dvh - 6rem)); max-height:calc(100dvh - 6rem); overflow:hidden; }
 .allocate-modal-content,.swap-modal-content { display:flex; height:100%; min-height:0; flex-direction:column; gap:10px; }
 .modal-results-list { min-height:0; max-height:none !important; flex:1 1 auto; overscroll-behavior:contain; }
-.swap-filter-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,220px); gap:7px; }
+.swap-filter-row { display:grid; grid-template-columns:minmax(0,1fr) 220px; gap:7px; }
 .swap-filter-row .app-field,.swap-sort-select { height:34px; min-height:34px !important; font-size:10px; }
 .sell-build-form { display:grid; gap:10px; }
 .sell-build-form-body { display:grid; gap:9px; min-height:0; padding:1px 2px 0 0; overscroll-behavior:contain; }
@@ -1168,6 +1174,9 @@ button[class*="bg-emerald-600"]:hover,
 .allocate-batch-actions { display:flex; align-items:center; gap:5px; }
 .allocate-batch-actions .app-field { min-height:30px !important; height:30px !important; }
 .dismantle-modal-body { overscroll-behavior:contain; }
+.dismantle-modal-known { height:auto !important; max-height:calc(100dvh - 6rem) !important; }
+.dismantle-modal-known > div { height:auto; max-height:inherit; }
+.dismantle-modal-known .dismantle-modal-body { flex:0 1 auto; }
 .dismantle-known-parts { display:grid; gap:8px; }
 .dismantle-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-block:1px solid var(--app-line); }
 .dismantle-summary > span { display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:7px 10px; }
@@ -1202,7 +1211,7 @@ button[class*="bg-emerald-600"]:hover,
 .buy-pc-modal .manual-parts-heading button { min-height:26px !important; padding:2px 4px; }
 .buy-pc-modal .manual-part-row { display:grid; gap:6px; padding:7px; border-radius:7px; box-shadow:none; }
 .buy-pc-modal .manual-part-identity { gap:6px; }
-.buy-pc-modal .manual-part-category { width:86px; }
+.buy-pc-modal .manual-part-category { width:102px; }
 .buy-pc-modal .manual-part-identity input,.buy-pc-modal .manual-part-category button { min-height:30px !important; height:30px !important; border-radius:6px; font-size:10px; }
 .buy-pc-modal .manual-part-costs { gap:5px; padding-top:5px; }
 .buy-pc-modal .manual-part-costs > div { gap:3px; }
@@ -1263,14 +1272,14 @@ button[class*="bg-emerald-600"]:hover,
   .builds-primary-actions .app-button { min-height:31px; padding-inline:7px; font-size:9.5px; }
   .builds-controls { gap:6px; padding:6px; }
   .builds-controls .app-segmented > button { min-height:29px; font-size:8.5px; }
-  .build-controls-row[data-has-sort='true'] { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); }
+  .build-controls-row[data-has-sort='true'] { display:grid; grid-template-columns:160px minmax(0,1fr); }
   .build-sort-control { width:100%; min-width:0; max-width:none; }
   .builds-controls .builds-sort-select,
   .builds-controls .builds-search { height:31px; min-height:31px !important; font-size:9px; }
   .sold-build-contact-lines,.sold-build-timeline { gap:4px; padding:6px 7px; font-size:9px; }
   .sold-build-dates { gap:5px; }
   [data-bottom-sheet-modal] .modal-workspace { height:calc(100dvh - 5.75rem); max-height:calc(100dvh - 5.75rem); }
-  .swap-filter-row { grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); }
+  .swap-filter-row { grid-template-columns:minmax(0,1fr) 190px; }
   .swap-filter-row .app-field,.swap-sort-select { height:31px; min-height:31px !important; font-size:9px; }
   .allocated-part-menu { right:0; width:190px; }
   .sell-part-header > div:first-child > div:first-child { width:29px; height:29px; }
@@ -1288,7 +1297,7 @@ button[class*="bg-emerald-600"]:hover,
   .selected-part-row { min-height:44px; padding-block:5px; }
   .selected-part-identity { grid-template-columns:38px minmax(0,1fr); gap:3px; }
   .selected-part-meta { margin-left:41px; }
-  .inventory-filter-bar.is-compact .inventory-filter-controls { grid-template-columns:minmax(0,1fr) 138px; gap:6px; }
+  .inventory-filter-bar.is-compact .inventory-filter-controls { grid-template-columns:minmax(0,1fr) 190px; gap:6px; }
   .inventory-filter-bar.is-compact .inventory-filter-controls .app-field,
   .inventory-filter-bar.is-compact .inventory-sort-control button { min-height:31px !important; height:31px; font-size:9px; }
   .allocate-batch-row { min-height:42px; padding-block:5px; }
