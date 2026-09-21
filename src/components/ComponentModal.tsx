@@ -326,7 +326,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                           </span>
                         )}
                       </div>
-                      <div className="text-zinc-400 font-mono text-[11px] mt-0.5">Qty: {availableQuantity} available &middot; ${(ph.unitPrice || 0).toFixed(2)}/ea</div>
+                      <div className="text-zinc-400 font-mono text-[11px] mt-0.5">Qty: {availableQuantity} available &middot; ${(ph.unitPrice || 0).toFixed(2)}{availableQuantity > 1 ? '/ea' : ''}</div>
                     </div>
                     <div className="flex gap-1">
                       <button type="button" onClick={() => handleEditPurchase(ph)} className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors" title="Edit purchase">
@@ -504,7 +504,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
 
       {/* Delete Purchase Entry Confirm Modal */}
       <ConfirmModal
-        isOpen={!!deletePurchaseId}
+        isOpen={!!deletePurchaseId && isOpen}
         title="Delete Purchase Record?"
         message="Are you sure you want to permanently delete this purchase entry batch? This action cannot be undone."
         confirmText="Delete Entry"

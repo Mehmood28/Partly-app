@@ -12,6 +12,7 @@ import { CustomSelect } from '../ui/CustomSelect';
 interface SwapPartModalProps {
   build: PCBuild;
   currentPart: PCBuildPart;
+  isOpen?: boolean;
   onClose: () => void;
 }
 
@@ -47,7 +48,7 @@ const determineSubCategory = (comp: InventoryComponent, category: string): strin
   return null;
 };
 
-export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart, onClose }) => {
+export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart, isOpen = true, onClose }) => {
   const { state, swapPartInBuild } = useInventory();
   const { hideSupplierNames } = usePrivacy();
   const { showToast } = useToast();
@@ -153,7 +154,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal modal-workspace max-w-xl">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="build-modal stock-modal modal-workspace max-w-xl">
       <div className="swap-modal-content w-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 shrink-0">
@@ -258,7 +259,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                       {subCategory && <span>·</span>}
                       <span>{totalAvailable} in stock</span>
                       <span>·</span>
-                      <span>Avg. {formatCurrency(avgPrice)}/ea</span>
+                      <span>Avg. {formatCurrency(avgPrice)}{totalAvailable > 1 ? '/ea' : ''}</span>
                     </div>
                   </div>
                   <div className="shrink-0 self-center">
@@ -272,7 +273,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                     {validEntries.map(entry => (
                       <div key={entry.id} className="swap-batch-row">
                         <div className="swap-batch-details">
-                          <strong>{entry.availableQty} available · {formatCurrency(entry.unitPrice)}/ea</strong>
+                          <strong>{entry.availableQty} available · {formatCurrency(entry.unitPrice)}{entry.availableQty > 1 ? '/ea' : ''}</strong>
                           <span>
                             {entry.condition} · {entry.date}
                             {!hideSupplierNames && entry.platform ? ` · ${entry.platform}` : ''}
@@ -318,7 +319,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
 
       {pendingSwap && (
         <ConfirmModal
-          isOpen={!!pendingSwap}
+          isOpen={!!pendingSwap && isOpen}
           title="Swap Component in Build?"
           message={`Swap out "${currentPart.componentName}" and assign "${pendingSwap.componentName}" (${pendingSwap.condition}, purchased on ${pendingSwap.date} @ ${formatCurrency(pendingSwap.unitPrice)}) in "${build.name}"? The current part will return to loose stock.${build.status === 'Sold' ? ' The recorded sold-build cost and profit will be updated.' : ''}`}
           confirmText="Swap Part"

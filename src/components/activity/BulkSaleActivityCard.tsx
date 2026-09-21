@@ -131,7 +131,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
                   <div key={tx.id} className="bulk-sale-line">
                     <div className="bulk-sale-line-part">
                       <strong>{partName}</strong>
-                      <span>@ {formatCurrency(unitCost)}/ea · Cost {formatCurrency(lineCost)}</span>
+                      <span>@ {formatCurrency(unitCost)}{qty > 1 ? '/ea' : ''} · Cost {formatCurrency(lineCost)}</span>
                     </div>
                     <span>{qty}</span>
                     <strong className="bulk-sale-line-revenue">{formatCurrency(lineRev)}</strong>

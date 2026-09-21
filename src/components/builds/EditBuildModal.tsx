@@ -9,10 +9,11 @@ import { BottomSheetModal } from '../ui/BottomSheetModal';
 
 interface EditBuildModalProps {
   build: PCBuild | null;
+  isOpen?: boolean;
   onClose: () => void;
 }
 
-export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }) => {
+export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = true, onClose }) => {
   const { updateBuild } = useInventory();
   const { showToast } = useToast();
   
@@ -88,7 +89,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal max-w-md">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="build-modal stock-modal max-w-md">
       <form 
         className="space-y-4 w-full"
         onSubmit={handleSaveEdit}
@@ -118,32 +119,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-zinc-300 font-medium mb-1 text-xs">Status</label>
-              <div className="w-full h-11 bg-[#101719]/60 border border-white/[0.08] rounded-xl px-3 flex items-center">
-                <span
-                  className={`text-[11px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border leading-none ${
-                    build.status === 'Sold'
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
-                      : build.status === 'Listed for Sale'
-                      ? 'bg-[#B9EF68]/15 text-[#83E5DF] border-[#B9EF68]/30'
-                      : build.status === 'Trade-In Processing'
-                      ? 'bg-cyan-500/10 text-cyan-300 border-cyan-400/30'
-                      : 'bg-[#83E5DF]/10 text-[#9FF8F4] border-[#83E5DF]/30'
-                  }`}
-                >
-                  {build.status === 'Listed for Sale'
-                    ? 'Available'
-                    : build.status === 'In Progress'
-                    ? 'Pending Sale'
-                    : build.status === 'Trade-In Processing'
-                    ? 'Trade-In Processing'
-                    : build.status}
-                </span>
-              </div>
-            </div>
-            <div>
+          <div>
               <label className="block text-zinc-300 font-medium mb-1 text-xs">Built Date</label>
               <input
                 type="date"
@@ -152,7 +128,6 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, onClose }
                 onChange={(e) => setEditBuiltDate(e.target.value)}
                 className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors [color-scheme:dark]"
               />
-            </div>
           </div>
 
           <div>

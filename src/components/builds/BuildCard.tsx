@@ -25,6 +25,7 @@ import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils
 import { renderCategoryIcon } from '../activity/activityHelpers';
 
 interface BuildCardProps {
+  isActive?: boolean;
   isExpanded?: boolean;
   onToggle?: () => void;
   build: PCBuild;
@@ -43,6 +44,7 @@ interface BuildCardProps {
 }
 
 export const BuildCard: React.FC<BuildCardProps> = React.memo(({
+  isActive = true,
   isExpanded: propIsExpanded,
   onToggle,
   build,
@@ -737,6 +739,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
       )}
       {swapPartData && (
         <SwapPartModal
+          isOpen={isActive}
           build={build}
           currentPart={swapPartData}
           onClose={() => setSwapPartData(null)}
@@ -744,6 +747,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
       )}
       {quantityPartData && (
         <EditBuildPartQuantityModal
+          isOpen={isActive}
           build={build}
           part={quantityPartData}
           onClose={() => setQuantityPartData(null)}
@@ -753,7 +757,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
       {/* Confirmation Modal */}
       {confirmModalConfig && (
         <ConfirmModal
-          isOpen={confirmModalConfig.isOpen}
+          isOpen={confirmModalConfig.isOpen && isActive}
           title={confirmModalConfig.title}
           message={confirmModalConfig.message}
           confirmText={confirmModalConfig.confirmText}
@@ -766,7 +770,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
       {/* Copy Ad Warranty Modal */}
       {isCopyAdModalOpen && (
         <BottomSheetModal
-          isOpen={isCopyAdModalOpen}
+          isOpen={isCopyAdModalOpen && isActive}
           onClose={() => setIsCopyAdModalOpen(false)}
           className="build-modal stock-modal max-w-md"
         >

@@ -16,6 +16,7 @@ import { getAcquiredPCBreakdown, getAcquiredPCLabel, isAcquiredPC } from '../../
 
 interface DismantleRigModalProps {
   build: PCBuild | null;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: (
     buildId: string,
@@ -23,7 +24,7 @@ interface DismantleRigModalProps {
   ) => void;
 }
 
-export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onClose, onConfirm }) => {
+export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, isOpen = true, onClose, onConfirm }) => {
   const [manualParts, setManualParts] = useState<ExtractedPartInput[]>(() => createInitialParts());
 
   useEffect(() => {
@@ -159,12 +160,12 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
 
   return (
     <BottomSheetModal
-      isOpen={!!build}
+      isOpen={!!build && isOpen}
       onClose={onClose}
-      className="build-modal stock-modal modal-workspace w-full max-w-2xl !p-0 !overflow-hidden"
+      className="build-modal stock-modal modal-workspace dismantle-modal w-full max-w-2xl !p-0 !overflow-hidden"
     >
-      <div className="flex flex-col h-full w-full bg-[#070A0B] text-zinc-100 select-none">
-        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-white/[0.08] shrink-0 bg-[#0B1113]/95 backdrop-blur-md z-30">
+      <div className="flex h-full w-full select-none flex-col bg-[#0B1113] text-zinc-100">
+        <div className="dismantle-modal-header shrink-0 border-b border-white/[0.08] bg-[#0B1113]/95 px-3 py-2.5 backdrop-blur-md z-30 sm:px-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
@@ -211,7 +212,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-3 sm:px-5 sm:py-3.5 space-y-3">
+        <div className="dismantle-modal-body flex-1 overflow-y-auto px-3 py-2.5 sm:px-4">
           {isModeA ? (
             <ModeAKnownParts build={build} />
           ) : (
@@ -228,7 +229,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, onC
           )}
         </div>
 
-        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-t border-white/[0.08] shrink-0 bg-[#0B1113]/95 backdrop-blur-md flex flex-col gap-3 z-30">
+        <div className="dismantle-modal-footer flex shrink-0 flex-col gap-2 border-t border-white/[0.08] bg-[#0B1113]/95 px-3 py-2 backdrop-blur-md z-30 sm:px-4">
           {!isModeA && isAcquired && !partOutValidation.valid && activeParts.length > 0 && (
             <div className="flex items-start gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 p-2.5 rounded-lg text-xs">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />

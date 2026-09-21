@@ -1,57 +1,65 @@
 import React from 'react';
 import { PCBuild } from '../../../types';
-import { formatCurrency, calculateBuildPartsCost } from '../../../utils/helpers';
+import { formatCurrency, calculateBuildPartsCost, formatReadableDate, getCategoryPresentation, getConditionDotColor } from '../../../utils/helpers';
+import { useInventory } from '../../../context/InventoryContext';
+import { usePrivacy } from '../../../context/PrivacyContext';
+import { normalizePlatform } from '../../../utils/platformDisplay';
 
 interface ModeAKnownPartsProps {
   build: PCBuild;
 }
 
 export const ModeAKnownParts: React.FC<ModeAKnownPartsProps> = ({ build }) => {
+  const { state } = useInventory();
+  const { hideSupplierNames } = usePrivacy();
+
   return (
-    <div className="space-y-3">
-      <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-zinc-400 font-medium font-sans">Build Inventory Parts:</span>
-          <span className="font-mono text-zinc-200 font-semibold">{build.parts.length} Components</span>
-        </div>
-        <div className="flex items-center justify-between text-xs pt-1.5 border-t border-white/[0.06]">
-          <span className="text-zinc-400 font-medium font-sans">Total Assembled Value:</span>
-          <span className="font-mono text-[#83E5DF] font-bold text-sm">
-            {formatCurrency(calculateBuildPartsCost(build))}
-          </span>
-        </div>
+    <div className="dismantle-known-parts">
+      <div className="dismantle-summary">
+        <span><em>Parts</em><strong>{build.parts.length}</strong></span>
+        <span><em>Total Cost</em><strong>{formatCurrency(calculateBuildPartsCost(build))}</strong></span>
       </div>
 
-      <div className="space-y-1.5">
-        <div className="text-xs font-semibold text-zinc-300 px-1 font-sans">Parts to extract & return to stock:</div>
-        <div className="space-y-1.5 rounded-xl border border-white/[0.08] p-2 bg-[#0B1113]">
-          {build.parts.map((p, idx) => (
-            <div
-              key={`${p.componentId}-${idx}`}
-              className="flex items-center justify-between p-2.5 rounded-lg bg-[#101719] border border-white/[0.06] text-xs"
-            >
-              <div className="min-w-0 pr-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/[0.04] text-zinc-300 border border-white/[0.08]">
-                    {p.category}
+      <div className="dismantle-ledger">
+        <div className="dismantle-ledger-title">Parts returning to their original batches</div>
+        {build.parts.map((part, idx) => {
+          const component = state.components.find((candidate) => candidate.id === part.componentId);
+          const entry = component?.purchaseHistory.find((candidate) => candidate.id === part.purchaseEntryId);
+          const category = getCategoryPresentation(part.category);
+          const details = [
+            ...(component?.tags || []).filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0),
+            typeof component?.specifications === 'string' && component.specifications.trim()
+              ? component.specifications.trim()
+              : undefined,
+            entry?.condition,
+            !hideSupplierNames && entry?.platform ? normalizePlatform(String(entry.platform)) : undefined,
+            entry?.paymentMethod,
+            entry?.date ? formatReadableDate(entry.date) || entry.date : undefined,
+          ].filter(Boolean) as string[];
+
+          return (
+            <div key={`${part.componentId}-${part.purchaseEntryId || idx}`} className="dismantle-part-row">
+              <span className={`dismantle-part-category ${category.textClass}`}>{category.label}</span>
+              <div className="dismantle-part-main">
+                <strong>{part.componentName}</strong>
+                {details.length > 0 && (
+                  <span>
+                    {entry?.condition && <i className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />}
+                    {details.join(' · ')}
                   </span>
-                  <span className="font-medium text-zinc-200 truncate">{p.componentName}</span>
-                </div>
-                <div className="text-[11px] text-zinc-400 mt-0.5 font-mono">
-                  Qty: {p.quantity} × {formatCurrency(p.unitCostAtAssignment)}
-                </div>
+                )}
               </div>
-              <div className="font-mono font-semibold text-zinc-200 shrink-0">
-                {formatCurrency(p.quantity * p.unitCostAtAssignment)}
+              <div className="dismantle-part-value">
+                <strong>{formatCurrency(part.quantity * part.unitCostAtAssignment)}</strong>
+                <span>{part.quantity > 1 ? `${part.quantity} × ${formatCurrency(part.unitCostAtAssignment)}` : formatCurrency(part.unitCostAtAssignment)}</span>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      <p className="text-xs text-zinc-300 bg-[#B9EF68]/10 border border-[#B9EF68]/20 rounded-xl p-3 leading-relaxed">
-        Dismantling this rig will return all {build.parts.length} allocated parts back to their original
-        inventory batches without altering their condition or cost basis.
+      <p className="dismantle-note">
+        All {build.parts.length} allocated parts return to their exact original batches with condition and cost basis unchanged.
       </p>
     </div>
   );

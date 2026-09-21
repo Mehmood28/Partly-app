@@ -9,12 +9,14 @@ import { BottomSheetModal } from '../ui/BottomSheetModal';
 interface EditBuildPartQuantityModalProps {
   build: PCBuild;
   part: PCBuildPart;
+  isOpen?: boolean;
   onClose: () => void;
 }
 
 export const EditBuildPartQuantityModal: React.FC<EditBuildPartQuantityModalProps> = ({
   build,
   part,
+  isOpen = true,
   onClose,
 }) => {
   const { state, updateBuildPartQuantity } = useInventory();
@@ -81,7 +83,7 @@ export const EditBuildPartQuantityModal: React.FC<EditBuildPartQuantityModalProp
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal max-w-sm">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="build-modal stock-modal max-w-sm">
       <form className="space-y-4 w-full" onSubmit={handleSubmit}>
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">

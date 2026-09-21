@@ -4,7 +4,7 @@ import {
   calculateUnassignedQuantityStrict,
   getAllBatchesWithRemaining,
   filterAndSortComponents,
-  getConditionColor,
+  formatReadableDate,
   formatCurrency,
   SortOption,
 } from '../../utils/helpers';
@@ -15,13 +15,15 @@ import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { InventoryFilterBar } from '../InventoryFilterBar';
 import { ConfirmModal } from '../ConfirmModal';
 import { useToast } from '../../context/ToastContext';
+import { normalizePlatform } from '../../utils/platformDisplay';
 
 interface AllocatePartModalProps {
   build: PCBuild | null;
+  isOpen?: boolean;
   onClose: () => void;
 }
 
-export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onClose }) => {
+export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isOpen = true, onClose }) => {
   const { state, allocatePartToBuild } = useInventory();
   const { showToast } = useToast();
   const { hideSupplierNames } = usePrivacy();
@@ -70,7 +72,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
   if (!build) return null;
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal modal-workspace max-w-xl">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="build-modal stock-modal modal-workspace max-w-xl">
       <div className="allocate-modal-content w-full">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
@@ -94,21 +96,24 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
           )}
         </p>
 
-        <InventoryFilterBar
-          components={state.components}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          activeCategory={activeCategoryTab}
-          onCategoryChange={(c) => { setActiveCategoryTab(c as ComponentCategory | 'ALL'); setActiveSubCategory(''); }}
-          onlyAvailable={true}
-          activeSubCategory={activeSubCategory}
-          onSubCategoryChange={setActiveSubCategory}
-          builds={state.builds}
-          sortBy={sortBy}
-          onSortByChange={setSortBy}
-        />
+        <div className="allocate-filter-bar">
+          <InventoryFilterBar
+            components={state.components}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            activeCategory={activeCategoryTab}
+            onCategoryChange={(c) => { setActiveCategoryTab(c as ComponentCategory | 'ALL'); setActiveSubCategory(''); }}
+            onlyAvailable={true}
+            activeSubCategory={activeSubCategory}
+            onSubCategoryChange={setActiveSubCategory}
+            builds={state.builds}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            compactControls
+          />
+        </div>
 
-        <div className="modal-results-list space-y-2 overflow-y-auto pr-1">
+        <div className="allocate-results modal-results-list overflow-y-auto pr-1">
           {filteredComponents.length === 0 ? (
             <div className="text-center py-8 px-4 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/[0.08] rounded-xl bg-[#101719]/50 mt-2">
               <Box className="w-7 h-7 mb-2 text-zinc-500" />
@@ -127,65 +132,46 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
             const isExpanded = expandedPartId === comp.id;
 
             return (
-              <div 
-                key={comp.id} 
-                className="bg-[#101719] border border-white/[0.08] hover:border-[#B9EF68]/40 rounded-xl mb-2 transition-all overflow-hidden"
-              >
+              <div key={comp.id} className={`swap-component-row ${isExpanded ? 'is-expanded' : ''}`}>
                 <div 
                   onClick={() => setExpandedPartId(isExpanded ? null : comp.id)}
-                  className="p-3 cursor-pointer flex items-start gap-2.5 group"
+                  className="swap-component-header cursor-pointer group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#B9EF68]/15 border border-[#B9EF68]/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="swap-category-icon">
                     {renderCategoryIcon(comp.category)}
                   </div>
-                  <div className="flex flex-col gap-1 min-w-0 flex-1">
-                    <h4 className="text-xs sm:text-sm font-bold text-zinc-100 break-words leading-snug transition-colors font-sans">{comp.name}</h4>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {comp.tags && comp.tags[0] && (
-                        <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
-                          {comp.tags[0]}
-                        </span>
-                      )}
-                      <span className="bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#83E5DF] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
-                        {unassignedQty} in stock
-                      </span>
-                      <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
-                        Avg: {formatCurrency(avgPrice)}/ea
-                      </span>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="break-words font-sans text-xs font-semibold leading-snug text-zinc-100 sm:text-sm">{comp.name}</h4>
+                    <div className="swap-component-meta">
+                      {comp.tags?.filter(Boolean).map((tag) => <span key={tag}>{tag}</span>)}
+                      {comp.specifications && <span>{comp.specifications}</span>}
+                      <span>{unassignedQty} in stock</span>
+                      <span>·</span>
+                      <span>Avg. {formatCurrency(avgPrice)}{totalAvailable > 1 ? '/ea' : ''}</span>
                     </div>
                   </div>
-                  <div className="shrink-0 ml-1.5 self-center">
+                  <div className="shrink-0 self-center">
                     {isExpanded ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
                   </div>
                 </div>
                 
                 {isExpanded && (
-                  <div className="border-t border-white/[0.08] bg-[#0B1113] p-3 space-y-2">
+                  <div className="swap-batches">
                     {availableBatches.map(({ entry, availableQuantity, unitCost }) => {
                       const quantityKey = `${comp.id}:${entry.id}`;
                       const quantityValue = allocationQuantities[quantityKey] ?? '1';
                       return (
-                        <div
-                          key={entry.id}
-                          className="bg-[#101719] border border-white/[0.08] hover:border-[#B9EF68]/40 rounded-xl p-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all"
-                        >
-                          <div className="flex items-center gap-2 flex-wrap flex-1">
-                            <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px] font-mono">
-                              {entry.date}
-                            </span>
-                            <span className={`shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-medium leading-none inline-flex items-center justify-center ${getConditionColor(entry.condition)}`}>
+                        <div key={entry.id} className="allocate-batch-row">
+                          <div className="swap-batch-details">
+                            <strong>{availableQuantity} available · {formatCurrency(unitCost)}{availableQuantity > 1 ? '/ea' : ''}</strong>
+                            <span>
                               {entry.condition}
+                              {entry.paymentMethod ? ` · ${entry.paymentMethod}` : ''}
+                              {!hideSupplierNames && entry.platform ? ` · ${normalizePlatform(String(entry.platform))}` : ''}
+                              {entry.date ? ` · ${formatReadableDate(entry.date) || entry.date}` : ''}
                             </span>
-                            <span className="bg-white/[0.06] text-zinc-200 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center">
-                              {availableQuantity} available @ {formatCurrency(unitCost)}
-                            </span>
-                            {!hideSupplierNames && entry.platform && (
-                              <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px]">
-                                {entry.platform}
-                              </span>
-                            )}
                           </div>
-                          <div className="flex items-center justify-end gap-1.5 shrink-0 self-end sm:self-auto w-full sm:w-auto">
+                          <div className="allocate-batch-actions">
                             <input
                               type="number"
                               inputMode="numeric"
@@ -201,7 +187,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                                 }));
                               }}
                               aria-label={`Quantity of ${comp.name} to assign`}
-                              className="w-16 h-8 bg-[#0B1113] border border-white/[0.1] rounded-lg px-2 text-center text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40"
+                              className="app-field h-8 w-14 px-1 text-center font-mono text-xs"
                             />
                             <button
                                 type="button"
@@ -230,7 +216,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
                                     quantity: requestedQuantity,
                                   });
                                 }}
-                                className="bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] shadow-sm shadow-[#B9EF68]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
+                                className="app-button app-button-primary shrink-0 px-3"
                               >
                                 Assign
                               </button>
@@ -248,7 +234,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
 
       {pendingAllocation && (
         <ConfirmModal
-          isOpen={!!pendingAllocation}
+          isOpen={!!pendingAllocation && isOpen}
           title="Assign Component to Build?"
           message={`Assign ${pendingAllocation.quantity}x "${pendingAllocation.componentName}" (${pendingAllocation.condition}, purchased on ${pendingAllocation.date} @ ${formatCurrency(pendingAllocation.unitCost)}) to "${build.name}"?${build.status === 'Sold' ? ' This will update the sold build cost and recorded profit.' : ''}`}
           confirmText="Assign Part"

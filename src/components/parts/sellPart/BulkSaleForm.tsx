@@ -369,7 +369,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                       <span>·</span>
                       <span>{item.availableQuantity} in stock</span>
                       <span>·</span>
-                      <span>{formatCurrency(item.unitCost)}/ea</span>
+                      <span>{formatCurrency(item.unitCost)}{item.availableQuantity > 1 ? '/ea' : ''}</span>
                       {item.entry.date && (
                         <>
                           <span>·</span>
@@ -444,7 +444,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-semibold text-zinc-100 font-sans">{item.component?.name || 'Unknown Component'}</div>
                     <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
-                      {item.component?.category} · {formatCurrency(item.unitCost)}/ea · {item.availableQty} available
+                      {item.component?.category} · {formatCurrency(item.unitCost)}{item.availableQty > 1 ? '/ea' : ''} · {item.availableQty} available
                     </div>
                   </div>
 

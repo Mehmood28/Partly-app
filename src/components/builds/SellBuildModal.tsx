@@ -21,11 +21,12 @@ export type BuildSaleData = SellBuildData;
 
 interface SellBuildModalProps {
   build: PCBuild | null;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: (buildId: string, saleData: SellBuildData) => void;
 }
 
-export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, onConfirm }) => {
+export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = true, onClose, onConfirm }) => {
   const { state } = useInventory();
   const { showToast } = useToast();
   const [salePrice, setSalePrice] = useState<string>('');
@@ -265,7 +266,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={handleClose} className="build-modal stock-modal sell-build-modal max-w-xl">
+    <BottomSheetModal isOpen={isOpen} onClose={handleClose} className="build-modal stock-modal sell-build-modal max-w-xl">
       <form 
         className="sell-build-form w-full"
         onSubmit={handleSubmit}

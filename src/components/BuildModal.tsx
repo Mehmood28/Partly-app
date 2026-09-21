@@ -33,6 +33,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
   const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'All' | 'ALL'>('ALL');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   const prevInitialDataRef = useRef(initialData);
   const hasAutoFilledRef = useRef<boolean>(!!initialData?.name);
@@ -82,6 +83,14 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
       setActiveSubCategory('');
     }
   }, [initialData]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const frame = requestAnimationFrame(() => {
+      if (bodyRef.current) bodyRef.current.scrollTop = 0;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen]);
 
   const handleCloseAndReset = () => {
     setName('');
@@ -240,7 +249,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCloseAndReset}
             aria-label="Close modal"
             className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
@@ -248,7 +257,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
           </button>
         </div>
 
-        <div className="build-editor-body min-h-0 flex-1 overflow-y-auto">
+        <div ref={bodyRef} className="build-editor-body min-h-0 flex-1 overflow-y-auto">
           <BuildBasicDetails
             name={name}
             onNameChange={handleNameChange}
@@ -288,14 +297,14 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
         </div>
 
         {/* Footer Actions */}
-        <div className="build-editor-footer flex shrink-0 flex-col gap-2 border-t border-white/[0.09] pt-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-xs text-zinc-400 font-sans">
-            Status: <span className="text-[#83E5DF] font-medium">{status === 'Listed for Sale' ? 'Available' : status === 'In Progress' ? 'Pending' : status}</span>
+        <div className="build-editor-footer flex shrink-0 flex-col border-t border-white/[0.09] pt-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="build-editor-status text-xs text-zinc-400 font-sans">
+            Status: <span className="font-semibold text-[#B9EF68]">{status === 'Listed for Sale' ? 'Available' : status === 'In Progress' ? 'Pending' : status}</span>
           </div>
           <div className="grid grid-cols-[auto_1fr] items-center gap-2 sm:flex">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleCloseAndReset}
               className="app-button px-4"
             >
               Cancel

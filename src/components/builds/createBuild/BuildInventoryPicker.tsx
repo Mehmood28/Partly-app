@@ -121,7 +121,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                               {comp.tags?.filter(Boolean).map((tag, idx) => <span key={idx}>{idx > 0 ? '· ' : ''}{tag}</span>)}
                               {comp.tags?.filter(Boolean).length ? <span>·</span> : null}
                               <span className="font-semibold text-[#83E5DF]">{totalUnassigned} in stock</span>
-                              <span>· Avg {formatCurrency(weightedAvgCost)}/ea</span>
+                              <span>· Avg {formatCurrency(weightedAvgCost)}{totalUnassigned > 1 ? '/ea' : ''}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">

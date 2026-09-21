@@ -284,13 +284,13 @@ function AppContent() {
       </main>
 
       <ComponentModal
-        isOpen={isComponentModalOpen}
+        isOpen={isComponentModalOpen && activeTab === 'inventory'}
         onClose={handleCloseComponentModal}
         onSave={handleSaveComponent}
         initialComponent={editingComponent}
       />
       <PurchaseEntryModal
-        isOpen={!!purchaseModalComponentId}
+        isOpen={!!purchaseModalComponentId && activeTab === 'inventory'}
         componentName={targetComponentForPurchase ? targetComponentForPurchase.name : ''}
         onClose={handleClosePurchaseModal}
         onSave={(entryData) => {
@@ -298,7 +298,7 @@ function AppContent() {
         }}
       />
       <SellPartModal
-        isOpen={isSellPartModalOpen}
+        isOpen={isSellPartModalOpen && activeTab === 'inventory'}
         onClose={handleCloseSellPartModal}
         preselectedComponent={sellPartPreselectedComp}
         preselectedEntryId={sellPartPreselectedEntryId}
@@ -308,18 +308,18 @@ function AppContent() {
         }}
       />
       <BulkStockEntryModal
-        isOpen={isBulkEntryModalOpen}
+        isOpen={isBulkEntryModalOpen && activeTab === 'inventory'}
         onClose={handleCloseBulkEntryModal}
         onSaveAll={handleSaveBulkItems}
       />
       <BuildModal
-        isOpen={isBuildModalOpen}
+        isOpen={isBuildModalOpen && activeTab === 'builds'}
         onClose={handleCloseBuildModal}
         initialData={initialBuildData}
         onSave={addBuild}
       />
       <BuyPCModal
-        isOpen={isBuyPCModalOpen}
+        isOpen={isBuyPCModalOpen && activeTab === 'builds'}
         onClose={() => setIsBuyPCModalOpen(false)}
         onConfirm={(purchase) => {
           const result = purchasePC(purchase);

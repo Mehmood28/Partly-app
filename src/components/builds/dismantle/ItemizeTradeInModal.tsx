@@ -14,6 +14,7 @@ import { getAcquiredPCBreakdown, getAcquiredPCLabel } from '../../../utils/acqui
 
 interface ItemizeTradeInModalProps {
   build: PCBuild | null;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: (
     buildId: string,
@@ -21,7 +22,7 @@ interface ItemizeTradeInModalProps {
   ) => void;
 }
 
-export const ItemizeTradeInModal: React.FC<ItemizeTradeInModalProps> = ({ build, onClose, onConfirm }) => {
+export const ItemizeTradeInModal: React.FC<ItemizeTradeInModalProps> = ({ build, isOpen = true, onClose, onConfirm }) => {
   const [manualParts, setManualParts] = useState<ExtractedPartInput[]>(() => createInitialParts());
 
   useEffect(() => {
@@ -138,7 +139,7 @@ export const ItemizeTradeInModal: React.FC<ItemizeTradeInModalProps> = ({ build,
 
   return (
     <BottomSheetModal
-      isOpen={!!build}
+      isOpen={!!build && isOpen}
       onClose={onClose}
       className="build-modal stock-modal modal-workspace w-full max-w-2xl !p-0 !overflow-hidden"
     >

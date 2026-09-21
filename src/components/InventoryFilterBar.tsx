@@ -19,6 +19,7 @@ interface InventoryFilterBarProps {
   onSubCategoryChange?: (sub: string) => void;
   showSearch?: boolean;
   showSort?: boolean;
+  compactControls?: boolean;
 }
 
 export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
@@ -35,6 +36,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
   onSubCategoryChange,
   showSearch = true,
   showSort = true,
+  compactControls = false,
 }) => {
   const isAvailable = (c: InventoryComponent) => !onlyAvailable || calculateUnassignedQuantityStrict(c, builds) > 0;
   
@@ -43,7 +45,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
     : [];
 
   return (
-    <div className="w-full space-y-3">
+    <div className={`inventory-filter-bar w-full space-y-3 ${compactControls ? 'is-compact' : ''}`}>
       <div className="category-filters">
         <button
           type="button"
@@ -108,7 +110,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       )}
 
       {/* Controls Row: Search & Sort */}
-      {(showSearch || (showSort && onSortByChange)) && <div className="flex w-full min-w-0 max-w-full flex-col gap-2.5 sm:flex-row">
+      {(showSearch || (showSort && onSortByChange)) && <div className="inventory-filter-controls flex w-full min-w-0 max-w-full flex-col gap-2.5 sm:flex-row">
         {showSearch && (
         <div className="relative flex-1 min-w-0 w-full max-w-full group">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
@@ -134,7 +136,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
         )}
         
         {showSort && onSortByChange && (
-          <div className="w-full sm:w-auto shrink-0 z-30 relative min-w-0 max-w-full">
+          <div className="inventory-sort-control w-full sm:w-auto shrink-0 z-30 relative min-w-0 max-w-full">
             <CustomSelect
               value={sortBy}
               onChange={(val) => onSortByChange(val as SortOption)}

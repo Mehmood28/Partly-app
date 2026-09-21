@@ -368,6 +368,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             <div key={rowBuilds.map(b => b.id).join('-') || rowIndex} className="grid grid-cols-1 gap-2.5">
               {rowBuilds.map((build) => (
                 <BuildCard
+                  isActive={isActive}
                   isExpanded={expandedBuildId === build.id}
                   onToggle={() => setExpandedBuildId(expandedBuildId === build.id ? null : build.id)}
                   key={build.id}
@@ -425,6 +426,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
                   <div className="grid grid-cols-1 gap-2.5">
                     {rowBuilds.map((build) => (
                       <BuildCard
+                        isActive={isActive}
                         isExpanded={expandedBuildId === build.id}
                         onToggle={() => setExpandedBuildId(expandedBuildId === build.id ? null : build.id)}
                         key={build.id}
@@ -447,10 +449,11 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         </div>
       )}
 
-      <EditBuildModal build={editingBuild} onClose={() => setEditingBuild(null)} />
-      <AllocatePartModal build={allocatingBuild} onClose={() => setAllocatingBuild(null)} />
+      <EditBuildModal build={editingBuild} isOpen={isActive !== false} onClose={() => setEditingBuild(null)} />
+      <AllocatePartModal build={allocatingBuild} isOpen={isActive !== false} onClose={() => setAllocatingBuild(null)} />
       <DismantleRigModal
         build={dismantlingBuild}
+        isOpen={isActive !== false}
         onClose={() => setDismantlingBuild(null)}
         onConfirm={(buildId, extractedParts) => {
           const isTradeIn = dismantlingBuild?.acquisitionSource === 'Trade-In';
@@ -473,6 +476,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       />
       <ItemizeTradeInModal
         build={itemizingBuild}
+        isOpen={isActive !== false}
         onClose={() => setItemizingBuild(null)}
         onConfirm={(buildId, breakdown) => {
           const acquisitionType = itemizingBuild?.acquisitionSource === 'Purchased' ? 'Purchased PC' : 'Trade-in PC';
@@ -487,6 +491,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       />
       <SellBuildModal 
         build={sellingBuild} 
+        isOpen={isActive !== false}
         onClose={() => setSellingBuild(null)} 
         onConfirm={(buildId, saleData) => {
           const res = sellBuild(buildId, saleData);
@@ -499,7 +504,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         }} 
       />
       <ConfirmModal
-        isOpen={!!deletingBuild}
+        isOpen={!!deletingBuild && isActive !== false}
         title="Delete Build Draft"
         message={`Are you sure you want to delete the draft build "${deletingBuild?.name}"?`}
         confirmText="Delete Draft"

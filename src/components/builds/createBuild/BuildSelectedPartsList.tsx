@@ -87,7 +87,7 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
 
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
                   <span className="whitespace-nowrap font-mono text-xs font-bold text-zinc-100">
-                    {formatCurrency(purchaseEntry ? purchaseEntry.unitPrice : part.unitCostAtAssignment)}/ea
+                    {formatCurrency(purchaseEntry ? purchaseEntry.unitPrice : part.unitCostAtAssignment)}{part.quantity > 1 ? '/ea' : ''}
                   </span>
                   <div className="flex items-center gap-1">
                     <div className="flex items-center gap-1 rounded-lg border border-white/[0.08] bg-[#0B1113] px-1.5 py-1 text-zinc-200">
