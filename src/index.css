@@ -624,9 +624,9 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .app-segmented > button { font-size:12px; min-height:42px; }
   .stock-card-header { padding:9px 11px; }
   .stock-card-header > div { position:relative; }
-  .stock-type { padding:0; font-size:10px; }
+  .stock-type { padding:2px 0 0; font-size:10px; }
   .stock-type::before { width:5px; height:5px; }
-  .stock-toggle { width:13px; height:13px; margin-top:0; }
+  .stock-toggle { width:13px; height:13px; margin-top:2px; }
   .stock-name { font-size:13px; line-height:1.25; }
   .stock-total { font-size:13px; }
   .stock-summary { margin-top:3px; font-size:11px; line-height:1.2; }
