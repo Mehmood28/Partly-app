@@ -1222,22 +1222,37 @@ button.app-button-primary:hover { filter:brightness(1.05); }
 .buy-pc-footer button { min-height:34px !important; padding-block:4px; }
 
 /* Sale dialogs use the same compact ledgers and field rhythm as Stock. */
-.sell-part-shell { display:flex; height:100%; min-height:0; flex-direction:column; }
-.sell-part-header { padding-block:8px !important; }
+.sell-part-modal { overflow-x:hidden !important; }
+.sell-part-shell { display:flex; width:100%; max-width:100%; height:100%; min-height:0; flex-direction:column; overflow:hidden; }
+.sell-part-header { padding:7px 12px !important; }
 .sell-part-header > div:first-child { gap:8px; }
-.sell-part-tabs { padding-top:7px !important; padding-bottom:7px !important; }
+.sell-part-tabs { padding:6px 12px !important; }
 .sell-part-header,.sell-part-tabs { flex:0 0 auto; }
-.sell-part-content,.single-sale-form { min-height:0; flex:1 1 auto; overflow-y:auto; padding-block:8px !important; }
-.single-sale-form,.single-sale-fields { display:grid; gap:7px !important; }
+.sell-part-content { min-height:0; flex:1 1 auto; overflow:auto; padding-block:8px !important; }
+.single-sale-form { display:grid; min-width:0; min-height:0; flex:1 1 auto; align-content:start; gap:5px !important; overflow:hidden; padding:7px 12px !important; }
+.single-sale-form.has-trade { overflow-y:auto; }
+.single-sale-fields { display:grid; min-width:0; align-content:start; gap:5px !important; }
 .single-sale-form > :not([hidden]) ~ :not([hidden]),
 .single-sale-fields > :not([hidden]) ~ :not([hidden]) { margin-top:0 !important; }
 .bulk-sale-form { gap:9px !important; }
-.single-sale-form > div label { margin-bottom:3px; }
-.single-sale-info { display:grid; gap:7px !important; margin-top:0 !important; padding:8px !important; }
+.single-sale-form > div label { margin-bottom:2px; }
+.single-sale-component-card { min-width:0; padding:7px 9px !important; border-radius:7px; }
+.single-sale-component-card > div:first-child { padding-right:8px; }
+.single-sale-component-card > div:first-child > div:first-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.single-sale-money-grid,.single-sale-info-grid { min-width:0; gap:6px !important; }
+.single-sale-money-grid input,.single-sale-info-grid input { min-width:0; height:34px !important; min-height:34px !important; padding-inline:8px; }
+.single-sale-money-grid input[class*="pl-7"] { padding-left:23px; }
+.single-sale-info { display:grid; min-width:0; gap:5px !important; margin-top:0 !important; padding:7px !important; border-radius:7px; }
 .single-sale-info > :not([hidden]) ~ :not([hidden]) { margin-top:0 !important; }
-.trade-in-section { padding-block:8px !important; }
-.single-sale-footer { position:sticky; z-index:4; bottom:-8px; margin:0 -20px -8px; padding:8px 20px !important; border-top:1px solid var(--app-line); background:rgba(11,17,19,.97); backdrop-filter:blur(10px); }
-.sale-summary { padding:9px; }
+.single-sale-info .custom-select-trigger { min-width:0; height:34px !important; min-height:34px !important; padding-inline:8px; }
+.trade-in-section { padding-block:6px !important; }
+.trade-in-section > div:first-child { min-height:28px; }
+.single-sale-footer { position:static; min-width:0; margin:0; padding:4px 0 0 !important; border:0; background:transparent; }
+.single-sale-footer button { min-height:34px !important; padding-block:5px; }
+.sale-summary { min-width:0; padding:7px 8px; border-radius:7px; }
+.sale-summary > div:first-child { font-size:9px; }
+.sale-summary > div:last-child { gap:5px; }
+.sale-summary > div:last-child span { font-size:10px; line-height:1.15; }
 .bulk-stock-selector,.bulk-deal-details,.bulk-sale-overview { padding-inline:0; gap:8px !important; }
 .bulk-stock-pool { border-block:1px solid var(--app-line); }
 .bulk-stock-row { gap:8px; min-height:44px; padding:6px 2px; border-bottom:1px solid var(--app-line); }

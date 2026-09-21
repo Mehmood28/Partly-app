@@ -461,14 +461,14 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="single-sale-form p-5 space-y-4">
+          <form onSubmit={handleSubmit} className={`single-sale-form p-5 space-y-4 ${hasTradeIn ? 'has-trade' : ''}`}>
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1 font-sans">
                 Select Component / Part
               </label>
               {preselectedComponent ? (
-                <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3 flex items-center justify-between">
-                  <div>
+                <div className="single-sale-component-card bg-[#101719] border border-white/[0.08] rounded-xl p-3 flex items-center justify-between">
+                  <div className="min-w-0">
                     <div className="text-xs font-medium text-zinc-100 font-sans">
                       {preselectedComponent.name}
                     </div>
@@ -477,7 +477,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                       {typeof preselectedComponent.specifications === 'string' && preselectedComponent.specifications ? ` · ${preselectedComponent.specifications}` : ''}
                     </div>
                   </div>
-                  <div className="text-right font-mono text-xs">
+                  <div className="shrink-0 text-right font-mono text-xs">
                     <div className={`font-medium ${maxQty > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {maxQty} in stock
                     </div>
