@@ -4,9 +4,10 @@ import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useInventory } from '../../context/InventoryContext';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { useToast } from '../../context/ToastContext';
-import { Box, ArrowRightLeft, X, Search, ChevronDown, ChevronUp , Monitor, Cpu, HardDrive, Database, CircuitBoard, Zap, Fan, Package} from 'lucide-react';
-import { formatCurrency, getConditionColor, getUnassignedBatches, SUB_CATEGORIES } from '../../utils/helpers';
+import { Box, ArrowRightLeft, X, Search, ChevronDown, ChevronUp, ArrowDownWideNarrow, Monitor, Cpu, HardDrive, Database, CircuitBoard, Zap, Fan, Package} from 'lucide-react';
+import { formatCurrency, getConditionColor, getUnassignedBatches, SUB_CATEGORIES, SortOption } from '../../utils/helpers';
 import { ConfirmModal } from '../ConfirmModal';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface SwapPartModalProps {
   build: PCBuild;
@@ -53,6 +54,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [sortBy, setSortBy] = useState<SortOption>('newest-purchase');
   const [expandedPartId, setExpandedPartId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [pendingSwap, setPendingSwap] = useState<{
@@ -120,6 +122,13 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
       return false;
     }
     return true;
+  }).sort((a, b) => {
+    if (sortBy === 'highest-price') return b.avgPrice - a.avgPrice;
+    if (sortBy === 'lowest-price') return a.avgPrice - b.avgPrice;
+    if (sortBy === 'highest-stock') return b.totalAvailable - a.totalAvailable;
+    if (sortBy === 'lowest-stock') return a.totalAvailable - b.totalAvailable;
+    const latest = (entries: typeof a.validEntries) => entries.reduce((max, entry) => Math.max(max, new Date(entry.date).getTime() || 0), 0);
+    return latest(b.validEntries) - latest(a.validEntries);
   });
 
   const handleSwap = (newComponentId: string, purchaseEntryId: string, targetQty: number) => {
@@ -144,8 +153,8 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal max-w-xl">
-      <div className="space-y-4 w-full flex flex-col">
+    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal modal-workspace max-w-xl">
+      <div className="swap-modal-content w-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 shrink-0">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
@@ -172,25 +181,40 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
 
         {/* Search & Filters */}
         <div className="space-y-3 shrink-0 w-full max-w-full min-w-0">
-          <div className="relative w-full max-w-full min-w-0">
-            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search parts by name or model..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full max-w-full box-border bg-[#101719] border border-white/[0.08] rounded-xl pl-9 pr-8 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+          <div className="swap-filter-row">
+            <div className="relative w-full max-w-full min-w-0">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search parts by name or model..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="app-field w-full max-w-full box-border pl-9 pr-8"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <CustomSelect
+              value={sortBy}
+              onChange={(value) => setSortBy(value as SortOption)}
+              options={[
+                { value: 'newest-purchase', label: 'Recently Bought' },
+                { value: 'highest-price', label: 'Highest Price Per Unit' },
+                { value: 'lowest-price', label: 'Lowest Price Per Unit' },
+                { value: 'highest-stock', label: 'Highest Units in Stock' },
+                { value: 'lowest-stock', label: 'Lowest Units in Stock' },
+              ]}
+              icon={<ArrowDownWideNarrow className="h-4 w-4 text-[#B9EF68]" />}
+              className="swap-sort-select w-full"
             />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors"
-                title="Clear search"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
 
           {chips.length > 1 && (
@@ -213,7 +237,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         </div>
 
         {/* List */}
-        <div className="overflow-y-auto pr-1 space-y-2 pb-6 min-h-[45vh]">
+        <div className="modal-results-list overflow-y-auto pr-1 space-y-2">
           {filteredParts.map(({ comp, validEntries, totalAvailable, avgPrice, subCategory }) => {
             const isExpanded = expandedPartId === comp.id;
 

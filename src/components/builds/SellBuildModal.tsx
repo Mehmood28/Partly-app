@@ -265,9 +265,9 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={handleClose} className="build-modal stock-modal max-w-md">
+    <BottomSheetModal isOpen={true} onClose={handleClose} className="build-modal stock-modal modal-workspace max-w-xl">
       <form 
-        className="space-y-4 w-full"
+        className="sell-build-form flex h-full w-full flex-col"
         onSubmit={handleSubmit}
       >
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
@@ -283,7 +283,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="space-y-3 text-xs flex flex-col">
+        <div className="sell-build-form-body space-y-3 text-xs flex flex-col">
           
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -546,7 +546,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, onClose, 
 
         </div>
 
-        <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
+        <div className="sell-build-form-footer pt-3 flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
           <button
             type="button"
             onClick={handleClose}

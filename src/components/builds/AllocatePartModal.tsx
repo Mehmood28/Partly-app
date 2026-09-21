@@ -6,6 +6,7 @@ import {
   filterAndSortComponents,
   getConditionColor,
   formatCurrency,
+  SortOption,
 } from '../../utils/helpers';
 import { X, Box, ChevronDown, ChevronUp, Monitor, Cpu, HardDrive, Database, CircuitBoard, Zap, Fan, Package } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
@@ -25,6 +26,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
   const { showToast } = useToast();
   const { hideSupplierNames } = usePrivacy();
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('newest-purchase');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [expandedPartId, setExpandedPartId] = useState<string | null>(null);
   const [allocationQuantities, setAllocationQuantities] = useState<Record<string, string>>({});
@@ -53,22 +55,23 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
     }
   };
 
-  const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'All'>('All');
+  const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'ALL'>('ALL');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('');
 
   const filteredComponents = filterAndSortComponents(state.components, {
     searchQuery: deferredSearchQuery,
-    category: activeCategoryTab === 'All' ? undefined : activeCategoryTab,
+    category: activeCategoryTab === 'ALL' ? undefined : activeCategoryTab,
     subCategory: activeSubCategory,
     onlyAvailable: true,
     builds: state.builds,
+    sortBy,
   });
 
   if (!build) return null;
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal max-w-lg">
-      <div className="space-y-3.5 w-full">
+    <BottomSheetModal isOpen={true} onClose={onClose} className="build-modal stock-modal modal-workspace max-w-xl">
+      <div className="allocate-modal-content w-full">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
             <Box className="w-4 h-4 text-[#B9EF68]" /> Allocate Inventory Component
@@ -96,13 +99,16 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, onC
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           activeCategory={activeCategoryTab}
-          onCategoryChange={(c) => { setActiveCategoryTab(c as ComponentCategory | 'All'); setActiveSubCategory(''); }}
+          onCategoryChange={(c) => { setActiveCategoryTab(c as ComponentCategory | 'ALL'); setActiveSubCategory(''); }}
           onlyAvailable={true}
           activeSubCategory={activeSubCategory}
           onSubCategoryChange={setActiveSubCategory}
+          builds={state.builds}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
         />
 
-        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+        <div className="modal-results-list space-y-2 overflow-y-auto pr-1">
           {filteredComponents.length === 0 ? (
             <div className="text-center py-8 px-4 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/[0.08] rounded-xl bg-[#101719]/50 mt-2">
               <Box className="w-7 h-7 mb-2 text-zinc-500" />

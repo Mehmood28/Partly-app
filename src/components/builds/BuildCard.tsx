@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
-import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, List } from 'lucide-react';
+import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, List, MoreVertical } from 'lucide-react';
 import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getCategoryPresentation, getConditionDotColor } from '../../utils/helpers';
 import { generateInvoice } from '../../utils/invoiceGenerator';
 import { executeCopyAdConfirmation } from '../../utils/copyAdHelper';
@@ -86,6 +86,16 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const [copyAdCustomWarranty, setCopyAdCustomWarranty] = useState<string>('');
   const [imageShareError, setImageShareError] = useState<string | null>(null);
   const imageCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!partActionsData) return;
+    const closeMenu = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest('[data-part-actions-menu]')) setPartActionsData(null);
+    };
+    document.addEventListener('pointerdown', closeMenu);
+    return () => document.removeEventListener('pointerdown', closeMenu);
+  }, [partActionsData]);
 
   const partsCost = calculateBuildPartsCost(build);
   const isSold = build.status === 'Sold';
@@ -253,11 +263,13 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
         <div className="build-expanded space-y-4 px-3 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-5">
           <div className="build-overview">
             <div className="build-overview-copy">
-              <button type="button" className="build-expanded-toggle" onClick={handleToggle} aria-label={`Collapse ${build.name}`}>
+              <button type="button" className="build-expanded-heading" onClick={handleToggle} aria-label={`Collapse ${build.name}`}>
+                <span className="min-w-0">
+                  <span className="build-expanded-title">{build.name}</span>
+                  <span className="build-status">{displayStatus}{isAcquired ? ` · ${isPurchased ? 'Purchased PC' : 'Trade-in PC'}` : ''}</span>
+                </span>
                 <ChevronUp />
               </button>
-              <h3 className="build-expanded-title">{build.name}</h3>
-              <span className="build-status">{displayStatus}{isAcquired ? ` · ${isPurchased ? 'Purchased PC' : 'Trade-in PC'}` : ''}</span>
               <div className="build-finances">
                 <div><span>Cost</span><strong>{formatCurrency(partsCost)}</strong></div>
                 <div><span>{isSold ? 'Sold' : 'Target'}</span><strong>{displayedPrice !== undefined ? formatCurrency(displayedPrice) : '—'}</strong></div>
@@ -407,7 +419,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className="build-expanded-body">
             {imageShareError && (
               <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs px-3 py-1.5 rounded-lg flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -480,7 +492,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           )}
 
           {/* Full Allocated Parts List */}
-          <div className="space-y-2 pt-1">
+          <div className="build-parts-section">
             {build.notes && (
               <div className="app-panel-quiet p-3 text-xs italic leading-relaxed text-zinc-400">
                 {build.notes}
@@ -555,13 +567,11 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                       purchaseEntry?.date ? formatReadableDate(purchaseEntry.date) || purchaseEntry.date : undefined,
                     ].filter(Boolean) as string[];
 
+                    const isActionsOpen = partActionsData === part;
                     return (
-                      <button
-                        type="button"
+                      <div
                         key={`${part.componentId}-${part.purchaseEntryId || partIdx}-${part.unitCostAtAssignment}`}
-                        className="allocated-part"
-                        onClick={(e) => { e.stopPropagation(); setPartActionsData(part); }}
-                        title={`Manage ${part.componentName}`}
+                        className="allocated-part allocated-part-managed"
                       >
                         <span className={`allocated-type ${category.textClass}`}>
                           {renderCategoryIcon(part.category, 'allocated-type-icon')}
@@ -576,7 +586,34 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                           </span>
                         </span>
                         <span className="allocated-cost">{formatCurrency(totalCost)}</span>
-                      </button>
+                        <span className="allocated-part-actions" data-part-actions-menu>
+                          <button
+                            type="button"
+                            className="allocated-part-menu-trigger"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setPartActionsData(isActionsOpen ? null : part);
+                            }}
+                            aria-label={`Actions for ${part.componentName}`}
+                            aria-expanded={isActionsOpen}
+                          >
+                            <MoreVertical />
+                          </button>
+                          {isActionsOpen && (
+                            <span className="allocated-part-menu" role="menu">
+                              <button type="button" role="menuitem" onClick={() => { setSwapPartData(part); setPartActionsData(null); }}>
+                                <ArrowRightLeft /> Swap part
+                              </button>
+                              <button type="button" role="menuitem" onClick={() => { setQuantityPartData(part); setPartActionsData(null); }}>
+                                <Pencil /> Change quantity
+                              </button>
+                              <button type="button" role="menuitem" className="danger" onClick={() => openRemovePartConfirm(part)}>
+                                <Trash2 /> Remove from build
+                              </button>
+                            </span>
+                          )}
+                        </span>
+                      </div>
                     );
                   })}
                 </div>
@@ -711,56 +748,6 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           part={quantityPartData}
           onClose={() => setQuantityPartData(null)}
         />
-      )}
-
-      {partActionsData && (
-        <BottomSheetModal
-          isOpen={Boolean(partActionsData)}
-          onClose={() => setPartActionsData(null)}
-          className="build-modal stock-modal max-w-sm"
-        >
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] pb-3">
-              <div className="min-w-0">
-                <div className={`font-mono text-[11px] font-bold uppercase tracking-wider ${getCategoryPresentation(partActionsData.category).textClass}`}>
-                  {getCategoryPresentation(partActionsData.category).label}
-                </div>
-                <h3 className="mt-1 break-words text-sm font-semibold text-zinc-100">{partActionsData.componentName}</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPartActionsData(null)}
-                aria-label="Close part actions"
-                className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="grid gap-2">
-              <button
-                type="button"
-                onClick={() => { setSwapPartData(partActionsData); setPartActionsData(null); }}
-                className="flex min-h-11 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#101719] px-3 text-left text-xs font-medium text-zinc-200 transition-colors hover:border-[#B9EF68]/40 hover:text-white"
-              >
-                <ArrowRightLeft className="h-4 w-4 text-[#83E5DF]" /> Swap part
-              </button>
-              <button
-                type="button"
-                onClick={() => { setQuantityPartData(partActionsData); setPartActionsData(null); }}
-                className="flex min-h-11 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#101719] px-3 text-left text-xs font-medium text-zinc-200 transition-colors hover:border-[#B9EF68]/40 hover:text-white"
-              >
-                <Pencil className="h-4 w-4 text-[#83E5DF]" /> Change quantity
-              </button>
-              <button
-                type="button"
-                onClick={() => openRemovePartConfirm(partActionsData)}
-                className="flex min-h-11 items-center gap-2 rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 text-left text-xs font-medium text-rose-300 transition-colors hover:bg-rose-500/20"
-              >
-                <Trash2 className="h-4 w-4" /> Remove from build
-              </button>
-            </div>
-          </div>
-        </BottomSheetModal>
       )}
 
       {/* Confirmation Modal */}
