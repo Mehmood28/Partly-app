@@ -527,19 +527,12 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                   <ImagePlus className="w-5 h-5" />
                 </div>
               )}
-              <div className="flex-1">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="block w-full text-xs text-zinc-400
-                    file:mr-2 file:py-1.5 file:px-3
-                    file:rounded-lg file:border file:border-white/[0.08]
-                    file:text-xs file:font-semibold
-                    file:bg-[#101719] file:text-zinc-200
-                    hover:file:bg-white/[0.06]
-                    cursor-pointer"
-                />
+              <div className="min-w-0 flex-1">
+                <label className="build-image-file-control">
+                  <ImagePlus />
+                  <span>{imageUrl ? 'Replace Image' : 'Choose Image'}</span>
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                </label>
                 <p className="text-[11px] text-zinc-500 mt-1">Upload a photo of the sold PC.</p>
               </div>
             </div>

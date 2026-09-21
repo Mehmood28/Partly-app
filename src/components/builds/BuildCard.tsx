@@ -208,14 +208,6 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const soldDate = exactTransaction?.dateSortable || exactTransaction?.timestamp || build.saleDate;
   const formattedSoldDate = soldDate ? formatReadableDate(soldDate) : null;
   const formattedBuiltDate = formatReadableDate(build.builtDate || build.completionDate || build.createdDate) || build.createdDate;
-  const displayStatus = build.status === 'Listed for Sale'
-    ? 'Available'
-    : build.status === 'In Progress'
-      ? 'Pending'
-      : build.status === 'Trade-In Processing'
-        ? 'Trade-In'
-        : build.status;
-
   const openRemovePartConfirm = (part: PCBuildPart) => {
     setPartActionsData(null);
     setConfirmModalConfig({
@@ -267,8 +259,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             <div className="build-overview-copy">
               <button type="button" className="build-expanded-heading" onClick={handleToggle} aria-label={`Collapse ${build.name}`}>
                 <span className="min-w-0">
-                  <span className="build-expanded-title">{build.name}</span>
-                  <span className="build-status">{displayStatus}{isAcquired ? ` · ${isPurchased ? 'Purchased PC' : 'Trade-in PC'}` : ''}</span>
+                  <span className="build-expanded-title" title={build.name}>{build.name}</span>
                 </span>
                 <ChevronUp />
               </button>
@@ -687,7 +678,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                             },
                           });
                         }}
-                        className="mark-available-action flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl text-xs font-medium"
+                        className="app-button mark-available-action flex items-center gap-1 px-3"
                         title="Mark build as Available"
                       >
                         <Tag className="w-3.5 h-3.5" /> Mark Available

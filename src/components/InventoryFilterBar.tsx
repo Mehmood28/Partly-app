@@ -113,19 +113,19 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       {(showSearch || (showSort && onSortByChange)) && <div className="inventory-filter-controls flex w-full min-w-0 max-w-full flex-col gap-2.5 sm:flex-row">
         {showSearch && (
         <div className="relative flex-1 min-w-0 w-full max-w-full group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search parts by name or model..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="app-field max-w-full box-border pl-10 pr-9 text-sm placeholder:text-zinc-500"
+            className="app-field max-w-full box-border pl-8 pr-8 text-sm placeholder:text-zinc-500"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => onSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-white/[0.06] transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-white/[0.06] transition-colors"
               title="Clear search"
               aria-label="Clear search"
             >
