@@ -227,13 +227,13 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     : [];
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="stock-modal max-w-lg">
+    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="stock-modal modal-workspace max-w-lg !overflow-hidden !p-0">
       <form 
-        className="space-y-4 w-full"
+        className="modal-standard-form w-full"
         onSubmit={handleSubmit}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <div className="modal-standard-header flex items-center justify-between border-b border-white/[0.08]">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
               <Package className="w-4 h-4 text-[#B9EF68]" />
@@ -479,7 +479,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
+        <div className="modal-standard-footer flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
           <button
             type="button"
             onClick={onClose}

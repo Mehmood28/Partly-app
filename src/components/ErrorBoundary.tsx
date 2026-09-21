@@ -27,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-[#070A0B] text-zinc-100 flex items-center justify-center p-4">
-          <div className="bg-[#0B1113] border border-white/[0.08] rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
+          <div className="app-panel max-w-md w-full p-6 text-center space-y-4">
             <div className="w-12 h-12 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#B9EF68] flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 this.setState({ hasError: false, error: undefined });
                 window.location.reload();
               }}
-              className="px-4 py-2.5 bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] font-semibold text-xs rounded-xl shadow-lg shadow-[#B9EF68]/20 transition-all inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
+              className="app-button app-button-primary inline-flex items-center gap-2 px-4"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Reload App</span>

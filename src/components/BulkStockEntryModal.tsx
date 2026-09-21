@@ -4,6 +4,15 @@ import { resizeImage } from '../utils/imageResizer';
 import { X, Upload, FileText, Trash2, Zap, Save } from 'lucide-react';
 import { ComponentCategory, Condition, PaymentMethod, Platform } from '../types';
 import { usePrivacy } from '../context/PrivacyContext';
+import { CustomSelect } from './ui/CustomSelect';
+import { useToast } from '../context/ToastContext';
+
+const CATEGORY_OPTIONS = ['GPU', 'CPU', 'Motherboard', 'RAM', 'Cooling', 'Storage', 'PSU', 'Case', 'Fans', 'Accessories', 'Other']
+  .map((value) => ({ value, label: value }));
+const CONDITION_OPTIONS = ['Sealed', 'New Open Box', 'New No Box', 'Used Open Box', 'Used No Box']
+  .map((value) => ({ value, label: value }));
+const PAYMENT_OPTIONS = ['Cash', 'E-Transfer', 'PayPal', 'Credit Card', 'Other']
+  .map((value) => ({ value, label: value }));
 
 export interface ParsedBulkStockItem {
   name: string;
@@ -24,6 +33,7 @@ interface BulkStockEntryModalProps {
 
 export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen, onClose, onSaveAll }) => {
   const { hideSupplierNames } = usePrivacy();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'text' | 'image'>('text');
   const [textInput, setTextInput] = useState('');
   const [images, setImages] = useState<string[]>([]);
@@ -75,7 +85,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
       setParsedItems(data);
     } catch (err: unknown) {
       console.error(err);
-      alert('Parsing failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      showToast(`Parsing failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     } finally {
       setIsParsing(false);
     }
@@ -108,11 +118,11 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
   if (!isOpen) return null;
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleClose} className="stock-modal max-w-4xl">
-      <div className="w-full flex flex-col relative h-full">
-        <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+    <BottomSheetModal isOpen={isOpen} onClose={handleClose} className="stock-modal modal-workspace bulk-entry-modal max-w-4xl !overflow-hidden !p-0">
+      <div className="flex h-full w-full flex-col bg-[#0B1113]">
+        <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-3 py-2.5 sm:px-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#B9EF68] flex items-center justify-center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#B9EF68]/25 bg-[#B9EF68]/10 text-[#B9EF68]">
               <Zap className="w-4 h-4" />
             </div>
             <div>
@@ -129,43 +139,41 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-4 space-y-4">
+        <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3 sm:px-4">
           {parsedItems.length === 0 ? (
             <>
               {/* Mode Selection */}
-              <div className="flex p-1 bg-[#101719] rounded-xl w-full max-w-sm border border-white/[0.08] mx-auto">
+              <div className="app-segmented mx-auto grid w-full max-w-sm grid-cols-2">
                 <button
                   type="button"
                   onClick={() => setActiveTab('text')}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
-                    activeTab === 'text' ? 'bg-[#B9EF68] text-[#07100B] shadow-md shadow-[#B9EF68]/20 font-bold' : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
+                  data-active={activeTab === 'text'}
+                  className="flex items-center justify-center gap-2"
                 >
-                  <FileText className="w-3.5 h-3.5" /> AI RAW TEXT
+                  <FileText className="w-3.5 h-3.5" /> Paste Text
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('image')}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
-                    activeTab === 'image' ? 'bg-[#B9EF68] text-[#07100B] shadow-md shadow-[#B9EF68]/20 font-bold' : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
+                  data-active={activeTab === 'image'}
+                  className="flex items-center justify-center gap-2"
                 >
-                  <Upload className="w-3.5 h-3.5" /> BATCH SCANNER
+                  <Upload className="w-3.5 h-3.5" /> Scan Images
                 </button>
               </div>
 
               {/* Input Area */}
-              <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-4">
+              <div className="app-panel p-3">
                 {activeTab === 'text' ? (
                   <textarea
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
                     placeholder="Paste unformatted raw text lists or unorganized stock notes... (e.g., '5x Ryzen 7 7700 @ $240 each, 3x MSI RTX 4070 Super @ $780')"
-                    className="w-full h-44 bg-transparent text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 resize-none focus:outline-none font-sans"
+                    className="app-field min-h-40 w-full resize-none p-3 text-xs sm:text-sm"
                   />
                 ) : (
                   <div className="space-y-4">
-                    <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-white/[0.1] border-dashed rounded-xl cursor-pointer hover:bg-white/[0.02] hover:border-[#B9EF68]/50 transition-colors">
+                    <label className="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-white/[0.12] bg-[#101719] transition-colors hover:border-[#B9EF68]/50 hover:bg-white/[0.02]">
                       <div className="flex flex-col items-center justify-center pt-4 pb-5">
                         <Upload className="w-7 h-7 text-zinc-400 mb-2" />
                         <p className="mb-1 text-xs text-zinc-300"><span className="font-semibold text-[#83E5DF]">Click to upload</span> or drag and drop</p>
@@ -199,7 +207,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                   type="button"
                   onClick={handleParse}
                   disabled={isParsing || (activeTab === 'text' ? !textInput.trim() : images.length === 0)}
-                  className="bg-[#B9EF68] hover:bg-[#C4FF79] disabled:opacity-50 text-[#07100B] font-semibold shadow-md shadow-[#B9EF68]/20 px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
+                  className="app-button app-button-primary flex items-center gap-2 px-5 disabled:opacity-50"
                 >
                   {isParsing ? (
                     <>
@@ -222,53 +230,35 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                 <button type="button" onClick={() => setParsedItems([])} className="text-xs text-zinc-400 hover:text-white transition-colors">Start Over</button>
               </div>
               
-              <div className="bg-[#101719] border border-white/[0.08] rounded-xl overflow-hidden overflow-x-auto">
-                <table className="w-full text-left text-xs min-w-[1100px]">
-                  <thead className="bg-[#0B1113] text-zinc-400 border-b border-white/[0.08]">
-                    <tr>
-                      <th className="px-3.5 py-2.5 font-medium min-w-[180px]">Name</th>
-                      <th className="px-3.5 py-2.5 font-medium w-36">Category</th>
-                      <th className="px-3.5 py-2.5 font-medium w-20">Qty</th>
-                      <th className="px-3.5 py-2.5 font-medium w-28">Unit Cost</th>
-                      <th className="px-3.5 py-2.5 font-medium w-36">Condition</th>
-                      <th className="px-3.5 py-2.5 font-medium w-28">Vendor</th>
-                      <th className="px-3.5 py-2.5 font-medium w-28">Date</th>
-                      <th className="px-3.5 py-2.5 font-medium w-28">Payment</th>
-                      <th className="px-3.5 py-2.5 w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.06]">
+              <div className="divide-y divide-white/[0.07] border-y border-white/[0.08]">
                     {parsedItems.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-white/[0.02]">
-                        <td className="px-3.5 py-2">
+                      <div key={idx} className="bulk-review-row grid grid-cols-2 gap-2 py-2.5 md:grid-cols-12">
+                        <label className="col-span-2 md:col-span-4"><span>Name</span>
                           <input
                             type="text"
                             value={item.name || ''}
                             onChange={(e) => updateParsedItem(idx, 'name', e.target.value)}
-                            className="w-full min-w-[180px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg px-2 py-1 text-zinc-100 outline-none"
+                            className="app-field w-full"
                           />
-                        </td>
-                        <td className="px-3.5 py-2">
-                          <select
+                        </label>
+                        <label className="md:col-span-2"><span>Category</span>
+                          <CustomSelect
                             value={item.category || 'Other'}
-                            onChange={(e) => updateParsedItem(idx, 'category', e.target.value as ComponentCategory)}
-                            className="w-full min-w-[110px] bg-[#0B1113] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#B9EF68]"
-                          >
-                            {['GPU', 'CPU', 'Motherboard', 'RAM', 'Cooling', 'Storage', 'PSU', 'Case', 'Fans', 'Accessories', 'Other'].map(cat => (
-                              <option key={cat} value={cat}>{cat}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-3.5 py-2">
+                            onChange={(value) => updateParsedItem(idx, 'category', value as ComponentCategory)}
+                            options={CATEGORY_OPTIONS}
+                            fitLongestOption={false}
+                          />
+                        </label>
+                        <label className="md:col-span-1"><span>Qty</span>
                           <input
                             type="number" inputMode="decimal"
                             min="1"
                             value={item.quantity || 1}
                             onChange={(e) => updateParsedItem(idx, 'quantity', parseInt(e.target.value) || 1)}
-                            className="w-full min-w-[50px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg px-2 py-1 text-zinc-100 font-mono outline-none"
+                            className="app-field w-full font-mono"
                           />
-                        </td>
-                        <td className="px-3.5 py-2">
+                        </label>
+                        <label className="md:col-span-2"><span>Unit Cost</span>
                           <div className="relative">
                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs pointer-events-none font-mono">$</span>
                             <input
@@ -277,67 +267,55 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                               step="0.01"
                               value={item.unitCost || 0}
                               onChange={(e) => updateParsedItem(idx, 'unitCost', parseFloat(e.target.value) || 0)}
-                              className="w-full min-w-[70px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg pr-2 py-1 text-zinc-100 font-mono outline-none pl-6"
+                              className="app-field w-full pl-6 font-mono"
                             />
                           </div>
-                        </td>
-                        <td className="px-3.5 py-2">
-                          <select
+                        </label>
+                        <label className="md:col-span-3"><span>Condition</span>
+                          <CustomSelect
                             value={item.condition || 'New Open Box'}
-                            onChange={(e) => updateParsedItem(idx, 'condition', e.target.value as Condition)}
-                            className="w-full min-w-[120px] bg-[#0B1113] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#B9EF68]"
-                          >
-                            <option value="Sealed">Sealed</option>
-                            <option value="New Open Box">New Open Box</option>
-                            <option value="New No Box">New No Box</option>
-                            <option value="Used Open Box">Used Open Box</option>
-                            <option value="Used No Box">Used No Box</option>
-                          </select>
-                        </td>
-                        <td className="px-3.5 py-2">
+                            onChange={(value) => updateParsedItem(idx, 'condition', value as Condition)}
+                            options={CONDITION_OPTIONS}
+                            fitLongestOption={false}
+                          />
+                        </label>
+                        <label className="md:col-span-3"><span>Vendor</span>
                           <input
                             type={hideSupplierNames ? "password" : "text"}
                             autoComplete="off"
                             value={item.vendor || ''}
                             onChange={(e) => updateParsedItem(idx, 'vendor', e.target.value as Platform)}
-                            className="w-full min-w-[90px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg px-2 py-1 text-zinc-100 outline-none"
+                            className="app-field w-full"
                             placeholder={hideSupplierNames ? "••••••••" : "Vendor"}
                           />
-                        </td>
-                        <td className="px-3.5 py-2">
+                        </label>
+                        <label className="md:col-span-3"><span>Date</span>
                           <input
                             type="date"
                             value={item.date || ''}
                             onChange={(e) => updateParsedItem(idx, 'date', e.target.value)}
-                            className="w-full min-w-[110px] bg-transparent border border-transparent hover:border-white/[0.1] focus:border-[#B9EF68] rounded-lg px-2 py-1 text-zinc-100 outline-none [color-scheme:dark]"
+                            className="app-field w-full [color-scheme:dark]"
                           />
-                        </td>
-                        <td className="px-3.5 py-2">
-                          <select
+                        </label>
+                        <label className="md:col-span-3"><span>Payment</span>
+                          <CustomSelect
                             value={item.paymentMethod || 'Cash'}
-                            onChange={(e) => updateParsedItem(idx, 'paymentMethod', e.target.value as PaymentMethod)}
-                            className="w-full min-w-[100px] bg-[#0B1113] border border-white/[0.08] rounded-lg px-2 py-1.5 text-zinc-200 outline-none focus:border-[#B9EF68]"
-                          >
-                            <option value="Cash">Cash</option>
-                            <option value="E-Transfer">E-Transfer</option>
-                            <option value="PayPal">PayPal</option>
-                            <option value="Credit Card">Credit Card</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </td>
-                        <td className="px-2 py-2 text-right">
+                            onChange={(value) => updateParsedItem(idx, 'paymentMethod', value as PaymentMethod)}
+                            options={PAYMENT_OPTIONS}
+                            fitLongestOption={false}
+                          />
+                        </label>
+                        <div className="col-span-2 flex items-end justify-end md:col-span-3">
                           <button 
                             type="button"
                             onClick={() => removeParsedItem(idx)} 
-                            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-white/[0.06] rounded-lg transition-colors"
+                            className="app-button flex items-center gap-1.5 px-3 text-rose-300 hover:border-rose-500/35"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3.5 h-3.5" /> Remove
                           </button>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
               </div>
             </div>
           )}
@@ -345,7 +323,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
 
         {/* Footer */}
         {parsedItems.length > 0 && (
-          <div className="pt-4 border-t border-white/[0.08] flex justify-end gap-2.5">
+          <div className="flex shrink-0 justify-end gap-2.5 border-t border-white/[0.08] px-3 py-2.5 sm:px-4">
             <button
               type="button"
               onClick={handleClose}
@@ -356,7 +334,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
             <button
               type="button"
               onClick={handleConfirm}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-5 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors shadow-md shadow-emerald-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="app-button app-button-primary flex items-center gap-2 px-5"
             >
               <Save className="w-4 h-4" />
               Confirm & Save All to Stock

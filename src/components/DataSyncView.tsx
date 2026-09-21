@@ -28,10 +28,12 @@ import {
 } from 'lucide-react';
 
 interface DataSyncViewProps {
+  isActive?: boolean;
   onResetData: () => void;
 }
 
 export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
+  isActive = true,
   onResetData,
 }) => {
   const { state, importData, recordBackup, lastBackupTimestamp } = useInventory();
@@ -517,7 +519,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
       {/* Export JSON Confirm Modal */}
       <ConfirmModal
-        isOpen={isExportJsonConfirmOpen}
+        isOpen={isExportJsonConfirmOpen && isActive}
         title="Export JSON Backup?"
         message={`Save an offline backup containing ${totalComponentsCount} components, ${totalBuildsCount} builds, and ${state.transactions.length} transaction records?`}
         confirmText="Export Backup"
@@ -531,7 +533,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
       {/* Export Financial Activity CSV Confirm Modal */}
       <ConfirmModal
-        isOpen={isExportFinancialConfirmOpen}
+        isOpen={isExportFinancialConfirmOpen && isActive}
         title="Generate Financial Report?"
         message={`Generate and download the financial activity report for ${selectedYear} containing ${yearTransactions.length} transaction record${
           yearTransactions.length === 1 ? '' : 's'
@@ -555,7 +557,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
       {/* Import Backup Confirm Modal */}
       <ConfirmModal
-        isOpen={!!pendingImport}
+        isOpen={!!pendingImport && isActive}
         title="Import Backup File?"
         message={
           pendingImport

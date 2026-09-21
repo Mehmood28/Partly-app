@@ -26,7 +26,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
 }) => {
   return (
     <div className="mt-3 space-y-2">
-      <div className="grid grid-cols-3 gap-2 p-2.5 bg-[#101719] border border-white/[0.08] rounded-xl text-xs">
+      <div className="grid grid-cols-3 divide-x divide-white/[0.08] border-y border-white/[0.08] py-2.5 text-xs [&>div]:px-2.5">
         <div>
           <div className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider font-sans">Target Value</div>
           <div className="text-xs sm:text-sm font-bold font-mono text-zinc-100 mt-0.5">
@@ -69,7 +69,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
       </div>
 
       {!isExactMatch ? (
-        <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#B9EF68]/10 border border-[#B9EF68]/25 text-xs text-zinc-200">
+        <div className="flex items-center justify-between gap-2 border-y border-[#B9EF68]/20 bg-[#B9EF68]/[0.04] px-1 py-2.5 text-xs text-zinc-200">
           <div className="flex items-center gap-2 min-w-0">
             <AlertCircle className="w-4 h-4 shrink-0 text-[#B9EF68]" />
             <div className="min-w-0">
@@ -116,7 +116,7 @@ export const ModeBStatusHeader: React.FC<ModeBStatusHeaderProps> = ({
           </button>
         </div>
       ) : (
-        <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300">
+        <div className="flex items-center justify-between gap-2 border-y border-emerald-500/20 bg-emerald-500/[0.04] px-1 py-2.5 text-xs text-emerald-300">
           <div className="flex items-center gap-1.5 min-w-0">
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
             <span className="text-[11px] sm:text-xs truncate">

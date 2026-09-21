@@ -89,12 +89,12 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="build-modal stock-modal max-w-md">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="build-modal stock-modal modal-workspace max-w-md !overflow-hidden !p-0">
       <form 
-        className="space-y-4 w-full"
+        className="modal-standard-form w-full"
         onSubmit={handleSaveEdit}
       >
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <div className="modal-standard-header flex items-center justify-between border-b border-white/[0.08]">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
             <Pencil className="w-4 h-4 text-[#B9EF68]" /> Edit PC Build
           </h3>
@@ -223,7 +223,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
 
         </div>
 
-        <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
+        <div className="modal-standard-footer flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
           <button
             type="button"
             onClick={onClose}

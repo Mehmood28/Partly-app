@@ -21,6 +21,7 @@ import { normalizePlatform } from '../../utils/platformDisplay';
 import { ConfirmModal } from '../ConfirmModal';
 
 export interface BulkSaleActivityCardProps {
+  isActive?: boolean;
   group: BulkPartSaleGroupDisplayItem;
   isExpanded?: boolean;
   onToggle?: () => void;
@@ -30,6 +31,7 @@ export interface BulkSaleActivityCardProps {
 }
 
 export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.memo(({
+  isActive = true,
   group,
   isExpanded: propIsExpanded,
   onToggle,
@@ -156,7 +158,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
 
       {/* Relist Entire Bulk Sale Confirmation Modal */}
       <ConfirmModal
-        isOpen={isRelistConfirmOpen}
+        isOpen={isRelistConfirmOpen && isActive}
         title="Relist Entire Bulk Sale"
         message="Relist all parts from this bulk sale back into stock?"
         confirmText="Relist Entire Bulk Sale"
@@ -171,7 +173,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
 
       {/* Delete Bulk Sale Group Confirmation Modal */}
       <ConfirmModal
-        isOpen={isDeleteConfirmOpen}
+        isOpen={isDeleteConfirmOpen && isActive}
         title="Delete Bulk Part Sale Record"
         message="This removes the entire bulk-sale activity record and does not return sold stock. Use Relist Entire Bulk Sale to return stock."
         confirmText="Delete Bulk Sale Record"

@@ -55,7 +55,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
   const incomingCostBasis = outgoingCostBasis + parsedCashPaid;
 
   return (
-    <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
+    <div className="space-y-3 border-y border-white/[0.08] py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ArrowRightLeft className="w-4 h-4 text-[#B9EF68]" />
@@ -79,10 +79,10 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
             <button
               type="button"
               onClick={() => setTradeDirection('CUSTOMER_TRADE_IN')}
-              className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
+              className={`min-h-[58px] border text-left transition-all flex flex-col justify-between px-2.5 py-2 ${
                 tradeDirection === 'CUSTOMER_TRADE_IN'
-                  ? 'bg-[#B9EF68]/15 border-[#B9EF68]/40 text-zinc-100 shadow-sm'
-                  : 'bg-[#0B1113] border-white/[0.06] text-zinc-400 hover:bg-white/[0.03] hover:text-zinc-200'
+                  ? 'bg-[#B9EF68]/[0.06] border-[#B9EF68]/40 text-zinc-100'
+                  : 'bg-transparent border-white/[0.08] text-zinc-400 hover:bg-white/[0.03] hover:text-zinc-200'
               }`}
             >
               <div className="flex items-center gap-1.5 mb-1">
@@ -97,10 +97,10 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
             <button
               type="button"
               onClick={() => setTradeDirection('TRADE_UP')}
-              className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
+              className={`min-h-[58px] border text-left transition-all flex flex-col justify-between px-2.5 py-2 ${
                 tradeDirection === 'TRADE_UP'
-                  ? 'bg-cyan-500/15 border-cyan-500/40 text-zinc-100 shadow-sm'
-                  : 'bg-[#0B1113] border-white/[0.06] text-zinc-400 hover:bg-white/[0.03] hover:text-zinc-200'
+                  ? 'bg-cyan-500/[0.06] border-cyan-500/40 text-zinc-100'
+                  : 'bg-transparent border-white/[0.08] text-zinc-400 hover:bg-white/[0.03] hover:text-zinc-200'
               }`}
             >
               <div className="flex items-center gap-1.5 mb-1">
@@ -197,7 +197,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                 />
               </div>
 
-              <div className="bg-[#B9EF68]/15 border border-[#B9EF68]/30 rounded-xl p-3 flex items-center justify-between">
+              <div className="flex items-center justify-between border-y border-[#B9EF68]/25 bg-[#B9EF68]/[0.04] px-1 py-2.5">
                 <div>
                   <div className="text-[11px] text-[#83E5DF] uppercase tracking-wider font-semibold">Total Effective Sale Price</div>
                   <div className="text-xs text-zinc-400">
@@ -213,7 +213,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
             /* TRADE UP / CASH PAID ON TOP PATH */
             <>
               {/* Outgoing Basis Info */}
-              <div className="bg-[#0B1113] border border-white/[0.06] rounded-xl p-3 space-y-1.5">
+              <div className="space-y-1.5 border-y border-white/[0.08] px-1 py-2.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-400 font-sans">Outgoing Part Cost Basis:</span>
                   <span className="font-mono font-bold text-zinc-200">{formatCurrency(outgoingCostBasis)}</span>
@@ -311,7 +311,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
               )}
 
               {/* Trade Up Transfer Calculation Summary */}
-              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3 space-y-2">
+              <div className="space-y-2 border-y border-cyan-500/25 bg-cyan-500/[0.04] px-1 py-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-cyan-400 uppercase tracking-wider font-semibold">
                     Trade Up Cost Basis Transfer
@@ -319,15 +319,15 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                   <span className="text-[11px] text-zinc-400 font-mono">Realized P/L: $0.00</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 pt-1 border-t border-cyan-500/20 text-center">
-                  <div className="bg-[#0B1113]/60 rounded-lg p-1.5">
+                  <div className="p-1.5">
                     <div className="text-[11px] text-zinc-400 uppercase font-sans">Outgoing Basis</div>
                     <div className="text-xs font-bold font-mono text-zinc-200">{formatCurrency(outgoingCostBasis)}</div>
                   </div>
-                  <div className="bg-[#0B1113]/60 rounded-lg p-1.5">
+                  <div className="border-x border-cyan-500/15 p-1.5">
                     <div className="text-[11px] text-zinc-400 uppercase font-sans">Cash Paid</div>
                     <div className="text-xs font-bold font-mono text-cyan-400">+{formatCurrency(parsedCashPaid)}</div>
                   </div>
-                  <div className="bg-[#0B1113]/60 rounded-lg p-1.5">
+                  <div className="p-1.5">
                     <div className="text-[11px] text-cyan-300 uppercase font-sans">New Part Basis</div>
                     <div className="text-xs font-bold font-mono text-cyan-300">{formatCurrency(incomingCostBasis)}</div>
                   </div>

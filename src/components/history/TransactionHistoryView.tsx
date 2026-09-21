@@ -156,6 +156,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
             if (item.type === 'bulk-group') {
               return (
                 <BulkSaleActivityCard
+                  isActive={isActive !== false}
                   key={item.id}
                   group={item}
                   isExpanded={expandedIds.has(item.id)}
@@ -169,6 +170,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
 
             return (
               <TransactionActivityCard
+                isActive={isActive !== false}
                 key={item.id}
                 tx={item.tx}
                 isExpanded={expandedIds.has(item.id)}
@@ -219,6 +221,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
                 >
                   {item.type === 'bulk-group' ? (
                     <BulkSaleActivityCard
+                      isActive={isActive !== false}
                       group={item}
                       isExpanded={expandedIds.has(item.id)}
                       onToggle={() => handleToggleExpand(item.id)}
@@ -228,6 +231,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
                     />
                   ) : (
                     <TransactionActivityCard
+                      isActive={isActive !== false}
                       tx={item.tx}
                       isExpanded={expandedIds.has(item.id)}
                       onToggle={() => handleToggleExpand(item.id)}
@@ -244,12 +248,12 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
 
       {/* Edit Modal */}
       {editingTx && (
-        <EditTransactionModal tx={editingTx} onClose={() => setEditingTx(null)} />
+        <EditTransactionModal tx={editingTx} isOpen={isActive !== false} onClose={() => setEditingTx(null)} />
       )}
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal
-        isOpen={!!deleteConfirmId}
+        isOpen={!!deleteConfirmId && isActive !== false}
         title="Delete Part Sale Record"
         message="Are you sure you want to delete this part sale record? This removes only the sale activity record and does not return sold stock. Use Relist if you want to return stock to inventory."
         onConfirm={() => {

@@ -48,12 +48,12 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="stock-modal max-w-md">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="stock-modal modal-workspace max-w-md !overflow-hidden !p-0">
       <form 
-        className="space-y-4 w-full"
+        className="modal-standard-form w-full"
         onSubmit={handleSubmit}
       >
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <div className="modal-standard-header flex items-center justify-between border-b border-white/[0.08]">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
               <ShoppingCart className="w-4 h-4 text-[#B9EF68]" /> Log Component Purchase
@@ -175,7 +175,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
           </div>
         </div>
 
-        <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
+        <div className="modal-standard-footer flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
           <button
             type="button"
             onClick={onClose}

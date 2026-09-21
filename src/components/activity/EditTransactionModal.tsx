@@ -9,10 +9,11 @@ import { prepareTransactionEdit } from './transactionEditParsers';
 
 interface EditTransactionModalProps {
   tx: TransactionLogItem | null;
+  isOpen?: boolean;
   onClose: () => void;
 }
 
-export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, onClose }) => {
+export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, isOpen = true, onClose }) => {
   const { updateTransaction } = useInventory();
   const { showToast } = useToast();
   const { hideSupplierNames } = usePrivacy();
@@ -106,7 +107,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
   };
 
   return (
-    <BottomSheetModal isOpen={true} onClose={onClose} className="stock-modal max-w-lg">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="stock-modal modal-workspace max-w-lg">
       <div className="transaction-edit-modal space-y-4 w-full">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">

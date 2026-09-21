@@ -18,6 +18,7 @@ import { parseBatchItem } from './activityHelpers';
 import { calculateProfitMarginPercent } from '../../utils/financialDisplay';
 
 export interface TransactionActivityCardProps {
+  isActive?: boolean;
   tx: TransactionLogItem;
   isExpanded?: boolean;
   onToggle?: () => void;
@@ -26,6 +27,7 @@ export interface TransactionActivityCardProps {
 }
 
 export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = React.memo(({
+  isActive = true,
   tx,
   isExpanded: propIsExpanded,
   onToggle,
@@ -333,7 +335,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
           {/* Relist Part Confirmation Modal */}
           {isPartSale && (
             <ConfirmModal
-              isOpen={isRelistConfirmOpen}
+              isOpen={isRelistConfirmOpen && isActive}
               title="Relist Part"
               message="Relist this part back into stock?"
               confirmText="Relist Part"
@@ -356,7 +358,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
           {/* Relist Entire Bulk Sale Confirmation Modal */}
           {isPartSale && tx.bulkSaleGroupId && (
             <ConfirmModal
-              isOpen={isRelistBulkConfirmOpen}
+              isOpen={isRelistBulkConfirmOpen && isActive}
               title="Relist Entire Bulk Sale"
               message="Relist all parts from this bulk sale back into stock?"
               confirmText="Relist Entire Bulk Sale"
@@ -374,7 +376,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
           {/* Invoice Confirmation Modal */}
           {(isPCSale || isPartSale) && (
             <ConfirmModal
-              isOpen={isInvoiceConfirmOpen}
+              isOpen={isInvoiceConfirmOpen && isActive}
               title="Download Invoice?"
               message={`Generate and download a PDF invoice for "${displayTitle}"?`}
               confirmText="Download Invoice"

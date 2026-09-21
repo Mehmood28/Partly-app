@@ -301,7 +301,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="bulk-sale-form space-y-4">
       {/* 1. Available Stock Selector Section */}
-      <div className="bulk-stock-selector bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
+      <div className="bulk-stock-selector space-y-3 border-y border-white/[0.08] py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-4 h-4 text-[#B9EF68]" />
@@ -526,7 +526,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       </div>
 
       {/* 3. Shared Deal Details */}
-      <div className="bulk-deal-details bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
+      <div className="bulk-deal-details space-y-3 border-y border-white/[0.08] py-3">
         <span className="text-xs font-semibold text-zinc-200 font-sans block">
           Deal & Payment Details
         </span>
@@ -599,7 +599,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       </div>
 
       {/* 4. Live Combined Summary Box */}
-      <div className="bulk-sale-overview bg-gradient-to-br from-[#101719] to-[#0B1113] border border-white/[0.08] rounded-xl p-3.5 space-y-2.5">
+      <div className="bulk-sale-overview space-y-2.5 border-y border-white/[0.08] py-3">
         <div className="flex items-center justify-between text-xs font-sans text-zinc-400">
           <span>Bulk Sale Overview</span>
           <span className="font-mono">

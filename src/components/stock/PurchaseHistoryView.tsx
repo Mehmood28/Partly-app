@@ -141,7 +141,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
             placeholder="Search purchase logs, vendor, platform..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="app-field h-12 pl-9 pr-8 text-xs placeholder:text-zinc-600 sm:text-sm"
+            className="app-field pl-9 pr-8 text-xs placeholder:text-zinc-600 sm:text-sm"
           />
           {searchQuery && (
             <button
@@ -181,6 +181,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
         <div className="space-y-2">
           {sortedTransactions.map((tx) => (
             <TransactionActivityCard
+              isActive={isActive !== false}
               key={tx.id}
               tx={tx}
               isExpanded={expandedIds.has(tx.id)}
@@ -229,6 +230,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
                   }}
                 >
                   <TransactionActivityCard
+                    isActive={isActive !== false}
                     tx={tx}
                     isExpanded={expandedIds.has(tx.id)}
                     onToggle={() => handleToggleExpand(tx.id)}
@@ -244,12 +246,12 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
 
       {/* Edit Modal */}
       {editingTx && (
-        <EditTransactionModal tx={editingTx} onClose={() => setEditingTx(null)} />
+        <EditTransactionModal tx={editingTx} isOpen={isActive !== false} onClose={() => setEditingTx(null)} />
       )}
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal
-        isOpen={!!deleteConfirmId}
+        isOpen={!!deleteConfirmId && isActive !== false}
         title="Delete Purchase Record"
         message="Are you sure you want to delete this purchase record? This removes only the purchase activity record and does not change its inventory batch."
         onConfirm={() => {

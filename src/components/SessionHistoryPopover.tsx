@@ -57,7 +57,7 @@ export const SessionHistoryPopover: React.FC<SessionHistoryPopoverProps> = ({ id
       id={id}
       role="region"
       aria-label="Session History Log"
-      className={`bg-[#0B1113] border border-white/[0.12] rounded-2xl shadow-2xl shadow-black/90 flex flex-col overflow-hidden text-zinc-100 ${className || ''}`}
+      className={`flex flex-col overflow-hidden rounded-[10px] border border-white/[0.12] bg-[#0B1113] text-zinc-100 shadow-[0_18px_55px_rgba(0,0,0,.6)] ${className || ''}`}
     >
       <div className="flex items-center justify-between gap-3 px-3.5 py-3 border-b border-white/[0.08] bg-[#0B1113] shrink-0">
         <div className="flex items-center gap-2 min-w-0">
@@ -81,7 +81,7 @@ export const SessionHistoryPopover: React.FC<SessionHistoryPopoverProps> = ({ id
         </div>
       </div>
 
-      <div className="px-3.5 py-2.5 overflow-y-auto max-h-72 sm:max-h-96 min-h-0 space-y-1.5 flex-1 overscroll-contain">
+      <div className="min-h-0 max-h-72 flex-1 divide-y divide-white/[0.07] overflow-y-auto px-3.5 sm:max-h-96 overscroll-contain">
         {historyItems.length === 0 ? (
           <div className="py-7 text-center text-xs text-zinc-500 italic">
             No actions recorded in this session.
@@ -90,12 +90,12 @@ export const SessionHistoryPopover: React.FC<SessionHistoryPopoverProps> = ({ id
           historyItems.map((item, index) => (
             <div
               key={`${item.direction}-${index}-${item.timestamp}`}
-              className={`p-2.5 rounded-xl border text-xs transition-colors ${
+              className={`px-0 py-2.5 text-xs transition-colors ${
                 item.isNext && item.direction === 'undo'
-                  ? 'bg-[#B9EF68]/10 border-[#B9EF68]/25 text-white'
+                  ? 'bg-[#B9EF68]/[0.05] text-white'
                   : item.isNext
-                  ? 'bg-white/[0.06] border-white/[0.12] text-white'
-                  : 'bg-white/[0.02] border-white/[0.04] text-zinc-300'
+                  ? 'bg-white/[0.04] text-white'
+                  : 'text-zinc-300'
               }`}
             >
               <div className="flex items-start gap-2">

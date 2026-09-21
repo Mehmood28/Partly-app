@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 
 interface ComponentCardProps {
+  isActive?: boolean;
   isExpanded?: boolean;
   onToggle?: () => void;
   actionOverride?: React.ReactNode;
@@ -39,6 +40,7 @@ interface ComponentCardProps {
 }
 
 export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
+  isActive = true,
   isExpanded: propIsExpanded,
   onToggle,
   component,
@@ -242,7 +244,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
       {/* Delete Component Confirmation Modal */}
       <ConfirmModal
-        isOpen={showDeleteConfirm}
+        isOpen={showDeleteConfirm && isActive}
         title="Delete Component"
         message={`Are you sure you want to delete "${String(component.name || "")}"? This will remove the component and its purchase history from inventory.`}
         confirmText="Delete Component"
@@ -259,7 +261,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
       {/* Delete Purchase Entry Confirmation Modal */}
       <ConfirmModal
-        isOpen={!!deletingEntryId}
+        isOpen={!!deletingEntryId && isActive}
         title="Delete Purchase Entry"
         message="Are you sure you want to delete this purchase entry? Component quantity and total cost calculations will be updated."
         confirmText="Delete Entry"

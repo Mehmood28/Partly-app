@@ -278,7 +278,7 @@ function AppContent() {
 
           {/* Data Tab */}
           <div className={activeTab === 'data' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
-            <DataSyncView onResetData={handleResetAllData} />
+            <DataSyncView isActive={activeTab === 'data'} onResetData={handleResetAllData} />
           </div>
         </React.Suspense>
       </main>
@@ -335,7 +335,7 @@ function AppContent() {
         }}
       />
       <ConfirmModal
-        isOpen={confirmModal.isOpen}
+        isOpen={confirmModal.isOpen && activeTab === 'data'}
         title={confirmModal.title}
         message={confirmModal.message}
         onConfirm={confirmModal.onConfirm}

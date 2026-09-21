@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, RotateCcw, HelpCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,6 +30,37 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   busyText = 'Working...',
 }) => {
   useModalScrollLock(isOpen);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const onCancelRef = useRef(onCancel);
+  const isBusyRef = useRef(isBusy);
+  onCancelRef.current = onCancel;
+  isBusyRef.current = isBusy;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    openerRef.current = document.activeElement as HTMLElement | null;
+    const frame = requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>('[data-confirm-initial]')?.focus());
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isBusyRef.current) {
+        event.preventDefault();
+        onCancelRef.current();
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handleKeyDown);
+      openerRef.current?.focus?.();
+    };
+  }, [isOpen]);
 
   const renderIcon = () => {
     if (variant === 'emerald') {
@@ -72,6 +103,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           style={{ height: '100dvh', width: '100vw' }}
         >
           <motion.div
+            ref={dialogRef}
+            tabIndex={-1}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -82,7 +115,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             initial={{ scale: 0.95, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
-            className="bg-[#0B1113] border border-white/[0.08] rounded-2xl w-full max-w-sm p-4 sm:p-5 relative flex flex-col shadow-2xl z-10 mx-auto pointer-events-auto"
+            className="relative z-10 mx-auto flex w-full max-w-sm flex-col rounded-[10px] border border-white/[0.12] bg-[#0B1113] p-4 shadow-[0_18px_55px_rgba(0,0,0,.65)] pointer-events-auto sm:p-5"
           >
             <div className="flex items-center gap-2.5 shrink-0 mb-3">
               {renderIcon()}
@@ -97,6 +130,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
             <div className="flex items-center justify-end gap-2 shrink-0">
               <button
+                data-confirm-initial
                 type="button"
                 onClick={onCancel}
                 disabled={isBusy}

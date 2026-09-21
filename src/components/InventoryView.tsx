@@ -172,7 +172,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         <button
           type="button"
           onClick={() => onOpenAddComponent()}
-          className="app-button app-button-primary stock-gradient-action flex shrink-0 items-center justify-center gap-1.5 px-4"
+          className="app-button app-button-primary flex shrink-0 items-center justify-center gap-1.5 px-4"
           title="Add a new component"
         >
           <Plus className="w-3.5 h-3.5 shrink-0" />
@@ -182,7 +182,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           <button
             type="button"
             onClick={onOpenBulkEntry}
-            className="app-button stock-gradient-action flex items-center justify-center gap-1.5 px-4"
+            className="app-button app-button-outline flex items-center justify-center gap-1.5 px-4"
             title="Fast Bulk Stock Entry via AI Text or Image Scan"
           >
             <Zap className="h-3.5 w-3.5 shrink-0" />
@@ -272,6 +272,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                 <div className="grid grid-cols-1 gap-2">
                   {row.items.map((component) => (
                     <ComponentCard
+                      isActive={isActive !== false}
                       isExpanded={expandedCardId === component.id}
                       onToggle={() => setExpandedCardId(expandedCardId === component.id ? null : component.id)}
                       key={component.id}
@@ -360,6 +361,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                   <div className="grid grid-cols-1 gap-2">
                     {row.items.map((component) => (
                       <ComponentCard
+                        isActive={isActive !== false}
                         isExpanded={expandedCardId === component.id}
                         onToggle={() => setExpandedCardId(expandedCardId === component.id ? null : component.id)}
                         key={component.id}

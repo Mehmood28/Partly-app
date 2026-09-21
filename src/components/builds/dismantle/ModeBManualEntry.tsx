@@ -57,15 +57,15 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
         </button>
       </div>
 
-      <div className="space-y-2">
+      <div className="divide-y divide-white/[0.08] border-y border-white/[0.08]">
         {manualParts.map((part, index) => (
           <div
             key={part.id}
             style={{ zIndex: manualParts.length - index + 20 }}
-            className={`manual-part-row relative rounded-xl border bg-[#101719] p-2.5 text-xs transition-colors sm:p-3 ${
+            className={`manual-part-row relative px-1 py-2.5 text-xs transition-colors ${
               part.isLocked
-                ? 'border-[#B9EF68]/40 shadow-sm shadow-[#B9EF68]/10'
-                : 'border-white/[0.08] hover:border-white/[0.15]'
+                ? 'bg-[#B9EF68]/[0.035]'
+                : 'hover:bg-white/[0.015]'
             }`}
           >
             <div className="manual-part-identity flex items-center gap-2">
