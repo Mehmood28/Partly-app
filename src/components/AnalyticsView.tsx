@@ -256,13 +256,13 @@ export const AnalyticsView: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="sales-tracking-table-wrap overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#101719]/80 text-zinc-400 font-mono font-bold uppercase tracking-wider border-b border-white/[0.08]">
                 <th className="w-[28%] border-r border-white/[0.06]">Month</th>
                 <th className="w-[24%] border-r border-white/[0.06]">Revenue</th>
-                <th className="w-[24%] border-r border-white/[0.06] text-emerald-400">Profit</th>
+                <th className="w-[24%] border-r border-white/[0.06] text-[#B9EF68]">Profit</th>
                 <th className="w-[24%] text-[#83E5DF]">PCs Sold</th>
               </tr>
             </thead>
@@ -296,7 +296,7 @@ export const AnalyticsView: React.FC = () => {
                     </td>
 
                     {/* Profit Cell */}
-                    <td className={`border-r border-white/[0.06] font-mono font-medium ${row.profit < 0 ? getProfitTextColor(row.profit) : 'text-emerald-400'}`}>
+                    <td className={`border-r border-white/[0.06] font-mono font-medium ${row.profit < 0 ? getProfitTextColor(row.profit) : 'text-[#B9EF68]'}`}>
                       {formatCurrency(row.profit)}
                     </td>
 
@@ -317,7 +317,7 @@ export const AnalyticsView: React.FC = () => {
                 <td className="text-[#83E5DF] border-r border-white/[0.06]">
                   {formatCurrency(totalYearlyRevenue)}
                 </td>
-                <td className={`border-r border-white/[0.06] ${totalYearlyProfit < 0 ? getProfitTextColor(totalYearlyProfit) : 'text-emerald-400'}`}>
+                <td className={`border-r border-white/[0.06] ${totalYearlyProfit < 0 ? getProfitTextColor(totalYearlyProfit) : 'text-[#B9EF68]'}`}>
                   {formatSignedCurrency(totalYearlyProfit)}
                 </td>
                 <td className="text-[#83E5DF] text-center sm:text-left">

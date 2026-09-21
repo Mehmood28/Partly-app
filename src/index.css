@@ -1222,11 +1222,12 @@ button.app-button-primary:hover { filter:brightness(1.05); }
 .buy-pc-footer button { min-height:34px !important; padding-block:4px; }
 
 /* Sale dialogs use the same compact ledgers and field rhythm as Stock. */
-.sell-part-shell { display:grid; min-height:0; }
+.sell-part-shell { display:flex; height:100%; min-height:0; flex-direction:column; }
 .sell-part-header { padding-block:8px !important; }
 .sell-part-header > div:first-child { gap:8px; }
 .sell-part-tabs { padding-top:7px !important; padding-bottom:7px !important; }
-.sell-part-content,.single-sale-form { padding-block:8px !important; }
+.sell-part-header,.sell-part-tabs { flex:0 0 auto; }
+.sell-part-content,.single-sale-form { min-height:0; flex:1 1 auto; overflow-y:auto; padding-block:8px !important; }
 .single-sale-form,.single-sale-fields { display:grid; gap:7px !important; }
 .single-sale-form > :not([hidden]) ~ :not([hidden]),
 .single-sale-fields > :not([hidden]) ~ :not([hidden]) { margin-top:0 !important; }
@@ -1235,7 +1236,7 @@ button.app-button-primary:hover { filter:brightness(1.05); }
 .single-sale-info { display:grid; gap:7px !important; margin-top:0 !important; padding:8px !important; }
 .single-sale-info > :not([hidden]) ~ :not([hidden]) { margin-top:0 !important; }
 .trade-in-section { padding-block:8px !important; }
-.single-sale-footer { padding-top:0; }
+.single-sale-footer { position:sticky; z-index:4; bottom:-8px; margin:0 -20px -8px; padding:8px 20px !important; border-top:1px solid var(--app-line); background:rgba(11,17,19,.97); backdrop-filter:blur(10px); }
 .sale-summary { padding:9px; }
 .bulk-stock-selector,.bulk-deal-details,.bulk-sale-overview { padding-inline:0; gap:8px !important; }
 .bulk-stock-pool { border-block:1px solid var(--app-line); }
@@ -1328,7 +1329,7 @@ button.app-button-primary:hover { filter:brightness(1.05); }
 .analytics-view .goal-details { margin:3px 0 5px; font-size:10px; }
 .analytics-view .goal-details > * { padding:0 8px; }
 .analytics-view .goal-track { height:4px; }
-.analytics-toolbar { display:grid; gap:3px; padding:1px 0 5px; border-bottom:1px solid var(--app-line); }
+.analytics-toolbar { display:grid; gap:3px; padding:1px 0 5px; border-bottom:0; }
 .analytics-toolbar-row { display:flex; min-width:0; align-items:center; justify-content:space-between; gap:8px; }
 .analytics-toolbar .app-page-title { min-width:0; font-size:17px; line-height:1.15; white-space:nowrap; }
 .analytics-date-filters { display:flex; flex-shrink:0; align-items:center; gap:6px; }
@@ -1336,19 +1337,20 @@ button.app-button-primary:hover { filter:brightness(1.05); }
 .analytics-month-select { width:112px; }
 .analytics-date-filters .custom-select-trigger { height:34px; min-height:34px; padding-inline:8px; font-size:10px; }
 .analytics-scope-copy { font-size:10px; line-height:1.25; }
-.analytics-summary-stack { display:grid; grid-template-columns:minmax(0,1fr); gap:0; }
+.analytics-summary-stack { display:grid; grid-template-columns:minmax(0,1fr); gap:5px; }
 .analytics-view .report-section { min-width:0; padding:6px 0; }
-.analytics-summary-stack .report-section { border-bottom:1px solid var(--app-line); }
+.analytics-summary-stack .report-section { border-bottom:0; }
 .analytics-summary-header { display:flex; min-height:18px; align-items:center; justify-content:space-between; gap:6px; }
 .analytics-view .report-section h3 { font-size:12px; line-height:1.2; }
 .analytics-summary-header > span { font-size:10px; }
 .analytics-view .report-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:4px; }
-.analytics-view .report-metrics > div { min-width:0; padding:5px 7px; }
+.analytics-view .report-metrics > div { min-width:0; padding:5px 7px; border-bottom:0; }
 .analytics-view .report-metrics p:first-child { font-size:10px; line-height:1.1; }
 .analytics-view .report-metrics p:last-child { margin-top:2px; font-size:12px; line-height:1.1; overflow-wrap:anywhere; }
-.sales-tracking-section { padding-bottom:0 !important; border-bottom:0 !important; }
-.sales-tracking-heading { padding:5px 7px; border-bottom:1px solid var(--app-line); }
+.sales-tracking-section { padding:0 !important; overflow:hidden; border:1px solid rgba(255,255,255,.10) !important; border-radius:9px; background:#0d1416; box-shadow:0 8px 24px rgba(0,0,0,.14); }
+.sales-tracking-heading { padding:7px 9px 6px; border-bottom:0; }
 .sales-tracking-copy { margin-top:1px; font-size:10px; line-height:1.2; }
+.sales-tracking-table-wrap { margin:0 7px 7px; overflow:hidden; border:1px solid rgba(255,255,255,.075); border-radius:6px; background:#0a1012; }
 .analytics-view table { table-layout:fixed; font-size:11px; }
 .analytics-view th,.analytics-view td { padding:4px 7px; font-size:11px; line-height:1.1; white-space:nowrap; }
 .analytics-view thead th { font-size:10px; }

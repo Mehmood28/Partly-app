@@ -485,14 +485,16 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
       {/* Reset & Maintenance */}
       <section className="data-section data-reset-section">
         <div className="data-section-heading">
-          <div className="w-6 h-6 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
-            <RotateCcw className="w-3.5 h-3.5" />
-          </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-100">Database Reset &amp; Maintenance</h3>
-            <p className="text-[11px] text-zinc-400">
-              Clear local cached state to start fresh or troubleshoot
-            </p>
+            <div className="w-6 h-6 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+              <RotateCcw className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-100">Database Reset &amp; Maintenance</h3>
+              <p className="text-[11px] text-zinc-400">
+                Clear local cached state to start fresh or troubleshoot
+              </p>
+            </div>
           </div>
         </div>
 
