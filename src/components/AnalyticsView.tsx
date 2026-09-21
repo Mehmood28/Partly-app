@@ -296,7 +296,7 @@ export const AnalyticsView: React.FC = () => {
                     </td>
 
                     {/* Profit Cell */}
-                    <td className={`border-r border-white/[0.06] font-mono font-medium ${getProfitTextColor(row.profit)}`}>
+                    <td className={`border-r border-white/[0.06] font-mono font-medium ${row.profit < 0 ? getProfitTextColor(row.profit) : 'text-emerald-400'}`}>
                       {formatCurrency(row.profit)}
                     </td>
 
@@ -317,7 +317,7 @@ export const AnalyticsView: React.FC = () => {
                 <td className="text-[#83E5DF] border-r border-white/[0.06]">
                   {formatCurrency(totalYearlyRevenue)}
                 </td>
-                <td className={`border-r border-white/[0.06] ${getProfitTextColor(totalYearlyProfit)}`}>
+                <td className={`border-r border-white/[0.06] ${totalYearlyProfit < 0 ? getProfitTextColor(totalYearlyProfit) : 'text-emerald-400'}`}>
                   {formatSignedCurrency(totalYearlyProfit)}
                 </td>
                 <td className="text-[#83E5DF] text-center sm:text-left">
