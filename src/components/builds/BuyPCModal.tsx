@@ -166,7 +166,7 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, isVisible = true
     <BottomSheetModal
       isOpen={isOpen && isVisible}
       onClose={onClose}
-      className="build-modal stock-modal modal-workspace buy-pc-modal w-full max-w-2xl !p-0 !overflow-hidden"
+      className="build-modal stock-modal modal-workspace modal-fill buy-pc-modal w-full max-w-2xl !p-0 !overflow-hidden"
     >
       <form onSubmit={handleSubmit} className="flex h-full w-full flex-col bg-[#0B1113] text-zinc-100">
         <div className="buy-pc-header shrink-0 border-b border-white/[0.08] bg-[#0B1113]/95 px-3 py-2.5 sm:px-4">

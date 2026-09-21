@@ -55,7 +55,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
   const incomingCostBasis = outgoingCostBasis + parsedCashPaid;
 
   return (
-    <div className="space-y-3 border-y border-white/[0.08] py-3">
+    <div className="trade-in-section space-y-3 border-y border-white/[0.08] py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ArrowRightLeft className="w-4 h-4 text-[#B9EF68]" />

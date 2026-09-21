@@ -118,7 +118,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
   if (!isOpen) return null;
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleClose} className="stock-modal modal-workspace bulk-entry-modal max-w-4xl !overflow-hidden !p-0">
+    <BottomSheetModal isOpen={isOpen} onClose={handleClose} className={`stock-modal modal-workspace bulk-entry-modal max-w-4xl !overflow-hidden !p-0 ${parsedItems.length > 0 ? 'modal-fill' : ''}`}>
       <div className="flex h-full w-full flex-col bg-[#0B1113]">
         <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-3 py-2.5 sm:px-4">
           <div className="flex items-center gap-3">

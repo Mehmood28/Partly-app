@@ -237,7 +237,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="build-modal stock-modal modal-workspace build-editor-modal max-w-4xl !overflow-hidden">
+    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="build-modal stock-modal modal-workspace modal-fill build-editor-modal max-w-4xl !overflow-hidden">
       <form className="build-editor-form flex h-full min-h-0 w-full flex-col" onSubmit={handleSubmit}>
         {/* Header */}
         <div className="build-editor-header flex shrink-0 items-start justify-between border-b border-white/[0.09] pb-3 pt-1">

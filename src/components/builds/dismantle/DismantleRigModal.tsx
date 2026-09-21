@@ -162,7 +162,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, isO
     <BottomSheetModal
       isOpen={!!build && isOpen}
       onClose={onClose}
-      className={`build-modal stock-modal modal-workspace dismantle-modal ${isModeA ? 'dismantle-modal-known' : ''} w-full max-w-2xl !p-0 !overflow-hidden`}
+      className={`build-modal stock-modal modal-workspace modal-fill dismantle-modal ${isModeA ? 'dismantle-modal-known' : ''} w-full max-w-2xl !p-0 !overflow-hidden`}
     >
       <div className="flex h-full w-full select-none flex-col bg-[#0B1113] text-zinc-100">
         <div className="dismantle-modal-header shrink-0 border-b border-white/[0.08] bg-[#0B1113]/95 px-3 py-2.5 backdrop-blur-md z-30 sm:px-4">
