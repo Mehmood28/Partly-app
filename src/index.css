@@ -640,9 +640,9 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .stock-inventory-layout .app-metric-label { font-size:9px; }
   .stock-inventory-layout .app-metric-value { font-size:14px; letter-spacing:-.03em; }
   .stock-inventory-layout .inventory-actions { gap:6px; }
-  .stock-inventory-layout .inventory-actions > button { flex:0 0 118px; min-height:32px; font-size:10px; white-space:nowrap; }
+  .stock-inventory-layout .inventory-actions > button { flex:1 1 0; min-width:0; min-height:32px; font-size:10px; white-space:nowrap; }
   .stock-actions-row { align-items:center; }
-  .stock-sort-control { margin-left:auto; width:160px; }
+  .stock-sort-control { margin-left:auto; width:200px; flex:0 0 200px; }
   .stock-sort-control > div > button { height:32px; min-height:32px; padding-inline:9px; font-size:10px; }
   .stock-inventory-layout .inventory-filters > div { gap:7px; }
   .stock-inventory-layout .category-filters { gap:4px; }
@@ -966,7 +966,7 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .purchase-history-view { gap:10px; }
   .purchase-page-heading h2 { font-size:18px; }
   .purchase-page-heading p { font-size:10px; text-align:right; }
-  .purchase-records-toolbar { grid-template-columns:minmax(0,1fr) 135px; gap:7px; }
+  .purchase-records-toolbar { grid-template-columns:minmax(0,1fr) 145px; gap:7px; }
   .purchase-records-toolbar .app-field, .purchase-records-toolbar > div:last-child > div > button { height:34px; min-height:34px; font-size:10px; }
   .purchase-history-view .record-header { padding:10px 11px; }
   .purchase-history-view .record-header h3 { font-size:13px; }
@@ -992,7 +992,7 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .sold-parts-view { gap:10px; }
   .sold-parts-heading h2 { font-size:18px; }
   .sold-parts-heading p { font-size:10px; text-align:right; }
-  .sold-parts-toolbar { grid-template-columns:minmax(0,1fr) 135px; gap:7px; }
+  .sold-parts-toolbar { grid-template-columns:minmax(0,1fr) 145px; gap:7px; }
   .sold-parts-toolbar .app-field, .sold-parts-toolbar > div:last-child > div > button { height:34px; min-height:34px; font-size:10px; }
   .sold-parts-view .record-header { padding:10px 11px; }
   .sold-parts-view .record-header h3 { font-size:13px; }
@@ -1171,7 +1171,7 @@ button[class*="bg-emerald-600"]:hover,
 .selected-part-quantity button { display:grid; min-height:20px !important; place-items:center; padding:0; }
 .selected-part-remove { display:grid; min-height:22px !important; width:22px; place-items:center; padding:0; }
 .build-inventory-list { padding-bottom:1px; }
-.inventory-filter-bar.is-compact .inventory-filter-controls { display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,190px); gap:7px; }
+.inventory-filter-bar.is-compact .inventory-filter-controls { display:grid; grid-template-columns:minmax(0,1fr) 200px; gap:7px; }
 .inventory-filter-bar.is-compact .inventory-sort-control { width:auto; }
 .inventory-filter-bar.is-compact .inventory-filter-controls .app-field,
 .inventory-filter-bar.is-compact .inventory-sort-control button { min-height:34px !important; height:34px; font-size:10px; }
@@ -1280,14 +1280,14 @@ button[class*="bg-emerald-600"]:hover,
   .builds-primary-actions .app-button { min-height:31px; padding-inline:7px; font-size:9.5px; }
   .builds-controls { gap:6px; padding:6px; }
   .builds-controls .app-segmented > button { min-height:29px; font-size:8.5px; }
-  .build-controls-row[data-has-sort='true'] { display:grid; grid-template-columns:160px minmax(0,1fr); }
+  .build-controls-row[data-has-sort='true'] { display:grid; grid-template-columns:200px minmax(0,1fr); }
   .build-sort-control { width:100%; min-width:0; max-width:none; }
   .builds-controls .builds-sort-select,
   .builds-controls .builds-search { height:31px; min-height:31px !important; font-size:9px; }
   .sold-build-contact-lines,.sold-build-timeline { gap:4px; padding:6px 7px; font-size:9px; }
   .sold-build-dates { gap:5px; }
   [data-bottom-sheet-modal] .modal-workspace { height:calc(100dvh - 5.75rem); max-height:calc(100dvh - 5.75rem); }
-  .swap-filter-row { grid-template-columns:minmax(0,1fr) 190px; }
+  .swap-filter-row { grid-template-columns:minmax(0,1fr) 200px; }
   .swap-filter-row .app-field,.swap-sort-select { height:31px; min-height:31px !important; font-size:9px; }
   .allocated-part-menu { right:0; width:190px; }
   .sell-part-header > div:first-child > div:first-child { width:29px; height:29px; }
@@ -1305,7 +1305,7 @@ button[class*="bg-emerald-600"]:hover,
   .selected-part-row { min-height:44px; padding-block:5px; }
   .selected-part-identity { grid-template-columns:38px minmax(0,1fr); gap:3px; }
   .selected-part-meta { margin-left:41px; }
-  .inventory-filter-bar.is-compact .inventory-filter-controls { grid-template-columns:minmax(0,1fr) 190px; gap:6px; }
+  .inventory-filter-bar.is-compact .inventory-filter-controls { grid-template-columns:minmax(0,1fr) 200px; gap:6px; }
   .inventory-filter-bar.is-compact .inventory-filter-controls .app-field,
   .inventory-filter-bar.is-compact .inventory-sort-control button { min-height:31px !important; height:31px; font-size:9px; }
   .allocate-batch-row { min-height:42px; padding-block:5px; }

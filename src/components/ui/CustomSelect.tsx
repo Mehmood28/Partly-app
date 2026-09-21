@@ -15,6 +15,7 @@ interface CustomSelectProps {
   className?: string;
   icon?: React.ReactNode;
   dropdownClassName?: string;
+  fitLongestOption?: boolean;
 }
 
 export const CustomSelect: React.FC<CustomSelectProps> = ({
@@ -24,12 +25,21 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   placeholder = 'Select...',
   className = '',
   icon,
-  dropdownClassName = ''
+  dropdownClassName = '',
+  fitLongestOption = true,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
+  const longestLabelLength = Math.max(
+    placeholder.length,
+    ...options.map((option) => option.label.length),
+  );
+  const preferredWidth = Math.min(
+    320,
+    Math.max(112, Math.ceil(longestLabelLength * 6 + (icon ? 66 : 42))),
+  );
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -90,7 +100,11 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   };
 
   return (
-    <div className="relative w-full min-w-full" ref={containerRef}>
+    <div
+      className="relative w-full min-w-full"
+      ref={containerRef}
+      style={fitLongestOption ? { minWidth: `${preferredWidth}px` } : undefined}
+    >
       <button
         type="button"
         aria-haspopup="listbox"

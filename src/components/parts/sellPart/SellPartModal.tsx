@@ -495,6 +495,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                     label: `${c.category} · ${c.name} (${calculateUnassignedQuantityStrict(c, state.builds)} in stock)`,
                   }))}
                   placeholder="Select a part to sell..."
+                  fitLongestOption={false}
                 />
               )}
             </div>
@@ -514,6 +515,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                         label: `${b.entry.date} · ${b.entry.condition} · ${formatCurrency(b.unitCost)} each (${b.availableQuantity} available)${!hideSupplierNames && b.entry.platform ? ` · ${b.entry.platform}` : ''}`,
                       }))}
                       placeholder="Select batch..."
+                      fitLongestOption={false}
                     />
                   </div>
                 )}
