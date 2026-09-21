@@ -363,7 +363,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           </p>
         </div>
       ) : !isVirtualized ? (
-        <div className="space-y-2.5 pr-1">
+        <div className="space-y-1.5 pr-1">
           {buildRows.map((rowBuilds, rowIndex) => (
             <div key={rowBuilds.map(b => b.id).join('-') || rowIndex} className="grid grid-cols-1 gap-2.5">
               {rowBuilds.map((build) => (
