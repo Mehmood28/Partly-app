@@ -299,9 +299,9 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="bulk-sale-form space-y-4">
       {/* 1. Available Stock Selector Section */}
-      <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
+      <div className="bulk-stock-selector bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-4 h-4 text-[#B9EF68]" />
@@ -340,7 +340,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
         </div>
 
         {/* Available Batches List */}
-        <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+        <div className="bulk-stock-pool max-h-44 overflow-y-auto pr-1 custom-scrollbar">
           {filteredAvailableBatches.length === 0 ? (
             <div className="text-center py-5 text-xs text-zinc-500 font-sans">
               No matching available inventory batches found.
@@ -353,33 +353,26 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
               return (
                 <div
                   key={key}
-                  className={`flex items-center justify-between p-2 rounded-lg border transition-all ${
+                  className={`bulk-stock-row flex items-center justify-between transition-all ${
                     isAdded
-                      ? 'bg-[#B9EF68]/10 border-[#B9EF68]/30 text-zinc-300'
-                      : 'bg-[#0B1113] border-white/[0.06] hover:border-white/[0.12] text-zinc-200'
+                      ? 'is-added text-zinc-300'
+                      : 'text-zinc-200'
                   }`}
                 >
                   <div className="min-w-0 flex-1 pr-2">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-semibold text-zinc-100 truncate">
-                        {item.component.name}
-                      </span>
-                      <span className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.06] text-zinc-400 font-sans">
-                        {item.component.category}
-                      </span>
-                      {item.entry.condition && (
-                        <span className="text-[11px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-sans">
-                          {item.entry.condition}
-                        </span>
-                      )}
+                    <div className="bulk-stock-name text-xs font-semibold text-zinc-100">
+                      {item.component.name}
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5 text-[11px] text-zinc-400 font-mono">
+                    <div className="bulk-stock-meta text-[11px] text-zinc-400">
+                      <span>{item.component.category}</span>
+                      {item.entry.condition && <><span>·</span><span>{item.entry.condition}</span></>}
+                      <span>·</span>
                       <span>{item.availableQuantity} in stock</span>
-                      <span>•</span>
-                      <span>Cost: {formatCurrency(item.unitCost)}/ea</span>
+                      <span>·</span>
+                      <span>{formatCurrency(item.unitCost)}/ea</span>
                       {item.entry.date && (
                         <>
-                          <span>•</span>
+                          <span>·</span>
                           <span>{item.entry.date}</span>
                         </>
                       )}
@@ -416,7 +409,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       </div>
 
       {/* 2. Selected Sale Lines Section */}
-      <div className="space-y-2">
+      <div className="bulk-selected-lines space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyan-400" />
@@ -440,25 +433,18 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
             No items selected yet. Choose component batches from the list above to add them to this bulk sale.
           </div>
         ) : (
-          <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+          <div className="bulk-line-list max-h-60 overflow-y-auto pr-1 custom-scrollbar">
             {lineSummaries.map((item, idx) => (
               <div
                 key={`${item.line.componentId}::${item.line.purchaseEntryId}`}
-                className="bg-[#101719] border border-white/[0.08] rounded-xl p-3 space-y-2.5"
+                className="bulk-selected-line"
               >
                 {/* Header row */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-bold text-zinc-100 font-sans">
-                        {item.component?.name || 'Unknown Component'}
-                      </span>
-                      <span className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.06] text-zinc-400 font-sans">
-                        {item.component?.category}
-                      </span>
-                    </div>
+                    <div className="text-xs font-semibold text-zinc-100 font-sans">{item.component?.name || 'Unknown Component'}</div>
                     <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
-                      Batch Cost: {formatCurrency(item.unitCost)}/ea • Max Available: {item.availableQty}
+                      {item.component?.category} · {formatCurrency(item.unitCost)}/ea · {item.availableQty} available
                     </div>
                   </div>
 
@@ -473,7 +459,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                 </div>
 
                 {/* Line inputs & metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-white/[0.04]">
+                <div className="grid grid-cols-2 gap-2.5 pt-1 border-t border-white/[0.04]">
                   {/* Quantity control */}
                   <div>
                     <label className="block text-[11px] font-medium text-zinc-400 mb-1 flex items-center justify-between font-sans">
@@ -540,12 +526,12 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       </div>
 
       {/* 3. Shared Deal Details */}
-      <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
+      <div className="bulk-deal-details bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
         <span className="text-xs font-semibold text-zinc-200 font-sans block">
           Deal & Payment Details
         </span>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-zinc-300 mb-1 font-sans">
               Sale Date
@@ -572,7 +558,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-zinc-300 mb-1 font-sans">
               Platform
@@ -613,7 +599,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       </div>
 
       {/* 4. Live Combined Summary Box */}
-      <div className="bg-gradient-to-br from-[#101719] to-[#0B1113] border border-white/[0.08] rounded-xl p-3.5 space-y-2.5">
+      <div className="bulk-sale-overview bg-gradient-to-br from-[#101719] to-[#0B1113] border border-white/[0.08] rounded-xl p-3.5 space-y-2.5">
         <div className="flex items-center justify-between text-xs font-sans text-zinc-400">
           <span>Bulk Sale Overview</span>
           <span className="font-mono">
@@ -621,7 +607,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+        <div className="grid grid-cols-3 gap-2 pt-1">
           <div className="bg-[#0B1113]/80 border border-white/[0.04] rounded-lg p-2">
             <span className="text-[11px] text-zinc-500 uppercase font-mono block">Revenue</span>
             <span className="text-xs font-bold text-zinc-100 font-mono">

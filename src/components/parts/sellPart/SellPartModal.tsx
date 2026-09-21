@@ -346,10 +346,10 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
     <BottomSheetModal
       isOpen={isOpen}
       onClose={handleCloseAndReset}
-      className={`stock-modal ${saleMode === 'bulk' ? 'max-w-2xl' : 'max-w-lg'}`}
+      className={`stock-modal sell-part-modal ${saleMode === 'bulk' ? 'max-w-2xl' : 'max-w-lg'}`}
     >
-      <div className="w-full">
-        <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
+      <div className="sell-part-shell w-full">
+        <div className="sell-part-header px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 flex items-center justify-center text-[#B9EF68]">
               {saleMode === 'bulk' ? <Layers className="w-5 h-5" /> : <Tag className="w-5 h-5" />}
@@ -380,7 +380,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
         </div>
 
         {/* Mode Switcher Tabs */}
-        <div className="px-5 pt-3 pb-2 border-b border-white/[0.06] bg-[#0B1113]">
+        <div className="sell-part-tabs px-5 pt-3 pb-2 border-b border-white/[0.06] bg-[#0B1113]">
           <div className="flex items-center gap-1 p-1 bg-[#101719] border border-white/[0.06] rounded-xl">
             <button
               type="button"
@@ -410,7 +410,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
         </div>
 
         {saleMode === 'bulk' ? (
-          <div className="p-5">
+          <div className="sell-part-content p-5">
             <BulkSaleForm
               onClose={handleCloseAndReset}
               initialComponentId={preselectedComponent?.id}
@@ -461,7 +461,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <form onSubmit={handleSubmit} className="single-sale-form p-5 space-y-4">
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1 font-sans">
                 Select Component / Part
@@ -518,7 +518,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                   </div>
                 )}
 
-                <div className="space-y-4 pt-1">
+                <div className="single-sale-fields space-y-4 pt-1">
                   <SaleDetailsForm 
                     hasTradeIn={hasTradeIn}
                     isTradeUp={isTradeUp}
@@ -563,7 +563,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                   />
 
                   {!isTradeUp && (
-                    <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-2">
+                    <div className="sale-summary bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-2">
                       <div className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
                         Sale Summary &amp; Profit Preview
                       </div>
@@ -595,7 +595,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                     </div>
                   )}
 
-                  <div className="pt-2 flex items-center justify-end gap-3">
+                  <div className="single-sale-footer pt-2 flex items-center justify-end gap-3">
                     <button
                       type="button"
                       onClick={(e) => {

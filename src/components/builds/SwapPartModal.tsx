@@ -5,7 +5,7 @@ import { useInventory } from '../../context/InventoryContext';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { useToast } from '../../context/ToastContext';
 import { Box, ArrowRightLeft, X, Search, ChevronDown, ChevronUp, ArrowDownWideNarrow, Monitor, Cpu, HardDrive, Database, CircuitBoard, Zap, Fan, Package} from 'lucide-react';
-import { formatCurrency, getConditionColor, getUnassignedBatches, SUB_CATEGORIES, SortOption } from '../../utils/helpers';
+import { formatCurrency, getUnassignedBatches, SUB_CATEGORIES, SortOption } from '../../utils/helpers';
 import { ConfirmModal } from '../ConfirmModal';
 import { CustomSelect } from '../ui/CustomSelect';
 
@@ -218,15 +218,15 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
           </div>
 
           {chips.length > 1 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            <div className="swap-subcategory-filter flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
               {chips.map(chip => (
                 <button
                   key={chip}
                   onClick={() => setActiveFilter(activeFilter === chip ? 'All' : chip)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
+                  className={`px-2.5 py-1 text-xs font-medium whitespace-nowrap border-b-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
                     activeFilter === chip
-                      ? 'bg-[#B9EF68] text-[#07100B] shadow-sm shadow-[#B9EF68]/20'
-                      : 'bg-[#101719] text-zinc-400 border border-white/[0.08] hover:text-white hover:bg-white/[0.04]'
+                      ? 'border-[#B9EF68] text-[#B9EF68]'
+                      : 'border-transparent text-zinc-400 hover:text-white'
                   }`}
                 >
                   {chip}
@@ -237,61 +237,48 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         </div>
 
         {/* List */}
-        <div className="modal-results-list overflow-y-auto pr-1 space-y-2">
+        <div className="swap-results modal-results-list overflow-y-auto pr-1">
           {filteredParts.map(({ comp, validEntries, totalAvailable, avgPrice, subCategory }) => {
             const isExpanded = expandedPartId === comp.id;
 
             return (
-              <div key={comp.id} className="bg-[#101719] border border-white/[0.08] hover:border-[#B9EF68]/40 rounded-xl mb-2 transition-all overflow-hidden">
+              <div key={comp.id} className={`swap-component-row ${isExpanded ? 'is-expanded' : ''}`}>
                 {/* Main Accordion Header */}
                 <div
                   onClick={() => setExpandedPartId(isExpanded ? null : comp.id)}
-                  className="p-3 cursor-pointer flex items-start gap-2.5 group"
+                  className="swap-component-header cursor-pointer group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#B9EF68]/15 border border-[#B9EF68]/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="swap-category-icon">
                     {renderCategoryIcon(comp.category)}
                   </div>
-                  <div className="flex flex-col gap-1 min-w-0 flex-1">
+                  <div className="min-w-0 flex-1">
                     <h4 className="text-xs sm:text-sm font-semibold text-zinc-100 break-words transition-colors font-sans">{comp.name}</h4>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {subCategory && (
-                        <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
-                          {subCategory}
-                        </span>
-                      )}
-                      <span className="bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#83E5DF] shrink-0 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">
-                        {totalAvailable} in stock
-                      </span>
-                      <span className="bg-white/[0.04] text-zinc-300 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-medium leading-none inline-flex items-center justify-center whitespace-nowrap">Avg: ${avgPrice.toFixed(2)}/ea</span>
+                    <div className="swap-component-meta">
+                      {subCategory && <span>{subCategory}</span>}
+                      {subCategory && <span>·</span>}
+                      <span>{totalAvailable} in stock</span>
+                      <span>·</span>
+                      <span>Avg. {formatCurrency(avgPrice)}/ea</span>
                     </div>
                   </div>
-                  <div className="shrink-0 ml-2 self-center">
+                  <div className="shrink-0 self-center">
                     {isExpanded ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
                   </div>
                 </div>
 
                 {/* Expanded Batches */}
                 {isExpanded && (
-                  <div className="border-t border-white/[0.08] bg-[#0B1113] p-3 space-y-2">
+                  <div className="swap-batches">
                     {validEntries.map(entry => (
-                      <div key={entry.id} className="bg-[#101719] border border-white/[0.08] hover:border-[#B9EF68]/40 rounded-xl p-2.5 flex items-start sm:items-center justify-between gap-2.5 transition-all">
-                        <div className="flex items-center gap-2 flex-wrap flex-1">
-                          <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px] font-mono">
-                            {entry.date}
+                      <div key={entry.id} className="swap-batch-row">
+                        <div className="swap-batch-details">
+                          <strong>{entry.availableQty} available · {formatCurrency(entry.unitPrice)}/ea</strong>
+                          <span>
+                            {entry.condition} · {entry.date}
+                            {!hideSupplierNames && entry.platform ? ` · ${entry.platform}` : ''}
                           </span>
-                          <span className={`shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-medium leading-none inline-flex items-center justify-center ${getConditionColor(entry.condition)}`}>
-                            {entry.condition}
-                          </span>
-                          <span className="bg-white/[0.06] text-zinc-200 border border-white/[0.08] shrink-0 whitespace-nowrap px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold leading-none inline-flex items-center justify-center">
-                            {entry.availableQty} available @ {formatCurrency(entry.unitPrice)}
-                          </span>
-                          {!hideSupplierNames && entry.platform && (
-                            <span className="text-zinc-400 shrink-0 whitespace-nowrap text-[11px]">
-                              {entry.platform}
-                            </span>
-                          )}
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                        <div className="shrink-0">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -306,7 +293,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                                 unitPrice: entry.unitPrice,
                               });
                             }}
-                            className="bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] shadow-sm shadow-[#B9EF68]/20 transition-all shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
+                            className="app-button app-button-primary shrink-0 px-3"
                           >
                             Swap
                           </button>

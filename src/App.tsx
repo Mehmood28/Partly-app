@@ -258,37 +258,6 @@ function AppContent() {
               onEditComponent={handleEditComponent}
               onOpenSellPart={handleOpenSellPart}
             />
-            <ComponentModal
-              isOpen={isComponentModalOpen}
-              onClose={handleCloseComponentModal}
-              onSave={handleSaveComponent}
-              initialComponent={editingComponent}
-            />
-            <PurchaseEntryModal
-              isOpen={!!purchaseModalComponentId}
-              componentName={targetComponentForPurchase ? targetComponentForPurchase.name : ''}
-              onClose={handleClosePurchaseModal}
-              onSave={(entryData) => {
-                if (purchaseModalComponentId) {
-                  addPurchaseEntry(purchaseModalComponentId, entryData);
-                }
-              }}
-            />
-            <SellPartModal
-              isOpen={isSellPartModalOpen}
-              onClose={handleCloseSellPartModal}
-              preselectedComponent={sellPartPreselectedComp}
-              preselectedEntryId={sellPartPreselectedEntryId}
-              onOpenAddComponent={() => {
-                handleCloseSellPartModal();
-                handleOpenAddComponent();
-              }}
-            />
-            <BulkStockEntryModal
-              isOpen={isBulkEntryModalOpen}
-              onClose={handleCloseBulkEntryModal}
-              onSaveAll={handleSaveBulkItems}
-            />
           </div>
 
           {/* Builds Tab */}
@@ -300,29 +269,6 @@ function AppContent() {
               statusFilter={buildsStatusFilter}
               onStatusFilterChange={setBuildsStatusFilter}
             />
-            <BuildModal
-              isOpen={isBuildModalOpen}
-              onClose={handleCloseBuildModal}
-              initialData={initialBuildData}
-              onSave={(buildData) => {
-                addBuild(buildData);
-              }}
-            />
-            <BuyPCModal
-              isOpen={isBuyPCModalOpen}
-              onClose={() => setIsBuyPCModalOpen(false)}
-              onConfirm={(purchase) => {
-                const result = purchasePC(purchase);
-                if (!result.success) {
-                  showToast(result.error || 'Unable to save this PC purchase.', 'error');
-                  return result;
-                }
-                setIsBuyPCModalOpen(false);
-                setBuildsStatusFilter('Pending');
-                showToast('PC purchase saved in Pending builds.', 'success');
-                return result;
-              }}
-            />
           </div>
 
           {/* Analytics Tab */}
@@ -333,19 +279,70 @@ function AppContent() {
           {/* Data Tab */}
           <div className={activeTab === 'data' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
             <DataSyncView onResetData={handleResetAllData} />
-            <ConfirmModal
-              isOpen={confirmModal.isOpen}
-              title={confirmModal.title}
-              message={confirmModal.message}
-              onConfirm={confirmModal.onConfirm}
-              onCancel={handleCloseConfirmModal}
-              confirmText="Clear All Data"
-              isBusy={isResetting}
-              busyText="Clearing..."
-            />
           </div>
         </React.Suspense>
       </main>
+
+      <ComponentModal
+        isOpen={isComponentModalOpen}
+        onClose={handleCloseComponentModal}
+        onSave={handleSaveComponent}
+        initialComponent={editingComponent}
+      />
+      <PurchaseEntryModal
+        isOpen={!!purchaseModalComponentId}
+        componentName={targetComponentForPurchase ? targetComponentForPurchase.name : ''}
+        onClose={handleClosePurchaseModal}
+        onSave={(entryData) => {
+          if (purchaseModalComponentId) addPurchaseEntry(purchaseModalComponentId, entryData);
+        }}
+      />
+      <SellPartModal
+        isOpen={isSellPartModalOpen}
+        onClose={handleCloseSellPartModal}
+        preselectedComponent={sellPartPreselectedComp}
+        preselectedEntryId={sellPartPreselectedEntryId}
+        onOpenAddComponent={() => {
+          handleCloseSellPartModal();
+          handleOpenAddComponent();
+        }}
+      />
+      <BulkStockEntryModal
+        isOpen={isBulkEntryModalOpen}
+        onClose={handleCloseBulkEntryModal}
+        onSaveAll={handleSaveBulkItems}
+      />
+      <BuildModal
+        isOpen={isBuildModalOpen}
+        onClose={handleCloseBuildModal}
+        initialData={initialBuildData}
+        onSave={addBuild}
+      />
+      <BuyPCModal
+        isOpen={isBuyPCModalOpen}
+        onClose={() => setIsBuyPCModalOpen(false)}
+        onConfirm={(purchase) => {
+          const result = purchasePC(purchase);
+          if (!result.success) {
+            showToast(result.error || 'Unable to save this PC purchase.', 'error');
+            return result;
+          }
+          setIsBuyPCModalOpen(false);
+          setBuildsStatusFilter('Pending');
+          showToast('PC purchase saved in Pending builds.', 'success');
+          return result;
+        }}
+      />
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={handleCloseConfirmModal}
+        confirmText="Clear All Data"
+        isBusy={isResetting}
+        busyText="Clearing..."
+      />
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, RotateCcw, HelpCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useModalScrollLock } from './ui/useModalScrollLock';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -28,19 +29,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isBusy = false,
   busyText = 'Working...',
 }) => {
-  const anchorRef = React.useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const isHiddenByParent = Boolean(anchorRef.current?.parentElement?.closest('.hidden'));
-    if (isOpen && !isHiddenByParent) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  useModalScrollLock(isOpen);
 
   const renderIcon = () => {
     if (variant === 'emerald') {
@@ -74,12 +63,9 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     return 'bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-rose-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500';
   };
 
-  const isHiddenByParent = Boolean(anchorRef.current?.parentElement?.closest('.hidden'));
-  const shouldRender = isOpen && !isHiddenByParent;
-
   const modalContent = (
     <AnimatePresence>
-      {shouldRender && (
+      {isOpen && (
         <div 
           data-confirm-modal="true" role="alertdialog" aria-modal="true" aria-label={title}
           className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-4 pb-[85px] md:pb-4 pointer-events-none" 
@@ -137,10 +123,5 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     </AnimatePresence>
   );
 
-  return (
-    <>
-      <span ref={anchorRef} className="hidden" aria-hidden="true" />
-      {typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null}
-    </>
-  );
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 };

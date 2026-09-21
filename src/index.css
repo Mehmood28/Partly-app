@@ -1115,10 +1115,11 @@ button[class*="bg-emerald-600"]:hover,
 .sold-build-details { display:grid; gap:7px; padding:7px 0 0; border-top:1px solid var(--app-line); }
 .sold-build-trade-in { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 10px; padding:7px 0; border-bottom:1px solid var(--app-line); font-size:11px; }
 .sold-build-info { border-bottom:1px solid var(--app-line); }
-.sold-build-contact-lines { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px 18px; padding:7px 0; color:#909da7; font-size:10px; }
+.sold-build-contact-lines { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px 18px; padding:7px 10px; color:#909da7; font-size:10px; }
 .sold-build-contact-lines > div { min-width:0; overflow-wrap:anywhere; }
 .sold-build-contact-lines strong { color:#edf2f3; font-weight:650; }
-.sold-build-timeline { display:flex; flex-wrap:wrap; gap:5px 12px; padding:7px 10px; border-top:1px solid var(--app-line); font-size:9px; }
+.sold-build-timeline { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px 18px; padding:7px 10px; border-top:1px solid var(--app-line); font-size:9px; }
+.sold-build-timeline > span { min-width:0; overflow-wrap:anywhere; }
 .sold-build-timeline svg { width:12px; height:12px; }
 .build-sold-footer { display:flex; justify-content:flex-end; }
 .sold-add-part { width:auto; min-width:132px; min-height:34px; font-size:10px; }
@@ -1129,8 +1130,53 @@ button[class*="bg-emerald-600"]:hover,
 .modal-results-list { min-height:0; max-height:none !important; flex:1 1 auto; overscroll-behavior:contain; }
 .swap-filter-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,220px); gap:7px; }
 .swap-filter-row .app-field,.swap-sort-select { height:34px; min-height:34px !important; font-size:10px; }
-.sell-build-form-body { min-height:0; flex:1 1 auto; overflow-y:auto; padding-right:3px; overscroll-behavior:contain; }
-.sell-build-form-footer { flex-shrink:0; }
+.sell-build-form { display:grid; gap:10px; }
+.sell-build-form-body { display:grid; gap:9px; min-height:0; padding:1px 2px 0 0; overscroll-behavior:contain; }
+.sell-build-form-footer { padding-top:9px; }
+.build-editor-form { gap:0; }
+.build-editor-header { margin-bottom:8px; }
+.build-editor-body { display:grid; gap:10px; padding-right:3px; padding-bottom:2px; overscroll-behavior:contain; }
+.build-editor-footer { margin-top:0; background:#0b1113; }
+
+/* Sale dialogs use the same compact ledgers and field rhythm as Stock. */
+.sell-part-shell { display:grid; }
+.sell-part-header { padding-block:8px !important; }
+.sell-part-header > div:first-child { gap:8px; }
+.sell-part-tabs { padding-top:7px !important; padding-bottom:7px !important; }
+.sell-part-content,.single-sale-form { padding-block:9px !important; }
+.single-sale-form,.single-sale-fields,.bulk-sale-form { gap:9px !important; }
+.single-sale-form > div label { margin-bottom:3px; }
+.single-sale-footer { padding-top:0; }
+.sale-summary { padding:9px; }
+.bulk-stock-selector,.bulk-deal-details,.bulk-sale-overview { padding:10px; gap:8px !important; }
+.bulk-stock-pool { border-block:1px solid var(--app-line); }
+.bulk-stock-row { gap:8px; min-height:44px; padding:6px 2px; border-bottom:1px solid var(--app-line); }
+.bulk-stock-row:last-child { border-bottom:0; }
+.bulk-stock-row.is-added { background:rgba(185,239,104,.035); }
+.bulk-stock-name { line-height:1.25; overflow-wrap:anywhere; }
+.bulk-stock-meta { display:flex; flex-wrap:wrap; gap:2px 6px; margin-top:3px; line-height:1.25; }
+.bulk-line-list { border-block:1px solid var(--app-line); }
+.bulk-selected-line { display:grid; gap:7px; padding:8px 2px; border-bottom:1px solid var(--app-line); }
+.bulk-selected-line:last-child { border-bottom:0; }
+.bulk-deal-details input,.bulk-deal-details button { min-height:32px !important; height:32px !important; }
+.bulk-sale-overview > div:last-child > div { min-width:0; padding:7px; }
+.bulk-sale-overview > div:last-child span { overflow-wrap:anywhere; }
+
+/* Swap uses open rows rather than pill-heavy cards. */
+.swap-subcategory-filter { border-bottom:1px solid var(--app-line); }
+.swap-results { border-top:1px solid var(--app-line); }
+.swap-component-row { border-bottom:1px solid var(--app-line); }
+.swap-component-header { display:grid; grid-template-columns:28px minmax(0,1fr) 16px; align-items:center; gap:9px; min-height:52px; padding:7px 3px; }
+.swap-component-row.is-expanded .swap-component-header { background:rgba(185,239,104,.025); }
+.swap-category-icon { display:grid; place-items:center; color:var(--app-aqua); }
+.swap-category-icon svg { width:17px; height:17px; }
+.swap-component-meta { display:flex; flex-wrap:wrap; gap:2px 6px; margin-top:3px; color:var(--app-muted); font-size:10px; line-height:1.25; }
+.swap-batches { padding-left:37px; border-top:1px solid var(--app-line); }
+.swap-batch-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px; min-height:44px; padding:6px 3px; border-bottom:1px solid var(--app-line); }
+.swap-batch-row:last-child { border-bottom:0; }
+.swap-batch-details { min-width:0; }
+.swap-batch-details strong { display:block; color:#edf2f3; font-size:11px; font-weight:600; }
+.swap-batch-details span { display:block; margin-top:2px; color:var(--app-muted); font-size:9px; overflow-wrap:anywhere; }
 
 @media(max-width:639px) {
   .app-main { padding:0 12px calc(72px + env(safe-area-inset-bottom)); }
@@ -1146,9 +1192,18 @@ button[class*="bg-emerald-600"]:hover,
   .build-sort-control { width:100%; min-width:0; max-width:none; }
   .builds-controls .builds-sort-select,
   .builds-controls .builds-search { height:31px; min-height:31px !important; font-size:9px; }
-  .sold-build-contact-lines { gap:4px 10px; padding:6px 0; font-size:9px; }
+  .sold-build-contact-lines,.sold-build-timeline { gap:4px 10px; padding:6px 7px; font-size:9px; }
   [data-bottom-sheet-modal] .modal-workspace { height:calc(100dvh - 5.75rem); max-height:calc(100dvh - 5.75rem); }
   .swap-filter-row { grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); }
   .swap-filter-row .app-field,.swap-sort-select { height:31px; min-height:31px !important; font-size:9px; }
   .allocated-part-menu { right:0; width:190px; }
+  .sell-part-header > div:first-child > div:first-child { width:29px; height:29px; }
+  .sell-part-header h2 { font-size:14px !important; }
+  .bulk-stock-selector,.bulk-deal-details,.bulk-sale-overview { padding:8px; }
+  .bulk-sale-overview > div:last-child { gap:4px; }
+  .bulk-sale-overview > div:last-child > div { padding:5px; }
+  .bulk-sale-overview > div:last-child span { font-size:9px; }
+  .build-editor-header { padding-bottom:7px; }
+  .build-editor-body { gap:8px; }
+  .build-editor-footer { padding-top:7px; }
 }

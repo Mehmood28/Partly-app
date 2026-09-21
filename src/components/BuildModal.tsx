@@ -228,10 +228,10 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="build-modal stock-modal max-w-4xl">
-      <form className="w-full space-y-4" onSubmit={handleSubmit}>
+    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="build-modal stock-modal modal-workspace build-editor-modal max-w-4xl !overflow-hidden">
+      <form className="build-editor-form flex h-full min-h-0 w-full flex-col" onSubmit={handleSubmit}>
         {/* Header */}
-        <div className="sticky -top-3.5 z-20 -mx-3.5 flex items-start justify-between border-b border-white/[0.09] bg-[#0b1113]/95 px-3.5 pb-3 pt-1 backdrop-blur-xl sm:-top-5 sm:-mx-5 sm:px-5 sm:pt-0">
+        <div className="build-editor-header flex shrink-0 items-start justify-between border-b border-white/[0.09] pb-3 pt-1">
           <div>
             <h3 className="flex items-center gap-2 text-base font-extrabold text-zinc-100 sm:text-lg">
               <Hammer className="h-4 w-4 text-[#B9EF68]" /> Create New PC Build
@@ -248,48 +248,47 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
           </button>
         </div>
 
-        {/* Basic Details Grid */}
-        <BuildBasicDetails
-          name={name}
-          onNameChange={handleNameChange}
-          salePrice={salePrice}
-          onSalePriceChange={setSalePrice}
-          notes={notes}
-          onNotesChange={setNotes}
-          onAutoFillTitle={handleAutoFillTitle}
-          warrantyDays={warrantyDays}
-          onWarrantyDaysChange={setWarrantyDays}
-          customWarrantyDays={customWarrantyDays}
-          onCustomWarrantyDaysChange={setCustomWarrantyDays}
-        />
+        <div className="build-editor-body min-h-0 flex-1 overflow-y-auto">
+          <BuildBasicDetails
+            name={name}
+            onNameChange={handleNameChange}
+            salePrice={salePrice}
+            onSalePriceChange={setSalePrice}
+            notes={notes}
+            onNotesChange={setNotes}
+            onAutoFillTitle={handleAutoFillTitle}
+            warrantyDays={warrantyDays}
+            onWarrantyDaysChange={setWarrantyDays}
+            customWarrantyDays={customWarrantyDays}
+            onCustomWarrantyDaysChange={setCustomWarrantyDays}
+          />
 
-        {/* Selected Parts Section */}
-        <BuildSelectedPartsList
-          selectedParts={selectedParts}
-          components={state.components}
-          totalBuildCost={totalBuildCost}
-          salePrice={salePrice}
-          onUpdatePartQty={handleUpdatePartQty}
-          onRemovePart={handleRemovePart}
-        />
+          <BuildSelectedPartsList
+            selectedParts={selectedParts}
+            components={state.components}
+            totalBuildCost={totalBuildCost}
+            salePrice={salePrice}
+            onUpdatePartQty={handleUpdatePartQty}
+            onRemovePart={handleRemovePart}
+          />
 
-        {/* Inventory Selection Grid */}
-        <BuildInventoryPicker
-          components={state.components}
-          builds={state.builds}
-          selectedParts={selectedParts}
-          initialBuildId={initialData?.id}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
-          activeCategoryTab={activeCategoryTab}
-          onCategoryChange={handleCategoryChange}
-          activeSubCategory={activeSubCategory}
-          onSubCategoryChange={handleSubCategoryChange}
-          onAddPart={handleAddPart}
-        />
+          <BuildInventoryPicker
+            components={state.components}
+            builds={state.builds}
+            selectedParts={selectedParts}
+            initialBuildId={initialData?.id}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            activeCategoryTab={activeCategoryTab}
+            onCategoryChange={handleCategoryChange}
+            activeSubCategory={activeSubCategory}
+            onSubCategoryChange={handleSubCategoryChange}
+            onAddPart={handleAddPart}
+          />
+        </div>
 
         {/* Footer Actions */}
-        <div className="sticky -bottom-3.5 z-20 -mx-3.5 flex flex-col gap-2.5 border-t border-white/[0.09] bg-[#0b1113]/96 px-3.5 pb-1 pt-3 backdrop-blur-xl sm:-bottom-5 sm:-mx-5 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:pb-0">
+        <div className="build-editor-footer flex shrink-0 flex-col gap-2 border-t border-white/[0.09] pt-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-zinc-400 font-sans">
             Status: <span className="text-[#83E5DF] font-medium">{status === 'Listed for Sale' ? 'Available' : status === 'In Progress' ? 'Pending' : status}</span>
           </div>
