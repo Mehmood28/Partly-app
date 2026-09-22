@@ -1,7 +1,8 @@
-import React, { ReactNode, useEffect, useRef } from 'react';
+import React, { ReactNode, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useModalScrollLock } from './useModalScrollLock';
+import { useDialogBehavior } from './useDialogBehavior';
 
 interface BottomSheetModalProps {
   isOpen: boolean;
@@ -13,44 +14,12 @@ interface BottomSheetModalProps {
 export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onClose, children, className = '' }) => {
   useModalScrollLock(isOpen);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const openerRef = useRef<HTMLElement | null>(null);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  useEffect(() => {
-    if (!isOpen) return;
-    openerRef.current = document.activeElement as HTMLElement | null;
-    const frame = requestAnimationFrame(() => {
-      const dialog = dialogRef.current;
-      const target = dialog?.querySelector<HTMLElement>('[data-autofocus], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])');
-      (target || dialog)?.focus();
-    });
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onCloseRef.current();
-        return;
-      }
-      if (event.key !== 'Tab' || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'));
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener('keydown', handleKeyDown);
-      openerRef.current?.focus?.();
-    };
-  }, [isOpen]);
+  useDialogBehavior({
+    isOpen,
+    dialogRef,
+    onEscape: onClose,
+    initialFocusSelector: '[data-autofocus]',
+  });
 
   const modal = (
     <AnimatePresence>

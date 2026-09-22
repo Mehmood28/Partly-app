@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useId, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
@@ -29,10 +29,11 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   dropdownClassName = '',
   fitLongestOption = true,
 }) => {
+  const listboxId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [preferredWidth, setPreferredWidth] = useState<number | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{ left: number; top?: number; bottom?: number; width: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ left: number; top?: number; bottom?: number; width: number; maxHeight: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -40,15 +41,25 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
   const selectedOption = options.find((opt) => opt.value === value);
   useLayoutEffect(() => {
-    if (!fitLongestOption || !measureRef.current) {
-      setPreferredWidth(null);
-      return;
-    }
-    const labels = Array.from(measureRef.current.children) as HTMLElement[];
-    const widestLabel = labels.reduce((width, label) => Math.max(width, label.scrollWidth), 0);
-    const chromeWidth = icon ? 68 : 46;
-    const viewportLimit = Math.max(112, window.innerWidth - 32);
-    setPreferredWidth(Math.min(viewportLimit, Math.ceil(widestLabel + chromeWidth)));
+    const measurePreferredWidth = () => {
+      if (!fitLongestOption || !measureRef.current) {
+        setPreferredWidth(null);
+        return;
+      }
+      const labels = Array.from(measureRef.current.children) as HTMLElement[];
+      const widestLabel = labels.reduce((width, label) => Math.max(width, label.scrollWidth), 0);
+      const chromeWidth = icon ? 68 : 46;
+      const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+      const viewportLimit = Math.max(112, viewportWidth - 32);
+      setPreferredWidth(Math.min(viewportLimit, Math.ceil(widestLabel + chromeWidth)));
+    };
+    measurePreferredWidth();
+    window.addEventListener('resize', measurePreferredWidth);
+    window.visualViewport?.addEventListener('resize', measurePreferredWidth);
+    return () => {
+      window.removeEventListener('resize', measurePreferredWidth);
+      window.visualViewport?.removeEventListener('resize', measurePreferredWidth);
+    };
   }, [fitLongestOption, icon, options, placeholder]);
 
   useEffect(() => {
@@ -73,30 +84,55 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     const positionMenu = () => {
       const rect = triggerRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const width = Math.min(window.innerWidth - 16, Math.max(rect.width, preferredWidth || 0));
-      const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
-      const estimatedHeight = Math.min(240, options.length * 34 + 12);
-      const roomBelow = window.innerHeight - rect.bottom - 8;
-      if (roomBelow >= estimatedHeight || roomBelow >= rect.top) {
-        setMenuPosition({ left, top: rect.bottom + 6, width });
+      const viewport = window.visualViewport;
+      const viewportLeft = viewport?.offsetLeft ?? 0;
+      const viewportTop = viewport?.offsetTop ?? 0;
+      const viewportWidth = viewport?.width ?? window.innerWidth;
+      const viewportHeight = viewport?.height ?? window.innerHeight;
+      const viewportRight = viewportLeft + viewportWidth;
+      const viewportBottom = viewportTop + viewportHeight;
+      const viewportPadding = 8;
+      const menuGap = 6;
+      const width = Math.min(viewportWidth - viewportPadding * 2, Math.max(rect.width, preferredWidth || 0));
+      const left = Math.min(Math.max(viewportLeft + viewportPadding, rect.left), viewportRight - width - viewportPadding);
+      const groupCount = new Set(options.map((option) => option.group).filter(Boolean)).size;
+      const estimatedHeight = Math.min(240, options.length * 34 + groupCount * 27 + 8);
+      const roomBelow = Math.max(0, viewportBottom - rect.bottom - menuGap - viewportPadding);
+      const roomAbove = Math.max(0, rect.top - viewportTop - menuGap - viewportPadding);
+      if (roomBelow >= estimatedHeight || roomBelow >= roomAbove) {
+        setMenuPosition({ left, top: rect.bottom + menuGap, width, maxHeight: roomBelow });
       } else {
-        setMenuPosition({ left, bottom: window.innerHeight - rect.top + 6, width });
+        setMenuPosition({ left, bottom: window.innerHeight - rect.top + menuGap, width, maxHeight: roomAbove });
       }
     };
     positionMenu();
     window.addEventListener('resize', positionMenu);
     window.addEventListener('scroll', positionMenu, true);
+    window.visualViewport?.addEventListener('resize', positionMenu);
+    window.visualViewport?.addEventListener('scroll', positionMenu);
     return () => {
       window.removeEventListener('resize', positionMenu);
       window.removeEventListener('scroll', positionMenu, true);
+      window.visualViewport?.removeEventListener('resize', positionMenu);
+      window.visualViewport?.removeEventListener('scroll', positionMenu);
     };
   }, [isOpen, options.length, preferredWidth]);
 
   useEffect(() => {
     if (!isOpen) return;
     const selectedIndex = options.findIndex((option) => option.value === value);
-    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
+    setActiveIndex(options.length ? (selectedIndex >= 0 ? selectedIndex : 0) : -1);
   }, [isOpen, options, value]);
+
+  useEffect(() => {
+    if (!isOpen || activeIndex < 0) return;
+    const frame = requestAnimationFrame(() => {
+      menuRef.current
+        ?.querySelector<HTMLElement>(`[data-option-index="${activeIndex}"]`)
+        ?.scrollIntoView({ block: 'nearest' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [activeIndex, isOpen]);
 
   const chooseOption = (index: number) => {
     const option = options[index];
@@ -109,7 +145,10 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
+      if (!options.length) return;
       if (!isOpen) {
+        const selectedIndex = options.findIndex((option) => option.value === value);
+        setActiveIndex(selectedIndex >= 0 ? selectedIndex : event.key === 'ArrowDown' ? 0 : options.length - 1);
         setIsOpen(true);
         return;
       }
@@ -120,6 +159,11 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       });
       return;
     }
+    if ((event.key === 'Home' || event.key === 'End') && isOpen) {
+      event.preventDefault();
+      if (options.length) setActiveIndex(event.key === 'Home' ? 0 : options.length - 1);
+      return;
+    }
     if ((event.key === 'Enter' || event.key === ' ') && isOpen) {
       event.preventDefault();
       chooseOption(activeIndex);
@@ -127,17 +171,22 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     }
     if (event.key === 'Escape' && isOpen) {
       event.preventDefault();
+      event.stopPropagation();
+      setIsOpen(false);
+      return;
+    }
+    if (event.key === 'Tab' && isOpen) {
       setIsOpen(false);
     }
   };
 
   const renderOptions = () => {
-    const grouped = options.reduce((acc, opt) => {
+    const grouped = options.reduce((acc, opt, index) => {
       const group = opt.group || 'none';
       if (!acc[group]) acc[group] = [];
-      acc[group].push(opt);
+      acc[group].push({ option: opt, index });
       return acc;
-    }, {} as Record<string, SelectOption[]>);
+    }, {} as Record<string, { option: SelectOption; index: number }[]>);
 
     return Object.entries(grouped).map(([group, opts]) => (
       <div key={group} role="group" aria-label={group !== 'none' ? group : undefined}>
@@ -147,17 +196,18 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           </div>
         )}
         <div className="p-1 space-y-0.5">
-          {opts.map((opt) => {
+          {opts.map(({ option: opt, index: optionIndex }) => {
             const isSelected = opt.value === value;
-            const optionIndex = options.findIndex((option) => option.value === opt.value);
             const isActive = optionIndex === activeIndex;
             return (
-              <button
-                key={opt.value}
-                type="button"
+              <div
+                key={`${opt.value}-${optionIndex}`}
+                id={`${listboxId}-option-${optionIndex}`}
+                data-option-index={optionIndex}
                 role="option"
                 aria-selected={isSelected}
                 onMouseEnter={() => setActiveIndex(optionIndex)}
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={() => chooseOption(optionIndex)}
                 className={`w-full cursor-pointer rounded-md border border-transparent px-2.5 py-1.5 text-left text-[11px] transition-colors flex items-center justify-between font-sans ${
                   isSelected
@@ -169,7 +219,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
               >
                 <span className="min-w-0 flex-1 whitespace-normal break-words pr-2">{opt.label}</span>
                 {isSelected && <Check className="w-3.5 h-3.5 text-[#B9EF68] shrink-0" />}
-              </button>
+              </div>
             );
           })}
         </div>
@@ -189,10 +239,16 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       <button
         ref={triggerRef}
         type="button"
+        role="combobox"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={listboxId}
+        aria-activedescendant={isOpen && activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined}
+        aria-disabled={!options.length}
         aria-label={selectedOption ? selectedOption.label : placeholder}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (options.length) setIsOpen(!isOpen);
+        }}
         onKeyDown={handleKeyDown}
         className={`app-field custom-select-trigger flex h-10 min-h-10 w-full cursor-pointer items-center justify-between gap-1.5 px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
           isOpen
@@ -214,11 +270,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       {isOpen && menuPosition && typeof document !== 'undefined' && createPortal(
         <div
           ref={menuRef}
+          id={listboxId}
           role="listbox"
           style={menuPosition}
           className={`fixed z-[500] overflow-hidden rounded-lg border border-white/[0.12] bg-[#0b1113]/98 shadow-2xl shadow-black/80 backdrop-blur-xl ${dropdownClassName}`}
         >
-          <div className="max-h-60 overflow-y-auto hide-scrollbar">
+          <div className="overflow-y-auto hide-scrollbar" style={{ maxHeight: menuPosition.maxHeight }}>
             {renderOptions()}
           </div>
         </div>,
