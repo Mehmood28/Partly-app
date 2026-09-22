@@ -8,7 +8,7 @@ import {
   formatCurrency,
   SortOption,
 } from '../../utils/helpers';
-import { X, Box, ChevronDown, ChevronUp, Monitor, Cpu, HardDrive, Database, CircuitBoard, Zap, Fan, Package } from 'lucide-react';
+import { X, Box } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
@@ -16,6 +16,7 @@ import { InventoryFilterBar } from '../InventoryFilterBar';
 import { ConfirmModal } from '../ConfirmModal';
 import { useToast } from '../../context/ToastContext';
 import { normalizePlatform } from '../../utils/platformDisplay';
+import { InventoryPartAccordionHeader } from './InventoryPartAccordionHeader';
 
 interface AllocatePartModalProps {
   build: PCBuild | null;
@@ -41,21 +42,6 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
     unitCost: number;
     quantity: number;
   } | null>(null);
-
-  const renderCategoryIcon = (category: string) => {
-    const className = 'w-4 h-4 text-[#B9EF68]';
-    switch (category) {
-      case 'GPU': return <Monitor className={className} />;
-      case 'CPU': return <Cpu className={className} />;
-      case 'RAM': return <HardDrive className={className} />;
-      case 'Storage': return <Database className={className} />;
-      case 'Motherboard': return <CircuitBoard className={className} />;
-      case 'PSU': return <Zap className={className} />;
-      case 'Cooling': return <Fan className={className} />;
-      case 'Case': return <Package className={className} />;
-      default: return <Cpu className={className} />;
-    }
-  };
 
   const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'ALL'>('ALL');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('');
@@ -133,27 +119,21 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
 
             return (
               <div key={comp.id} className={`swap-component-row ${isExpanded ? 'is-expanded' : ''}`}>
-                <div 
-                  onClick={() => setExpandedPartId(isExpanded ? null : comp.id)}
-                  className="swap-component-header cursor-pointer group"
-                >
-                  <div className="swap-category-icon">
-                    {renderCategoryIcon(comp.category)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="break-words font-sans text-xs font-semibold leading-snug text-zinc-100 sm:text-sm">{comp.name}</h4>
-                    <div className="swap-component-meta">
+                <InventoryPartAccordionHeader
+                  category={comp.category}
+                  name={comp.name}
+                  isExpanded={isExpanded}
+                  onToggle={() => setExpandedPartId(isExpanded ? null : comp.id)}
+                  metadata={
+                    <>
                       {comp.tags?.filter(Boolean).map((tag) => <span key={tag}>{tag}</span>)}
                       {comp.specifications && <span>{comp.specifications}</span>}
                       <span>{unassignedQty} in stock</span>
                       <span>·</span>
                       <span>Avg. {formatCurrency(avgPrice)}{totalAvailable > 1 ? '/ea' : ''}</span>
-                    </div>
-                  </div>
-                  <div className="shrink-0 self-center">
-                    {isExpanded ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
-                  </div>
-                </div>
+                    </>
+                  }
+                />
                 
                 {isExpanded && (
                   <div className="swap-batches">

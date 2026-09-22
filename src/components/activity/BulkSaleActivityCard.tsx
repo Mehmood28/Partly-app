@@ -11,10 +11,9 @@ import {
   BulkPartSaleGroupDisplayItem, 
   getTransactionRecordedCost,
   getSafeDisplayQuantity,
-  formatSignedProfit,
   toFiniteNumber
 } from '../../utils/bulkSaleGrouping';
-import { getProfitTextColor } from '../../utils/financialDisplay';
+import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 import { TransactionLogItem } from '../../types';
 import { formatCurrency } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
@@ -58,7 +57,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
         <dl className="record-finances">
           <div><dt>Cost</dt><dd>{formatCurrency(group.totalCost)}</dd></div>
           <div><dt>Sold</dt><dd>{formatCurrency(group.totalRevenue)}</dd></div>
-          <div><dt>Profit</dt><dd className={getProfitTextColor(group.totalProfit)}>{formatSignedProfit(group.totalProfit)}</dd></div>
+          <div><dt>Profit</dt><dd className={getProfitTextColor(group.totalProfit)}>{formatSignedCurrency(group.totalProfit)}</dd></div>
           <div><dt>Margin</dt><dd className={getProfitTextColor(group.totalProfit)}>{group.profitMarginPercent.toFixed(1)}%</dd></div>
         </dl>
         <div className="sold-part-contact-row">
@@ -137,7 +136,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
                     </div>
                     <span>{qty}</span>
                     <strong className="bulk-sale-line-revenue">{formatCurrency(lineRev)}</strong>
-                    <strong className={getProfitTextColor(lineProfit)}>{formatSignedProfit(lineProfit)}</strong>
+                    <strong className={getProfitTextColor(lineProfit)}>{formatSignedCurrency(lineProfit)}</strong>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

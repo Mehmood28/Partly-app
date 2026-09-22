@@ -1,6 +1,6 @@
 import React from 'react';
 import { Wand2 } from 'lucide-react';
-import { CustomSelect } from '../../ui/CustomSelect';
+import { WarrantyFields } from '../WarrantyFields';
 
 interface BuildBasicDetailsProps {
   name: string;
@@ -66,37 +66,13 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
         </div>
       </div>
       <div>
-        <div>
-          <label className="block text-zinc-300 font-medium mb-1 text-xs">Warranty Provided</label>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <CustomSelect
-                value={warrantyDays}
-                onChange={(val) => onWarrantyDaysChange?.(val)}
-                options={[
-                  { value: '30', label: '30 Days' },
-                  { value: '60', label: '60 Days' },
-                  { value: '90', label: '90 Days' },
-                  { value: '365', label: '1 Year' },
-                  { value: 'Custom', label: 'Custom' }
-                ]}
-                placeholder="Select..."
-              />
-            </div>
-            {warrantyDays === 'Custom' && (
-              <input
-                type="number"
-                min="1"
-                step="1"
-                value={customWarrantyDays}
-                onChange={(e) => onCustomWarrantyDaysChange?.(e.target.value)}
-                className="app-field w-16 px-2 text-center text-xs placeholder:text-zinc-600"
-                placeholder="Days"
-                required
-              />
-            )}
-          </div>
-        </div>
+        <WarrantyFields
+          value={warrantyDays}
+          onChange={(value) => onWarrantyDaysChange?.(value)}
+          customValue={customWarrantyDays}
+          onCustomChange={(value) => onCustomWarrantyDaysChange?.(value)}
+          customInputClassName="app-field w-16 px-2 text-center text-xs placeholder:text-zinc-600"
+        />
       </div>
       <div className="col-span-2">
         <label className="block text-zinc-300 font-medium mb-1 text-xs">Notes / Description (Optional)</label>

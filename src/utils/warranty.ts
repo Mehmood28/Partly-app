@@ -2,6 +2,16 @@ import { parseDateLocal } from './helpers';
 
 export const BUILD_WARRANTY_DAYS = 30;
 
+export const WARRANTY_PRESETS = [
+  { value: '30', label: '30 Days' },
+  { value: '60', label: '60 Days' },
+  { value: '90', label: '90 Days' },
+  { value: '365', label: '1 Year' },
+] as const;
+
+export const isWarrantyPreset = (days: unknown): boolean =>
+  WARRANTY_PRESETS.some((preset) => Number(preset.value) === days);
+
 export interface BuildWarrantyInfo {
   isActive: boolean;
   daysLeft: number;

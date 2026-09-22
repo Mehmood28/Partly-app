@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
-import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, ArrowRightLeft, Shield, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, List, MoreVertical } from 'lucide-react';
+import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, ArrowRightLeft, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, List, MoreVertical } from 'lucide-react';
 import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getCategoryPresentation, getConditionDotColor } from '../../utils/helpers';
 import { generateInvoice } from '../../utils/invoiceGenerator';
 import { executeCopyAdConfirmation } from '../../utils/copyAdHelper';
@@ -16,13 +16,14 @@ import { hasShareableBuildImage, shareBuildImageToDiscord } from './discordShare
 import { SoldBuildTransactionPanel } from './SoldBuildTransactionPanel';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { ConfirmModal } from '../ConfirmModal';
-import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { canDeleteBuildDraft, canDismantleBuild, canPartOutAcquiredPC, canMoveToTradeIns } from '../../utils/buildEligibility';
 import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
 import { calculateProfitMarginPercent, formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
 import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils/acquiredPC';
-import { renderCategoryIcon } from '../activity/activityHelpers';
+import { CategoryIcon } from '../ui/CategoryIcon';
+import { CopyAdWarrantyModal } from './CopyAdWarrantyModal';
+import { isWarrantyPreset } from '../../utils/warranty';
 
 interface BuildCardProps {
   isActive?: boolean;
@@ -181,7 +182,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const handleCopyAdClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const wDays = build.warrantyDays ?? 30;
-    if ([30, 60, 90, 365].includes(wDays)) {
+    if (isWarrantyPreset(wDays)) {
       setCopyAdWarrantyDays(String(wDays));
       setCopyAdCustomWarranty('');
     } else {
@@ -517,7 +518,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     return (
                       <div key={part.id || idx} className="allocated-part allocated-part-static">
                         <span className={`allocated-type ${category.textClass}`}>
-                          {renderCategoryIcon(part.category, 'allocated-type-icon')}
+                          <CategoryIcon category={part.category} className="allocated-type-icon" />
                           <span>{category.label}</span>
                         </span>
                         <span className="allocated-details">
@@ -575,7 +576,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                         className="allocated-part allocated-part-managed"
                       >
                         <span className={`allocated-type ${category.textClass}`}>
-                          {renderCategoryIcon(part.category, 'allocated-type-icon')}
+                          <CategoryIcon category={part.category} className="allocated-type-icon" />
                           <span>{category.label}</span>
                         </span>
                         <span className="allocated-details">
@@ -751,114 +752,15 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
 
       {/* Copy Ad Warranty Modal */}
       {isCopyAdModalOpen && (
-        <BottomSheetModal
+        <CopyAdWarrantyModal
           isOpen={isCopyAdModalOpen && isActive}
           onClose={() => setIsCopyAdModalOpen(false)}
-          layout="content"
-          className="build-modal stock-modal max-w-md"
-        >
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-              <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#B9EF68]" /> Copy Marketplace Ad
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsCopyAdModalOpen(false)}
-                aria-label="Close modal"
-                className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <p className="text-zinc-400">
-                Select or customize the warranty duration to include in the generated marketplace listing.
-              </p>
-
-              <div className="space-y-2">
-                <label className="block text-zinc-300 font-medium text-xs">Warranty Duration</label>
-
-                {/* 2-column grid for preset buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: '30', label: '30 Days' },
-                    { value: '60', label: '60 Days' },
-                    { value: '90', label: '90 Days' },
-                    { value: '365', label: '1 Year' },
-                  ].map((preset) => {
-                    const isSelected = copyAdWarrantyDays === preset.value;
-                    return (
-                      <button
-                        key={preset.value}
-                        type="button"
-                        onClick={() => setCopyAdWarrantyDays(preset.value)}
-                        aria-pressed={isSelected}
-                        className={`min-h-[44px] h-11 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
-                          isSelected
-                            ? 'bg-[#B9EF68] text-[#07100B] border border-[#B9EF68] shadow-sm shadow-[#B9EF68]/25 font-semibold'
-                            : 'bg-[#101719] text-zinc-300 hover:text-white hover:bg-white/[0.04] border border-white/[0.08]'
-                        }`}
-                      >
-                        {preset.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Full-width Custom button */}
-                <button
-                  type="button"
-                  onClick={() => setCopyAdWarrantyDays('Custom')}
-                  aria-pressed={copyAdWarrantyDays === 'Custom'}
-                  className={`w-full min-h-[44px] h-11 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
-                    copyAdWarrantyDays === 'Custom'
-                      ? 'bg-[#B9EF68] text-[#07100B] border border-[#B9EF68] shadow-sm shadow-[#B9EF68]/25 font-semibold'
-                      : 'bg-[#101719] text-zinc-300 hover:text-white hover:bg-white/[0.04] border border-white/[0.08]'
-                  }`}
-                >
-                  Custom
-                </button>
-
-                {/* Positive whole-number input directly below Custom button */}
-                {copyAdWarrantyDays === 'Custom' && (
-                  <div className="pt-1">
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={copyAdCustomWarranty}
-                      onChange={(e) => setCopyAdCustomWarranty(e.target.value)}
-                      className="app-field h-11 min-h-[44px] px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
-                      placeholder="Enter warranty days (e.g. 14, 45, 180)"
-                      aria-label="Custom warranty days"
-                      required
-                      autoFocus
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
-              <button
-                type="button"
-                onClick={() => setIsCopyAdModalOpen(false)}
-                className="min-h-[44px] px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCopyAdConfirm}
-                className="min-h-[44px] bg-[#B9EF68] hover:bg-[#C4FF79] text-[#07100B] font-semibold shadow-md shadow-[#B9EF68]/20 px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
-              >
-                <Copy className="w-3.5 h-3.5" /> Copy Ad
-              </button>
-            </div>
-          </div>
-        </BottomSheetModal>
+          warrantyDays={copyAdWarrantyDays}
+          onWarrantyDaysChange={setCopyAdWarrantyDays}
+          customWarrantyDays={copyAdCustomWarranty}
+          onCustomWarrantyDaysChange={setCopyAdCustomWarranty}
+          onConfirm={handleCopyAdConfirm}
+        />
       )}
 
       {/* Off-screen card used for HTML-to-Image rendering */}

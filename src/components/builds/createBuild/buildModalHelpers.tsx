@@ -1,42 +1,6 @@
-import {
-  Cpu,
-  Monitor,
-  HardDrive,
-  Database,
-  CircuitBoard,
-  Zap,
-  Box,
-  Fan,
-  Package,
-} from 'lucide-react';
-import { ComponentCategory, InventoryComponent, PCBuild, PCBuildPart } from '../../../types';
+import { InventoryComponent, PCBuild, PCBuildPart } from '../../../types';
 import { getAllBatchesWithRemaining } from '../../../utils/helpers';
 export { generateBuildTitleFromParts } from '../../../utils/buildTitle';
-
-export const getCategoryIcon = (cat: ComponentCategory) => {
-  const iconClass = 'w-3.5 h-3.5 text-[#83E5DF]';
-  switch (cat) {
-    case 'CPU':
-      return <Cpu className={iconClass} />;
-    case 'GPU':
-      return <Monitor className={iconClass} />;
-    case 'RAM':
-      return <HardDrive className={iconClass} />;
-    case 'Storage':
-      return <Database className={iconClass} />;
-    case 'Motherboard':
-      return <CircuitBoard className={iconClass} />;
-    case 'PSU':
-      return <Zap className={iconClass} />;
-    case 'Case':
-      return <Box className={iconClass} />;
-    case 'Cooling':
-    case 'Fans':
-      return <Fan className={iconClass} />;
-    default:
-      return <Package className="w-3.5 h-3.5 text-zinc-400" />;
-  }
-};
 
 export interface ComponentBatchInfo {
   entry: InventoryComponent['purchaseHistory'][0];

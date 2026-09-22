@@ -10,6 +10,7 @@ import { BuildInventoryPicker } from './builds/createBuild/BuildInventoryPicker'
 import { generateBuildTitleFromParts } from './builds/createBuild/buildModalHelpers';
 import { calculateComponentBatchesWithStock } from './builds/createBuild/buildModalHelpers';
 import { getAllBatchesWithRemaining } from '../utils/helpers';
+import { isWarrantyPreset } from '../utils/warranty';
 
 interface BuildModalProps {
   isOpen: boolean;
@@ -59,7 +60,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
         setSelectedParts(initialData.parts || []);
         setImageUrl(initialData.imageUrl || '');
         const wDays = initialData.warrantyDays ?? 30;
-        if ([30, 60, 90, 365].includes(wDays)) {
+        if (isWarrantyPreset(wDays)) {
           setWarrantyDays(String(wDays));
           setCustomWarrantyDays('');
         } else {

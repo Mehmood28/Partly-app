@@ -9,7 +9,7 @@ import {
   getUnassignedBatches 
 } from '../utils/helpers';
 import { RecommendedBuild, LaunchpadViewProps } from './launchpad/launchpadTypes';
-import { formatShortCpuAndGpu } from './launchpad/launchpadHelpers';
+import { formatShortCpuAndGpu } from '../utils/buildTitle';
 import { DashboardQuickStats } from './launchpad/DashboardQuickStats';
 import { DashboardQuickActions } from './launchpad/DashboardQuickActions';
 import { CustomAIBuildRequest } from './launchpad/CustomAIBuildRequest';

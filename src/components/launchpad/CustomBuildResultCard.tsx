@@ -4,7 +4,7 @@ import { RecommendedBuild } from './launchpadTypes';
 import { sortByCategory } from '../../utils/sorting';
 import { formatCurrency } from '../../utils/helpers';
 import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';
-import { getCategoryIcon } from './launchpadHelpers';
+import { CategoryIcon } from '../ui/CategoryIcon';
 
 interface CustomBuildResultCardProps {
   customBuild: RecommendedBuild;
@@ -57,7 +57,11 @@ export const CustomBuildResultCard: React.FC<CustomBuildResultCardProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2 mb-3.5">
           {sortByCategory(customBuild.parts).map((p) => (
             <div key={p.id} className="flex items-center gap-2 text-xs text-zinc-300 leading-tight">
-              {getCategoryIcon(p.category)}
+              <CategoryIcon
+                category={p.category}
+                className="w-3.5 h-3.5 text-[#83E5DF]"
+                fallbackClassName="w-3.5 h-3.5 text-neutral-500"
+              />
               <span className="break-words font-medium">{p.name}</span>
             </div>
           ))}

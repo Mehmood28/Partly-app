@@ -2,10 +2,11 @@ import { compressBuildImage } from '../../utils/imageResizer';
 import React, { useState, useEffect } from 'react';
 import { PCBuild } from '../../types';
 import { X, Pencil, ImagePlus, Trash2 } from 'lucide-react';
-import { CustomSelect } from '../ui/CustomSelect';
 import { useInventory } from '../../context/InventoryContext';
 import { useToast } from '../../context/ToastContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
+import { WarrantyFields } from './WarrantyFields';
+import { isWarrantyPreset } from '../../utils/warranty';
 
 interface EditBuildModalProps {
   build: PCBuild | null;
@@ -33,7 +34,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
       setEditNotes(build.notes || '');
       setEditImageUrl(build.imageUrl || '');
       const wDays = build.warrantyDays ?? 30;
-      if ([30, 60, 90, 365].includes(wDays)) {
+      if (isWarrantyPreset(wDays)) {
         setWarrantyDays(String(wDays));
         setCustomWarrantyDays('');
       } else {
@@ -148,37 +149,12 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
             </div>
           </div>
 
-          <div>
-            <label className="block text-zinc-300 font-medium mb-1 text-xs">Warranty Provided</label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <CustomSelect
-                  value={warrantyDays}
-                  onChange={(val) => setWarrantyDays(val)}
-                  options={[
-                    { value: '30', label: '30 Days' },
-                    { value: '60', label: '60 Days' },
-                    { value: '90', label: '90 Days' },
-                    { value: '365', label: '1 Year' },
-                    { value: 'Custom', label: 'Custom' },
-                  ]}
-                  placeholder="Select..."
-                />
-              </div>
-              {warrantyDays === 'Custom' && (
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={customWarrantyDays}
-                  onChange={(e) => setCustomWarrantyDays(e.target.value)}
-                  className="app-field h-11 w-20 px-2 py-2 text-center text-xs placeholder:text-zinc-500 sm:text-sm"
-                  placeholder="Days"
-                  required
-                />
-              )}
-            </div>
-          </div>
+          <WarrantyFields
+            value={warrantyDays}
+            onChange={setWarrantyDays}
+            customValue={customWarrantyDays}
+            onCustomChange={setCustomWarrantyDays}
+          />
 
           <div>
             <label className="block text-zinc-300 font-medium mb-1 text-xs">Notes / Description</label>

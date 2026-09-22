@@ -128,6 +128,21 @@ export const AnalyticsView: React.FC = () => {
     ? calculateProfitMarginPercent(selectedMonthPcProfit, selectedMonthPcRevenue)
     : 0;
 
+  const renderMetrics = (metrics: Array<{ label: string; value: React.ReactNode; tone: string }>) => (
+    <div className="report-metrics">
+      {metrics.map((metric) => (
+        <div key={metric.label} className="p-3 bg-[#0D1416] flex flex-col justify-center">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">
+            {metric.label}
+          </p>
+          <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${metric.tone}`}>
+            {metric.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="analytics-view w-full">
       <GoalBar />
@@ -175,32 +190,14 @@ export const AnalyticsView: React.FC = () => {
             </h3>
           </div>
 
-          <div className="report-metrics">
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Revenue</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-[#83E5DF] mt-0.5 leading-tight">{formatCurrency(selectedMonthRevenue)}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Cost</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-zinc-200 mt-0.5 leading-tight">{formatCurrency(selectedMonthCost)}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Net Profit</p>
-              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(selectedMonthProfit)}`}>{formatSignedCurrency(selectedMonthProfit)}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">PCs Sold</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-[#83E5DF] mt-0.5 leading-tight">{selectedMonthPcsSold}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Avg Profit / PC</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-zinc-100 mt-0.5 leading-tight">{formatCurrency(selectedMonthAvgProfit)}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Profit Margin</p>
-              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(selectedMonthProfitMargin)}`}>{selectedMonthProfitMargin.toFixed(1)}%</p>
-            </div>
-          </div>
+          {renderMetrics([
+            { label: 'Revenue', value: formatCurrency(selectedMonthRevenue), tone: 'text-[#83E5DF]' },
+            { label: 'Total Cost', value: formatCurrency(selectedMonthCost), tone: 'text-zinc-200' },
+            { label: 'Net Profit', value: formatSignedCurrency(selectedMonthProfit), tone: getProfitTextColor(selectedMonthProfit) },
+            { label: 'PCs Sold', value: selectedMonthPcsSold, tone: 'text-[#83E5DF]' },
+            { label: 'Avg Profit / PC', value: formatCurrency(selectedMonthAvgProfit), tone: 'text-zinc-100' },
+            { label: 'Profit Margin', value: `${selectedMonthProfitMargin.toFixed(1)}%`, tone: getProfitTextColor(selectedMonthProfitMargin) },
+          ])}
         </section>
 
         {/* Yearly Stats Card */}
@@ -214,32 +211,14 @@ export const AnalyticsView: React.FC = () => {
             </span>
           </div>
 
-          <div className="report-metrics">
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Revenue</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-[#83E5DF] mt-0.5 leading-tight">{formatCurrency(totalYearlyRevenue)}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total Cost</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-zinc-200 mt-0.5 leading-tight">{formatCurrency(totalYearlyCost)}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Net Profit</p>
-              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(totalYearlyProfit)}`}>{formatSignedCurrency(totalYearlyProfit)}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Total PCs Sold</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-[#83E5DF] mt-0.5 leading-tight">{totalYearlyPcsSold}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Avg Profit / PC</p>
-              <p className="text-sm sm:text-base font-bold font-mono text-zinc-100 mt-0.5 leading-tight">{formatCurrency(avgYearlyProfitPerBuild)}</p>
-            </div>
-            <div className="p-3 bg-[#0D1416] flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 leading-tight">Profit Margin</p>
-              <p className={`text-sm sm:text-base font-bold font-mono mt-0.5 leading-tight ${getProfitTextColor(avgYearlyProfitMargin)}`}>{avgYearlyProfitMargin.toFixed(1)}%</p>
-            </div>
-          </div>
+          {renderMetrics([
+            { label: 'Total Revenue', value: formatCurrency(totalYearlyRevenue), tone: 'text-[#83E5DF]' },
+            { label: 'Total Cost', value: formatCurrency(totalYearlyCost), tone: 'text-zinc-200' },
+            { label: 'Net Profit', value: formatSignedCurrency(totalYearlyProfit), tone: getProfitTextColor(totalYearlyProfit) },
+            { label: 'Total PCs Sold', value: totalYearlyPcsSold, tone: 'text-[#83E5DF]' },
+            { label: 'Avg Profit / PC', value: formatCurrency(avgYearlyProfitPerBuild), tone: 'text-zinc-100' },
+            { label: 'Profit Margin', value: `${avgYearlyProfitMargin.toFixed(1)}%`, tone: getProfitTextColor(avgYearlyProfitMargin) },
+          ])}
         </section>
       </div>
 

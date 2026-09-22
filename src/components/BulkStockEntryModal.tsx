@@ -2,13 +2,12 @@ import { BottomSheetModal } from './ui/BottomSheetModal';
 import React, { useState } from 'react';
 import { resizeImage } from '../utils/imageResizer';
 import { X, Upload, FileText, Trash2, Zap, Save } from 'lucide-react';
-import { ComponentCategory, Condition, PaymentMethod, Platform } from '../types';
+import { CATEGORIES, ComponentCategory, Condition, PaymentMethod, Platform } from '../types';
 import { usePrivacy } from '../context/PrivacyContext';
 import { CustomSelect } from './ui/CustomSelect';
 import { useToast } from '../context/ToastContext';
 
-const CATEGORY_OPTIONS = ['GPU', 'CPU', 'Motherboard', 'RAM', 'Cooling', 'Storage', 'PSU', 'Case', 'Fans', 'Accessories', 'Other']
-  .map((value) => ({ value, label: value }));
+const CATEGORY_OPTIONS = CATEGORIES.map((value) => ({ value, label: value }));
 const CONDITION_OPTIONS = ['Sealed', 'New Open Box', 'New No Box', 'Used Open Box', 'Used No Box']
   .map((value) => ({ value, label: value }));
 const PAYMENT_OPTIONS = ['Cash', 'E-Transfer', 'PayPal', 'Credit Card', 'Other']

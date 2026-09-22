@@ -1,7 +1,6 @@
 import { TransactionLogItem, PCBuild } from '../types';
 import { classifyTransaction } from './transactionClassification';
 import { parseDateLocal } from './helpers';
-import { formatSignedCurrency } from './financialDisplay';
 
 export interface SinglePartSaleDisplayItem {
   type: 'single';
@@ -57,10 +56,6 @@ export function getSafeDisplayQuantity(tx: TransactionLogItem): number {
     }
   }
   return 1;
-}
-
-export function formatSignedProfit(profit: number): string {
-  return formatSignedCurrency(profit);
 }
 
 export interface ResolvedTransactionDate {

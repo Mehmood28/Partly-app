@@ -7,8 +7,8 @@ import { InventoryFilterBar } from '../../InventoryFilterBar';
 import { normalizePlatform } from '../../../utils/platformDisplay';
 import {
   calculateComponentBatchesWithStock,
-  getCategoryIcon,
 } from './buildModalHelpers';
+import { CategoryIcon } from '../../ui/CategoryIcon';
 
 interface BuildInventoryPickerProps {
   components: InventoryComponent[];
@@ -99,15 +99,21 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
             return (
               <div key={cat} className="space-y-2">
                 <div className="text-xs font-bold text-zinc-300 flex items-center gap-1.5 pt-2 font-display">
-                  {getCategoryIcon(cat)} {cat} Parts
+                  <CategoryIcon
+                    category={cat}
+                    className="w-3.5 h-3.5 text-[#83E5DF]"
+                    fallbackClassName="w-3.5 h-3.5 text-zinc-400"
+                  /> {cat} Parts
                 </div>
                 <div className="grid grid-cols-1 gap-1.5">
                   {componentGroups.map(({ comp, batches, totalUnassigned, weightedAvgCost }) => {
                     const isExpanded = expandedInventoryPartId === comp.id;
                     return (
                       <div key={comp.id} className="picker-part flex flex-col overflow-hidden text-xs transition-all hover:border-[#B9EF68]/30">
-                        <div
-                          className="px-3 py-2 flex items-center justify-between cursor-pointer"
+                        <button
+                          type="button"
+                          aria-expanded={isExpanded}
+                          className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left"
                           onClick={(e) => {
                             e.stopPropagation();
                             setExpandedInventoryPartId(isExpanded ? null : comp.id);
@@ -129,7 +135,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                               <ChevronDown className="w-4 h-4 text-zinc-400" />
                             )}
                           </div>
-                        </div>
+                        </button>
 
                         {isExpanded && (
                           <div className="flex flex-col gap-2.5 border-t border-white/[0.08] bg-[#0b1113] p-3 text-xs">

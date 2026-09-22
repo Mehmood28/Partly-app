@@ -1,8 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { formatWarrantyLabel, getBuildWarrantyInfo, isValidWarrantyDays, normalizeWarrantyDays } from './warranty';
+import { formatWarrantyLabel, getBuildWarrantyInfo, isValidWarrantyDays, isWarrantyPreset, normalizeWarrantyDays, WARRANTY_PRESETS } from './warranty';
 import { generateMarketplaceAd } from './adGenerator';
 
 describe('Warranty Logic', () => {
+  it('shares the controlled-field and Copy Ad presets', () => {
+    expect(WARRANTY_PRESETS).toEqual([
+      { value: '30', label: '30 Days' },
+      { value: '60', label: '60 Days' },
+      { value: '90', label: '90 Days' },
+      { value: '365', label: '1 Year' },
+    ]);
+    expect(isWarrantyPreset(30)).toBe(true);
+    expect(isWarrantyPreset(365)).toBe(true);
+    expect(isWarrantyPreset(45)).toBe(false);
+  });
+
   it('validates warranty days correctly', () => {
     expect(isValidWarrantyDays(30)).toBe(true);
     expect(isValidWarrantyDays(365)).toBe(true);

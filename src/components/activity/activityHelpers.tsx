@@ -1,14 +1,3 @@
-import { 
-  Monitor, 
-  Cpu, 
-  HardDrive, 
-  Database, 
-  CircuitBoard, 
-  Zap, 
-  Fan, 
-  Box, 
-  Package 
-} from 'lucide-react';
 import { InventoryComponent, TransactionLogItem } from '../../types';
 
 export interface ParsedBatchItem {
@@ -23,21 +12,6 @@ export interface ParsedBatchItem {
   paymentMethod: string;
   comp?: InventoryComponent;
 }
-
-export const renderCategoryIcon = (category?: string, className = 'w-4 h-4 text-[#83E5DF]') => {
-  switch (category?.toUpperCase()) {
-    case 'GPU': return <Monitor className={className} />;
-    case 'CPU': return <Cpu className={className} />;
-    case 'RAM': return <HardDrive className={className} />;
-    case 'STORAGE': return <Database className={className} />;
-    case 'MOTHERBOARD': return <CircuitBoard className={className} />;
-    case 'PSU': return <Zap className={className} />;
-    case 'COOLING': return <Fan className={className} />;
-    case 'FANS': return <Fan className={className} />;
-    case 'CASE': return <Box className={className} />;
-    default: return <Package className={className} />;
-  }
-};
 
 export const parseBatchItem = (
   detailStr: string, 

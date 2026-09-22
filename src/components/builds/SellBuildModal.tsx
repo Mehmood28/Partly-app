@@ -16,6 +16,8 @@ import {
   parseTradeInCredit,
   parseTradeInSaleInputs,
 } from './sellBuildParsers';
+import { WarrantyFields } from './WarrantyFields';
+import { isWarrantyPreset } from '../../utils/warranty';
 
 export type BuildSaleData = SellBuildData;
 
@@ -104,7 +106,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
     setBuyerPhone(targetBuild.buyerPhone || '');
     setImageUrl(targetBuild.imageUrl || '');
     const wDays = (isSold && txMatch && txMatch.warrantyDaysAtSale !== undefined) ? txMatch.warrantyDaysAtSale : (targetBuild.warrantyDays ?? 30);
-    if ([30, 60, 90, 365].includes(wDays)) {
+    if (isWarrantyPreset(wDays)) {
       setWarrantyDaysAtSale(String(wDays));
       setCustomWarrantyDays('');
     } else {
@@ -342,37 +344,12 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
             </div>
           </div>
 
-          <div>
-            <label className="block text-zinc-300 font-medium mb-1 text-xs">Warranty Provided</label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <CustomSelect
-                  value={warrantyDaysAtSale}
-                  onChange={(val) => setWarrantyDaysAtSale(val)}
-                  options={[
-                    { value: '30', label: '30 Days' },
-                    { value: '60', label: '60 Days' },
-                    { value: '90', label: '90 Days' },
-                    { value: '365', label: '1 Year' },
-                    { value: 'Custom', label: 'Custom' },
-                  ]}
-                  placeholder="Select..."
-                />
-              </div>
-              {warrantyDaysAtSale === 'Custom' && (
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={customWarrantyDays}
-                  onChange={(e) => setCustomWarrantyDays(e.target.value)}
-                  className="app-field h-11 w-20 px-2 py-2 text-center text-xs placeholder:text-zinc-500 sm:text-sm"
-                  placeholder="Days"
-                  required
-                />
-              )}
-            </div>
-          </div>
+          <WarrantyFields
+            value={warrantyDaysAtSale}
+            onChange={setWarrantyDaysAtSale}
+            customValue={customWarrantyDays}
+            onCustomChange={setCustomWarrantyDays}
+          />
 
           {/* Trade-In Toggle Section */}
           <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
