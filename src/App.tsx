@@ -215,8 +215,6 @@ function AppContent() {
       <Sidebar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
-        isSessionHistoryOpen={isSessionHistoryOpen}
-        onToggleSessionHistory={() => setIsSessionHistoryOpen((prev) => !prev)}
       />
       
       <div className="relative z-0 flex min-w-0 flex-1 flex-col bg-transparent">
@@ -229,7 +227,7 @@ function AppContent() {
       <main className="app-page app-main flex w-full flex-1 flex-col">
         <React.Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-8 h-8 border-4 border-[#A8FF3E]/30 border-t-[#A8FF3E] rounded-full animate-spin"></div></div>}>
           {/* Launchpad Tab */}
-          <div className={activeTab === 'launchpad' || (activeTab as string) === 'home' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
+          <div className={activeTab === 'launchpad' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
             <LaunchpadView
               setActiveTab={handleTabChange}
               onNavigateToBuilds={handleNavigateToBuilds}
@@ -249,9 +247,9 @@ function AppContent() {
           </div>
 
           {/* Stock / Inventory Tab */}
-          <div className={activeTab === 'inventory' || (activeTab as string) === 'stock' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
+          <div className={activeTab === 'inventory' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
             <StockView
-              isActive={activeTab === 'inventory' || (activeTab as string) === 'stock'}
+              isActive={activeTab === 'inventory'}
               onOpenBulkEntry={handleOpenBulkEntry}
               onOpenAddComponent={handleOpenAddComponent}
               onOpenAddPurchaseEntry={handleOpenAddPurchaseEntry}

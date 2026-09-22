@@ -19,8 +19,6 @@ import {
 import { WarrantyFields } from './WarrantyFields';
 import { isWarrantyPreset } from '../../utils/warranty';
 
-export type BuildSaleData = SellBuildData;
-
 interface SellBuildModalProps {
   build: PCBuild | null;
   isOpen?: boolean;

@@ -1,5 +1,4 @@
-import { PCBuild, InventoryComponent } from '../../types';
-import { getBuildPresentation } from '../../utils/buildPresentation';
+import { PCBuild } from '../../types';
 
 export interface BuildSpecsMap {
   GPU?: string;
@@ -67,32 +66,6 @@ export function extractBuildSpecs(parts: Array<{category: string; name: string; 
   if (caseParts.length > 0) specs.Case = caseParts.map(formatPartName).join(' + ');
 
   return specs;
-}
-
-export async function shareBuildEmbedToDiscord(build: PCBuild, partsCost: number, components: InventoryComponent[]): Promise<void> {
-  const presentation = getBuildPresentation(build, components);
-  const specs = extractBuildSpecs(presentation.allComponents);
-
-  const payload = {
-    name: build.name,
-    cost: partsCost,
-    specs,
-    imageUrl: build.imageUrl || undefined,
-  };
-
-  const response = await fetch('/api/share-build-discord', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(data.error || `Server responded with status ${response.status}`);
-  }
 }
 
 export async function shareBuildImageToDiscord(buildName: string, imageBase64: string): Promise<void> {

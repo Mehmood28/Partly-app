@@ -7,17 +7,15 @@ import { SessionHistoryPopover } from './SessionHistoryPopover';
 interface SessionHistoryControlsProps {
   isSessionHistoryOpen: boolean;
   onToggleSessionHistory: () => void;
-  placement: 'mobile' | 'desktop';
 }
 
 export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
   isSessionHistoryOpen,
   onToggleSessionHistory,
-  placement,
 }) => {
   const { undoHistory, redoHistory, undoCount, redoCount, undo, redo } = useInventory();
   const { hideSupplierNames } = usePrivacy();
-  const popoverId = `session-history-popover-${placement}`;
+  const popoverId = 'session-history-popover';
 
   const getItemLabel = (item?: { label: string; privacySafeLabel?: string }): string => {
     if (!item) return '';
@@ -83,20 +81,10 @@ export const SessionHistoryControls: React.FC<SessionHistoryControlsProps> = ({
       </div>
 
       {isSessionHistoryOpen && (
-        <div
-          className={
-            placement === 'mobile'
-              ? 'absolute right-0 top-full z-[300] mt-2 w-full sm:w-96'
-              : 'absolute left-[calc(100%+1.5rem)] bottom-0 w-80 sm:w-96 max-w-[calc(100vw-18rem)] z-[300]'
-          }
-        >
+        <div className="absolute right-0 top-full z-[300] mt-2 w-full sm:w-96">
           <SessionHistoryPopover
             id={popoverId}
-            className={
-              placement === 'mobile'
-                ? 'max-h-[calc(100dvh-150px)]'
-                : 'max-h-[min(520px,calc(100dvh-5rem))]'
-            }
+            className="max-h-[calc(100dvh-150px)]"
           />
         </div>
       )}

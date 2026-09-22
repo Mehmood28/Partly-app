@@ -10,8 +10,3 @@ export function normalizePlatform(platform?: string | null): string {
   }
   return trimmed;
 }
-
-export function formatPlatformDisplay(platform?: string | null, fallback = 'N/A'): string {
-  const normalized = normalizePlatform(platform);
-  return normalized || fallback;
-}

@@ -6,7 +6,6 @@ interface DashboardQuickActionsProps {
   onOpenAddBuild: () => void;
   onOpenBulkEntry?: () => void;
   onNavigateToStock: () => void;
-  onNavigateToBuilds: () => void;
 }
 
 export const DashboardQuickActions: React.FC<DashboardQuickActionsProps> = ({

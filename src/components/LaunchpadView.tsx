@@ -180,13 +180,6 @@ export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({
         onOpenAddComponent={onOpenAddComponent}
         onOpenBulkEntry={onOpenBulkEntry}
         onNavigateToStock={() => setActiveTab('inventory')}
-        onNavigateToBuilds={() => {
-          if (onNavigateToBuilds) {
-            onNavigateToBuilds('Available');
-          } else {
-            setActiveTab('builds');
-          }
-        }}
       />
 
       {/* Custom AI Build Request */}

@@ -370,15 +370,6 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export function formatCompactCurrency(amount: number): string {
-  if (amount >= 1000) {
-    const inK = amount / 1000;
-    // e.g. 7.5k or 17.9k or 6.4k
-    return `$${inK.toFixed(inK % 1 === 0 ? 0 : 1)}k`;
-  }
-  return `$${amount.toFixed(0)}`;
-}
-
 const MONTH_NAME_TO_NUMBER: Record<string, number> = {
   jan: 1, january: 1,
   feb: 2, february: 2,
@@ -628,29 +619,6 @@ export function formatReadableDate(dateStr?: string): string | null {
   return `${MONTHS[parsed.monthIndex]} ${parsed.day}, ${parsed.year}`;
 }
 
-export function getCategoryIconName(category: string): string {
-  switch (category) {
-    case 'GPU':
-      return 'Monitor';
-    case 'CPU':
-      return 'Cpu';
-    case 'RAM':
-      return 'HardDrive';
-    case 'Storage':
-      return 'Database';
-    case 'Motherboard':
-      return 'CircuitBoard';
-    case 'PSU':
-      return 'Zap';
-    case 'Case':
-      return 'Box';
-    case 'Cooling':
-      return 'Fan';
-    default:
-      return 'Package';
-  }
-}
-
 export type SortOption = 'highest-price' | 'lowest-price' | 'highest-stock' | 'lowest-stock' | 'newest-purchase';
 
 export interface FilterSortOptions {
@@ -884,23 +852,6 @@ export function calculateMonthlyMetrics(state: AppState, year: number, monthInde
   };
 }
 
-export function getConditionColor(cond: string): string {
-  const c = String(cond || "").toUpperCase();
-  if (c === 'SEALED') {
-    return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30';
-  } else if (c.includes('NEW')) {
-    return 'bg-[#62E6E6]/10 text-[#9FF8F4] border border-[#62E6E6]/30';
-  } else if (c.includes('USED')) {
-    return 'bg-white/[0.04] text-zinc-300 border border-white/[0.10]';
-  }
-  return 'bg-white/[0.04] text-zinc-300 border border-white/[0.10]';
-}
-
-export function getCategoryBadgeColor(category: string): string {
-  void category;
-  return 'bg-[#62E6E6]/10 text-[#9FF8F4] border border-[#62E6E6]/30';
-}
-
 /** A shared, restrained palette for component rows. */
 export function getCategoryPresentation(category: string): {
   label: string;
@@ -928,21 +879,6 @@ export function getConditionDotColor(condition: string): string {
   if (normalized.includes('NEW')) return 'bg-cyan-400';
   if (normalized.includes('USED')) return 'bg-zinc-400';
   return 'bg-zinc-500';
-}
-
-export function getTagBadgeColor(tag: string): string {
-  void tag;
-  return 'bg-white/[0.035] text-zinc-300 border border-white/[0.10]';
-}
-
-export function getPlatformBadgeColor(platform: string): string {
-  void platform;
-  return 'bg-[#62E6E6]/10 text-[#9FF8F4] border border-[#62E6E6]/25';
-}
-
-export function getPaymentMethodBadgeColor(method: string): string {
-  void method;
-  return 'bg-white/[0.035] text-zinc-300 border border-white/[0.10]';
 }
 
 export const SUB_CATEGORIES: Record<string, string[]> = {

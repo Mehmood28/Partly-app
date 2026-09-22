@@ -53,7 +53,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({ isSessionHistoryOpen,
           {hideSupplierNames ? <EyeOff /> : <Eye />}
         </button>
       </div>
-      <div className="partly-history"><SessionHistoryControls isSessionHistoryOpen={isSessionHistoryOpen} onToggleSessionHistory={onToggleSessionHistory} placement="mobile" /></div>
+      <div className="partly-history"><SessionHistoryControls isSessionHistoryOpen={isSessionHistoryOpen} onToggleSessionHistory={onToggleSessionHistory} /></div>
     </header>
   );
 });

@@ -27,13 +27,9 @@ interface ComponentCardProps {
   isActive?: boolean;
   isExpanded?: boolean;
   onToggle?: () => void;
-  actionOverride?: React.ReactNode;
-  unassignedQuantityOverride?: number;
-  readonlyMode?: boolean;
   component: InventoryComponent;
   onAddPurchaseEntry?: (componentId: string) => void;
   onDeletePurchaseEntry?: (componentId: string, entryId: string) => { success: boolean; error?: string } | void;
-  onUpdateMarketValue?: (componentId: string, value: number) => void;
   onEditComponent?: (component: InventoryComponent) => void;
   onDeleteComponent?: (componentId: string) => { success: boolean; error?: string } | void;
   onSellPart?: (component: InventoryComponent, purchaseEntryId: string) => void;
@@ -49,9 +45,6 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   onEditComponent,
   onDeleteComponent,
   onSellPart,
-  actionOverride,
-  readonlyMode,
-  unassignedQuantityOverride,
 }) => {
   const { state } = useInventory();
   const { hideSupplierNames } = usePrivacy();
@@ -65,18 +58,14 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
 
-  const unassignedQty = unassignedQuantityOverride !== undefined ? unassignedQuantityOverride : calculateUnassignedQuantityStrict(component, state.builds);
+  const unassignedQty = calculateUnassignedQuantityStrict(component, state.builds);
   const unassignedVal = calculateUnassignedValueStrict(component, state.builds);
   const avgCost = unassignedQty > 0 ? unassignedVal / unassignedQty : calculateAverageUnitCost(component);
 
   const categoryPresentation = getCategoryPresentation(component.category);
 
-  const getCardBorder = () => {
-    return 'border-white/[0.08] hover:border-[#B9EF68]/40';
-  };
-
   return (
-    <div className={`app-panel stock-card transition-colors ${getCardBorder()} ${isExpanded ? 'stock-card-expanded' : ''}`}>
+    <div className={`app-panel stock-card border-white/[0.08] transition-colors hover:border-[#B9EF68]/40 ${isExpanded ? 'stock-card-expanded' : ''}`}>
       {/* Collapsed Header Bar - Clickable for mobile */}
       <div
         className="stock-card-header" role="button" tabIndex={0} aria-expanded={isExpanded}
@@ -95,7 +84,6 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                 {String(component.name || '')}
               </h3>
               <span className="stock-total">{formatCurrency(unassignedVal)}</span>
-              {actionOverride ? <div className="-mr-1 -mt-0.5 flex items-center text-zinc-500">{actionOverride}</div> : null}
             </div>
             <div className="stock-summary">
               {(component.tags || []).filter((tag): tag is string => typeof tag === 'string' && Boolean(tag)).map((tag, idx) => <span key={`${tag}-${idx}`}>{idx > 0 && '· '}{tag}</span>)}
@@ -112,8 +100,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
         <div className="stock-expanded">
 
           {/* Expanded Action Toolbar */}
-          {!readonlyMode && (
-            <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2">
               {onAddPurchaseEntry && (
                 <button
                   onClick={(e) => {
@@ -147,8 +134,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                   <Trash2 className="w-3.5 h-3.5" /> Delete
                 </button>
               )}
-            </div>
-          )}
+          </div>
 
           {/* Available inventory batches. */}
           <div>
@@ -207,7 +193,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                             <strong>{formatCurrency(entryTotal)}</strong>
                           </div>
                           <div className="batch-actions">
-                            {!readonlyMode && onSellPart && batch.availableQuantity > 0 && (
+                            {onSellPart && batch.availableQuantity > 0 && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -218,7 +204,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                                 <Tag className="w-3 h-3" /> Sell
                               </button>
                             )}
-                            {!readonlyMode && onDeletePurchaseEntry && (
+                            {onDeletePurchaseEntry && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();

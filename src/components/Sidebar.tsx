@@ -5,8 +5,6 @@ import { useInventory } from '../context/InventoryContext';
 interface SidebarProps {
   activeTab: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data';
   setActiveTab: (tab: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data') => void;
-  isSessionHistoryOpen: boolean;
-  onToggleSessionHistory: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = React.memo(({
