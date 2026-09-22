@@ -83,7 +83,7 @@ export const EditBuildPartQuantityModal: React.FC<EditBuildPartQuantityModalProp
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="build-modal stock-modal max-w-sm">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="content" className="build-modal stock-modal max-w-sm">
       <form className="space-y-4 w-full" onSubmit={handleSubmit}>
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
@@ -131,7 +131,7 @@ export const EditBuildPartQuantityModal: React.FC<EditBuildPartQuantityModalProp
               setQuantityInput(event.target.value);
               setErrorMessage(null);
             }}
-            className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
+            className="app-field h-11 px-3 py-2 text-sm font-mono"
           />
           <p className="text-[11px] text-zinc-500 mt-1.5">
             {exactBatchAvailability === null

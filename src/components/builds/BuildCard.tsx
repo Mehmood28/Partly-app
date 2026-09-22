@@ -754,6 +754,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
         <BottomSheetModal
           isOpen={isCopyAdModalOpen && isActive}
           onClose={() => setIsCopyAdModalOpen(false)}
+          layout="content"
           className="build-modal stock-modal max-w-md"
         >
           <div className="space-y-4">
@@ -829,7 +830,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                       step="1"
                       value={copyAdCustomWarranty}
                       onChange={(e) => setCopyAdCustomWarranty(e.target.value)}
-                      className="w-full min-h-[44px] h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-mono"
+                      className="app-field h-11 min-h-[44px] px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
                       placeholder="Enter warranty days (e.g. 14, 45, 180)"
                       aria-label="Custom warranty days"
                       required

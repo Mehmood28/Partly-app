@@ -162,9 +162,10 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, isO
     <BottomSheetModal
       isOpen={!!build && isOpen}
       onClose={onClose}
-      className={`build-modal stock-modal modal-workspace modal-fill dismantle-modal ${isModeA ? 'dismantle-modal-known' : ''} w-full max-w-2xl !p-0 !overflow-hidden`}
+      layout={isModeA ? 'content' : 'workspace'}
+      className="build-modal stock-modal dismantle-modal w-full max-w-2xl !p-0"
     >
-      <div className="flex h-full w-full select-none flex-col bg-[#0B1113] text-zinc-100">
+      <div className={`flex w-full select-none flex-col bg-[#0B1113] text-zinc-100 ${isModeA ? '' : 'h-full min-h-0'}`}>
         <div className="dismantle-modal-header shrink-0 border-b border-white/[0.08] bg-[#0B1113]/95 px-3 py-2.5 backdrop-blur-md z-30 sm:px-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -212,7 +213,7 @@ export const DismantleRigModal: React.FC<DismantleRigModalProps> = ({ build, isO
           )}
         </div>
 
-        <div className="dismantle-modal-body flex-1 overflow-y-auto px-3 py-2.5 sm:px-4">
+        <div className={`dismantle-modal-body px-3 py-2.5 sm:px-4 ${isModeA ? '' : 'min-h-0 flex-1 overflow-y-auto'}`}>
           {isModeA ? (
             <ModeAKnownParts build={build} />
           ) : (

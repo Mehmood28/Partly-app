@@ -154,7 +154,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="build-modal stock-modal modal-workspace modal-fill max-w-xl">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="workspace" className="build-modal stock-modal max-w-xl">
       <div className="swap-modal-content w-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 shrink-0">

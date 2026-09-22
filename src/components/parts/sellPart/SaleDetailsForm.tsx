@@ -66,7 +66,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               max={maxQty > 0 ? maxQty : 1}
               value={quantity}
               onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-              className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/40 transition-colors font-mono"
+              className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 focus:border-cyan-500 focus:ring-cyan-500/40 font-mono"
             />
           </div>
           <div>
@@ -77,7 +77,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               type="date"
               value={saleDate}
               onChange={(e) => setSaleDate(e.target.value)}
-              className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/40 transition-colors font-mono"
+              className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 focus:border-cyan-500 focus:ring-cyan-500/40 font-mono"
             />
           </div>
         </div>
@@ -91,7 +91,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               type="text"
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
-              className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/40 transition-colors font-sans"
+              className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 focus:border-cyan-500 focus:ring-cyan-500/40 font-sans"
               placeholder="e.g. Local Trade, Facebook"
             />
           </div>
@@ -125,7 +125,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
             max={maxQty > 0 ? maxQty : 1}
             value={quantity}
             onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-            className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-mono"
+            className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-mono"
           />
         </div>
         <div className="min-w-0">
@@ -140,7 +140,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               step="any"
               value={unitSalePrice}
               onChange={(e) => handleUnitSalePriceChange(e.target.value)}
-              className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-mono"
+              className="app-field h-9 min-h-9 pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono"
             />
           </div>
         </div>
@@ -156,7 +156,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               step="any"
               value={totalSalePrice}
               onChange={(e) => handleTotalSalePriceChange(e.target.value)}
-              className="w-full h-9 bg-[#101719] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-mono"
+              className="app-field h-9 min-h-9 pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono"
             />
           </div>
         </div>
@@ -173,7 +173,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               type="date"
               value={saleDate}
               onChange={(e) => setSaleDate(e.target.value)}
-              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-mono"
+              className="app-field h-9 min-h-9 bg-[#0B1113] px-3 text-xs placeholder:text-zinc-500 font-mono"
             />
           </div>
           <div className="min-w-0">
@@ -184,7 +184,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
               type="text"
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
-              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+              className="app-field h-9 min-h-9 bg-[#0B1113] px-3 text-xs placeholder:text-zinc-500 font-sans"
               placeholder="e.g. Amazon, Kijiji"
             />
           </div>
@@ -209,7 +209,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
             placeholder="e.g. Alex"
             value={buyerName}
             onChange={(e) => setBuyerName(e.target.value)}
-            className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+            className="app-field h-9 min-h-9 bg-[#0B1113] px-3 text-xs placeholder:text-zinc-500 font-sans"
           />
         </div>
       </div>

@@ -346,10 +346,11 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
     <BottomSheetModal
       isOpen={isOpen}
       onClose={handleCloseAndReset}
-      className={`stock-modal modal-workspace modal-fill sell-part-modal !overflow-hidden !p-0 ${saleMode === 'bulk' ? 'max-w-2xl' : 'max-w-lg'}`}
+      layout={saleMode === 'bulk' ? 'workspace' : 'content'}
+      className={`stock-modal sell-part-modal !p-0 ${saleMode === 'bulk' ? 'max-w-2xl' : 'max-w-lg'}`}
     >
-      <div className="sell-part-shell w-full">
-        <div className="sell-part-header px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
+      <div className={`sell-part-shell w-full ${saleMode === 'bulk' ? 'is-workspace' : ''}`}>
+        <div className="sell-part-header border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 flex items-center justify-center text-[#B9EF68]">
               {saleMode === 'bulk' ? <Layers className="w-5 h-5" /> : <Tag className="w-5 h-5" />}
@@ -380,7 +381,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
         </div>
 
         {/* Mode Switcher Tabs */}
-        <div className="sell-part-tabs px-5 pt-3 pb-2 border-b border-white/[0.06] bg-[#0B1113]">
+        <div className="sell-part-tabs border-b border-white/[0.06] bg-[#0B1113]">
           <div className="flex items-center gap-1 p-1 bg-[#101719] border border-white/[0.06] rounded-xl">
             <button
               type="button"
@@ -410,7 +411,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
         </div>
 
         {saleMode === 'bulk' ? (
-          <div className="sell-part-content p-5">
+          <div className="sell-part-content">
             <BulkSaleForm
               onClose={handleCloseAndReset}
               initialComponentId={preselectedComponent?.id}
@@ -461,7 +462,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className={`single-sale-form p-5 space-y-4 ${hasTradeIn ? 'has-trade' : ''}`}>
+          <form onSubmit={handleSubmit} className="single-sale-form">
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1 font-sans">
                 Select Component / Part

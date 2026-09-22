@@ -94,7 +94,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             initial={{ scale: 0.95, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
-            className="relative z-10 mx-auto flex w-full max-w-sm flex-col rounded-[10px] border border-white/[0.12] bg-[#0B1113] p-4 shadow-[0_18px_55px_rgba(0,0,0,.65)] pointer-events-auto sm:p-5"
+            className="confirm-modal-panel relative z-10 mx-auto flex w-full max-w-sm flex-col rounded-[10px] border border-white/[0.12] bg-[#0B1113] p-4 shadow-[0_18px_55px_rgba(0,0,0,.65)] pointer-events-auto sm:p-5"
           >
             <div className="flex items-center gap-2.5 shrink-0 mb-3">
               {renderIcon()}

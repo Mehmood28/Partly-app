@@ -198,12 +198,12 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                         <div className="stock-batch-compact">
                           <div className="stock-batch-line stock-batch-line-primary">
                             <strong>{formatReadableDate(entry.date) || entry.date}</strong>
-                            <span><em>Supplier</em>{source}</span>
+                            <span><em>Supplier</em><span className="stock-batch-value">{source}</span></span>
                             <span>{batch.availableQuantity} × {formatCurrency(entryUnitPrice)}</span>
                           </div>
                           <div className="stock-batch-line stock-batch-line-secondary">
                             <span>{entry.condition}</span>
-                            <span><em>Payment</em>{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span>
+                            <span><em>Payment</em><span className="stock-batch-value">{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span></span>
                             <strong>{formatCurrency(entryTotal)}</strong>
                           </div>
                           <div className="batch-actions">

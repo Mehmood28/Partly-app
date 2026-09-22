@@ -323,7 +323,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
               placeholder="Search components or condition..."
               value={batchSearch}
               onChange={(e) => setBatchSearch(e.target.value)}
-              className="w-full h-8 bg-[#0B1113] border border-white/[0.06] rounded-lg pl-8 pr-2.5 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] transition-colors font-sans"
+              className="app-field h-8 min-h-8 bg-[#0B1113] pl-8 pr-2.5 text-xs placeholder:text-zinc-500 font-sans"
             />
           </div>
           <div>
@@ -340,7 +340,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
         </div>
 
         {/* Available Batches List */}
-        <div className="bulk-stock-pool max-h-44 overflow-y-auto pr-1 custom-scrollbar">
+        <div className="bulk-stock-pool pr-1">
           {filteredAvailableBatches.length === 0 ? (
             <div className="text-center py-5 text-xs text-zinc-500 font-sans">
               No matching available inventory batches found.
@@ -433,7 +433,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
             No items selected yet. Choose component batches from the list above to add them to this bulk sale.
           </div>
         ) : (
-          <div className="bulk-line-list max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+          <div className="bulk-line-list pr-1">
             {lineSummaries.map((item, idx) => (
               <div
                 key={`${item.line.componentId}::${item.line.purchaseEntryId}`}
@@ -481,7 +481,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                       onChange={(e) =>
                         handleLineQtyChange(idx, parseInt(e.target.value) || 1, item.availableQty)
                       }
-                      className="w-full h-8 bg-[#0B1113] border border-white/[0.08] rounded-lg px-2.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68]"
+                      className="app-field h-8 min-h-8 bg-[#0B1113] px-2.5 text-xs font-mono"
                     />
                   </div>
 
@@ -501,7 +501,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                         min="0"
                         value={item.line.unitSalePrice}
                         onChange={(e) => handleLinePriceChange(idx, e.target.value)}
-                        className="w-full h-8 bg-[#0B1113] border border-white/[0.08] rounded-lg pl-6 pr-2.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68]"
+                        className="app-field h-8 min-h-8 bg-[#0B1113] pl-6 pr-2.5 text-xs font-mono"
                       />
                     </div>
                   </div>
@@ -540,7 +540,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
               type="date"
               value={saleDate}
               onChange={(e) => setSaleDate(e.target.value)}
-              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-mono focus:outline-none focus:border-[#B9EF68]"
+              className="app-field h-9 min-h-9 bg-[#0B1113] px-3 text-xs font-mono"
             />
           </div>
 
@@ -553,7 +553,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
               placeholder="e.g. John Doe"
               value={buyerName}
               onChange={(e) => setBuyerName(e.target.value)}
-              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-sans focus:outline-none focus:border-[#B9EF68]"
+              className="app-field h-9 min-h-9 bg-[#0B1113] px-3 text-xs font-sans"
             />
           </div>
         </div>
@@ -568,7 +568,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
               placeholder="Facebook, Local, etc."
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
-              className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-sans focus:outline-none focus:border-[#B9EF68]"
+              className="app-field h-9 min-h-9 bg-[#0B1113] px-3 text-xs font-sans"
             />
           </div>
 
@@ -593,7 +593,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
             placeholder="Optional sale notes, customer handle, or serial numbers..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 font-sans focus:outline-none focus:border-[#B9EF68]"
+            className="app-field h-9 min-h-9 bg-[#0B1113] px-3 text-xs font-sans"
           />
         </div>
       </div>

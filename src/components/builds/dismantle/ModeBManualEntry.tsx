@@ -104,7 +104,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                 }`}
                 value={part.name}
                 onChange={(e) => handleUpdatePart(part.id, { name: e.target.value })}
-                className="flex-1 min-w-0 h-8 bg-[#0B1113] border border-white/[0.08] rounded-xl px-2.5 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+                className="app-field h-8 min-h-8 min-w-0 flex-1 bg-[#0B1113] px-2.5 text-xs placeholder:text-zinc-500 font-sans"
               />
               {manualParts.length > 1 && (
                 <button
@@ -131,7 +131,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                       quantity: Math.max(1, parseInt(e.target.value) || 1),
                     })
                   }
-                  className="w-12 sm:w-14 h-7 bg-[#0B1113] border border-white/[0.08] rounded-lg px-1.5 text-xs text-zinc-100 font-mono text-center focus:outline-none focus:border-[#B9EF68]"
+                  className="app-field h-7 min-h-7 w-12 bg-[#0B1113] px-1.5 text-center text-xs font-mono sm:w-14"
                 />
               </div>
 

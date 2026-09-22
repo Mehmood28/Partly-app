@@ -118,8 +118,8 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
   if (!isOpen) return null;
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleClose} className={`stock-modal modal-workspace bulk-entry-modal max-w-4xl !overflow-hidden !p-0 ${parsedItems.length > 0 ? 'modal-fill' : ''}`}>
-      <div className="flex h-full w-full flex-col bg-[#0B1113]">
+    <BottomSheetModal isOpen={isOpen} onClose={handleClose} layout={parsedItems.length > 0 ? 'workspace' : 'content'} className="stock-modal bulk-entry-modal max-w-4xl !p-0">
+      <div className={`flex w-full flex-col bg-[#0B1113] ${parsedItems.length > 0 ? 'h-full min-h-0' : ''}`}>
         <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-3 py-2.5 sm:px-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#B9EF68]/25 bg-[#B9EF68]/10 text-[#B9EF68]">
@@ -139,7 +139,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
           </button>
         </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3 sm:px-4">
+        <div className={`${parsedItems.length > 0 ? 'min-h-0 flex-1 overflow-y-auto' : ''} space-y-3 px-3 py-3 sm:px-4`}>
           {parsedItems.length === 0 ? (
             <>
               {/* Mode Selection */}

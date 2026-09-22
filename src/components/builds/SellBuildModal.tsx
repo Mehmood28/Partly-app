@@ -266,7 +266,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleClose} className="build-modal stock-modal sell-build-modal max-w-xl">
+    <BottomSheetModal isOpen={isOpen} onClose={handleClose} layout="content" className="build-modal stock-modal sell-build-modal max-w-xl">
       <form 
         className="sell-build-form w-full"
         onSubmit={handleSubmit}
@@ -293,7 +293,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                 type="date"
                 value={builtDate}
                 onChange={(e) => setBuiltDate(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors [color-scheme:dark]"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm [color-scheme:dark]"
               />
             </div>
             <div>
@@ -303,7 +303,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                 required
                 value={saleDate}
                 onChange={(e) => setSaleDate(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors [color-scheme:dark]"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm [color-scheme:dark]"
               />
             </div>
           </div>
@@ -322,7 +322,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                   required
                   value={salePrice}
                   onChange={(e) => setSalePrice(e.target.value)}
-                  className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors pr-3 pl-7"
+                  className="app-field h-11 py-2 pl-7 pr-3 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
                   placeholder={hasTradeIn ? "2000" : "2500"}
                 />
               </div>
@@ -366,7 +366,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                   step="1"
                   value={customWarrantyDays}
                   onChange={(e) => setCustomWarrantyDays(e.target.value)}
-                  className="w-20 h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
+                  className="app-field h-11 w-20 px-2 py-2 text-center text-xs placeholder:text-zinc-500 sm:text-sm"
                   placeholder="Days"
                   required
                 />
@@ -425,7 +425,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                         disabled={isTradeInLocked}
                         value={tradeInCredit}
                         onChange={(e) => setTradeInCredit(e.target.value)}
-                        className={`w-full h-11 bg-[#0B1113] border border-[#B9EF68]/30 rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors pr-3 pl-7 ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className={`app-field h-11 bg-[#0B1113] border-[#B9EF68]/30 py-2 pr-3 pl-7 text-xs sm:text-sm font-mono placeholder:text-zinc-500 ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                         placeholder="500"
                       />
                     </div>
@@ -440,7 +440,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                       disabled={isTradeInLocked}
                       value={tradeInBuildName}
                       onChange={(e) => setTradeInBuildName(e.target.value)}
-                      className={`w-full h-11 bg-[#0B1113] border border-[#B9EF68]/30 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      className={`app-field h-11 bg-[#0B1113] border-[#B9EF68]/30 px-3 py-2 text-xs sm:text-sm placeholder:text-zinc-500 font-sans ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                       placeholder="e.g. i7-10700K + RTX 3070 Rig"
                     />
                   </div>
@@ -453,7 +453,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                     disabled={isTradeInLocked}
                     value={tradeInNotes}
                     onChange={(e) => setTradeInNotes(e.target.value)}
-                    className={`w-full h-11 bg-[#0B1113] border border-[#B9EF68]/30 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    className={`app-field h-11 bg-[#0B1113] border-[#B9EF68]/30 px-3 py-2 text-xs sm:text-sm placeholder:text-zinc-500 font-sans ${isTradeInLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                     placeholder="e.g. Boots fine, needs dusting, 16GB RAM, 650W PSU"
                   />
                 </div>
@@ -480,7 +480,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
               type="text"
               value={platformSold}
               onChange={(e) => setPlatformSold(e.target.value)}
-              className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+              className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-sans"
               placeholder="e.g. Amazon, Kijiji"
             />
           </div>
@@ -492,7 +492,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                 type="text"
                 value={buyerName}
                 onChange={(e) => setBuyerName(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-sans"
                 placeholder="e.g. Alex"
               />
             </div>
@@ -502,7 +502,7 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
                 type="tel"
                 value={buyerPhone}
                 onChange={(e) => setBuyerPhone(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-sans"
                 placeholder="e.g. 555-0123"
               />
             </div>

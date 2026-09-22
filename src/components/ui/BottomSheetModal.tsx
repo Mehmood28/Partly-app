@@ -9,9 +9,10 @@ interface BottomSheetModalProps {
   onClose: () => void;
   children: ReactNode;
   className?: string;
+  layout?: 'content' | 'workspace';
 }
 
-export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onClose, children, className = '' }) => {
+export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onClose, children, className = '', layout = 'content' }) => {
   useModalScrollLock(isOpen);
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialogBehavior({
@@ -43,7 +44,8 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onCl
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 10, opacity: 0, scale: 0.98 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className={`pointer-events-auto relative flex max-h-[calc(100dvh-5.5rem)] w-full flex-col overflow-y-auto rounded-[14px] border border-white/[0.12] bg-[#0b1113]/98 p-3.5 shadow-[0_28px_80px_rgba(0,0,0,0.82)] backdrop-blur-xl sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-2xl sm:p-5 ${className}`}
+            data-modal-layout={layout}
+            className={`pointer-events-auto relative flex w-full flex-col rounded-[14px] border border-white/[0.12] bg-[#0b1113]/98 p-3.5 shadow-[0_28px_80px_rgba(0,0,0,0.82)] backdrop-blur-xl sm:rounded-2xl sm:p-5 ${layout === 'workspace' ? 'modal-layout-workspace' : 'modal-layout-content'} ${className}`}
           >
             {children}
           </motion.div>

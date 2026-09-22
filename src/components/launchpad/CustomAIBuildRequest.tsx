@@ -48,7 +48,7 @@ export const CustomAIBuildRequest: React.FC<CustomAIBuildRequestProps> = ({
         <button
           onClick={onGenerate}
           disabled={!customPrompt.trim() || isGeneratingCustomBuild}
-          className="app-button app-button-primary app-button-gradient flex items-center justify-center gap-2 h-12 shrink-0 px-6 disabled:cursor-not-allowed disabled:opacity-45"
+          className="app-button app-button-primary flex items-center justify-center gap-2 h-12 shrink-0 px-6 disabled:cursor-not-allowed disabled:opacity-45"
         >
           {isGeneratingCustomBuild ? (
             <>

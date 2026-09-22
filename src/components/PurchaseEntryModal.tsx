@@ -48,7 +48,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="stock-modal modal-workspace max-w-md !overflow-hidden !p-0">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="content" className="stock-modal max-w-md !p-0">
       <form 
         className="modal-standard-form w-full"
         onSubmit={handleSubmit}
@@ -85,7 +85,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                   required
                   value={unitPrice}
                   onChange={(e) => setUnitPrice(e.target.value)}
-                  className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors pr-3 pl-7"
+                  className="app-field h-11 py-2 pl-7 pr-3 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
                   placeholder="0.00"
                 />
               </div>
@@ -99,7 +99,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                 min="1"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors [color-scheme:dark]"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm [color-scheme:dark]"
               />
             </div>
             <div>
@@ -139,7 +139,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                 autoComplete="off"
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm"
                 placeholder={hideSupplierNames ? "••••••••" : "e.g. Amazon, Best Buy, Daniel"}
               />
             </div>
@@ -168,7 +168,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                 step="any"
                 value={taxPercent}
                 onChange={(e) => setTaxPercent(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
                 placeholder="0"
               />
             </div>

@@ -89,7 +89,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} className="build-modal stock-modal modal-workspace max-w-md !overflow-hidden !p-0">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="content" className="build-modal stock-modal max-w-md !p-0">
       <form 
         className="modal-standard-form w-full"
         onSubmit={handleSaveEdit}
@@ -115,7 +115,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
               required
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+              className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-sans"
             />
           </div>
 
@@ -126,7 +126,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
                 disabled={build.status === 'Sold'}
                 value={editBuiltDate}
                 onChange={(e) => setEditBuiltDate(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors [color-scheme:dark]"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm [color-scheme:dark]"
               />
           </div>
 
@@ -142,7 +142,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
                 step="any"
                 value={editSalePrice}
                 onChange={(e) => setEditSalePrice(e.target.value)}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors pr-3 pl-7"
+                className="app-field h-11 py-2 pl-7 pr-3 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
                 placeholder="0.00"
               />
             </div>
@@ -172,7 +172,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
                   step="1"
                   value={customWarrantyDays}
                   onChange={(e) => setCustomWarrantyDays(e.target.value)}
-                  className="w-20 h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-2 py-2 text-xs sm:text-sm text-zinc-100 text-center placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
+                  className="app-field h-11 w-20 px-2 py-2 text-center text-xs placeholder:text-zinc-500 sm:text-sm"
                   placeholder="Days"
                   required
                 />
@@ -186,7 +186,7 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
               rows={2}
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
-              className="w-full min-h-[60px] bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors resize-y font-sans"
+              className="app-field min-h-[60px] px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm resize-y font-sans"
               placeholder="Build specs, condition, notes..."
             />
           </div>

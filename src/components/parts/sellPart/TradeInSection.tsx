@@ -143,7 +143,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                       required={hasTradeIn}
                       value={tradeInCredit}
                       onChange={(e) => setTradeInCredit(e.target.value)}
-                      className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-mono"
+                      className="app-field h-9 min-h-9 bg-[#0B1113] pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono"
                       placeholder="40.00"
                     />
                   </div>
@@ -192,7 +192,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                   required={hasTradeIn}
                   value={tradeInPartName}
                   onChange={(e) => setTradeInPartName(e.target.value)}
-                  className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+                  className="app-field h-9 min-h-9 bg-[#0B1113] px-3 text-xs placeholder:text-zinc-500 font-sans"
                   placeholder="e.g. GTX 1660 Super 6GB"
                 />
               </div>
@@ -238,7 +238,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                     required={hasTradeIn && tradeDirection === 'TRADE_UP'}
                     value={cashPaidOnTop}
                     onChange={(e) => setCashPaidOnTop(e.target.value)}
-                    className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl pl-7 pr-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/40 transition-colors font-mono"
+                    className="app-field h-9 min-h-9 bg-[#0B1113] pl-7 pr-3 text-xs placeholder:text-zinc-500 focus:border-cyan-500 focus:ring-cyan-500/40 font-mono"
                     placeholder="0.00"
                   />
                 </div>
@@ -271,7 +271,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                     required={hasTradeIn && tradeDirection === 'TRADE_UP'}
                     value={tradeInPartName}
                     onChange={(e) => setTradeInPartName(e.target.value)}
-                    className="w-full h-9 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/40 transition-colors font-sans"
+                    className="app-field h-9 min-h-9 bg-[#0B1113] px-3 text-xs placeholder:text-zinc-500 focus:border-cyan-500 focus:ring-cyan-500/40 font-sans"
                     placeholder="e.g. RTX 5070 Ti 16GB"
                   />
                 </div>

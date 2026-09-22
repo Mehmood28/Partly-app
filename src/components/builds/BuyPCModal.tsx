@@ -166,9 +166,10 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, isVisible = true
     <BottomSheetModal
       isOpen={isOpen && isVisible}
       onClose={onClose}
-      className="build-modal stock-modal modal-workspace modal-fill buy-pc-modal w-full max-w-2xl !p-0 !overflow-hidden"
+      layout="content"
+      className="build-modal stock-modal buy-pc-modal w-full max-w-2xl !p-0"
     >
-      <form onSubmit={handleSubmit} className="flex h-full w-full flex-col bg-[#0B1113] text-zinc-100">
+      <form onSubmit={handleSubmit} className="flex w-full flex-col bg-[#0B1113] text-zinc-100">
         <div className="buy-pc-header shrink-0 border-b border-white/[0.08] bg-[#0B1113]/95 px-3 py-2.5 sm:px-4">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -185,26 +186,26 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, isVisible = true
           </div>
         </div>
 
-        <div className="buy-pc-body flex-1 overflow-y-auto px-3 py-2.5 sm:px-4">
+        <div className="buy-pc-body px-3 py-2.5 sm:px-4">
           <div className="buy-pc-fields grid grid-cols-2 gap-2 text-xs">
             <div className="col-span-2">
               <label className="block text-zinc-300 font-medium mb-1">PC Name / Listing Title (Optional)</label>
-              <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Auto-generated from CPU + GPU if left blank" className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68]" />
+              <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Auto-generated from CPU + GPU if left blank" className="app-field h-11 px-3 placeholder:text-zinc-500" />
             </div>
             <div>
               <label className="block text-zinc-300 font-medium mb-1">Total Paid *</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-mono">$</span>
-                <input type="number" inputMode="decimal" min="0.01" step="0.01" required value={purchasePrice} onChange={(event) => { setPurchasePrice(event.target.value); setFormError(null); }} placeholder="520.00" className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl pl-7 pr-3 font-mono text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68]" />
+                <input type="number" inputMode="decimal" min="0.01" step="0.01" required value={purchasePrice} onChange={(event) => { setPurchasePrice(event.target.value); setFormError(null); }} placeholder="520.00" className="app-field h-11 pl-7 pr-3 font-mono placeholder:text-zinc-500" />
               </div>
             </div>
             <div>
               <label className="block text-zinc-300 font-medium mb-1">Date Bought *</label>
-              <input type="date" required value={purchaseDate} onChange={(event) => setPurchaseDate(event.target.value)} className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 font-mono text-zinc-100 focus:outline-none focus:border-[#B9EF68] [color-scheme:dark]" />
+              <input type="date" required value={purchaseDate} onChange={(event) => setPurchaseDate(event.target.value)} className="app-field h-11 px-3 font-mono [color-scheme:dark]" />
             </div>
             <div>
               <label className="block text-zinc-300 font-medium mb-1">Seller / Platform (Optional)</label>
-              <input value={seller} onChange={(event) => setSeller(event.target.value)} placeholder="e.g. Facebook · John Smith" className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68]" />
+              <input value={seller} onChange={(event) => setSeller(event.target.value)} placeholder="e.g. Facebook · John Smith" className="app-field h-11 px-3 placeholder:text-zinc-500" />
             </div>
             <div>
               <label className="block text-zinc-300 font-medium mb-1">Payment Method *</label>
@@ -212,7 +213,7 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, isVisible = true
             </div>
             <div className="col-span-2">
               <label className="block text-zinc-300 font-medium mb-1">Notes (Optional)</label>
-              <textarea rows={2} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Condition, damage, parts you will not keep, listing details…" className="w-full bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] resize-y" />
+              <textarea rows={2} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Condition, damage, parts you will not keep, listing details…" className="app-field px-3 py-2 placeholder:text-zinc-500 resize-y" />
             </div>
             <div className="col-span-2">
               <label className="block text-zinc-300 font-medium mb-1">PC Image (Optional)</label>
@@ -224,7 +225,7 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, isVisible = true
                   </button>
                 </div>
               ) : (
-                <label className="h-11 rounded-xl border border-dashed border-white/[0.14] bg-[#101719] flex items-center justify-center gap-2 text-zinc-400 hover:text-zinc-200 hover:border-[#B9EF68]/50 cursor-pointer transition-colors">
+                <label className="buy-pc-image-control rounded-xl border border-dashed border-white/[0.14] bg-[#101719] flex items-center justify-center gap-2 text-zinc-400 hover:text-zinc-200 hover:border-[#B9EF68]/50 cursor-pointer transition-colors">
                   <ImagePlus className="w-4 h-4" /> Add Image
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>

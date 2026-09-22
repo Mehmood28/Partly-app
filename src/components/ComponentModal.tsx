@@ -227,7 +227,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     : [];
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} className="stock-modal modal-workspace max-w-lg !overflow-hidden !p-0">
+    <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} layout="content" className="stock-modal max-w-lg !p-0">
       <form 
         className="modal-standard-form w-full"
         onSubmit={handleSubmit}
@@ -268,7 +268,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={selectedCompId !== 'NEW' && !initialComponent}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-sans"
                 placeholder="e.g. ASUS Prime RTX 5080"
               />
             </div>
@@ -290,7 +290,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                 value={tagsRaw}
                 onChange={(e) => setTagsRaw(e.target.value)}
                 disabled={selectedCompId !== 'NEW' && !initialComponent}
-                className="w-full h-11 bg-[#101719] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-sans"
                 placeholder="e.g. AM5, DDR5, White"
               />
             </div>
@@ -382,7 +382,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                       required={includePurchase}
                       value={unitPrice}
                       onChange={(e) => setUnitPrice(e.target.value)}
-                      className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors pr-3 pl-7"
+                      className="app-field h-11 bg-[#0B1113] py-2 pl-7 pr-3 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
                       placeholder="750.00"
                     />
                   </div>
@@ -395,7 +395,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                     required={includePurchase}
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
+                    className="app-field h-11 bg-[#0B1113] px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
                     placeholder="1"
                   />
                 </div>
@@ -411,7 +411,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                     autoComplete="off"
                     value={platform}
                     onChange={(e) => setPlatform(e.target.value)}
-                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors font-sans"
+                    className="app-field h-11 bg-[#0B1113] px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-sans"
                     placeholder={hideSupplierNames ? "••••••••" : "e.g. Amazon, Best Buy, Daniel"}
                   />
                 </div>
@@ -424,7 +424,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                     required={includePurchase}
                     value={purchaseDate}
                     onChange={(e) => setPurchaseDate(e.target.value)}
-                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors [color-scheme:dark]"
+                    className="app-field h-11 bg-[#0B1113] px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -469,7 +469,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                     step="any"
                     value={taxPercent}
                     onChange={(e) => setTaxPercent(e.target.value)}
-                    className="w-full h-11 bg-[#0B1113] border border-white/[0.08] rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-100 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-[#B9EF68] focus:ring-1 focus:ring-[#B9EF68]/40 transition-colors"
+                    className="app-field h-11 bg-[#0B1113] px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
                     placeholder="0"
                   />
                 </div>
