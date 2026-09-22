@@ -114,7 +114,7 @@ export const useDialogBehavior = ({
       const first = focusTargets[0];
       const last = focusTargets[focusTargets.length - 1];
       const activeElement = document.activeElement;
-      if (!dialog.contains(activeElement)) {
+      if (!dialog.contains(activeElement) || activeElement === dialog) {
         event.preventDefault();
         (event.shiftKey ? last : first).focus();
       } else if (event.shiftKey && activeElement === first) {

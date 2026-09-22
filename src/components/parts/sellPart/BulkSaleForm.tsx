@@ -299,9 +299,9 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bulk-sale-form space-y-4">
+    <form onSubmit={handleSubmit} className="bulk-sale-form flex flex-col">
       {/* 1. Available Stock Selector Section */}
-      <div className="bulk-stock-selector space-y-3 border-y border-white/[0.08] py-3">
+      <div className="bulk-stock-selector flex flex-col border-y border-white/[0.08] py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-4 h-4 text-[#B9EF68]" />
@@ -409,7 +409,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       </div>
 
       {/* 2. Selected Sale Lines Section */}
-      <div className="bulk-selected-lines space-y-2">
+      <div className="bulk-selected-lines flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyan-400" />
@@ -526,7 +526,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       </div>
 
       {/* 3. Shared Deal Details */}
-      <div className="bulk-deal-details space-y-3 border-y border-white/[0.08] py-3">
+      <div className="bulk-deal-details flex flex-col border-y border-white/[0.08] py-3">
         <span className="text-xs font-semibold text-zinc-200 font-sans block">
           Deal & Payment Details
         </span>
@@ -599,7 +599,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       </div>
 
       {/* 4. Live Combined Summary Box */}
-      <div className="bulk-sale-overview space-y-2.5 border-y border-white/[0.08] py-3">
+      <div className="bulk-sale-overview flex flex-col border-y border-white/[0.08] py-3">
         <div className="flex items-center justify-between text-xs font-sans text-zinc-400">
           <span>Bulk Sale Overview</span>
           <span className="font-mono">

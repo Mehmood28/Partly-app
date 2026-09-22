@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect, useId, useLayoutEffect } from 'reac
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
+const MENU_CONTENT_HEIGHT_CAP = 240;
+const MENU_CHROME_HEIGHT = 2;
+
 export interface SelectOption {
   label: string;
   value: string;
@@ -38,6 +41,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const requestedOpeningIndexRef = useRef<number | null>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
   useLayoutEffect(() => {
@@ -96,13 +100,24 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       const width = Math.min(viewportWidth - viewportPadding * 2, Math.max(rect.width, preferredWidth || 0));
       const left = Math.min(Math.max(viewportLeft + viewportPadding, rect.left), viewportRight - width - viewportPadding);
       const groupCount = new Set(options.map((option) => option.group).filter(Boolean)).size;
-      const estimatedHeight = Math.min(240, options.length * 34 + groupCount * 27 + 8);
+      const estimatedContentHeight = Math.min(MENU_CONTENT_HEIGHT_CAP, options.length * 34 + groupCount * 27 + 8);
+      const estimatedHeight = estimatedContentHeight + MENU_CHROME_HEIGHT;
       const roomBelow = Math.max(0, viewportBottom - rect.bottom - menuGap - viewportPadding);
       const roomAbove = Math.max(0, rect.top - viewportTop - menuGap - viewportPadding);
       if (roomBelow >= estimatedHeight || roomBelow >= roomAbove) {
-        setMenuPosition({ left, top: rect.bottom + menuGap, width, maxHeight: roomBelow });
+        setMenuPosition({
+          left,
+          top: rect.bottom + menuGap,
+          width,
+          maxHeight: Math.min(roomBelow, MENU_CONTENT_HEIGHT_CAP + MENU_CHROME_HEIGHT),
+        });
       } else {
-        setMenuPosition({ left, bottom: window.innerHeight - rect.top + menuGap, width, maxHeight: roomAbove });
+        setMenuPosition({
+          left,
+          bottom: window.innerHeight - rect.top + menuGap,
+          width,
+          maxHeight: Math.min(roomAbove, MENU_CONTENT_HEIGHT_CAP + MENU_CHROME_HEIGHT),
+        });
       }
     };
     positionMenu();
@@ -120,6 +135,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    const requestedOpeningIndex = requestedOpeningIndexRef.current;
+    requestedOpeningIndexRef.current = null;
+    if (requestedOpeningIndex !== null && requestedOpeningIndex >= 0 && requestedOpeningIndex < options.length) {
+      setActiveIndex(requestedOpeningIndex);
+      return;
+    }
     const selectedIndex = options.findIndex((option) => option.value === value);
     setActiveIndex(options.length ? (selectedIndex >= 0 ? selectedIndex : 0) : -1);
   }, [isOpen, options, value]);
@@ -148,7 +169,13 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       if (!options.length) return;
       if (!isOpen) {
         const selectedIndex = options.findIndex((option) => option.value === value);
-        setActiveIndex(selectedIndex >= 0 ? selectedIndex : event.key === 'ArrowDown' ? 0 : options.length - 1);
+        const requestedOpeningIndex = selectedIndex >= 0
+          ? selectedIndex
+          : event.key === 'ArrowDown'
+            ? 0
+            : options.length - 1;
+        requestedOpeningIndexRef.current = requestedOpeningIndex;
+        setActiveIndex(requestedOpeningIndex);
         setIsOpen(true);
         return;
       }
@@ -247,7 +274,10 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         aria-disabled={!options.length}
         aria-label={selectedOption ? selectedOption.label : placeholder}
         onClick={() => {
-          if (options.length) setIsOpen(!isOpen);
+          if (options.length) {
+            requestedOpeningIndexRef.current = null;
+            setIsOpen(!isOpen);
+          }
         }}
         onKeyDown={handleKeyDown}
         className={`app-field custom-select-trigger flex h-10 min-h-10 w-full cursor-pointer items-center justify-between gap-1.5 px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
@@ -275,7 +305,10 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           style={menuPosition}
           className={`fixed z-[500] overflow-hidden rounded-lg border border-white/[0.12] bg-[#0b1113]/98 shadow-2xl shadow-black/80 backdrop-blur-xl ${dropdownClassName}`}
         >
-          <div className="overflow-y-auto hide-scrollbar" style={{ maxHeight: menuPosition.maxHeight }}>
+          <div
+            className="overflow-y-auto hide-scrollbar"
+            style={{ maxHeight: Math.max(0, menuPosition.maxHeight - MENU_CHROME_HEIGHT) }}
+          >
             {renderOptions()}
           </div>
         </div>,

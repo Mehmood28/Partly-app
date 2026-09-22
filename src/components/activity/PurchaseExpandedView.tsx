@@ -40,13 +40,18 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
   const sourceBuildId = purchasedBuild?.id || tx.relatedComponentId;
   const partedOutItems = isPCPurchase
     ? components.flatMap((component) => component.purchaseHistory
-      .filter((entry) =>
-        entry.sourcePurchaseTransactionId === tx.id ||
-        (!!sourceBuildId && entry.sourcePurchasedBuildId === sourceBuildId) ||
-        (!!entry.notes && purchaseNames.some((name) =>
+      .filter((entry) => {
+        const entrySourceTransactionId = entry.sourcePurchaseTransactionId?.trim();
+        const entrySourceBuildId = entry.sourcePurchasedBuildId?.trim();
+        if (entrySourceTransactionId || entrySourceBuildId) {
+          const transactionMatches = !entrySourceTransactionId || entrySourceTransactionId === tx.id;
+          const buildMatches = !entrySourceBuildId || (!!sourceBuildId && entrySourceBuildId === sourceBuildId);
+          return transactionMatches && buildMatches;
+        }
+        return !!entry.notes && purchaseNames.some((name) =>
           entry.notes!.toLowerCase().includes(`purchased pc: ${name}`)
-        ))
-      )
+        );
+      })
       .map((entry) => ({
         category: component.category,
         itemName: component.name,

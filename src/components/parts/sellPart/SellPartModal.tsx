@@ -419,11 +419,11 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
             />
           </div>
         ) : hasNoInStockParts ? (
-          <div className="p-6 text-center space-y-4">
+          <div className="flex flex-col gap-4 p-6 text-center">
             <div className="w-12 h-12 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#B9EF68] flex items-center justify-center mx-auto">
               <Package className="w-6 h-6" />
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <h3 className="text-sm font-medium text-zinc-200">No Parts Available in Stock</h3>
               <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
                 You currently have no unassigned components available in stock to sell. Add a component or purchase entry first before logging a loose part sale.
@@ -521,7 +521,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                   </div>
                 )}
 
-                <div className="single-sale-fields space-y-4 pt-1">
+                <div className="single-sale-fields pt-1">
                   <SaleDetailsForm 
                     hasTradeIn={hasTradeIn}
                     isTradeUp={isTradeUp}
@@ -566,7 +566,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                   />
 
                   {!isTradeUp && (
-                    <div className="sale-summary bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-2">
+                    <div className="sale-summary flex flex-col gap-2 bg-[#101719] border border-white/[0.08] rounded-xl p-3.5">
                       <div className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
                         Sale Summary &amp; Profit Preview
                       </div>

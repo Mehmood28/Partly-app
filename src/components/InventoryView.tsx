@@ -167,7 +167,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
   };
 
   return (
-    <div className="stock-inventory-layout space-y-4">
+    <div className="stock-inventory-layout flex flex-col gap-4">
       <div className="inventory-capital">
         <div className="flex min-w-0 flex-col justify-center p-3 sm:p-4">
           <div className="app-metric-label">Unassigned</div>

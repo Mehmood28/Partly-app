@@ -220,7 +220,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
   );
 
   return (
-    <div className="builds-view space-y-3">
+    <div className="builds-view flex flex-col">
       {/* Build workbench */}
       <div className="builds-toolbar">
         <div className="min-w-0">

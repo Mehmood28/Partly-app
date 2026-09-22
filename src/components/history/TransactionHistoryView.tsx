@@ -106,7 +106,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
   };
 
   return (
-    <div className="sold-parts-view space-y-4">
+    <div className="sold-parts-view flex flex-col gap-4">
       <header className="sold-parts-heading">
         <h2>Sold Parts</h2>
         <p>Track loose-part sales and trade-ups</p>

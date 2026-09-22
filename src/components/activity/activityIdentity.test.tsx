@@ -1,0 +1,174 @@
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+import { InventoryContext } from '../../context/InventoryContext';
+import { AppState, InventoryComponent, PCBuild, TransactionLogItem } from '../../types';
+import { parseBatchItem } from './activityHelpers';
+import { PurchaseExpandedView } from './PurchaseExpandedView';
+import { TransactionActivityCard } from './TransactionActivityCard';
+
+const makeEntry = (id: string, platform: string, condition: 'New Open Box' | 'Used') => ({
+  id,
+  date: '2026-09-01',
+  condition,
+  quantity: 1,
+  unitPrice: 100,
+  totalPrice: 100,
+  paymentMethod: platform === 'Supplier A' ? 'Cash' as const : 'E-Transfer' as const,
+  platform,
+});
+
+const componentA: InventoryComponent = {
+  id: 'component-a',
+  name: 'Same Name GPU',
+  category: 'GPU',
+  specifications: '',
+  assignedCount: 0,
+  purchaseHistory: [
+    makeEntry('batch-a', 'Supplier A', 'New Open Box'),
+    makeEntry('batch-b', 'Supplier B', 'Used'),
+  ],
+};
+
+const componentB: InventoryComponent = {
+  ...componentA,
+  id: 'component-b',
+  category: 'CPU',
+  purchaseHistory: [makeEntry('batch-c', 'Supplier C', 'Used')],
+};
+
+const makePurchase = (overrides: Partial<TransactionLogItem> = {}): TransactionLogItem => ({
+  id: 'purchase-1',
+  type: 'PURCHASE',
+  title: 'Purchased: Supplier B',
+  timestamp: '2026-09-01',
+  dateSortable: '2026-09-01',
+  itemCount: 1,
+  quantity: 1,
+  totalAmount: 100,
+  platform: 'Supplier B',
+  paymentMethod: 'E-Transfer',
+  itemNameOrSummary: 'Same Name GPU',
+  detailsList: ['Same Name GPU ($100/ea)'],
+  relatedComponentId: componentA.id,
+  relatedPurchaseEntryId: 'batch-b',
+  ...overrides,
+});
+
+describe('activity exact identity display', () => {
+  it('uses exact component and batch IDs for same-price batches', () => {
+    const parsed = parseBatchItem('Same Name GPU ($100/ea)', [componentA, componentB], makePurchase());
+    expect(parsed.comp?.id).toBe(componentA.id);
+    expect(parsed.condition).toBe('Used');
+    expect(parsed.platform).toBe('Supplier B');
+    expect(parsed.paymentMethod).toBe('E-Transfer');
+  });
+
+  it('does not name-match a conflicting or stale explicit component/batch ID', () => {
+    const conflicting = parseBatchItem(
+      'Same Name GPU ($100/ea)',
+      [componentA, componentB],
+      makePurchase({ relatedComponentId: componentB.id, relatedPurchaseEntryId: 'batch-a' }),
+    );
+    expect(conflicting.comp?.id).toBe(componentB.id);
+    expect(conflicting.condition).toBe('');
+
+    const stale = parseBatchItem(
+      'Same Name GPU',
+      [componentA, componentB],
+      makePurchase({ relatedComponentId: 'missing-component', relatedPurchaseEntryId: 'missing-batch' }),
+    );
+    expect(stale.comp).toBeUndefined();
+    expect(stale.condition).toBe('');
+    expect(stale.unitPrice).toBe(0);
+  });
+
+  it('preserves only a stored snapshot that matches the explicit batch ID', () => {
+    const matchingSnapshot = makeEntry('deleted-batch', 'Snapshot Supplier', 'Used');
+    const matched = parseBatchItem(
+      'Same Name GPU',
+      [componentA],
+      makePurchase({
+        relatedPurchaseEntryId: 'deleted-batch',
+        originalPurchaseEntrySnapshot: matchingSnapshot,
+      }),
+    );
+    expect(matched.condition).toBe('Used');
+    expect(matched.platform).toBe('Snapshot Supplier');
+    expect(matched.unitPrice).toBe(100);
+
+    const conflicting = parseBatchItem(
+      'Same Name GPU',
+      [componentA],
+      makePurchase({
+        relatedPurchaseEntryId: 'different-batch',
+        originalPurchaseEntrySnapshot: matchingSnapshot,
+      }),
+    );
+    expect(conflicting.condition).toBe('');
+    expect(conflicting.unitPrice).toBe(0);
+  });
+
+  it('shows condition only from an exact batch or matching stored snapshot', () => {
+    const exactTx = makePurchase();
+    const staleTx = makePurchase({ relatedPurchaseEntryId: 'missing-batch' });
+    const state = { components: [componentA], builds: [], transactions: [exactTx, staleTx], monthlyGoal: 10000 } as AppState;
+    const renderCard = (tx: TransactionLogItem) => renderToStaticMarkup(
+      <InventoryContext.Provider value={{ state, relistPartSale: () => ({ success: true }), relistBulkPartSale: () => ({ success: true }) } as never}>
+        <TransactionActivityCard tx={tx} onEdit={() => undefined} onDelete={() => undefined} />
+      </InventoryContext.Provider>,
+    );
+
+    expect(renderCard(exactTx)).toContain('Used');
+    expect(renderCard(exactTx)).not.toContain('New Open Box');
+    expect(renderCard(staleTx)).not.toContain('New Open Box');
+    expect(renderCard(staleTx)).not.toContain('>Used<');
+  });
+
+  it('requires all present purchased-PC source IDs to agree before using part-out metadata', () => {
+    const purchasedBuild: PCBuild = {
+      id: 'purchased-build',
+      name: 'Purchased Rig',
+      status: 'Sold',
+      createdDate: '2026-09-01',
+      acquisitionSource: 'Purchased',
+      purchaseTransactionId: 'purchase-pc',
+      parts: [],
+    };
+    const pcTx = makePurchase({
+      id: 'purchase-pc',
+      purchaseKind: 'PC',
+      relatedComponentId: purchasedBuild.id,
+      itemNameOrSummary: purchasedBuild.name,
+      detailsList: [],
+    });
+    const makePartComponent = (id: string, name: string, sourcePurchaseTransactionId?: string, sourcePurchasedBuildId?: string, notes?: string): InventoryComponent => ({
+      id,
+      name,
+      category: 'GPU',
+      specifications: '',
+      assignedCount: 0,
+      purchaseHistory: [{
+        ...makeEntry(`batch-${id}`, 'PC Seller', 'Used'),
+        sourcePurchaseTransactionId,
+        sourcePurchasedBuildId,
+        notes,
+      }],
+    });
+    const exact = makePartComponent('exact', 'Exact Part', pcTx.id, purchasedBuild.id);
+    const conflicting = makePartComponent('conflict', 'Conflicting Part', 'different-transaction', purchasedBuild.id, 'Parted out from purchased PC: Purchased Rig');
+    const legacy = makePartComponent('legacy', 'Legacy Part', undefined, undefined, 'Parted out from purchased PC: Purchased Rig');
+
+    const markup = renderToStaticMarkup(
+      <PurchaseExpandedView
+        tx={pcTx}
+        isBulkPurchase={false}
+        isPCPurchase
+        purchasedBuild={purchasedBuild}
+        components={[exact, conflicting, legacy]}
+      />,
+    );
+    expect(markup).toContain('Exact Part');
+    expect(markup).toContain('Legacy Part');
+    expect(markup).not.toContain('Conflicting Part');
+  });
+});

@@ -148,20 +148,19 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
   const platform = tx.platform;
   const paymentMethod = tx.paymentMethod;
 
-  // Condition string for purchases
+  // Condition string for purchases. Exact batch identity or a stored snapshot
+  // may supply it; current-inventory heuristics must not rewrite history.
   let conditionStr = '';
   if (isPurchase) {
-    if (matchedComp && matchedComp.purchaseHistory && matchedComp.purchaseHistory.length > 0) {
-      const ph = matchedComp.purchaseHistory.find(p => {
-        const matchesDate = p.date === tx.dateSortable || p.date === tx.timestamp;
-        const matchesPlatform = !tx.platform || p.platform === tx.platform;
-        const matchesPayment = !tx.paymentMethod || p.paymentMethod === tx.paymentMethod;
-        const matchesPrice = !tx.totalAmount || Math.abs(p.totalPrice - tx.totalAmount) < 0.01 || Math.abs((p.unitPrice * (tx.quantity || 1)) - tx.totalAmount) < 0.01;
-        return matchesDate && (matchesPlatform || matchesPayment || matchesPrice);
-      }) || matchedComp.purchaseHistory.find(p => p.date === tx.dateSortable || p.date === tx.timestamp) || matchedComp.purchaseHistory[0];
-
-      if (ph) conditionStr = ph.condition;
-    }
+    const relatedPurchaseEntryId = tx.relatedPurchaseEntryId?.trim();
+    const exactPurchaseEntry = relatedPurchaseEntryId
+      ? matchedComp?.purchaseHistory?.find((entry) => entry.id === relatedPurchaseEntryId)
+      : undefined;
+    const storedSnapshot = tx.originalPurchaseEntrySnapshot;
+    const matchingSnapshot = storedSnapshot && (!relatedPurchaseEntryId || storedSnapshot.id === relatedPurchaseEntryId)
+      ? storedSnapshot
+      : undefined;
+    conditionStr = exactPurchaseEntry?.condition || matchingSnapshot?.condition || '';
     if (!conditionStr && (isBulkPurchase || (tx.quantity && tx.quantity > 1 && !matchedComp))) {
       conditionStr = 'MIXED';
     }

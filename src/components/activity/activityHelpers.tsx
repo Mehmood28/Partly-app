@@ -30,33 +30,38 @@ export const parseBatchItem = (
     unitPrice = match[3] ? parseFloat(match[3].replace(/,/g, '')) : 0;
   }
 
-  // Find matched component in inventory
+  // Explicit transaction links are authoritative. Name matching remains only
+  // for legacy records that never stored a component ID.
   const itemLower = String(itemName || '').toLowerCase().trim();
-  const comp = components.find(c => {
-    const cNameLower = String(c.name || '').toLowerCase().trim();
-    return cNameLower === itemLower ||
-      (cNameLower && itemLower && (cNameLower.includes(itemLower) || itemLower.includes(cNameLower)));
-  });
+  const relatedComponentId = tx.relatedComponentId?.trim();
+  const comp = relatedComponentId
+    ? components.find((candidate) => candidate.id === relatedComponentId)
+    : components.find((candidate) => {
+        const candidateName = String(candidate.name || '').toLowerCase().trim();
+        return candidateName === itemLower ||
+          (candidateName && itemLower && (candidateName.includes(itemLower) || itemLower.includes(candidateName)));
+      });
 
-  // If unitPrice not in detail string, get from component purchase history
-  if (unitPrice === 0 && comp && comp.purchaseHistory && comp.purchaseHistory.length > 0) {
-    const ph = comp.purchaseHistory.find(p => p.date === tx.dateSortable || p.date === tx.timestamp) || comp.purchaseHistory[0];
-    if (ph) {
-      unitPrice = ph.unitPrice || (ph.totalPrice / (ph.quantity || 1));
-    }
+  const relatedPurchaseEntryId = tx.relatedPurchaseEntryId?.trim();
+  const exactPurchaseEntry = relatedPurchaseEntryId
+    ? comp?.purchaseHistory?.find((entry) => entry.id === relatedPurchaseEntryId)
+    : undefined;
+  const storedSnapshot = tx.originalPurchaseEntrySnapshot;
+  const matchingSnapshot = storedSnapshot && (!relatedPurchaseEntryId || storedSnapshot.id === relatedPurchaseEntryId)
+    ? storedSnapshot
+    : undefined;
+  const purchaseEntry = exactPurchaseEntry || matchingSnapshot;
+
+  // Recorded detail text wins. Otherwise use only an exact batch or its stored
+  // historical snapshot; never infer a batch from date, price, or position.
+  if (unitPrice === 0 && purchaseEntry) {
+    unitPrice = purchaseEntry.unitPrice || (purchaseEntry.totalPrice / (purchaseEntry.quantity || 1));
   }
 
   const category = comp?.category || 'Other';
   const tags = comp?.tags || [];
   
-  // Find purchase entry for condition, platform, etc.
-  const purchaseEntry = comp?.purchaseHistory?.find(p =>
-    (p.date === tx.dateSortable || p.date === tx.timestamp) && (unitPrice === 0 || Math.abs((p.unitPrice || 0) - unitPrice) < 1)
-  ) || comp?.purchaseHistory?.find(p =>
-    unitPrice > 0 && Math.abs((p.unitPrice || 0) - unitPrice) < 1
-  ) || comp?.purchaseHistory?.[0];
-
-  const condition = purchaseEntry?.condition || (comp?.purchaseHistory?.[0]?.condition) || '';
+  const condition = purchaseEntry?.condition || '';
   const itemPlatform = purchaseEntry?.platform || tx.platform || '';
   const itemPaymentMethod = purchaseEntry?.paymentMethod || tx.paymentMethod || '';
   const totalPrice = unitPrice > 0 ? unitPrice * quantity : 0;
