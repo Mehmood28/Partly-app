@@ -16,6 +16,7 @@ import {
 import { Plus, Filter, Zap, Layers } from 'lucide-react';
 import { ArrowDownWideNarrow } from 'lucide-react';
 import { CustomSelect } from './ui/CustomSelect';
+import { useVirtualListScroll } from '../hooks/useVirtualListScroll';
 
 interface InventoryViewProps {
   isActive?: boolean;
@@ -77,7 +78,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
   type VirtualInventoryRow = 
     | { type: 'header'; key: string; category: string; totalUnits: number; totalVal: number }
-    | { type: 'items_row'; key: string; items: InventoryComponent[] };
+    | { type: 'item'; key: string; component: InventoryComponent };
 
   const virtualRows = useMemo<VirtualInventoryRow[]>(() => {
     const rows: VirtualInventoryRow[] = [];
@@ -89,12 +90,11 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         totalUnits: group.totalUnits,
         totalVal: group.totalVal,
       });
-      for (let i = 0; i < group.items.length; i += 1) {
-        const slice = group.items.slice(i, i + 1);
+      for (const component of group.items) {
         rows.push({
-          type: 'items_row',
-          key: `items-${group.category}-${slice.map(c => c.id).join('-')}`,
-          items: slice,
+          type: 'item',
+          key: `items-${group.category}-${component.id}`,
+          component,
         });
       }
     }
@@ -118,38 +118,53 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
     useFlushSync: false,
   });
 
-  // Restore scroll position when tab becomes active (virtualized path only)
-  React.useLayoutEffect(() => {
-    if (isActive && isVirtualized && parentRef.current && scrollOffsetRef.current > 0) {
-      const maxScroll = Math.max(0, parentRef.current.scrollHeight - parentRef.current.clientHeight);
-      const targetOffset = Math.min(scrollOffsetRef.current, maxScroll);
-      scrollOffsetRef.current = targetOffset;
-      queueMicrotask(() => {
-        if (parentRef.current) {
-          parentRef.current.scrollTop = targetOffset;
-          rowVirtualizer.scrollToOffset(targetOffset);
-        }
-      });
-    } else if (!isVirtualized) {
-      scrollOffsetRef.current = 0;
-    }
-  }, [isActive, isVirtualized, rowVirtualizer]);
+  const handleScroll = useVirtualListScroll({
+    isActive,
+    isVirtualized,
+    parentRef,
+    scrollOffsetRef,
+    virtualizer: rowVirtualizer,
+    resetDependencies: [selectedCategory, activeSubCategory, sortBy, deferredSearchQuery],
+  });
 
-  // Reset list scroll to top only when user changes local filter/search/sort criteria
-  const isFirstFilterRun = useRef(true);
-  React.useEffect(() => {
-    if (isFirstFilterRun.current) {
-      isFirstFilterRun.current = false;
-      return;
+  const renderInventoryRow = (row: VirtualInventoryRow, inVirtualList = false) => {
+    if (row.type === 'header') {
+      const headingContent = (
+        <>
+          <span className="flex items-center gap-2 text-xs font-bold text-zinc-100 sm:text-sm">
+            <Layers className="h-4 w-4 text-[#B9EF68]" />
+            {row.category}
+          </span>
+          <span>—</span>
+          <span>{row.totalUnits} in stock</span>
+          <span>—</span>
+          <span className="font-semibold text-zinc-200">{formatCurrency(row.totalVal)}</span>
+        </>
+      );
+
+      return inVirtualList
+        ? <div className="inventory-group inventory-group-heading">{headingContent}</div>
+        : <div className="inventory-group mt-4 first:mt-0"><div className="inventory-group-heading">{headingContent}</div></div>;
     }
-    scrollOffsetRef.current = 0;
-    if (parentRef.current) {
-      parentRef.current.scrollTop = 0;
-    }
-    if (isVirtualized) {
-      rowVirtualizer.scrollToOffset(0);
-    }
-  }, [selectedCategory, activeSubCategory, sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
+
+    const component = row.component;
+    const componentCard = (
+      <div className="grid grid-cols-1 gap-2">
+        <ComponentCard
+          isActive={isActive !== false}
+          isExpanded={expandedCardId === component.id}
+          onToggle={() => setExpandedCardId(expandedCardId === component.id ? null : component.id)}
+          component={component}
+          onAddPurchaseEntry={onOpenAddPurchaseEntry}
+          onDeletePurchaseEntry={deletePurchaseEntry}
+          onEditComponent={onEditComponent}
+          onDeleteComponent={deleteComponent}
+          onSellPart={onOpenSellPart}
+        />
+      </div>
+    );
+    return inVirtualList ? componentCard : <div>{componentCard}</div>;
+  };
 
   return (
     <div className="stock-inventory-layout space-y-4">
@@ -249,54 +264,14 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         </div>
       ) : !isVirtualized ? (
         <div className="space-y-2">
-          {virtualRows.map((row) => {
-            if (row.type === 'header') {
-              return (
-                <div key={row.key} className="inventory-group mt-4 first:mt-0">
-                  <div className="inventory-group-heading">
-                    <span className="flex items-center gap-2 text-xs font-bold text-zinc-100 sm:text-sm">
-                      <Layers className="h-4 w-4 text-[#B9EF68]" />
-                      {row.category}
-                    </span>
-                    <span>—</span>
-                    <span>{row.totalUnits} in stock</span>
-                    <span>—</span>
-                    <span className="font-semibold text-zinc-200">{formatCurrency(row.totalVal)}</span>
-                  </div>
-                </div>
-              );
-            }
-
-            return (
-              <div key={row.key}>
-                <div className="grid grid-cols-1 gap-2">
-                  {row.items.map((component) => (
-                    <ComponentCard
-                      isActive={isActive !== false}
-                      isExpanded={expandedCardId === component.id}
-                      onToggle={() => setExpandedCardId(expandedCardId === component.id ? null : component.id)}
-                      key={component.id}
-                      component={component}
-                      onAddPurchaseEntry={onOpenAddPurchaseEntry}
-                      onDeletePurchaseEntry={deletePurchaseEntry}
-                      onEditComponent={onEditComponent}
-                      onDeleteComponent={deleteComponent}
-                      onSellPart={onOpenSellPart}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          {virtualRows.map((row) => (
+            <React.Fragment key={row.key}>{renderInventoryRow(row)}</React.Fragment>
+          ))}
         </div>
       ) : (
         <div 
           ref={parentRef}
-          onScroll={(e) => {
-            if (isActive) {
-              scrollOffsetRef.current = e.currentTarget.scrollTop;
-            }
-          }}
+          onScroll={handleScroll}
           className="max-h-[75dvh] min-h-[360px] overflow-y-auto pr-1"
           style={{
             overflowAnchor: 'none',
@@ -314,36 +289,6 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
               const row = virtualRows[virtualRow.index];
               if (!row) return null;
 
-              if (row.type === 'header') {
-                return (
-                  <div
-                    key={row.key}
-                    data-index={virtualRow.index}
-                    ref={rowVirtualizer.measureElement}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      transform: `translateY(${virtualRow.start}px)`,
-                      paddingTop: '6px',
-                      paddingBottom: '3px',
-                    }}
-                  >
-                    <div className="inventory-group inventory-group-heading">
-                      <span className="flex items-center gap-2 text-xs font-bold text-zinc-100 sm:text-sm">
-                        <Layers className="h-4 w-4 text-[#B9EF68]" />
-                        {row.category}
-                      </span>
-                      <span>—</span>
-                      <span>{row.totalUnits} in stock</span>
-                      <span>—</span>
-                      <span className="font-semibold text-zinc-200">{formatCurrency(row.totalVal)}</span>
-                    </div>
-                  </div>
-                );
-              }
-
               return (
                 <div
                   key={row.key}
@@ -355,25 +300,11 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                     left: 0,
                     width: '100%',
                     transform: `translateY(${virtualRow.start}px)`,
-                    paddingBottom: '6px',
+                    paddingTop: row.type === 'header' ? '6px' : undefined,
+                    paddingBottom: row.type === 'header' ? '3px' : '6px',
                   }}
                 >
-                  <div className="grid grid-cols-1 gap-2">
-                    {row.items.map((component) => (
-                      <ComponentCard
-                        isActive={isActive !== false}
-                        isExpanded={expandedCardId === component.id}
-                        onToggle={() => setExpandedCardId(expandedCardId === component.id ? null : component.id)}
-                        key={component.id}
-                        component={component}
-                        onAddPurchaseEntry={onOpenAddPurchaseEntry}
-                        onDeletePurchaseEntry={deletePurchaseEntry}
-                        onEditComponent={onEditComponent}
-                        onDeleteComponent={deleteComponent}
-                          onSellPart={onOpenSellPart}
-                      />
-                    ))}
-                  </div>
+                  {renderInventoryRow(row, true)}
                 </div>
               );
             })}

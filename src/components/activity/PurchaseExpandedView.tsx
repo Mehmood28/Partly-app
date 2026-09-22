@@ -15,6 +15,18 @@ interface PurchaseExpandedViewProps {
   components: InventoryComponent[];
 }
 
+interface PurchaseDisplayItem {
+  category: string;
+  itemName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  tags: string[];
+  condition?: string;
+  platform?: string;
+  paymentMethod?: string;
+}
+
 export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, isBulkPurchase, isPCPurchase, matchedComp, purchasedBuild, components }) => {
   const { hideSupplierNames } = usePrivacy();
   // A purchased PC can later be parted out to Stock. Those entries preserve the
@@ -59,7 +71,12 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
     paymentMethod: tx.paymentMethod,
   })) || [];
   const detailItems = (tx.detailsList || []).map((detail) => parseBatchItem(detail, components, tx));
-  const purchasedItems = sortByCategory(partedOutItems.length > 0 ? partedOutItems : acquisitionItems.length > 0 ? acquisitionItems : detailItems);
+  const purchaseDisplayItems: PurchaseDisplayItem[] = partedOutItems.length > 0
+    ? partedOutItems
+    : acquisitionItems.length > 0
+      ? acquisitionItems
+      : detailItems;
+  const purchasedItems = sortByCategory(purchaseDisplayItems);
   return (
     <div className="record-detail purchase-expanded-detail space-y-4">
       {purchasedItems.length > 0 ? <section>

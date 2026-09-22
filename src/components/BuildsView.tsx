@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useInventory } from '../context/InventoryContext';
 import { useToast } from '../context/ToastContext';
@@ -14,6 +14,7 @@ import { DismantleRigModal } from './builds/dismantle/DismantleRigModal';
 import { ItemizeTradeInModal } from './builds/dismantle/ItemizeTradeInModal';
 import { BuildCard } from './builds/BuildCard';
 import { CustomSelect } from './ui/CustomSelect';
+import { useVirtualListScroll } from '../hooks/useVirtualListScroll';
 import {
   Hammer,
   Plus,
@@ -176,61 +177,47 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       });
   }, [state.builds, statusFilter, deferredSearchQuery, sortBy]);
 
-  // Keep each full-width build independently measurable when expanded.
-  const buildRows = useMemo(() => {
-    const rows: PCBuild[][] = [];
-    for (let i = 0; i < filteredBuilds.length; i += 1) {
-      rows.push(filteredBuilds.slice(i, i + 1));
-    }
-    return rows;
-  }, [filteredBuilds]);
-
-  const isVirtualized = buildRows.length > 12;
+  const isVirtualized = filteredBuilds.length > 12;
   const parentRef = useRef<HTMLDivElement>(null);
-  const scrollOffsetRef = useRef<number>(0);
+  const scrollOffsetRef = useRef(0);
 
   const rowVirtualizer = useVirtualizer({
-    count: isVirtualized ? buildRows.length : 0,
+    count: isVirtualized ? filteredBuilds.length : 0,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 260,
     overscan: 4,
-    getItemKey: (index) => buildRows[index]?.map(b => b.id).join('-') ?? index,
+    getItemKey: (index) => filteredBuilds[index]?.id ?? index,
     useCachedMeasurements: !isActive,
     useFlushSync: false,
   });
 
-  // Restore scroll position when tab becomes active (virtualized path only)
-  React.useLayoutEffect(() => {
-    if (isActive && isVirtualized && parentRef.current && scrollOffsetRef.current > 0) {
-      const maxScroll = Math.max(0, parentRef.current.scrollHeight - parentRef.current.clientHeight);
-      const targetOffset = Math.min(scrollOffsetRef.current, maxScroll);
-      scrollOffsetRef.current = targetOffset;
-      queueMicrotask(() => {
-        if (parentRef.current) {
-          parentRef.current.scrollTop = targetOffset;
-          rowVirtualizer.scrollToOffset(targetOffset);
-        }
-      });
-    } else if (!isVirtualized) {
-      scrollOffsetRef.current = 0;
-    }
-  }, [isActive, isVirtualized, rowVirtualizer]);
+  const handleScroll = useVirtualListScroll({
+    isActive,
+    isVirtualized,
+    parentRef,
+    scrollOffsetRef,
+    virtualizer: rowVirtualizer,
+    resetDependencies: [statusFilter, sortBy, deferredSearchQuery],
+  });
 
-  // Reset list scroll to top only when user changes local filter/search/sort criteria
-  const isFirstFilterRun = useRef(true);
-  React.useEffect(() => {
-    if (isFirstFilterRun.current) {
-      isFirstFilterRun.current = false;
-      return;
-    }
-    scrollOffsetRef.current = 0;
-    if (parentRef.current) {
-      parentRef.current.scrollTop = 0;
-    }
-    if (isVirtualized) {
-      rowVirtualizer.scrollToOffset(0);
-    }
-  }, [statusFilter, sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
+  const renderBuildRow = (build: PCBuild) => (
+    <div className="grid grid-cols-1 gap-2.5">
+      <BuildCard
+        isActive={isActive}
+        isExpanded={expandedBuildId === build.id}
+        onToggle={() => setExpandedBuildId(expandedBuildId === build.id ? null : build.id)}
+        build={build}
+        onEdit={handleOpenEditModal}
+        onDelete={setDeletingBuild}
+        onDismantle={setDismantlingBuild}
+        onItemize={setItemizingBuild}
+        onSell={handleOpenSellModal}
+        onAllocate={setAllocatingBuild}
+        updateStatus={updateBuildStatus}
+        removePart={removePartFromBuild}
+      />
+    </div>
+  );
 
   return (
     <div className="builds-view space-y-3">
@@ -364,36 +351,14 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         </div>
       ) : !isVirtualized ? (
         <div className="space-y-1.5 pr-1">
-          {buildRows.map((rowBuilds, rowIndex) => (
-            <div key={rowBuilds.map(b => b.id).join('-') || rowIndex} className="grid grid-cols-1 gap-2.5">
-              {rowBuilds.map((build) => (
-                <BuildCard
-                  isActive={isActive}
-                  isExpanded={expandedBuildId === build.id}
-                  onToggle={() => setExpandedBuildId(expandedBuildId === build.id ? null : build.id)}
-                  key={build.id}
-                  build={build}
-                  onEdit={handleOpenEditModal}
-                  onDelete={setDeletingBuild}
-                  onDismantle={setDismantlingBuild}
-                  onItemize={setItemizingBuild}
-                  onSell={handleOpenSellModal}
-                  onAllocate={setAllocatingBuild}
-                  updateStatus={updateBuildStatus}
-                  removePart={removePartFromBuild}
-                />
-              ))}
-            </div>
+          {filteredBuilds.map((build) => (
+            <React.Fragment key={build.id}>{renderBuildRow(build)}</React.Fragment>
           ))}
         </div>
       ) : (
         <div 
           ref={parentRef}
-          onScroll={(e) => {
-            if (isActive) {
-              scrollOffsetRef.current = e.currentTarget.scrollTop;
-            }
-          }}
+          onScroll={handleScroll}
           className="h-[calc(100dvh-330px)] overflow-y-auto pr-1 md:h-[calc(100dvh-210px)]"
           style={{
             overflowAnchor: 'none',
@@ -408,7 +373,8 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             }}
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const rowBuilds = buildRows[virtualRow.index] || [];
+              const build = filteredBuilds[virtualRow.index];
+              if (!build) return null;
               return (
                 <div
                   key={virtualRow.key}
@@ -423,25 +389,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
                     paddingBottom: '6px',
                   }}
                 >
-                  <div className="grid grid-cols-1 gap-2.5">
-                    {rowBuilds.map((build) => (
-                      <BuildCard
-                        isActive={isActive}
-                        isExpanded={expandedBuildId === build.id}
-                        onToggle={() => setExpandedBuildId(expandedBuildId === build.id ? null : build.id)}
-                        key={build.id}
-                        build={build}
-                        onEdit={handleOpenEditModal}
-                        onDelete={setDeletingBuild}
-                        onDismantle={setDismantlingBuild}
-                        onItemize={setItemizingBuild}
-                        onSell={handleOpenSellModal}
-                        onAllocate={setAllocatingBuild}
-                        updateStatus={updateBuildStatus}
-                        removePart={removePartFromBuild}
-                      />
-                    ))}
-                  </div>
+                  {renderBuildRow(build)}
                 </div>
               );
             })}

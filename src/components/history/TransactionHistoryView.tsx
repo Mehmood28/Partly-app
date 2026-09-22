@@ -14,6 +14,7 @@ import {
   sortSoldPartDisplayItems, 
   SoldPartSortOption 
 } from '../../utils/bulkSaleGrouping';
+import { useVirtualListScroll } from '../../hooks/useVirtualListScroll';
 
 interface TransactionHistoryViewProps {
   isActive?: boolean;
@@ -68,36 +69,41 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
     useFlushSync: false,
   });
 
-  React.useLayoutEffect(() => {
-    if (isActive && isVirtualized && parentRef.current && scrollOffsetRef.current > 0) {
-      const maxScroll = Math.max(0, parentRef.current.scrollHeight - parentRef.current.clientHeight);
-      const targetOffset = Math.min(scrollOffsetRef.current, maxScroll);
-      scrollOffsetRef.current = targetOffset;
-      queueMicrotask(() => {
-        if (parentRef.current) {
-          parentRef.current.scrollTop = targetOffset;
-          rowVirtualizer.scrollToOffset(targetOffset);
-        }
-      });
-    } else if (!isVirtualized) {
-      scrollOffsetRef.current = 0;
-    }
-  }, [isActive, isVirtualized, rowVirtualizer]);
+  const handleScroll = useVirtualListScroll({
+    isActive,
+    isVirtualized,
+    parentRef,
+    scrollOffsetRef,
+    virtualizer: rowVirtualizer,
+    resetDependencies: [sortBy, deferredSearchQuery],
+  });
 
-  const isFirstFilterRun = useRef(true);
-  React.useEffect(() => {
-    if (isFirstFilterRun.current) {
-      isFirstFilterRun.current = false;
-      return;
+  const renderTransactionRow = (item: (typeof sortedDisplayItems)[number]) => {
+    if (item.type === 'bulk-group') {
+      return (
+        <BulkSaleActivityCard
+          isActive={isActive !== false}
+          group={item}
+          isExpanded={expandedIds.has(item.id)}
+          onToggle={() => handleToggleExpand(item.id)}
+          onEditLine={(txToEdit) => setEditingTx(txToEdit)}
+          onDeleteGroup={(bulkSaleGroupId) => deleteBulkPartSale(bulkSaleGroupId)}
+          onRelistGroup={(bulkSaleGroupId) => relistBulkPartSale(bulkSaleGroupId)}
+        />
+      );
     }
-    scrollOffsetRef.current = 0;
-    if (parentRef.current) {
-      parentRef.current.scrollTop = 0;
-    }
-    if (isVirtualized) {
-      rowVirtualizer.scrollToOffset(0);
-    }
-  }, [sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
+
+    return (
+      <TransactionActivityCard
+        isActive={isActive !== false}
+        tx={item.tx}
+        isExpanded={expandedIds.has(item.id)}
+        onToggle={() => handleToggleExpand(item.id)}
+        onEdit={(txToEdit) => setEditingTx(txToEdit)}
+        onDelete={(idToDelete) => setDeleteConfirmId(idToDelete)}
+      />
+    );
+  };
 
   return (
     <div className="sold-parts-view space-y-4">
@@ -152,43 +158,14 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
         </div>
       ) : !isVirtualized ? (
         <div className="space-y-2">
-          {sortedDisplayItems.map((item) => {
-            if (item.type === 'bulk-group') {
-              return (
-                <BulkSaleActivityCard
-                  isActive={isActive !== false}
-                  key={item.id}
-                  group={item}
-                  isExpanded={expandedIds.has(item.id)}
-                  onToggle={() => handleToggleExpand(item.id)}
-                  onEditLine={(txToEdit) => setEditingTx(txToEdit)}
-                  onDeleteGroup={(bulkSaleGroupId) => deleteBulkPartSale(bulkSaleGroupId)}
-                  onRelistGroup={(bulkSaleGroupId) => relistBulkPartSale(bulkSaleGroupId)}
-                />
-              );
-            }
-
-            return (
-              <TransactionActivityCard
-                isActive={isActive !== false}
-                key={item.id}
-                tx={item.tx}
-                isExpanded={expandedIds.has(item.id)}
-                onToggle={() => handleToggleExpand(item.id)}
-                onEdit={(txToEdit) => setEditingTx(txToEdit)}
-                onDelete={(idToDelete) => setDeleteConfirmId(idToDelete)}
-              />
-            );
-          })}
+          {sortedDisplayItems.map((item) => (
+            <React.Fragment key={item.id}>{renderTransactionRow(item)}</React.Fragment>
+          ))}
         </div>
       ) : (
         <div
           ref={parentRef}
-          onScroll={(e) => {
-            if (isActive) {
-              scrollOffsetRef.current = e.currentTarget.scrollTop;
-            }
-          }}
+          onScroll={handleScroll}
           className="h-[calc(100dvh-330px)] overflow-y-auto pr-1 md:h-[calc(100dvh-210px)]"
           style={{
             overflowAnchor: 'none',
@@ -219,26 +196,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
                     paddingBottom: '6px',
                   }}
                 >
-                  {item.type === 'bulk-group' ? (
-                    <BulkSaleActivityCard
-                      isActive={isActive !== false}
-                      group={item}
-                      isExpanded={expandedIds.has(item.id)}
-                      onToggle={() => handleToggleExpand(item.id)}
-                      onEditLine={(txToEdit) => setEditingTx(txToEdit)}
-                      onDeleteGroup={(bulkSaleGroupId) => deleteBulkPartSale(bulkSaleGroupId)}
-                      onRelistGroup={(bulkSaleGroupId) => relistBulkPartSale(bulkSaleGroupId)}
-                    />
-                  ) : (
-                    <TransactionActivityCard
-                      isActive={isActive !== false}
-                      tx={item.tx}
-                      isExpanded={expandedIds.has(item.id)}
-                      onToggle={() => handleToggleExpand(item.id)}
-                      onEdit={(txToEdit) => setEditingTx(txToEdit)}
-                      onDelete={(idToDelete) => setDeleteConfirmId(idToDelete)}
-                    />
-                  )}
+                  {renderTransactionRow(item)}
                 </div>
               );
             })}

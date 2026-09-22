@@ -9,6 +9,7 @@ import { TransactionActivityCard } from '../activity/TransactionActivityCard';
 import { ConfirmModal } from '../ConfirmModal';
 import { classifyTransaction } from '../../utils/transactionClassification';
 import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
+import { useVirtualListScroll } from '../../hooks/useVirtualListScroll';
 
 interface PurchaseHistoryViewProps {
   isActive?: boolean;
@@ -95,36 +96,25 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
     useFlushSync: false,
   });
 
-  React.useLayoutEffect(() => {
-    if (isActive && isVirtualized && parentRef.current && scrollOffsetRef.current > 0) {
-      const maxScroll = Math.max(0, parentRef.current.scrollHeight - parentRef.current.clientHeight);
-      const targetOffset = Math.min(scrollOffsetRef.current, maxScroll);
-      scrollOffsetRef.current = targetOffset;
-      queueMicrotask(() => {
-        if (parentRef.current) {
-          parentRef.current.scrollTop = targetOffset;
-          rowVirtualizer.scrollToOffset(targetOffset);
-        }
-      });
-    } else if (!isVirtualized) {
-      scrollOffsetRef.current = 0;
-    }
-  }, [isActive, isVirtualized, rowVirtualizer]);
+  const handleScroll = useVirtualListScroll({
+    isActive,
+    isVirtualized,
+    parentRef,
+    scrollOffsetRef,
+    virtualizer: rowVirtualizer,
+    resetDependencies: [sortBy, deferredSearchQuery],
+  });
 
-  const isFirstFilterRun = useRef(true);
-  React.useEffect(() => {
-    if (isFirstFilterRun.current) {
-      isFirstFilterRun.current = false;
-      return;
-    }
-    scrollOffsetRef.current = 0;
-    if (parentRef.current) {
-      parentRef.current.scrollTop = 0;
-    }
-    if (isVirtualized) {
-      rowVirtualizer.scrollToOffset(0);
-    }
-  }, [sortBy, deferredSearchQuery, isVirtualized, rowVirtualizer]);
+  const renderTransactionRow = (tx: TransactionLogItem) => (
+    <TransactionActivityCard
+      isActive={isActive !== false}
+      tx={tx}
+      isExpanded={expandedIds.has(tx.id)}
+      onToggle={() => handleToggleExpand(tx.id)}
+      onEdit={(txToEdit) => setEditingTx(txToEdit)}
+      onDelete={(idToDelete) => setDeleteConfirmId(idToDelete)}
+    />
+  );
 
   return (
     <div className="purchase-history-view space-y-4">
@@ -180,25 +170,13 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
       ) : !isVirtualized ? (
         <div className="space-y-2">
           {sortedTransactions.map((tx) => (
-            <TransactionActivityCard
-              isActive={isActive !== false}
-              key={tx.id}
-              tx={tx}
-              isExpanded={expandedIds.has(tx.id)}
-              onToggle={() => handleToggleExpand(tx.id)}
-              onEdit={(txToEdit) => setEditingTx(txToEdit)}
-              onDelete={(idToDelete) => setDeleteConfirmId(idToDelete)}
-            />
+            <React.Fragment key={tx.id}>{renderTransactionRow(tx)}</React.Fragment>
           ))}
         </div>
       ) : (
         <div
           ref={parentRef}
-          onScroll={(e) => {
-            if (isActive) {
-              scrollOffsetRef.current = e.currentTarget.scrollTop;
-            }
-          }}
+          onScroll={handleScroll}
           className="h-[calc(100dvh-330px)] overflow-y-auto pr-1 md:h-[calc(100dvh-210px)]"
           style={{
             overflowAnchor: 'none',
@@ -229,14 +207,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
                     paddingBottom: '6px',
                   }}
                 >
-                  <TransactionActivityCard
-                    isActive={isActive !== false}
-                    tx={tx}
-                    isExpanded={expandedIds.has(tx.id)}
-                    onToggle={() => handleToggleExpand(tx.id)}
-                    onEdit={(txToEdit) => setEditingTx(txToEdit)}
-                    onDelete={(idToDelete) => setDeleteConfirmId(idToDelete)}
-                  />
+                  {renderTransactionRow(tx)}
                 </div>
               );
             })}

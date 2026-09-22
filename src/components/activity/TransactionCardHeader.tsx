@@ -12,11 +12,8 @@ interface TransactionCardHeaderProps {
   tx: TransactionLogItem;
   displayTitle: string;
   subCategoryLabel: string;
-  imageUrl?: string;
-  isPCSale: boolean;
   isPartSale: boolean;
   isPurchase: boolean;
-  isBuildAllocation: boolean;
   isBulkPurchase: boolean;
   isPCPurchase?: boolean;
   isExchange?: boolean;
@@ -33,7 +30,6 @@ interface TransactionCardHeaderProps {
   paymentMethod?: string;
   buyerName?: string;
   saleDate?: string;
-  daysOnMarket?: number;
   matchedComp?: InventoryComponent;
   conditionStr?: string;
 }
@@ -46,10 +42,8 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
   tx,
   displayTitle,
   subCategoryLabel,
-  isPCSale,
   isPartSale,
   isPurchase,
-  isBuildAllocation,
   isBulkPurchase,
   isPCPurchase = false,
   isExchange = false,
@@ -66,15 +60,12 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
   paymentMethod,
   buyerName,
   saleDate,
-  daysOnMarket,
   matchedComp,
   conditionStr,
 }) => {
   const { hideSupplierNames } = usePrivacy();
   const recordedDate = saleDate || tx.dateSortable || tx.timestamp;
-  const quantity = tx.quantity || tx.itemCount || tx.detailsList?.length || 1;
-  const isSale = isPCSale || isPartSale;
-  const StatusIcon = isSale ? CheckCircle2 : isExchange ? ArrowRightLeft : Receipt;
+  const StatusIcon = isPartSale ? CheckCircle2 : isExchange ? ArrowRightLeft : Receipt;
   const fields = [
     { label: 'Category', value: isBulkPurchase ? 'Bulk' : isPCPurchase ? 'PC' : (matchedComp?.category || '—') },
     { label: 'Condition', value: conditionStr || '—' },
@@ -122,12 +113,10 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
         <dl className="record-purchase-fields">{fields.map(f => <div key={f.label}><dt>{f.label}</dt><dd>{f.value}</dd></div>)}<div className="record-paid"><dt>Paid</dt><dd>{formatCurrency(tx.totalAmount)}</dd></div></dl>
       ) : (
         <>
-          <dl className="record-finances" style={!isSale ? {gridTemplateColumns:`repeat(${isExchange ? 3 : 2},minmax(0,1fr))`} : undefined}>
-            {isSale && <><div><dt>Cost</dt><dd>{formatCurrency(partsCost)}</dd></div><div><dt>Sold</dt><dd>{formatCurrency(salePrice)}</dd></div><div><dt>Profit</dt><dd className={getProfitTextColor(netProfit)}>{formatSignedCurrency(netProfit)}</dd></div><div><dt>Margin</dt><dd className={getProfitTextColor(netProfit)}>{profitMarginPercent.toFixed(1)}%</dd></div></>}
+          <dl className="record-finances" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))' }}>
             {isExchange && <><div><dt>Outgoing</dt><dd>{formatCurrency(outgoingCostBasis)}</dd></div><div><dt>Cash</dt><dd>{formatCurrency(cashPaidOnTop)}</dd></div><div><dt>Incoming</dt><dd>{formatCurrency(incomingCostBasis)}</dd></div></>}
-            {isBuildAllocation && <><div><dt>Build Cost</dt><dd>{formatCurrency(tx.totalAmount)}</dd></div><div><dt>Allocated</dt><dd>{tx.itemCount || quantity} items</dd></div></>}
           </dl>
-          <div className="record-metadata">{matchedComp?.category && <span>{matchedComp.category}</span>}{matchedComp?.tags?.map((tag) => <span key={tag}>{tag}</span>)}{conditionStr && <span>{conditionStr}</span>}{buyerName && <span>{buyerName}</span>}{platform && <span>{normalizePlatform(platform)}</span>}{paymentMethod && <span>{paymentMethod}</span>}{daysOnMarket !== undefined && <span>{daysOnMarket === 0 ? 'Sold same day' : `Sold in ${daysOnMarket} days`}</span>}</div>
+          <div className="record-metadata">{matchedComp?.category && <span>{matchedComp.category}</span>}{matchedComp?.tags?.map((tag) => <span key={tag}>{tag}</span>)}{conditionStr && <span>{conditionStr}</span>}{buyerName && <span>{buyerName}</span>}{platform && <span>{normalizePlatform(platform)}</span>}{paymentMethod && <span>{paymentMethod}</span>}</div>
         </>
       )}
     </button>

@@ -35,7 +35,7 @@ export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
         <h4>Financial details</h4>
         <dl>
           <div><dt>Sale price</dt><dd>{formatCurrency(salePrice)}</dd></div>
-          <div><dt>Unit cost</dt><dd>{formatCurrency(partsCost)}</dd></div>
+          <div><dt>Total cost</dt><dd>{formatCurrency(partsCost)}</dd></div>
           <div><dt>Net profit</dt><dd className={getProfitTextColor(netProfit)}>{formatSignedCurrency(netProfit)}</dd></div>
           <div><dt>Margin</dt><dd className={getProfitTextColor(netProfit)}>{profitMarginPercent.toFixed(1)}%</dd></div>
         </dl>

@@ -1,58 +1,33 @@
 import React from 'react';
-import { Pencil, FileText, Trash2, RotateCcw } from 'lucide-react';
+import { Pencil, Trash2, RotateCcw } from 'lucide-react';
 import { TransactionLogItem } from '../../types';
 
 interface TransactionCardActionsProps {
   tx: TransactionLogItem;
-  isPCSale: boolean;
-  hasLinkedBuild?: boolean;
   isPartSale: boolean;
   onEdit: (tx: TransactionLogItem) => void;
   onDelete: (id: string) => void;
-  onDownloadInvoice: (e: React.MouseEvent) => void;
   onRelistPart?: (tx: TransactionLogItem) => void;
   onRelistBulkSale?: () => void;
 }
 
 export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
   tx,
-  isPCSale,
-  hasLinkedBuild,
   isPartSale,
   onEdit,
   onDelete,
-  onDownloadInvoice,
   onRelistPart,
   onRelistBulkSale,
-}) => {
-  const isManagedViaBuilds = isPCSale && hasLinkedBuild;
-  
-  return (
+}) => (
     <div className="record-actions">
       <div className="contents">
-        {!isManagedViaBuilds && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(tx); }}
-            className="app-button flex items-center justify-center gap-1.5 px-2"
-            title="Edit Log Record"
-          >
-            <Pencil className="w-3.5 h-3.5" /> Edit Record
-          </button>
-        )}
-        {(isPCSale || isPartSale) && (
-          <button
-            onClick={onDownloadInvoice}
-            className="app-button flex items-center justify-center gap-1.5 px-2"
-            title="Download Invoice PDF"
-          >
-            <FileText className="w-3.5 h-3.5" /> Invoice PDF
-          </button>
-        )}
-        {isManagedViaBuilds && (
-          <span className="text-[11px] text-neutral-500 italic">
-            PC Sale managed via Builds &gt; Sold
-          </span>
-        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit(tx); }}
+          className="app-button flex items-center justify-center gap-1.5 px-2"
+          title="Edit Log Record"
+        >
+          <Pencil className="w-3.5 h-3.5" /> Edit Record
+        </button>
         {isPartSale && tx.bulkSaleGroupId && onRelistBulkSale ? (
           <button
             onClick={(e) => { e.stopPropagation(); onRelistBulkSale(); }}
@@ -72,15 +47,12 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
         )}
       </div>
 
-      {!isManagedViaBuilds && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(tx.id); }}
-          className="app-button app-button-danger flex items-center justify-center gap-1.5 px-2"
-          title="Delete Activity Log"
-        >
-          <Trash2 className="w-3.5 h-3.5" /> Delete
-        </button>
-      )}
+      <button
+        onClick={(e) => { e.stopPropagation(); onDelete(tx.id); }}
+        className="app-button app-button-danger flex items-center justify-center gap-1.5 px-2"
+        title="Delete Activity Log"
+      >
+        <Trash2 className="w-3.5 h-3.5" /> Delete
+      </button>
     </div>
-  );
-};
+);
