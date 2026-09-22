@@ -51,12 +51,7 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
         <div className="build-selected-list">
           {sortByCategory(selectedParts).map((part, idx) => {
             const comp = components.find((c) => c.id === part.componentId);
-            let purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
-            if (!purchaseEntry && comp?.purchaseHistory?.length) {
-              purchaseEntry =
-                comp.purchaseHistory.find((pe) => pe.unitPrice === part.unitCostAtAssignment) ||
-                comp.purchaseHistory[0];
-            }
+            const purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
 
             const category = getCategoryPresentation(part.category);
             const metadata = [

@@ -554,10 +554,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 <div className="divide-y divide-white/[0.06]">
                   {sortByCategory(build.parts).map((part, partIdx) => {
                     const comp = state.components.find((c) => c.id === part.componentId);
-                    let purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
-                    if (!purchaseEntry && comp?.purchaseHistory?.length) {
-                      purchaseEntry = comp.purchaseHistory.find((pe) => pe.unitPrice === part.unitCostAtAssignment) || comp.purchaseHistory[0];
-                    }
+                    const purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
                     const category = getCategoryPresentation(part.category);
                     // Assignment cost is immutable, so every row total always reconciles to Build Cost.
                     const unitCost = part.unitCostAtAssignment;
