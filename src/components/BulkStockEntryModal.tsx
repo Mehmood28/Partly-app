@@ -168,7 +168,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
                     placeholder="Paste unformatted raw text lists or unorganized stock notes... (e.g., '5x Ryzen 7 7700 @ $240 each, 3x MSI RTX 4070 Super @ $780')"
-                    className="app-field min-h-40 w-full resize-none p-3 text-xs sm:text-sm"
+                    className="app-field bulk-entry-text w-full resize-y p-3 text-xs sm:text-sm"
                   />
                 ) : (
                   <div className="space-y-4">
@@ -266,7 +266,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                               step="0.01"
                               value={item.unitCost || 0}
                               onChange={(e) => updateParsedItem(idx, 'unitCost', parseFloat(e.target.value) || 0)}
-                              className="app-field w-full pl-6 font-mono"
+                              className="app-field bulk-review-unit-cost w-full font-mono"
                             />
                           </div>
                         </label>

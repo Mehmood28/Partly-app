@@ -2,14 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { useInventory } from '../../../context/InventoryContext';
 import { useToast } from '../../../context/ToastContext';
 import { CATEGORIES, PaymentMethod, InventoryComponent, PurchaseEntry } from '../../../types';
-import { getAllBatchesWithRemaining, formatCurrency } from '../../../utils/helpers';
+import { getAllBatchesWithRemaining, formatCurrency, filterAndSortComponents, SortOption } from '../../../utils/helpers';
+import { InventoryFilterBar } from '../../InventoryFilterBar';
 import { CustomSelect } from '../../ui/CustomSelect';
 import { PAYMENT_METHODS } from './SaleDetailsForm';
 import {
   Layers,
   Plus,
   Trash2,
-  Search,
   CheckCircle2,
   TrendingUp,
   ShoppingBag,
@@ -58,6 +58,8 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
   // Search & filter for available batches pool
   const [batchSearch, setBatchSearch] = useState<string>('');
   const [batchCategory, setBatchCategory] = useState<string>('ALL');
+  const [batchSubCategory, setBatchSubCategory] = useState('');
+  const [batchSort, setBatchSort] = useState<SortOption>('newest-purchase');
 
   // Compute all available batches with unassigned quantity > 0
   const allAvailableBatches = useMemo<AvailableBatchItem[]>(() => {
@@ -114,20 +116,29 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
   // Filtered batches in the selector
   const filteredAvailableBatches = useMemo(() => {
     const q = batchSearch.trim().toLowerCase();
-    return allAvailableBatches.filter((item) => {
-      if (batchCategory !== 'ALL' && item.component.category !== batchCategory) {
-        return false;
-      }
-      if (!q) return true;
-      return (
-        item.component.name.toLowerCase().includes(q) ||
-        item.component.category.toLowerCase().includes(q) ||
-        (item.entry.condition && item.entry.condition.toLowerCase().includes(q)) ||
-        (item.entry.platform && item.entry.platform.toLowerCase().includes(q)) ||
-        (item.entry.date && item.entry.date.includes(q))
-      );
+    const sortedComponents = filterAndSortComponents(state.components, {
+      category: batchCategory,
+      subCategory: batchSubCategory,
+      sortBy: batchSort,
+      builds: state.builds,
+      onlyAvailable: true,
     });
-  }, [allAvailableBatches, batchSearch, batchCategory]);
+    const matchingComponentIds = new Set(filterAndSortComponents(sortedComponents, {
+      searchQuery: batchSearch,
+      builds: state.builds,
+      onlyAvailable: true,
+    }).map((component) => component.id));
+    const categoryIndex = new Map(CATEGORIES.map((category, index) => [category, index]));
+    const sortIndex = new Map(sortedComponents.map((component, index) => [component.id, index]));
+    return allAvailableBatches.filter((item) => sortIndex.has(item.component.id) && (
+      !q || matchingComponentIds.has(item.component.id) ||
+      [item.entry.condition, item.entry.platform, item.entry.date].some((value) => value?.toLowerCase().includes(q))
+    )).sort((a, b) =>
+      (categoryIndex.get(a.component.category) ?? CATEGORIES.length) - (categoryIndex.get(b.component.category) ?? CATEGORIES.length) ||
+      (sortIndex.get(a.component.id) ?? 0) - (sortIndex.get(b.component.id) ?? 0) ||
+      (b.entry.date || '').localeCompare(a.entry.date || '')
+    );
+  }, [allAvailableBatches, batchSearch, batchCategory, batchSubCategory, batchSort, state.components, state.builds]);
 
   // Map of batch keys to easily check if added
   const selectedBatchKeys = useMemo(() => {
@@ -314,30 +325,19 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
           </span>
         </div>
 
-        {/* Filter & Search Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <div className="sm:col-span-2 relative">
-            <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search components or condition..."
-              value={batchSearch}
-              onChange={(e) => setBatchSearch(e.target.value)}
-              className="app-field h-8 min-h-8 bg-[#0B1113] pl-8 pr-2.5 text-xs placeholder:text-zinc-500 font-sans"
-            />
-          </div>
-          <div>
-            <CustomSelect
-              value={batchCategory}
-              onChange={(val) => setBatchCategory(val)}
-              options={[
-                { value: 'ALL', label: 'All Categories' },
-                ...CATEGORIES.map((c) => ({ value: c, label: c })),
-              ]}
-              className="text-xs"
-            />
-          </div>
-        </div>
+        <InventoryFilterBar
+          components={state.components}
+          builds={state.builds}
+          searchQuery={batchSearch}
+          onSearchChange={setBatchSearch}
+          activeCategory={batchCategory}
+          onCategoryChange={setBatchCategory}
+          activeSubCategory={batchSubCategory}
+          onSubCategoryChange={setBatchSubCategory}
+          sortBy={batchSort}
+          onSortByChange={setBatchSort}
+          compactControls
+        />
 
         {/* Available Batches List */}
         <div className="bulk-stock-pool pr-1">

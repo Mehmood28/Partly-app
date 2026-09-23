@@ -14,8 +14,6 @@ import {
   SortOption
 } from '../utils/helpers';
 import { Plus, Filter, Zap, Layers } from 'lucide-react';
-import { ArrowDownWideNarrow } from 'lucide-react';
-import { CustomSelect } from './ui/CustomSelect';
 import { useVirtualListScroll } from '../hooks/useVirtualListScroll';
 
 interface InventoryViewProps {
@@ -204,22 +202,6 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             <span>AI Import</span>
           </button>
         )}
-        <div className="stock-sort-control">
-          <CustomSelect
-            value={sortBy}
-            onChange={(val) => setSortBy(val as SortOption)}
-            options={[
-              { value: 'newest-purchase', label: 'Recently Bought' },
-              { value: 'highest-price', label: 'Highest Price Per Unit' },
-              { value: 'lowest-price', label: 'Lowest Price Per Unit' },
-              { value: 'highest-stock', label: 'Highest Units in Stock' },
-              { value: 'lowest-stock', label: 'Lowest Units in Stock' },
-            ]}
-            icon={<ArrowDownWideNarrow className="h-3.5 w-3.5 text-[#B9EF68]" />}
-            className="w-full"
-            dropdownClassName="min-w-[220px] py-1.5"
-          />
-        </div>
       </div>
 
       <div className="inventory-filters">
@@ -234,8 +216,6 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           onSubCategoryChange={setActiveSubCategory}
           sortBy={sortBy}
           onSortByChange={setSortBy}
-          showSearch={false}
-          showSort={false}
           onlyAvailable={true}
         />
       </div>

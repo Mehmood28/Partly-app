@@ -897,10 +897,12 @@ export const determineSubCategory = (comp: import('../types').InventoryComponent
   const nameLower = String(comp.name || '').toLowerCase();
   const specLower = typeof comp.specifications === 'string' ? comp.specifications.toLowerCase() : (comp.specifications ? String(comp.specifications).toLowerCase() : '');
   const compTags = Array.isArray(comp.tags) ? comp.tags : [];
+  const inferredTags = autoTagComponent(comp.name || '', comp.specifications || '', comp.category);
   for (const sub of possible) {
     const subLower = sub.toLowerCase();
     if (nameLower.includes(subLower) || 
         compTags.some(t => typeof t === 'string' && t.toLowerCase() === subLower) ||
+        inferredTags.some(tag => tag.toLowerCase() === subLower) ||
         (specLower && specLower.includes(subLower))) {
       return sub;
     }

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Tag, Plus, ChevronUp, ChevronDown } from 'lucide-react';
 import { CATEGORIES, ComponentCategory, InventoryComponent, PCBuild, PCBuildPart } from '../../../types';
-import { filterAndSortComponents, formatCurrency, formatReadableDate, getConditionDotColor } from '../../../utils/helpers';
+import { filterAndSortComponents, formatCurrency, formatReadableDate, getConditionDotColor, SortOption } from '../../../utils/helpers';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { InventoryFilterBar } from '../../InventoryFilterBar';
 import { normalizePlatform } from '../../../utils/platformDisplay';
@@ -39,6 +39,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
 }) => {
   const { hideSupplierNames } = usePrivacy();
   const [expandedInventoryPartId, setExpandedInventoryPartId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('newest-purchase');
 
   const filteredComponents = useMemo(() => {
     return filterAndSortComponents(components, {
@@ -47,8 +48,9 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
       subCategory: activeSubCategory,
       onlyAvailable: true,
       builds,
+      sortBy,
     });
-  }, [components, searchQuery, activeCategoryTab, activeSubCategory, builds]);
+  }, [components, searchQuery, activeCategoryTab, activeSubCategory, builds, sortBy]);
 
   const handleAddPartClick = (comp: InventoryComponent, entryId: string) => {
     setExpandedInventoryPartId(null);
@@ -73,6 +75,9 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
         onlyAvailable={true}
         activeSubCategory={activeSubCategory}
         onSubCategoryChange={onSubCategoryChange}
+        builds={builds}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
       />
 
       <div

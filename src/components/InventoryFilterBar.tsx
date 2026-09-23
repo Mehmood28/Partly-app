@@ -20,6 +20,7 @@ interface InventoryFilterBarProps {
   showSearch?: boolean;
   showSort?: boolean;
   compactControls?: boolean;
+  showCategories?: boolean;
 }
 
 export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
@@ -37,6 +38,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
   showSearch = true,
   showSort = true,
   compactControls = false,
+  showCategories = true,
 }) => {
   const isAvailable = (c: InventoryComponent) => !onlyAvailable || calculateUnassignedQuantityStrict(c, builds) > 0;
   
@@ -46,7 +48,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
 
   return (
     <div className={`inventory-filter-bar w-full space-y-3 ${compactControls ? 'is-compact' : ''}`}>
-      <div className="category-filters">
+      {showCategories && <div className="category-filters">
         <button
           type="button"
           onClick={() => {
@@ -84,7 +86,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
             </button>
           );
         })}
-      </div>
+      </div>}
       
       {/* Sub-Category Pills (Fully Visible Wrapping Layout) */}
       {currentSubCats.length > 0 && (

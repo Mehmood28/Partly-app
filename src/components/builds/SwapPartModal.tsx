@@ -1,13 +1,13 @@
 import React, { useState, useDeferredValue } from 'react';
-import { InventoryComponent, PCBuild, PCBuildPart } from '../../types';
+import { PCBuild, PCBuildPart } from '../../types';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useInventory } from '../../context/InventoryContext';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { useToast } from '../../context/ToastContext';
-import { Box, ArrowRightLeft, X, Search, ArrowDownWideNarrow } from 'lucide-react';
-import { formatCurrency, getUnassignedBatches, SUB_CATEGORIES, SortOption } from '../../utils/helpers';
+import { Box, ArrowRightLeft, X } from 'lucide-react';
+import { formatCurrency, getUnassignedBatches, filterAndSortComponents, determineSubCategory, SortOption } from '../../utils/helpers';
 import { ConfirmModal } from '../ConfirmModal';
-import { CustomSelect } from '../ui/CustomSelect';
+import { InventoryFilterBar } from '../InventoryFilterBar';
 import { InventoryPartAccordionHeader } from './InventoryPartAccordionHeader';
 
 interface SwapPartModalProps {
@@ -17,45 +17,13 @@ interface SwapPartModalProps {
   onClose: () => void;
 }
 
-const getFilterChips = (category: string) => {
-  switch (category) {
-    case 'Storage':
-    case 'CPU':
-    case 'GPU':
-    case 'RAM':
-      return ['All', ...(SUB_CATEGORIES[category] || [])];
-    case 'Motherboard':
-      return ['All', ...(SUB_CATEGORIES.Motherboard || []), 'DDR5', 'DDR4'];
-    default: return ['All'];
-  }
-};
-
-const determineSubCategory = (comp: InventoryComponent, category: string): string | null => {
-  const chips = getFilterChips(category).filter(c => c !== 'All');
-  if (chips.length === 0) return null;
-  const nameStr = typeof comp.name === 'string' ? comp.name : '';
-  const specStr = typeof comp.specifications === 'string' ? comp.specifications : '';
-  const tagsStr = Array.isArray(comp.tags) ? comp.tags.filter(t => typeof t === 'string').join(' ') : '';
-  const text = `${nameStr} ${specStr} ${tagsStr}`.toLowerCase();
-  for (const chip of chips) {
-    const f = chip.toLowerCase();
-    if (f === '50 series' && (text.includes('rtx 50') || text.includes('5090') || text.includes('5080') || text.includes('5070'))) return chip;
-    if (f === '40 series' && (text.includes('rtx 40') || text.includes('4090') || text.includes('4080') || text.includes('4070') || text.includes('4060'))) return chip;
-    if (f === '30 series' && (text.includes('rtx 30') || text.includes('3090') || text.includes('3080') || text.includes('3070') || text.includes('3060'))) return chip;
-    if (f === 'amd' && (text.includes('radeon') || text.includes('rx '))) return chip;
-    if (f === 'intel' && (text.includes('intel') || text.includes('core i') || text.includes('lga') || text.includes('z790') || text.includes('z890') || text.includes('b760') || text.includes('h610'))) return chip;
-    if (text.includes(f)) return chip;
-  }
-  return null;
-};
-
 export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart, isOpen = true, onClose }) => {
   const { state, swapPartInBuild } = useInventory();
   const { hideSupplierNames } = usePrivacy();
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
-  const [activeFilter, setActiveFilter] = useState('All');
+  const [activeFilter, setActiveFilter] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest-purchase');
   const [expandedPartId, setExpandedPartId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -69,10 +37,14 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
     unitPrice: number;
   } | null>(null);
 
-  const chips = getFilterChips(currentPart.category);
-
-  // 1. Process inventory for matching category
-  const categoryParts = state.components.filter(c => c.category === currentPart.category);
+  const categoryParts = filterAndSortComponents(state.components, {
+    searchQuery: deferredSearchQuery,
+    category: currentPart.category,
+    subCategory: activeFilter,
+    sortBy,
+    builds: state.builds,
+    onlyAvailable: true,
+  });
 
   // 2. Map parts to their actual available entries
   const availablePartsWithEntries = categoryParts.map(comp => {
@@ -92,24 +64,11 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
       validEntries,
       totalAvailable,
       avgPrice,
-      subCategory: determineSubCategory(comp, currentPart.category)
+      subCategory: determineSubCategory(comp)
     };
   }).filter(item => item.totalAvailable > 0);
 
-  // 3. Filter by search and chip
-  const filteredParts = availablePartsWithEntries.filter(item => {
-    if (searchQuery.trim() !== '') {
-      const q = deferredSearchQuery.toLowerCase();
-      const nameStr = typeof item.comp.name === 'string' ? item.comp.name : '';
-      const specStr = typeof item.comp.specifications === 'string' ? item.comp.specifications : '';
-      const matchText = `${nameStr} ${specStr}`.toLowerCase();
-      if (!matchText.includes(q)) return false;
-    }
-    if (activeFilter !== 'All' && item.subCategory !== activeFilter) {
-      return false;
-    }
-    return true;
-  }).sort((a, b) => {
+  const filteredParts = availablePartsWithEntries.sort((a, b) => {
     if (sortBy === 'highest-price') return b.avgPrice - a.avgPrice;
     if (sortBy === 'lowest-price') return a.avgPrice - b.avgPrice;
     if (sortBy === 'highest-stock') return b.totalAvailable - a.totalAvailable;
@@ -167,60 +126,21 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         )}
 
         {/* Search & Filters */}
-        <div className="space-y-3 shrink-0 w-full max-w-full min-w-0">
-          <div className="swap-filter-row">
-            <div className="relative w-full max-w-full min-w-0">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search parts by name or model..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="app-field w-full max-w-full box-border pl-9 pr-8"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors"
-                  title="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-            <CustomSelect
-              value={sortBy}
-              onChange={(value) => setSortBy(value as SortOption)}
-              options={[
-                { value: 'newest-purchase', label: 'Recently Bought' },
-                { value: 'highest-price', label: 'Highest Price Per Unit' },
-                { value: 'lowest-price', label: 'Lowest Price Per Unit' },
-                { value: 'highest-stock', label: 'Highest Units in Stock' },
-                { value: 'lowest-stock', label: 'Lowest Units in Stock' },
-              ]}
-              icon={<ArrowDownWideNarrow className="h-4 w-4 text-[#B9EF68]" />}
-              className="swap-sort-select w-full"
-            />
-          </div>
-
-          {chips.length > 1 && (
-            <div className="swap-subcategory-filter flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
-              {chips.map(chip => (
-                <button
-                  key={chip}
-                  onClick={() => setActiveFilter(activeFilter === chip ? 'All' : chip)}
-                  className={`px-2.5 py-1 text-xs font-medium whitespace-nowrap border-b-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
-                    activeFilter === chip
-                      ? 'border-[#B9EF68] text-[#B9EF68]'
-                      : 'border-transparent text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
-          )}
+        <div className="shrink-0 w-full max-w-full min-w-0">
+          <InventoryFilterBar
+            components={state.components}
+            builds={state.builds}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            activeCategory={currentPart.category}
+            onCategoryChange={() => undefined}
+            activeSubCategory={activeFilter}
+            onSubCategoryChange={setActiveFilter}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            showCategories={false}
+            compactControls
+          />
         </div>
 
         {/* List */}

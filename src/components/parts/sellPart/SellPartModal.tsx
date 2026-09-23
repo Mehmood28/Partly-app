@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useInventory } from '../../../context/InventoryContext';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { useToast } from '../../../context/ToastContext';
-import { ComponentCategory, InventoryComponent, PaymentMethod, Platform } from '../../../types';
-import { calculateAverageUnitCost, calculateUnassignedQuantityStrict, formatCurrency, getAllBatchesWithRemaining } from '../../../utils/helpers';
+import { CATEGORIES, ComponentCategory, InventoryComponent, PaymentMethod, Platform } from '../../../types';
+import { calculateAverageUnitCost, calculateUnassignedQuantityStrict, filterAndSortComponents, formatCurrency, getAllBatchesWithRemaining, SortOption } from '../../../utils/helpers';
 import { normalizePlatform } from '../../../utils/platformDisplay';
 import { BottomSheetModal } from '../../ui/BottomSheetModal';
 import { CustomSelect } from '../../ui/CustomSelect';
+import { InventoryFilterBar } from '../../InventoryFilterBar';
 import { X, Tag, Package, Plus, Layers, TrendingUp } from 'lucide-react';
 import { getEstimatedNumericValue, parseCashPaidOnTop } from './sellPartHelpers';
 import { SaleDetailsForm } from './SaleDetailsForm';
@@ -35,6 +36,10 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
   const [saleMode, setSaleMode] = useState<'single' | 'bulk'>('single');
   const [selectedComponentId, setSelectedComponentId] = useState<string>('');
   const [selectedEntryId, setSelectedEntryId] = useState<string>('');
+  const [partSearch, setPartSearch] = useState('');
+  const [partCategory, setPartCategory] = useState('ALL');
+  const [partSubCategory, setPartSubCategory] = useState('');
+  const [partSort, setPartSort] = useState<SortOption>('newest-purchase');
 
   const [quantity, setQuantity] = useState<number>(1);
   const [unitSalePrice, setUnitSalePrice] = useState<string>('');
@@ -58,6 +63,20 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
   const availableComponents = state.components.filter(
     (c) => calculateUnassignedQuantityStrict(c, state.builds) > 0
   );
+  const filteredComponents = filterAndSortComponents(availableComponents, {
+    builds: state.builds,
+    searchQuery: partSearch,
+    category: partCategory,
+    subCategory: partSubCategory,
+    sortBy: partSort,
+    onlyAvailable: true,
+  });
+  // Keep the current draft's selected part visible in the menu while filters
+  // narrow the alternatives; changing filters must not silently change a sale.
+  const selectedAvailableComponent = availableComponents.find((component) => component.id === selectedComponentId);
+  const pickerComponents = selectedAvailableComponent && !filteredComponents.some((component) => component.id === selectedComponentId)
+    ? [selectedAvailableComponent, ...filteredComponents]
+    : filteredComponents;
 
   const currentComponent =
     (selectedComponentId ? state.components.find((c) => c.id === selectedComponentId) : null) ||
@@ -132,6 +151,10 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
     setSaleMode('single');
     setSelectedComponentId('');
     setSelectedEntryId('');
+    setPartSearch('');
+    setPartCategory('ALL');
+    setPartSubCategory('');
+    setPartSort('newest-purchase');
     setQuantity(1);
     setUnitSalePrice('');
     setTotalSalePrice('');
@@ -488,16 +511,34 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                   </div>
                 </div>
               ) : (
-                <CustomSelect
-                  value={selectedComponentId || ''}
-                  onChange={handleComponentChange}
-                  options={availableComponents.map(c => ({
-                    value: c.id,
-                    label: `${c.category} · ${c.name} (${calculateUnassignedQuantityStrict(c, state.builds)} in stock)`,
-                  }))}
-                  placeholder="Select a part to sell..."
-                  fitLongestOption={false}
-                />
+                <div className="flex flex-col gap-2">
+                  <InventoryFilterBar
+                    components={availableComponents}
+                    builds={state.builds}
+                    searchQuery={partSearch}
+                    onSearchChange={setPartSearch}
+                    activeCategory={partCategory}
+                    onCategoryChange={setPartCategory}
+                    activeSubCategory={partSubCategory}
+                    onSubCategoryChange={setPartSubCategory}
+                    sortBy={partSort}
+                    onSortByChange={setPartSort}
+                    compactControls
+                  />
+                  <CustomSelect
+                    value={selectedComponentId || ''}
+                    onChange={handleComponentChange}
+                    options={CATEGORIES.flatMap((category) => pickerComponents
+                      .filter((component) => component.category === category)
+                      .map((component) => ({
+                        value: component.id,
+                        label: `${component.name} (${calculateUnassignedQuantityStrict(component, state.builds)} in stock)`,
+                        group: category,
+                      })))}
+                    placeholder="Select a part to sell..."
+                    fitLongestOption={false}
+                  />
+                </div>
               )}
             </div>
 
