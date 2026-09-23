@@ -313,7 +313,8 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .inventory-filters { padding:0; }
 .category-filters { display:flex; flex-wrap:wrap; gap:8px; }
 .inventory-group { padding:15px 0 5px; }
-.inventory-group > div { font-size:16px; }
+.inventory-stock-row { padding-bottom:6px; }
+.inventory-stock-row[data-type='header'] { padding-top:6px; padding-bottom:3px; }
 .inventory-group-heading { display:flex; align-items:center; gap:12px; color:var(--app-muted); font-size:13px; }
 .inventory-group-heading > span:first-child { color:#eff5f5; }
 .inventory-group svg { color:var(--app-aqua); }
@@ -549,7 +550,6 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .stock-inventory-layout .category-filters { gap:4px; }
   .stock-inventory-layout .app-chip { min-height:34px; padding-inline:8px; font-size:10px; }
   .stock-inventory-layout .inventory-group { padding:6px 0 2px; }
-  .stock-inventory-layout .inventory-group > div { font-size:13px; }
   .inventory-group-heading { gap:7px; font-size:11px; white-space:nowrap; }
   .inventory-group-heading > span:first-child { font-size:12px; }
   .batch-actions { justify-content:flex-end; }

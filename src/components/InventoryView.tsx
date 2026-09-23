@@ -126,7 +126,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
     resetDependencies: [selectedCategory, activeSubCategory, sortBy, deferredSearchQuery],
   });
 
-  const renderInventoryRow = (row: VirtualInventoryRow, inVirtualList = false) => {
+  const renderInventoryRow = (row: VirtualInventoryRow) => {
     if (row.type === 'header') {
       const headingContent = (
         <>
@@ -141,9 +141,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         </>
       );
 
-      return inVirtualList
-        ? <div className="inventory-group inventory-group-heading">{headingContent}</div>
-        : <div className="inventory-group mt-4 first:mt-0"><div className="inventory-group-heading">{headingContent}</div></div>;
+      return <div className="inventory-group inventory-group-heading">{headingContent}</div>;
     }
 
     const component = row.component;
@@ -162,7 +160,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         />
       </div>
     );
-    return inVirtualList ? componentCard : <div>{componentCard}</div>;
+    return componentCard;
   };
 
   return (
@@ -262,9 +260,15 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           </div>
         </div>
       ) : !isVirtualized ? (
-        <div className="space-y-2">
+        <div>
           {virtualRows.map((row) => (
-            <React.Fragment key={row.key}>{renderInventoryRow(row)}</React.Fragment>
+            <div
+              key={row.key}
+              className="inventory-stock-row"
+              data-type={row.type}
+            >
+              {renderInventoryRow(row)}
+            </div>
           ))}
         </div>
       ) : (
@@ -291,6 +295,8 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
               return (
                 <div
                   key={row.key}
+                  className="inventory-stock-row"
+                  data-type={row.type}
                   data-index={virtualRow.index}
                   ref={rowVirtualizer.measureElement}
                   style={{
@@ -299,11 +305,9 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                     left: 0,
                     width: '100%',
                     transform: `translateY(${virtualRow.start}px)`,
-                    paddingTop: row.type === 'header' ? '6px' : undefined,
-                    paddingBottom: row.type === 'header' ? '3px' : '6px',
                   }}
                 >
-                  {renderInventoryRow(row, true)}
+                  {renderInventoryRow(row)}
                 </div>
               );
             })}
