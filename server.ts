@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 
 let aiClient: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI {
@@ -19,6 +19,14 @@ const GEMINI_MODEL_CANDIDATES = [
   'gemini-3.7-flash',
   'gemini-3.1-flash-lite',
   'gemini-flash-latest',
+] as const;
+
+// Inventory extraction is a short, structured task. Keep the more capable
+// model ordering for build generation, where reasoning matters more.
+const BULK_IMPORT_MODELS = [
+  'gemini-3.5-flash-lite',
+  'gemini-3.1-flash-lite',
+  'gemini-3.8-flash',
 ] as const;
 
 function parseModelJsonResponse(
@@ -85,12 +93,15 @@ async function generateGeminiContent(params: {
   systemInstruction?: string;
   contents: any;
   responseSchema?: any;
+  fastBulkImport?: boolean;
 }) {
   const ai = getAI();
   let lastError: any = null;
 
-  for (const model of GEMINI_MODEL_CANDIDATES) {
-    for (let attempt = 0; attempt < 2; attempt++) {
+  const models = params.fastBulkImport ? BULK_IMPORT_MODELS : GEMINI_MODEL_CANDIDATES;
+  for (const model of models) {
+    for (let attempt = 0; attempt < (params.fastBulkImport ? 1 : 2); attempt++) {
+      const started = performance.now();
       try {
         const response = await ai.models.generateContent({
           model,
@@ -99,13 +110,18 @@ async function generateGeminiContent(params: {
             systemInstruction: params.systemInstruction,
             responseMimeType: params.responseSchema ? 'application/json' : undefined,
             responseSchema: params.responseSchema,
+            thinkingConfig: params.fastBulkImport ? {
+              thinkingLevel: model.includes('flash-lite') ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW,
+            } : undefined,
           },
         });
         if (response && response.text) {
+          if (params.fastBulkImport) console.info(`[bulk import] ${model} completed in ${Math.round(performance.now() - started)}ms`);
           return response;
         }
       } catch (err: any) {
         lastError = err;
+        if (params.fastBulkImport) console.warn(`[bulk import] ${model} failed after ${Math.round(performance.now() - started)}ms: ${err?.status || err?.code || 'request error'}`);
         const errMsg = err?.message || String(err);
         const isTransient = 
           err?.status === 'UNAVAILABLE' || 
@@ -195,6 +211,7 @@ async function startServer() {
 
   app.post('/api/parse-bulk-entry', async (req, res) => {
     try {
+      const started = performance.now();
       const { text, images } = req.body;
       
       let parts: any[] = [];
@@ -237,10 +254,12 @@ async function startServer() {
       const response = await generateGeminiContent({
         systemInstruction,
         contents: { parts },
-        responseSchema
+        responseSchema,
+        fastBulkImport: true,
       });
       
       const data = parseModelJsonResponse(response.text, 'array');
+      res.setHeader('Server-Timing', `bulk-import;dur=${Math.round(performance.now() - started)}`);
       res.json(data);
     } catch (err: any) {
       console.error(err);
