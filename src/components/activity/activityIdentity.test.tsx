@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { InventoryContext } from '../../context/InventoryContext';
+import { handleDismantleBuild, handlePurchasePC } from '../../context/actions/buildActions';
 import { AppState, InventoryComponent, PCBuild, TransactionLogItem } from '../../types';
 import { parseBatchItem } from './activityHelpers';
 import { PurchaseExpandedView } from './PurchaseExpandedView';
@@ -227,6 +228,37 @@ describe('activity exact identity display', () => {
     expect(markup).not.toContain('Rejected Build Part');
   });
 
+  it('shows both exact-linked stock parts after a purchased PC is parted out and its build removed', () => {
+    const breakdown = [
+      { category: 'CPU' as const, name: 'Ryzen 5 5600X', quantity: 1, unitCost: 200 },
+      { category: 'GPU' as const, name: 'RTX 3060 12GB', quantity: 1, unitCost: 320 },
+    ];
+    const purchase = handlePurchasePC(
+      { components: [], builds: [], transactions: [] },
+      { name: 'Purchased Rig', purchasePrice: 520, purchaseDate: '2026-09-15', paymentMethod: 'Cash', breakdown },
+    );
+    expect(purchase.success).toBe(true);
+    const purchasedBuild = purchase.nextState.builds[0];
+    const purchaseTx = purchase.nextState.transactions[0];
+    const partOut = handleDismantleBuild(purchase.nextState, purchasedBuild.id, breakdown);
+    expect(partOut.success).toBe(true);
+    expect(partOut.nextState.builds).toEqual([]);
+    expect(partOut.nextState.components).toHaveLength(2);
+    for (const component of partOut.nextState.components) {
+      expect(component.purchaseHistory[0].sourcePurchaseTransactionId).toBe(purchaseTx.id);
+      expect(component.purchaseHistory[0].sourcePurchasedBuildId).toBe(purchasedBuild.id);
+    }
+
+    const markup = renderToStaticMarkup(
+      <InventoryContext.Provider value={{ state: partOut.nextState, relistPartSale: () => ({ success: true }), relistBulkPartSale: () => ({ success: true }) } as never}>
+        <TransactionActivityCard tx={purchaseTx} isExpanded onEdit={() => undefined} onDelete={() => undefined} />
+      </InventoryContext.Provider>,
+    );
+    expect(markup).toContain('Ryzen 5 5600X');
+    expect(markup).toContain('RTX 3060 12GB');
+    expect(markup).toContain('Purchase items');
+  });
+
   it('does not select either purchased build when explicit build and transaction links conflict', () => {
     const pcTx = makePurchase({
       id: 'purchase-pc-conflict',
@@ -262,7 +294,17 @@ describe('activity exact identity display', () => {
         unitCost: 100,
       }],
     } as PCBuild;
-    const state = { components: [], builds: [buildA, buildB], transactions: [pcTx], monthlyGoal: 10000 } as AppState;
+    const conflictingStock: InventoryComponent = {
+      ...componentA,
+      id: 'conflicting-stock',
+      name: 'Conflicting Stock Part',
+      purchaseHistory: [{
+        ...makeEntry('conflicting-stock-entry', 'PC Seller', 'Used'),
+        sourcePurchaseTransactionId: pcTx.id,
+        sourcePurchasedBuildId: buildB.id,
+      }],
+    };
+    const state = { components: [conflictingStock], builds: [buildA, buildB], transactions: [pcTx], monthlyGoal: 10000 } as AppState;
     const markup = renderToStaticMarkup(
       <InventoryContext.Provider value={{ state, relistPartSale: () => ({ success: true }), relistBulkPartSale: () => ({ success: true }) } as never}>
         <TransactionActivityCard tx={pcTx} isExpanded onEdit={() => undefined} onDelete={() => undefined} />
@@ -270,5 +312,6 @@ describe('activity exact identity display', () => {
     );
     expect(markup).not.toContain('Build A Part');
     expect(markup).not.toContain('Build B Part');
+    expect(markup).not.toContain('Conflicting Stock Part');
   });
 });

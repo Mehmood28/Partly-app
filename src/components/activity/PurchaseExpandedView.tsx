@@ -12,6 +12,7 @@ interface PurchaseExpandedViewProps {
   isPCPurchase: boolean;
   matchedComp?: InventoryComponent;
   purchasedBuild?: PCBuild;
+  hasConflictingLiveBuildLinks?: boolean;
   components: InventoryComponent[];
 }
 
@@ -27,7 +28,7 @@ interface PurchaseDisplayItem {
   paymentMethod?: string;
 }
 
-export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, isBulkPurchase, isPCPurchase, matchedComp, purchasedBuild, components }) => {
+export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, isBulkPurchase, isPCPurchase, matchedComp, purchasedBuild, hasConflictingLiveBuildLinks = false, components }) => {
   const { hideSupplierNames } = usePrivacy();
   // A purchased PC can later be parted out to Stock. Those entries preserve the
   // original purchase transaction, so prefer them for the purchase ledger. If
@@ -37,20 +38,22 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
     tx.itemNameOrSummary,
     tx.title?.replace(/^Purchased:\s*/i, ''),
   ].filter(Boolean).map((value) => String(value).trim().toLowerCase());
-  const hasExplicitBuildLink = !!tx.relatedComponentId?.trim();
-  const sourceBuildId = purchasedBuild?.id;
-  const canResolvePartedOutItems = !hasExplicitBuildLink || !!purchasedBuild;
-  const partedOutItems = isPCPurchase && canResolvePartedOutItems
+  const sourceBuildId = tx.relatedComponentId?.trim() || purchasedBuild?.id;
+  const orphanedBuild = !!sourceBuildId && !purchasedBuild;
+  const partedOutItems = isPCPurchase && !hasConflictingLiveBuildLinks
     ? components.flatMap((component) => component.purchaseHistory
       .filter((entry) => {
         const entrySourceTransactionId = entry.sourcePurchaseTransactionId?.trim();
         const entrySourceBuildId = entry.sourcePurchasedBuildId?.trim();
         if (entrySourceTransactionId || entrySourceBuildId) {
+          // Without the build, a transaction ID is required to distinguish its
+          // entries from stock linked only to a rejected or stale build ID.
+          if (orphanedBuild && !entrySourceTransactionId) return false;
           const transactionMatches = !entrySourceTransactionId || entrySourceTransactionId === tx.id;
           const buildMatches = !entrySourceBuildId || (!!sourceBuildId && entrySourceBuildId === sourceBuildId);
           return transactionMatches && buildMatches;
         }
-        return !!entry.notes && purchaseNames.some((name) =>
+        return !orphanedBuild && !!entry.notes && purchaseNames.some((name) =>
           entry.notes!.toLowerCase().includes(`purchased pc: ${name}`)
         );
       })

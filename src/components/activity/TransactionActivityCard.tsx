@@ -60,6 +60,10 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
         return matchesRelatedBuild && matchesPurchaseTransaction && hasMatchingLink;
       })
     : undefined;
+  const hasConflictingLiveBuildLinks = isPurchase && !!relatedBuildId && state.builds.some((build) =>
+    (build.id === relatedBuildId && !!build.purchaseTransactionId && build.purchaseTransactionId !== tx.id) ||
+    (build.purchaseTransactionId === tx.id && build.id !== relatedBuildId)
+  );
   const isPCPurchase = isPurchase && (tx.purchaseKind === 'PC' || !!purchasedBuild);
   const singletonPurchaseItem =
     isPurchase && !isBulkPurchase && tx.detailsList?.length === 1
@@ -321,6 +325,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
               isPCPurchase={isPCPurchase}
               matchedComp={matchedComp}
               purchasedBuild={purchasedBuild}
+              hasConflictingLiveBuildLinks={hasConflictingLiveBuildLinks}
               components={state.components}
             />
           )}
