@@ -540,10 +540,10 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .stock-inventory-layout .inventory-capital > div { padding:4px 3px; }
   .stock-inventory-layout .app-metric-label { font-size:10px; }
   .stock-inventory-layout .app-metric-value { font-size:14px; letter-spacing:-.03em; }
-  .stock-inventory-layout .inventory-actions { display:grid; grid-template-columns:max-content max-content minmax(0,1fr); gap:6px; }
+  .stock-inventory-layout .inventory-actions { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content; gap:6px; }
   .stock-inventory-layout .inventory-actions > button { min-width:0; min-height:36px; padding-inline:9px; font-size:10px; white-space:nowrap; }
   .stock-actions-row { align-items:center; }
-  .stock-sort-control { margin-left:0; width:min(190px,100%); min-width:0; }
+  .stock-sort-control { margin-left:0; width:min(190px,45vw); min-width:0; }
   .stock-sort-control > div > button { height:36px; min-height:36px; padding-inline:9px; font-size:10px; }
   .stock-inventory-layout .inventory-filters > div { gap:7px; }
   .stock-inventory-layout .category-filters { gap:4px; }
