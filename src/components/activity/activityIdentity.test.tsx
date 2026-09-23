@@ -82,6 +82,31 @@ describe('activity exact identity display', () => {
     expect(stale.unitPrice).toBe(0);
   });
 
+  it('does not name-match live inventory when only an explicit batch ID is stored', () => {
+    const batchOnly = parseBatchItem(
+      'Same Name GPU',
+      [componentA, componentB],
+      makePurchase({ relatedComponentId: undefined, relatedPurchaseEntryId: 'batch-b' }),
+    );
+    expect(batchOnly.comp).toBeUndefined();
+    expect(batchOnly.condition).toBe('');
+    expect(batchOnly.unitPrice).toBe(0);
+
+    const storedSnapshot = makeEntry('batch-b', 'Snapshot Supplier', 'Used');
+    const snapshotBacked = parseBatchItem(
+      'Same Name GPU',
+      [componentA, componentB],
+      makePurchase({
+        relatedComponentId: undefined,
+        relatedPurchaseEntryId: 'batch-b',
+        originalPurchaseEntrySnapshot: storedSnapshot,
+      }),
+    );
+    expect(snapshotBacked.comp).toBeUndefined();
+    expect(snapshotBacked.condition).toBe('Used');
+    expect(snapshotBacked.platform).toBe('Snapshot Supplier');
+  });
+
   it('preserves only a stored snapshot that matches the explicit batch ID', () => {
     const matchingSnapshot = makeEntry('deleted-batch', 'Snapshot Supplier', 'Used');
     const matched = parseBatchItem(
@@ -170,5 +195,80 @@ describe('activity exact identity display', () => {
     expect(markup).toContain('Exact Part');
     expect(markup).toContain('Legacy Part');
     expect(markup).not.toContain('Conflicting Part');
+  });
+
+  it('does not restore part-out metadata when an explicit build link was rejected', () => {
+    const pcTx = makePurchase({
+      id: 'purchase-pc-conflict',
+      purchaseKind: 'PC',
+      relatedComponentId: 'build-b',
+      itemNameOrSummary: 'Conflicting Rig',
+      detailsList: [],
+    });
+    const linkedOnlyByRejectedBuild: InventoryComponent = {
+      ...componentA,
+      id: 'rejected-part',
+      name: 'Rejected Build Part',
+      purchaseHistory: [{
+        ...makeEntry('rejected-entry', 'PC Seller', 'Used'),
+        sourcePurchasedBuildId: 'build-b',
+        notes: 'Parted out from purchased PC: Conflicting Rig',
+      }],
+    };
+
+    const markup = renderToStaticMarkup(
+      <PurchaseExpandedView
+        tx={pcTx}
+        isBulkPurchase={false}
+        isPCPurchase
+        components={[linkedOnlyByRejectedBuild]}
+      />,
+    );
+    expect(markup).not.toContain('Rejected Build Part');
+  });
+
+  it('does not select either purchased build when explicit build and transaction links conflict', () => {
+    const pcTx = makePurchase({
+      id: 'purchase-pc-conflict',
+      purchaseKind: 'PC',
+      relatedComponentId: 'build-b',
+      itemNameOrSummary: 'Conflicting Rig',
+      detailsList: [],
+    });
+    const buildA = {
+      id: 'build-a',
+      name: 'Build A',
+      status: 'Sold',
+      createdDate: '2026-09-01',
+      acquisitionSource: 'Purchased',
+      purchaseTransactionId: pcTx.id,
+      acquisitionComponentBreakdown: [{
+        category: 'GPU',
+        name: 'Build A Part',
+        quantity: 1,
+        unitCost: 100,
+      }],
+      parts: [],
+    } as PCBuild;
+    const buildB = {
+      ...buildA,
+      id: 'build-b',
+      name: 'Build B',
+      purchaseTransactionId: 'different-purchase',
+      acquisitionComponentBreakdown: [{
+        category: 'CPU',
+        name: 'Build B Part',
+        quantity: 1,
+        unitCost: 100,
+      }],
+    } as PCBuild;
+    const state = { components: [], builds: [buildA, buildB], transactions: [pcTx], monthlyGoal: 10000 } as AppState;
+    const markup = renderToStaticMarkup(
+      <InventoryContext.Provider value={{ state, relistPartSale: () => ({ success: true }), relistBulkPartSale: () => ({ success: true }) } as never}>
+        <TransactionActivityCard tx={pcTx} isExpanded onEdit={() => undefined} onDelete={() => undefined} />
+      </InventoryContext.Provider>,
+    );
+    expect(markup).not.toContain('Build A Part');
+    expect(markup).not.toContain('Build B Part');
   });
 });

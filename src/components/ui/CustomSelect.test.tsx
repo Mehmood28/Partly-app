@@ -14,22 +14,28 @@ const options: SelectOption[] = [
 describe('CustomSelect keyboard opening and menu height', () => {
   let container: HTMLDivElement;
   let root: Root;
+  let styleElement: HTMLStyleElement;
 
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    styleElement = document.createElement('style');
+    styleElement.textContent = '.test-padded-menu { padding-top: 6px; padding-bottom: 6px; border-top: 1px solid; border-bottom: 1px solid; }';
+    document.head.appendChild(styleElement);
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
       return 1;
     });
     vi.stubGlobal('cancelAnimationFrame', () => undefined);
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     HTMLElement.prototype.scrollIntoView = vi.fn();
   });
 
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    styleElement.remove();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -75,10 +81,17 @@ describe('CustomSelect keyboard opening and menu height', () => {
     expect(scroller.style.maxHeight).toBe('240px');
   });
 
-  it('uses the same border-aware budget in a short viewport', () => {
-    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 120 });
+  it('keeps the final option accessible when caller padding shares a short viewport budget', async () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 240 });
     const longOptions = Array.from({ length: 20 }, (_, index) => ({ value: String(index), label: `Option ${index}` }));
-    act(() => root.render(<CustomSelect options={longOptions} value="" onChange={() => undefined} />));
+    await act(async () => root.render(
+      <CustomSelect
+        options={longOptions}
+        value=""
+        onChange={() => undefined}
+        dropdownClassName="test-padded-menu"
+      />,
+    ));
     const trigger = container.querySelector<HTMLButtonElement>('[role="combobox"]')!;
     vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
       left: 10,
@@ -92,11 +105,15 @@ describe('CustomSelect keyboard opening and menu height', () => {
       toJSON: () => ({}),
     });
 
-    act(() => trigger.click());
+    await act(async () => {
+      trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
+    });
     const listbox = document.body.querySelector<HTMLElement>('[role="listbox"]')!;
     const scroller = listbox.firstElementChild as HTMLElement;
-    expect(listbox.style.maxHeight).toBe('36px');
-    expect(scroller.style.maxHeight).toBe('34px');
-    expect(scroller.querySelector('[data-option-index="19"]')).not.toBeNull();
+    const finalOption = scroller.querySelector<HTMLElement>('[data-option-index="19"]')!;
+    expect(listbox.style.maxHeight).toBe('156px');
+    expect(scroller.style.maxHeight).toBe('142px');
+    expect(trigger.getAttribute('aria-activedescendant')).toMatch(/-option-19$/);
+    expect(finalOption.scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
   });
 });

@@ -31,19 +31,19 @@ export const parseBatchItem = (
   }
 
   // Explicit transaction links are authoritative. Name matching remains only
-  // for legacy records that never stored a component ID.
+  // for legacy records that stored neither a component nor a batch ID.
   const itemLower = String(itemName || '').toLowerCase().trim();
   const relatedComponentId = tx.relatedComponentId?.trim();
+  const relatedPurchaseEntryId = tx.relatedPurchaseEntryId?.trim();
   const comp = relatedComponentId
     ? components.find((candidate) => candidate.id === relatedComponentId)
-    : components.find((candidate) => {
+    : !relatedPurchaseEntryId ? components.find((candidate) => {
         const candidateName = String(candidate.name || '').toLowerCase().trim();
         return candidateName === itemLower ||
           (candidateName && itemLower && (candidateName.includes(itemLower) || itemLower.includes(candidateName)));
-      });
+      }) : undefined;
 
-  const relatedPurchaseEntryId = tx.relatedPurchaseEntryId?.trim();
-  const exactPurchaseEntry = relatedPurchaseEntryId
+  const exactPurchaseEntry = relatedComponentId && relatedPurchaseEntryId
     ? comp?.purchaseHistory?.find((entry) => entry.id === relatedPurchaseEntryId)
     : undefined;
   const storedSnapshot = tx.originalPurchaseEntrySnapshot;

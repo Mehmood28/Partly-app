@@ -808,8 +808,10 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 /* The Stock workflow uses the same compact controls as its ledger cards. */
 [data-bottom-sheet-modal] .stock-modal { --app-field-background:#101719; padding:14px; }
 [data-bottom-sheet-modal] .stock-modal .rounded-xl { border-radius:7px; }
-[data-bottom-sheet-modal] .stock-modal .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top:12px; }
-[data-bottom-sheet-modal] .stock-modal .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top:9px; }
+[data-bottom-sheet-modal] .stock-modal .space-y-4 > :not([hidden]),
+[data-bottom-sheet-modal] .stock-modal .space-y-3 > :not([hidden]) { margin-block-start:0; margin-block-end:0; }
+[data-bottom-sheet-modal] .stock-modal .space-y-4 > :not([hidden]):not(:last-child) { margin-block-end:12px; }
+[data-bottom-sheet-modal] .stock-modal .space-y-3 > :not([hidden]):not(:last-child) { margin-block-end:9px; }
 [data-bottom-sheet-modal] .stock-modal .p-5 { padding:14px; }
 [data-bottom-sheet-modal] .stock-modal .px-5 { padding-left:14px; padding-right:14px; }
 [data-bottom-sheet-modal] .stock-modal .font-bold { font-weight:600; }
@@ -924,8 +926,8 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   [data-bottom-sheet-modal] .stock-modal .pb-2 { padding-bottom:6px; }
   [data-bottom-sheet-modal] .stock-modal .p-4 { padding:9px; }
   [data-bottom-sheet-modal] .stock-modal .p-3\.5 { padding:9px; }
-  [data-bottom-sheet-modal] .stock-modal .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top:9px; }
-  [data-bottom-sheet-modal] .stock-modal .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top:7px; }
+  [data-bottom-sheet-modal] .stock-modal .space-y-4 > :not([hidden]):not(:last-child) { margin-block-end:9px; }
+  [data-bottom-sheet-modal] .stock-modal .space-y-3 > :not([hidden]):not(:last-child) { margin-block-end:7px; }
   [data-bottom-sheet-modal] .stock-modal .gap-3 { gap:7px; }
   [data-confirm-modal] > div:last-child { max-width:320px; padding:13px; border-radius:9px; }
   [data-confirm-modal] h3 { font-size:15px; }
@@ -1085,7 +1087,6 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 .single-sale-money-grid input,.single-sale-info-grid input { min-width:0; height:34px !important; min-height:34px !important; padding-inline:8px; }
 .single-sale-money-grid input[class*="pl-7"] { padding-left:23px; }
 .single-sale-info { display:grid; min-width:0; gap:5px !important; margin-top:0 !important; padding:7px !important; border-radius:7px; }
-.single-sale-info > :not([hidden]) ~ :not([hidden]) { margin-top:0 !important; }
 .single-sale-info .custom-select-trigger { min-width:0; height:34px !important; min-height:34px !important; padding-inline:8px; }
 .trade-in-section { padding-block:6px !important; }
 .trade-in-section > div:first-child { min-height:28px; }

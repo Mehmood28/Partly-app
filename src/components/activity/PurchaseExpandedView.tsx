@@ -37,8 +37,10 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
     tx.itemNameOrSummary,
     tx.title?.replace(/^Purchased:\s*/i, ''),
   ].filter(Boolean).map((value) => String(value).trim().toLowerCase());
-  const sourceBuildId = purchasedBuild?.id || tx.relatedComponentId;
-  const partedOutItems = isPCPurchase
+  const hasExplicitBuildLink = !!tx.relatedComponentId?.trim();
+  const sourceBuildId = purchasedBuild?.id;
+  const canResolvePartedOutItems = !hasExplicitBuildLink || !!purchasedBuild;
+  const partedOutItems = isPCPurchase && canResolvePartedOutItems
     ? components.flatMap((component) => component.purchaseHistory
       .filter((entry) => {
         const entrySourceTransactionId = entry.sourcePurchaseTransactionId?.trim();

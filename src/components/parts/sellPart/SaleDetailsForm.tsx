@@ -163,7 +163,7 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
       </div>
 
       {/* Sale Info */}
-      <div className="single-sale-info bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 space-y-3 mt-3">
+      <div className="single-sale-info bg-[#101719] border border-white/[0.08] rounded-xl p-3.5 mt-3">
         <div className="single-sale-info-grid grid grid-cols-3 gap-3">
           <div className="min-w-0">
             <label className="block text-xs font-medium text-zinc-300 mb-1 font-sans">

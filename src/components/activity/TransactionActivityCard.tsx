@@ -48,10 +48,17 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
   const isPartSale = classification.isPartSale;
   const isPurchase = classification.isPurchase;
   const isBulkPurchase = classification.isBulkPurchase;
-  // Older purchased-PC records did not always save purchaseKind. The linked
-  // build is still authoritative, so use it to recover their item breakdown.
+  // Older purchased-PC records did not always save purchaseKind. Resolve a
+  // linked build only when every stored link that is present agrees.
+  const relatedBuildId = tx.relatedComponentId?.trim();
   const purchasedBuild: PCBuild | undefined = isPurchase
-    ? state.builds.find((build) => build.purchaseTransactionId === tx.id || build.id === tx.relatedComponentId)
+    ? state.builds.find((build) => {
+        const purchaseTransactionId = build.purchaseTransactionId?.trim();
+        const matchesRelatedBuild = !relatedBuildId || build.id === relatedBuildId;
+        const matchesPurchaseTransaction = !purchaseTransactionId || purchaseTransactionId === tx.id;
+        const hasMatchingLink = relatedBuildId ? build.id === relatedBuildId : purchaseTransactionId === tx.id;
+        return matchesRelatedBuild && matchesPurchaseTransaction && hasMatchingLink;
+      })
     : undefined;
   const isPCPurchase = isPurchase && (tx.purchaseKind === 'PC' || !!purchasedBuild);
   const singletonPurchaseItem =

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
 const MENU_CONTENT_HEIGHT_CAP = 240;
-const MENU_CHROME_HEIGHT = 2;
+const MENU_DEFAULT_CHROME_HEIGHT = 2;
 
 export interface SelectOption {
   label: string;
@@ -36,6 +36,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [preferredWidth, setPreferredWidth] = useState<number | null>(null);
+  const [menuChromeHeight, setMenuChromeHeight] = useState(MENU_DEFAULT_CHROME_HEIGHT);
   const [menuPosition, setMenuPosition] = useState<{ left: number; top?: number; bottom?: number; width: number; maxHeight: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -101,7 +102,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       const left = Math.min(Math.max(viewportLeft + viewportPadding, rect.left), viewportRight - width - viewportPadding);
       const groupCount = new Set(options.map((option) => option.group).filter(Boolean)).size;
       const estimatedContentHeight = Math.min(MENU_CONTENT_HEIGHT_CAP, options.length * 34 + groupCount * 27 + 8);
-      const estimatedHeight = estimatedContentHeight + MENU_CHROME_HEIGHT;
+      const estimatedHeight = estimatedContentHeight + menuChromeHeight;
       const roomBelow = Math.max(0, viewportBottom - rect.bottom - menuGap - viewportPadding);
       const roomAbove = Math.max(0, rect.top - viewportTop - menuGap - viewportPadding);
       if (roomBelow >= estimatedHeight || roomBelow >= roomAbove) {
@@ -109,14 +110,14 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           left,
           top: rect.bottom + menuGap,
           width,
-          maxHeight: Math.min(roomBelow, MENU_CONTENT_HEIGHT_CAP + MENU_CHROME_HEIGHT),
+          maxHeight: Math.min(roomBelow, MENU_CONTENT_HEIGHT_CAP + menuChromeHeight),
         });
       } else {
         setMenuPosition({
           left,
           bottom: window.innerHeight - rect.top + menuGap,
           width,
-          maxHeight: Math.min(roomAbove, MENU_CONTENT_HEIGHT_CAP + MENU_CHROME_HEIGHT),
+          maxHeight: Math.min(roomAbove, MENU_CONTENT_HEIGHT_CAP + menuChromeHeight),
         });
       }
     };
@@ -131,7 +132,20 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       window.visualViewport?.removeEventListener('resize', positionMenu);
       window.visualViewport?.removeEventListener('scroll', positionMenu);
     };
-  }, [isOpen, options.length, preferredWidth]);
+  }, [isOpen, menuChromeHeight, options.length, preferredWidth]);
+
+  useLayoutEffect(() => {
+    if (!isOpen || !menuPosition || !menuRef.current) return;
+    const styles = window.getComputedStyle(menuRef.current);
+    const measuredChromeHeight = [
+      styles.paddingTop,
+      styles.paddingBottom,
+      styles.borderTopWidth,
+      styles.borderBottomWidth,
+    ].reduce((total, value) => total + (Number.parseFloat(value) || 0), 0);
+    const nextChromeHeight = Math.max(MENU_DEFAULT_CHROME_HEIGHT, measuredChromeHeight);
+    setMenuChromeHeight((current) => current === nextChromeHeight ? current : nextChromeHeight);
+  }, [dropdownClassName, isOpen, menuPosition]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -153,7 +167,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         ?.scrollIntoView({ block: 'nearest' });
     });
     return () => cancelAnimationFrame(frame);
-  }, [activeIndex, isOpen]);
+  }, [activeIndex, isOpen, menuPosition]);
 
   const chooseOption = (index: number) => {
     const option = options[index];
@@ -302,12 +316,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           ref={menuRef}
           id={listboxId}
           role="listbox"
-          style={menuPosition}
+          style={{ ...menuPosition, boxSizing: 'border-box' }}
           className={`fixed z-[500] overflow-hidden rounded-lg border border-white/[0.12] bg-[#0b1113]/98 shadow-2xl shadow-black/80 backdrop-blur-xl ${dropdownClassName}`}
         >
           <div
             className="overflow-y-auto hide-scrollbar"
-            style={{ maxHeight: Math.max(0, menuPosition.maxHeight - MENU_CHROME_HEIGHT) }}
+            style={{ maxHeight: Math.max(0, menuPosition.maxHeight - menuChromeHeight) }}
           >
             {renderOptions()}
           </div>
