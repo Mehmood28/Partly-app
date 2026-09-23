@@ -962,9 +962,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     <InventoryContext.Provider value={contextValue}>
       {!isHydrated ? (
         <div className="partly-launch-screen" role="status" aria-label="Loading Partly">
-          <img className="partly-launch-logo" src="/partly-icon-192.png" width="112" height="112" alt="" />
-          <p className="partly-launch-name">Partly</p>
-          <p className="partly-launch-status">Loading workspace...</p>
+          <img className="partly-launch-art" src="/partly-splash.png" alt="" />
         </div>
       ) : (
         children

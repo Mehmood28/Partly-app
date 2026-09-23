@@ -245,7 +245,7 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .partly-masthead { max-width:1220px; margin:auto; padding:22px 24px; display:flex; align-items:center; gap:24px; }
 .partly-brand { display:flex; align-items:center; gap:12px; margin-right:auto; }
 .partly-mark { height:42px; width:42px; border-radius:10px; }
-.partly-brand h1 { font-size:32px; line-height:1.1; letter-spacing:-.035em; }
+.partly-brand h1 { font-size:32px; line-height:1.1; letter-spacing:-.035em; font-weight:500; color:var(--app-text); }
 .partly-brand span { display:block; font-size:10px; margin-top:4px; text-transform:uppercase; letter-spacing:.13em; color:#a5b1be; }
 .masthead-metrics { display:flex; align-items:center; }
 .masthead-metrics > div { display:flex; align-items:center; gap:14px; border-left:1px solid var(--app-line); padding:0 28px; }
