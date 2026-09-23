@@ -216,7 +216,8 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             ]}
             icon={<ArrowDownWideNarrow className="h-3.5 w-3.5 text-[#B9EF68]" />}
             className="w-full"
-            dropdownClassName="min-w-[220px] py-1.5"
+            dropdownClassName="py-1.5"
+            fitLongestOption={false}
           />
         </div>
       </div>
