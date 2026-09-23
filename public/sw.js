@@ -1,7 +1,9 @@
-const CACHE_NAME = 'partly-shell-20260919-reference';
+const CACHE_NAME = 'partly-shell-20260923-branding';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
+  '/partly-icon-48.png',
+  '/partly-icon-180.png',
   '/partly-icon-192.png',
   '/partly-icon-512.png',
   '/manifest.json'

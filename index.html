@@ -20,6 +20,20 @@
         width: 100%;
         min-height: 100%;
       }
+      .partly-launch-screen {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: #0B0F11;
+        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      .partly-launch-logo { width: 112px; height: 112px; object-fit: contain; }
+      .partly-launch-name { margin: 0; color: #f3f7f5; font-size: 24px; font-weight: 700; letter-spacing: -.035em; }
+      .partly-launch-status { margin: 0; color: #a4b0bc; font-size: 12px; letter-spacing: .02em; }
     </style>
     <script>
       // Early global error suppression for iframe cross-origin warnings
@@ -47,11 +61,11 @@
       <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     </noscript>
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" href="/partly-icon-512.png" />
-    <link rel="apple-touch-icon" href="/partly-icon-512.png" />
+    <link rel="icon" type="image/png" href="/partly-icon-48.png" sizes="48x48" />
+    <link rel="apple-touch-icon" href="/partly-icon-180.png" sizes="180x180" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="partly-launch-screen" role="status" aria-label="Loading Partly"><img class="partly-launch-logo" src="/partly-icon-192.png" width="112" height="112" alt="" /><p class="partly-launch-name">Partly</p></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
