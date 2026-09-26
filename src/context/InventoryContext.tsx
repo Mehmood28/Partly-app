@@ -500,7 +500,13 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (result.nextState !== current) {
         const build = current.builds.find((b) => b.id === buildId);
         const comp = current.components.find((c) => c.id === componentId);
-        const compName = comp ? comp.name : 'Part';
+        const breakdown = build
+          ? (build.acquisitionComponentBreakdown || build.tradeInComponentBreakdown || [])
+          : [];
+        const baseItem = breakdown.find(
+          (item) => item.id === componentId || item.name.trim().toLowerCase() === componentId.trim().toLowerCase()
+        );
+        const compName = comp?.name || baseItem?.name || 'Part';
         const buildName = build ? build.name : 'Build';
         saveStateToHistory(`Remove part: ${compName} ← ${buildName}`);
         setState(result.nextState);

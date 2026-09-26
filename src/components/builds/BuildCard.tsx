@@ -69,7 +69,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   };
   const [swapPartData, setSwapPartData] = useState<PCBuildPart | null>(null);
   const [quantityPartData, setQuantityPartData] = useState<PCBuildPart | null>(null);
-  const [partActionsData, setPartActionsData] = useState<PCBuildPart | null>(null);
+  const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Confirmation modal state
@@ -91,14 +91,14 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const imageCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!partActionsData) return;
+    if (!activeMenuKey) return;
     const closeMenu = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
-      if (!target?.closest('[data-part-actions-menu]')) setPartActionsData(null);
+      if (!target?.closest('[data-part-actions-menu]')) setActiveMenuKey(null);
     };
     document.addEventListener('pointerdown', closeMenu);
     return () => document.removeEventListener('pointerdown', closeMenu);
-  }, [partActionsData]);
+  }, [activeMenuKey]);
 
   const partsCost = calculateBuildPartsCost(build);
   const isSold = build.status === 'Sold';
@@ -210,7 +210,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const formattedSoldDate = soldDate ? formatReadableDate(soldDate) : null;
   const formattedBuiltDate = formatReadableDate(build.builtDate || build.completionDate || build.createdDate) || build.createdDate;
   const openRemovePartConfirm = (part: PCBuildPart) => {
-    setPartActionsData(null);
+    setActiveMenuKey(null);
     setConfirmModalConfig({
       isOpen: true,
       title: 'Remove Allocated Part?',
@@ -515,8 +515,18 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   {sortByCategory(acquiredBreakdown).map((part, idx) => {
                     const category = getCategoryPresentation(part.category);
                     const totalCost = part.quantity * part.unitCost;
+                    const asBuildPart: PCBuildPart = {
+                      componentId: part.id,
+                      componentName: part.name,
+                      purchaseEntryId: undefined,
+                      category: part.category,
+                      quantity: part.quantity,
+                      unitCostAtAssignment: part.unitCost,
+                    };
+                    const partActionKey = `base-${part.id || idx}`;
+                    const isActionsOpen = activeMenuKey === partActionKey;
                     return (
-                      <div key={part.id || idx} className="allocated-part allocated-part-static">
+                      <div key={part.id || idx} className="allocated-part allocated-part-managed">
                         <span className={`allocated-type ${category.textClass}`}>
                           <CategoryIcon category={part.category} className="allocated-type-icon" />
                           <span>{category.label}</span>
@@ -528,6 +538,55 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                           </span>
                         </span>
                         <span className="allocated-cost">{formatCurrency(totalCost)}</span>
+                        <span className="allocated-part-actions" data-part-actions-menu>
+                          <button
+                            type="button"
+                            className="allocated-part-menu-trigger"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setActiveMenuKey(isActionsOpen ? null : partActionKey);
+                            }}
+                            aria-label={`Actions for ${part.name}`}
+                            aria-expanded={isActionsOpen}
+                          >
+                            <MoreVertical />
+                          </button>
+                          {isActionsOpen && (
+                            <span className="allocated-part-menu" role="menu">
+                              <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                  setSwapPartData(asBuildPart);
+                                  setActiveMenuKey(null);
+                                }}
+                              >
+                                <ArrowRightLeft /> Swap part
+                              </button>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                  setQuantityPartData(asBuildPart);
+                                  setActiveMenuKey(null);
+                                }}
+                              >
+                                <Pencil /> Change quantity
+                              </button>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="danger"
+                                onClick={() => {
+                                  setActiveMenuKey(null);
+                                  openRemovePartConfirm(asBuildPart);
+                                }}
+                              >
+                                <Trash2 /> Remove from build
+                              </button>
+                            </span>
+                          )}
+                        </span>
                       </div>
                     );
                   })}
@@ -566,7 +625,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                       purchaseEntry?.date ? formatReadableDate(purchaseEntry.date) || purchaseEntry.date : undefined,
                     ].filter(Boolean) as string[];
 
-                    const isActionsOpen = partActionsData === part;
+                    const partActionKey = `alloc-${part.componentId}-${part.purchaseEntryId || partIdx}`;
+                    const isActionsOpen = activeMenuKey === partActionKey;
                     return (
                       <div
                         key={`${part.componentId}-${part.purchaseEntryId || partIdx}-${part.unitCostAtAssignment}`}
@@ -591,7 +651,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                             className="allocated-part-menu-trigger"
                             onClick={(event) => {
                               event.stopPropagation();
-                              setPartActionsData(isActionsOpen ? null : part);
+                              setActiveMenuKey(isActionsOpen ? null : partActionKey);
                             }}
                             aria-label={`Actions for ${part.componentName}`}
                             aria-expanded={isActionsOpen}
@@ -600,13 +660,35 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                           </button>
                           {isActionsOpen && (
                             <span className="allocated-part-menu" role="menu">
-                              <button type="button" role="menuitem" onClick={() => { setSwapPartData(part); setPartActionsData(null); }}>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                  setSwapPartData(part);
+                                  setActiveMenuKey(null);
+                                }}
+                              >
                                 <ArrowRightLeft /> Swap part
                               </button>
-                              <button type="button" role="menuitem" onClick={() => { setQuantityPartData(part); setPartActionsData(null); }}>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                  setQuantityPartData(part);
+                                  setActiveMenuKey(null);
+                                }}
+                              >
                                 <Pencil /> Change quantity
                               </button>
-                              <button type="button" role="menuitem" className="danger" onClick={() => openRemovePartConfirm(part)}>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="danger"
+                                onClick={() => {
+                                  setActiveMenuKey(null);
+                                  openRemovePartConfirm(part);
+                                }}
+                              >
                                 <Trash2 /> Remove from build
                               </button>
                             </span>

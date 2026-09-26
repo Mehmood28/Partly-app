@@ -8,7 +8,7 @@ import {
   PurchaseEntry,
   TransactionLogItem,
 } from '../../types';
-import { autoTagComponent, calculateBuildPartsCost, computeUnresolvedLegacyReservation, formatCurrency, getPurchaseEntryRemainingQuantity, parseDateLocal } from '../../utils/helpers';
+import { autoTagComponent, calculateBuildPartsCost, calculateUnassignedQuantityStrict, computeUnresolvedLegacyReservation, formatCurrency, getPurchaseEntryRemainingQuantity, getUnassignedBatches, parseDateLocal } from '../../utils/helpers';
 import { getBuildPresentation } from '../../utils/buildPresentation';
 import { AcquiredPCComponentInput, PurchasePCData, SellBuildData } from '../types';
 import {
@@ -646,6 +646,91 @@ export const resolveUniqueAllocationIndex = (
   return matches.length === 1 ? matches[0] : -1;
 };
 
+const returnBaseComponentToInventory = (
+  components: InventoryComponent[],
+  targetBuild: PCBuild,
+  baseItem: { id: string; category: ComponentCategory; name: string; quantity: number; unitCost: number; tags?: string[] },
+  removeQuantity: number
+): InventoryComponent[] => {
+  const isPurchased = targetBuild.acquisitionSource === 'Purchased';
+  const removeCost = removeQuantity * baseItem.unitCost;
+  const purchaseDate =
+    targetBuild.purchaseDate ||
+    targetBuild.createdDate ||
+    new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+  const platform =
+    targetBuild.purchaseSeller ||
+    (isPurchased ? 'Purchased PC' : 'Trade-In');
+  const paymentMethod =
+    targetBuild.purchasePaymentMethod ||
+    (isPurchased ? 'Cash' : 'Trade-In');
+  const entryId = baseItem.id
+    ? `pe-${targetBuild.id}-${baseItem.id}`
+    : `pe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+  const newEntry: PurchaseEntry = {
+    id: entryId,
+    date: purchaseDate,
+    condition: 'Used No Box',
+    quantity: removeQuantity,
+    unitPrice: baseItem.unitCost,
+    totalPrice: removeCost,
+    taxPercent: 0,
+    paymentMethod: paymentMethod as PaymentMethod,
+    platform,
+    sourcePurchasedBuildId: isPurchased ? targetBuild.id : undefined,
+    sourcePurchaseTransactionId: targetBuild.purchaseTransactionId,
+    sourceTradeInBuildId: !isPurchased ? targetBuild.id : undefined,
+    sourceSaleTransactionId: targetBuild.sourceSaleTransactionId,
+    notes: `Extracted from ${isPurchased ? 'purchased' : 'traded-in'} PC: ${targetBuild.name}`,
+  };
+
+  const trimmedName = baseItem.name.trim();
+  const existingCompIndex = components.findIndex(
+    (c) =>
+      c.name.trim().toLowerCase() === trimmedName.toLowerCase() &&
+      c.category === baseItem.category
+  );
+
+  if (existingCompIndex !== -1) {
+    const existingComp = components[existingCompIndex];
+    const batchExists = (existingComp.purchaseHistory || []).some((e) => e.id === entryId);
+    const updatedHistory = batchExists
+      ? existingComp.purchaseHistory.map((e) =>
+          e.id === entryId
+            ? { ...e, quantity: e.quantity + removeQuantity, totalPrice: e.totalPrice + removeCost }
+            : e
+        )
+      : [newEntry, ...(existingComp.purchaseHistory || [])].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+    const updatedComponent: InventoryComponent = {
+      ...existingComp,
+      purchaseHistory: updatedHistory,
+      tags: Array.from(new Set([...(existingComp.tags || []), ...(baseItem.tags || [])])),
+    };
+    return components.map((c, idx) =>
+      idx === existingCompIndex ? updatedComponent : c
+    );
+  }
+
+  const newCompId = `comp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  const tags = baseItem.tags && baseItem.tags.length > 0
+    ? [...baseItem.tags]
+    : autoTagComponent(trimmedName, '', baseItem.category);
+  const newComponent: InventoryComponent = {
+    id: newCompId,
+    name: trimmedName,
+    category: baseItem.category,
+    specifications: '',
+    assignedCount: 0,
+    tags,
+    purchaseHistory: [newEntry],
+  };
+  return [newComponent, ...components];
+};
+
 export const handleRemovePartFromBuild = (
   prev: AppState,
   buildId: string,
@@ -672,10 +757,6 @@ export const handleRemovePartFromBuild = (
     }
   });
 
-  if (matches.length === 0) {
-    return { nextState: prev, success: false, error: 'Allocated part not found in build.' };
-  }
-
   if (matches.length > 1) {
     return {
       nextState: prev,
@@ -684,19 +765,117 @@ export const handleRemovePartFromBuild = (
     };
   }
 
-  const partIndex = matches[0];
-  const partToRemove = targetBuild.parts[partIndex];
+  if (matches.length === 1) {
+    const partIndex = matches[0];
+    const partToRemove = targetBuild.parts[partIndex];
 
-  const targetComp = prev.components.find((c) => c.id === componentId);
-  if (!targetComp) {
-    return { nextState: prev, success: false, error: 'Component not found.' };
+    const targetComp = prev.components.find((c) => c.id === componentId);
+    if (!targetComp) {
+      return { nextState: prev, success: false, error: 'Component not found.' };
+    }
+
+    if (
+      typeof partToRemove.quantity !== 'number' ||
+      !Number.isFinite(partToRemove.quantity) ||
+      !Number.isInteger(partToRemove.quantity) ||
+      partToRemove.quantity <= 0
+    ) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Stored build part quantity must be a finite positive whole number.',
+      };
+    }
+
+    if (
+      typeof partToRemove.unitCostAtAssignment !== 'number' ||
+      !Number.isFinite(partToRemove.unitCostAtAssignment) ||
+      partToRemove.unitCostAtAssignment < 0
+    ) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Stored build part unit cost must be a finite non-negative number.',
+      };
+    }
+
+    if (targetComp.assignedCount !== undefined && targetComp.assignedCount !== null) {
+      if (
+        typeof targetComp.assignedCount !== 'number' ||
+        !Number.isFinite(targetComp.assignedCount) ||
+        !Number.isInteger(targetComp.assignedCount) ||
+        targetComp.assignedCount < 0
+      ) {
+        return {
+          nextState: prev,
+          success: false,
+          error: 'Component assigned count must be a finite non-negative whole number.',
+        };
+      }
+    }
+
+    const currentAssignedCount = targetComp.assignedCount ?? 0;
+    const newAssignedCount = Math.max(0, currentAssignedCount - partToRemove.quantity);
+
+    const updatedParts = targetBuild.parts.filter((_, idx) => idx !== partIndex);
+
+    const updatedBuilds = prev.builds.map((build) => {
+      if (build.id === buildId) {
+        return {
+          ...build,
+          parts: updatedParts,
+        };
+      }
+      return build;
+    });
+
+    const updatedComponents = prev.components.map((comp) => {
+      if (comp.id === componentId) {
+        return {
+          ...comp,
+          assignedCount: newAssignedCount,
+        };
+      }
+      return comp;
+    });
+
+    return finalizeBuildPartMutation(
+      prev,
+      {
+        ...prev,
+        builds: updatedBuilds,
+        components: updatedComponents,
+      },
+      buildId
+    );
   }
 
+  // Check base components of acquired PC
+  const isAcquired = isAcquiredPC(targetBuild);
+  const isPurchased = targetBuild.acquisitionSource === 'Purchased';
+  const breakdown = isAcquired
+    ? (isPurchased
+        ? targetBuild.acquisitionComponentBreakdown || []
+        : targetBuild.tradeInComponentBreakdown || targetBuild.acquisitionComponentBreakdown || [])
+    : [];
+
+  const baseMatchIndex = breakdown.findIndex(
+    (item) =>
+      item.id === componentId ||
+      (purchaseEntryId && item.id === purchaseEntryId) ||
+      item.name.trim().toLowerCase() === componentId.trim().toLowerCase()
+  );
+
+  if (baseMatchIndex === -1) {
+    return { nextState: prev, success: false, error: 'Allocated part not found in build.' };
+  }
+
+  const baseItem = breakdown[baseMatchIndex];
   if (
-    typeof partToRemove.quantity !== 'number' ||
-    !Number.isFinite(partToRemove.quantity) ||
-    !Number.isInteger(partToRemove.quantity) ||
-    partToRemove.quantity <= 0
+    typeof baseItem.quantity !== 'number' ||
+    !Number.isFinite(baseItem.quantity) ||
+    !Number.isInteger(baseItem.quantity) ||
+    baseItem.quantity <= 0
   ) {
     return {
       nextState: prev,
@@ -704,11 +883,10 @@ export const handleRemovePartFromBuild = (
       error: 'Stored build part quantity must be a finite positive whole number.',
     };
   }
-
   if (
-    typeof partToRemove.unitCostAtAssignment !== 'number' ||
-    !Number.isFinite(partToRemove.unitCostAtAssignment) ||
-    partToRemove.unitCostAtAssignment < 0
+    typeof baseItem.unitCost !== 'number' ||
+    !Number.isFinite(baseItem.unitCost) ||
+    baseItem.unitCost < 0
   ) {
     return {
       nextState: prev,
@@ -717,45 +895,30 @@ export const handleRemovePartFromBuild = (
     };
   }
 
-  if (targetComp.assignedCount !== undefined && targetComp.assignedCount !== null) {
-    if (
-      typeof targetComp.assignedCount !== 'number' ||
-      !Number.isFinite(targetComp.assignedCount) ||
-      !Number.isInteger(targetComp.assignedCount) ||
-      targetComp.assignedCount < 0
-    ) {
-      return {
-        nextState: prev,
-        success: false,
-        error: 'Component assigned count must be a finite non-negative whole number.',
-      };
-    }
-  }
+  const removeQuantity = baseItem.quantity;
+  const removeCost = removeQuantity * baseItem.unitCost;
+  const updatedBreakdown = breakdown.filter((_, idx) => idx !== baseMatchIndex);
+  const currentEstimatedCost =
+    targetBuild.estimatedCost ??
+    breakdown.reduce((sum, p) => sum + p.quantity * p.unitCost, 0);
+  const newEstimatedCost = Math.max(0, currentEstimatedCost - removeCost);
 
-  const currentAssignedCount = targetComp.assignedCount ?? 0;
-  const newAssignedCount = Math.max(0, currentAssignedCount - partToRemove.quantity);
+  const updatedTargetBuild: PCBuild = {
+    ...targetBuild,
+    estimatedCost: newEstimatedCost,
+    ...(isPurchased
+      ? { acquisitionComponentBreakdown: updatedBreakdown }
+      : { tradeInComponentBreakdown: updatedBreakdown }),
+  };
 
-  const updatedParts = targetBuild.parts.filter((_, idx) => idx !== partIndex);
+  const updatedComponents = returnBaseComponentToInventory(
+    prev.components,
+    targetBuild,
+    baseItem,
+    removeQuantity
+  );
 
-  const updatedBuilds = prev.builds.map((build) => {
-    if (build.id === buildId) {
-      return {
-        ...build,
-        parts: updatedParts,
-      };
-    }
-    return build;
-  });
-
-  const updatedComponents = prev.components.map((comp) => {
-    if (comp.id === componentId) {
-      return {
-        ...comp,
-        assignedCount: newAssignedCount,
-      };
-    }
-    return comp;
-  });
+  const updatedBuilds = prev.builds.map((b) => (b.id === buildId ? updatedTargetBuild : b));
 
   return finalizeBuildPartMutation(
     prev,
@@ -804,7 +967,100 @@ export const handleUpdateBuildPartQuantity = (
   });
 
   if (matchingIndexes.length === 0) {
-    return { nextState: prev, success: false, error: 'Allocated part not found in build.' };
+    const isAcquired = isAcquiredPC(targetBuild);
+    const isPurchased = targetBuild.acquisitionSource === 'Purchased';
+    const breakdown = isAcquired
+      ? (isPurchased
+          ? targetBuild.acquisitionComponentBreakdown || []
+          : targetBuild.tradeInComponentBreakdown || targetBuild.acquisitionComponentBreakdown || [])
+      : [];
+
+    const baseMatchIndex = breakdown.findIndex(
+      (item) =>
+        item.id === componentId ||
+        (purchaseEntryId && item.id === purchaseEntryId) ||
+        item.name.trim().toLowerCase() === componentId.trim().toLowerCase()
+    );
+
+    if (baseMatchIndex === -1) {
+      return { nextState: prev, success: false, error: 'Allocated part not found in build.' };
+    }
+
+    const currentPart = breakdown[baseMatchIndex];
+    if (newQuantity === currentPart.quantity) {
+      return { nextState: prev, success: true };
+    }
+
+    if (newQuantity < currentPart.quantity) {
+      const delta = currentPart.quantity - newQuantity;
+      const deltaCost = delta * currentPart.unitCost;
+      const updatedBreakdown = breakdown.map((item, idx) =>
+        idx === baseMatchIndex ? { ...item, quantity: newQuantity } : item
+      );
+      const currentEstimatedCost =
+        targetBuild.estimatedCost ??
+        breakdown.reduce((sum, p) => sum + p.quantity * p.unitCost, 0);
+      const newEstimatedCost = Math.max(0, currentEstimatedCost - deltaCost);
+
+      const updatedTargetBuild: PCBuild = {
+        ...targetBuild,
+        estimatedCost: newEstimatedCost,
+        ...(isPurchased
+          ? { acquisitionComponentBreakdown: updatedBreakdown }
+          : { tradeInComponentBreakdown: updatedBreakdown }),
+      };
+
+      const updatedComponents = returnBaseComponentToInventory(
+        prev.components,
+        targetBuild,
+        currentPart,
+        delta
+      );
+
+      const updatedBuilds = prev.builds.map((b) => (b.id === buildId ? updatedTargetBuild : b));
+
+      return finalizeBuildPartMutation(
+        prev,
+        {
+          ...prev,
+          builds: updatedBuilds,
+          components: updatedComponents,
+        },
+        buildId
+      );
+    }
+
+    const delta = newQuantity - currentPart.quantity;
+    const targetComp = prev.components.find(
+      (c) =>
+        c.name.trim().toLowerCase() === currentPart.name.trim().toLowerCase() &&
+        c.category === currentPart.category
+    );
+    if (!targetComp) {
+      return {
+        nextState: prev,
+        success: false,
+        error: `Cannot increase base component: no inventory component found for "${currentPart.name}".`,
+      };
+    }
+    const availableQty = calculateUnassignedQuantityStrict(targetComp, prev.builds);
+    if (delta > availableQty) {
+      return {
+        nextState: prev,
+        success: false,
+        error: `Requested increase (${delta}) exceeds available inventory stock (${availableQty}).`,
+      };
+    }
+    const unassignedBatches = getUnassignedBatches(targetComp, prev.builds);
+    if (unassignedBatches.length === 0 || unassignedBatches[0].availableQuantity < delta) {
+      return {
+        nextState: prev,
+        success: false,
+        error: `Requested increase (${delta}) exceeds available batch stock.`,
+      };
+    }
+    const chosenBatch = unassignedBatches[0];
+    return handleAllocatePartToBuild(prev, buildId, targetComp.id, chosenBatch.entry.id, delta);
   }
   if (matchingIndexes.length > 1) {
     return {
@@ -1000,7 +1256,178 @@ export const handleSwapPartInBuild = (
   });
 
   if (matches.length === 0) {
-    return { nextState: prev, success: false, error: 'Allocated part not found in build.' };
+    const isAcquired = isAcquiredPC(targetBuild);
+    const isPurchased = targetBuild.acquisitionSource === 'Purchased';
+    const breakdown = isAcquired
+      ? (isPurchased
+          ? targetBuild.acquisitionComponentBreakdown || []
+          : targetBuild.tradeInComponentBreakdown || targetBuild.acquisitionComponentBreakdown || [])
+      : [];
+
+    const baseMatchIndex = breakdown.findIndex(
+      (item) =>
+        item.id === oldComponentId ||
+        (oldPurchaseEntryId && item.id === oldPurchaseEntryId) ||
+        item.name.trim().toLowerCase() === oldComponentId.trim().toLowerCase()
+    );
+
+    if (baseMatchIndex === -1) {
+      return { nextState: prev, success: false, error: 'Allocated part not found in build.' };
+    }
+
+    const oldBasePart = breakdown[baseMatchIndex];
+    if (
+      typeof oldBasePart.quantity !== 'number' ||
+      !Number.isFinite(oldBasePart.quantity) ||
+      !Number.isInteger(oldBasePart.quantity) ||
+      oldBasePart.quantity <= 0
+    ) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Stored build part quantity must be a finite positive whole number.',
+      };
+    }
+    if (
+      typeof oldBasePart.unitCost !== 'number' ||
+      !Number.isFinite(oldBasePart.unitCost) ||
+      oldBasePart.unitCost < 0
+    ) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Stored build part unit cost must be a finite non-negative number.',
+      };
+    }
+
+    const newComp = prev.components.find((c) => c.id === newComponentId);
+    if (!newComp) {
+      return { nextState: prev, success: false, error: 'Replacement component not found in inventory.' };
+    }
+    if (newComp.category !== oldBasePart.category) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Replacement component category does not match outgoing allocation category.',
+      };
+    }
+
+    const newBatch = (newComp.purchaseHistory || []).find((e) => e.id === newPurchaseEntryId);
+    if (!newBatch) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Selected replacement purchase batch not found.',
+      };
+    }
+
+    if (
+      typeof newBatch.quantity !== 'number' ||
+      !Number.isFinite(newBatch.quantity) ||
+      !Number.isInteger(newBatch.quantity) ||
+      newBatch.quantity <= 0
+    ) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Replacement purchase batch quantity must be a finite positive whole number.',
+      };
+    }
+    if (
+      typeof newBatch.unitPrice !== 'number' ||
+      !Number.isFinite(newBatch.unitPrice) ||
+      newBatch.unitPrice < 0
+    ) {
+      return {
+        nextState: prev,
+        success: false,
+        error: 'Replacement purchase batch unit price must be a finite non-negative number.',
+      };
+    }
+
+    const availableQty = getPurchaseEntryRemainingQuantity(newComp, newPurchaseEntryId, prev.builds);
+    if (availableQty < quantity) {
+      return {
+        nextState: prev,
+        success: false,
+        error: `Insufficient stock: requested ${quantity}, but only ${availableQty} available.`,
+      };
+    }
+
+    const componentsWithOldReturned = returnBaseComponentToInventory(
+      prev.components,
+      targetBuild,
+      oldBasePart,
+      oldBasePart.quantity
+    );
+
+    const updatedComponents = componentsWithOldReturned.map((comp) => {
+      if (comp.id === newComponentId) {
+        return {
+          ...comp,
+          assignedCount: (comp.assignedCount || 0) + quantity,
+        };
+      }
+      return comp;
+    });
+
+    const updatedBreakdown = breakdown.filter((_, idx) => idx !== baseMatchIndex);
+    const oldCost = oldBasePart.quantity * oldBasePart.unitCost;
+    const currentEstimatedCost =
+      targetBuild.estimatedCost ??
+      breakdown.reduce((sum, p) => sum + p.quantity * p.unitCost, 0);
+    const newEstimatedCost = Math.max(0, currentEstimatedCost - oldCost);
+
+    const existingPartIndex = targetBuild.parts.findIndex(
+      (p) => p.componentId === newComponentId && p.purchaseEntryId === newPurchaseEntryId
+    );
+
+    let updatedParts: PCBuildPart[];
+    if (existingPartIndex >= 0) {
+      const existingPart = targetBuild.parts[existingPartIndex];
+      const combinedQuantity = existingPart.quantity + quantity;
+      const combinedUnitCost =
+        (existingPart.quantity * existingPart.unitCostAtAssignment + quantity * newBatch.unitPrice) /
+        combinedQuantity;
+      updatedParts = targetBuild.parts.map((p, idx) =>
+        idx === existingPartIndex
+          ? { ...p, quantity: combinedQuantity, unitCostAtAssignment: combinedUnitCost }
+          : p
+      );
+    } else {
+      updatedParts = [
+        ...targetBuild.parts,
+        {
+          componentId: newComp.id,
+          componentName: newComp.name,
+          purchaseEntryId: newPurchaseEntryId,
+          category: newComp.category,
+          quantity,
+          unitCostAtAssignment: newBatch.unitPrice,
+        },
+      ];
+    }
+
+    const updatedTargetBuild: PCBuild = {
+      ...targetBuild,
+      estimatedCost: newEstimatedCost,
+      parts: updatedParts,
+      ...(isPurchased
+        ? { acquisitionComponentBreakdown: updatedBreakdown }
+        : { tradeInComponentBreakdown: updatedBreakdown }),
+    };
+
+    const updatedBuilds = prev.builds.map((b) => (b.id === buildId ? updatedTargetBuild : b));
+
+    return finalizeBuildPartMutation(
+      prev,
+      {
+        ...prev,
+        builds: updatedBuilds,
+        components: updatedComponents,
+      },
+      buildId
+    );
   }
 
   if (matches.length > 1) {
