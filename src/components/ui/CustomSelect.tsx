@@ -43,6 +43,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const measureRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const requestedOpeningIndexRef = useRef<number | null>(null);
+  const shouldScrollIntoViewRef = useRef(false);
 
   const selectedOption = options.find((opt) => opt.value === value);
   useLayoutEffect(() => {
@@ -86,7 +87,11 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       setMenuPosition(null);
       return;
     }
-    const positionMenu = () => {
+    const positionMenu = (event?: Event) => {
+      // If the scroll event came from inside the dropdown menu itself, ignore it so manual scrolling is smooth
+      if (event?.target && menuRef.current && (menuRef.current === event.target || menuRef.current.contains(event.target as Node))) {
+        return;
+      }
       const rect = triggerRef.current?.getBoundingClientRect();
       if (!rect) return;
       const viewport = window.visualViewport;
@@ -105,21 +110,29 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       const estimatedHeight = estimatedContentHeight + menuChromeHeight;
       const roomBelow = Math.max(0, viewportBottom - rect.bottom - menuGap - viewportPadding);
       const roomAbove = Math.max(0, rect.top - viewportTop - menuGap - viewportPadding);
-      if (roomBelow >= estimatedHeight || roomBelow >= roomAbove) {
-        setMenuPosition({
-          left,
-          top: rect.bottom + menuGap,
-          width,
-          maxHeight: Math.min(roomBelow, MENU_CONTENT_HEIGHT_CAP + menuChromeHeight),
-        });
-      } else {
-        setMenuPosition({
-          left,
-          bottom: window.innerHeight - rect.top + menuGap,
-          width,
-          maxHeight: Math.min(roomAbove, MENU_CONTENT_HEIGHT_CAP + menuChromeHeight),
-        });
-      }
+      const isBelow = roomBelow >= estimatedHeight || roomBelow >= roomAbove;
+
+      const nextPosition = {
+        left,
+        top: isBelow ? rect.bottom + menuGap : undefined,
+        bottom: isBelow ? undefined : window.innerHeight - rect.top + menuGap,
+        width,
+        maxHeight: Math.min(isBelow ? roomBelow : roomAbove, MENU_CONTENT_HEIGHT_CAP + menuChromeHeight),
+      };
+
+      setMenuPosition((prev) => {
+        if (
+          prev &&
+          prev.left === nextPosition.left &&
+          prev.top === nextPosition.top &&
+          prev.bottom === nextPosition.bottom &&
+          prev.width === nextPosition.width &&
+          prev.maxHeight === nextPosition.maxHeight
+        ) {
+          return prev;
+        }
+        return nextPosition;
+      });
     };
     positionMenu();
     window.addEventListener('resize', positionMenu);
@@ -160,7 +173,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   }, [isOpen, options, value]);
 
   useEffect(() => {
-    if (!isOpen || activeIndex < 0) return;
+    if (!isOpen || activeIndex < 0 || !shouldScrollIntoViewRef.current) return;
+    shouldScrollIntoViewRef.current = false;
     const frame = requestAnimationFrame(() => {
       menuRef.current
         ?.querySelector<HTMLElement>(`[data-option-index="${activeIndex}"]`)
@@ -181,6 +195,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       if (!options.length) return;
+      shouldScrollIntoViewRef.current = true;
       if (!isOpen) {
         const selectedIndex = options.findIndex((option) => option.value === value);
         const requestedOpeningIndex = selectedIndex >= 0
@@ -202,6 +217,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     }
     if ((event.key === 'Home' || event.key === 'End') && isOpen) {
       event.preventDefault();
+      shouldScrollIntoViewRef.current = true;
       if (options.length) setActiveIndex(event.key === 'Home' ? 0 : options.length - 1);
       return;
     }
@@ -290,6 +306,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={() => {
           if (options.length) {
             requestedOpeningIndexRef.current = null;
+            shouldScrollIntoViewRef.current = true;
             setIsOpen(!isOpen);
           }
         }}
@@ -320,8 +337,11 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           className={`fixed z-[500] overflow-hidden rounded-lg border border-white/[0.12] bg-[#0b1113]/98 shadow-2xl shadow-black/80 backdrop-blur-xl ${dropdownClassName}`}
         >
           <div
-            className="overflow-y-auto hide-scrollbar"
-            style={{ maxHeight: Math.max(0, menuPosition.maxHeight - menuChromeHeight) }}
+            className="overflow-y-auto overscroll-contain touch-pan-y"
+            style={{
+              maxHeight: Math.max(0, menuPosition.maxHeight - menuChromeHeight),
+              WebkitOverflowScrolling: 'touch',
+            }}
           >
             {renderOptions()}
           </div>

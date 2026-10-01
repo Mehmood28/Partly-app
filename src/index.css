@@ -422,8 +422,34 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 .allocated-part-menu button.danger { color:#fb8b99; }
 .allocated-part-menu button svg { width:14px; height:14px; color:#83e5df; }
 .allocated-part-menu button.danger svg { color:currentColor; }
-.build-card:has(.allocated-part-menu) { overflow:visible; }
-.app-ledger:has(.allocated-part-menu) { overflow:visible; }
+.build-virtual-row:has(.allocated-part-menu),
+.build-virtual-row:has(.is-menu-open) {
+  z-index: 50 !important;
+}
+.build-row-wrapper:has(.allocated-part-menu),
+.build-row-wrapper:has(.is-menu-open) {
+  position: relative;
+  z-index: 50;
+}
+.build-card:has(.allocated-part-menu),
+.build-card.is-menu-open {
+  overflow: visible;
+  position: relative;
+  z-index: 50;
+}
+.app-ledger:has(.allocated-part-menu) {
+  overflow: visible;
+  position: relative;
+  z-index: 50;
+}
+.allocated-part-managed:has(.allocated-part-menu) {
+  position: relative;
+  z-index: 50;
+}
+.allocated-part-actions:has(.allocated-part-menu) {
+  position: relative;
+  z-index: 60;
+}
 .record-header { padding:18px; text-align:left; width:100%; }
 .record-topline { display:flex; align-items:center; gap:8px; color:var(--app-lime); font-size:13px; margin-bottom:10px; }
 .record-topline time { color:var(--app-muted); margin-left:auto; }

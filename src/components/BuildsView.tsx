@@ -201,7 +201,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
   });
 
   const renderBuildRow = (build: PCBuild) => (
-    <div className="grid grid-cols-1 gap-2.5">
+    <div className="build-row-wrapper grid grid-cols-1 gap-2.5">
       <BuildCard
         isActive={isActive}
         isExpanded={expandedBuildId === build.id}
@@ -380,6 +380,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
                   key={virtualRow.key}
                   data-index={virtualRow.index}
                   ref={rowVirtualizer.measureElement}
+                  className="build-virtual-row"
                   style={{
                     position: 'absolute',
                     top: 0,

@@ -232,7 +232,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   };
 
   return (
-    <div className={`app-panel build-card group relative flex flex-col transition-all duration-200 ${isExpanded ? 'border-white/20' : 'hover:border-[#B9EF68]/30'}`}>
+    <div className={`app-panel build-card group relative flex flex-col transition-all duration-200 ${isExpanded ? 'border-white/20' : 'hover:border-[#B9EF68]/30'} ${activeMenuKey ? 'is-menu-open z-50' : ''}`}>
       {!isExpanded && (
         <div className="build-header build-header-collapsed" onClick={handleToggle} role="button" tabIndex={0} aria-expanded={false} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggle(); } }}>
           {build.imageUrl ? (
@@ -552,11 +552,16 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                             <MoreVertical />
                           </button>
                           {isActionsOpen && (
-                            <span className="allocated-part-menu" role="menu">
+                            <span
+                              className="allocated-part-menu"
+                              role="menu"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <button
                                 type="button"
                                 role="menuitem"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSwapPartData(asBuildPart);
                                   setActiveMenuKey(null);
                                 }}
@@ -566,7 +571,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                               <button
                                 type="button"
                                 role="menuitem"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setQuantityPartData(asBuildPart);
                                   setActiveMenuKey(null);
                                 }}
@@ -577,7 +583,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                                 type="button"
                                 role="menuitem"
                                 className="danger"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setActiveMenuKey(null);
                                   openRemovePartConfirm(asBuildPart);
                                 }}
@@ -659,11 +666,16 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                             <MoreVertical />
                           </button>
                           {isActionsOpen && (
-                            <span className="allocated-part-menu" role="menu">
+                            <span
+                              className="allocated-part-menu"
+                              role="menu"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <button
                                 type="button"
                                 role="menuitem"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSwapPartData(part);
                                   setActiveMenuKey(null);
                                 }}
@@ -673,7 +685,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                               <button
                                 type="button"
                                 role="menuitem"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setQuantityPartData(part);
                                   setActiveMenuKey(null);
                                 }}
@@ -684,7 +697,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                                 type="button"
                                 role="menuitem"
                                 className="danger"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setActiveMenuKey(null);
                                   openRemovePartConfirm(part);
                                 }}
