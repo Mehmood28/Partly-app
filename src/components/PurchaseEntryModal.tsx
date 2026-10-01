@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CustomSelect } from './ui/CustomSelect';
-import { Condition, PaymentMethod, PurchaseEntry } from '../types';
+import { ComponentCategory, Condition, PaymentMethod, PurchaseEntry } from '../types';
 import { X, ShoppingCart } from 'lucide-react';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { usePrivacy } from '../context/PrivacyContext';
@@ -8,6 +8,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 interface PurchaseEntryModalProps {
   isOpen: boolean;
   componentName: string;
+  category?: ComponentCategory;
   onClose: () => void;
   onSave: (entry: Omit<PurchaseEntry, 'id'>) => void;
 }
@@ -15,6 +16,7 @@ interface PurchaseEntryModalProps {
 export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
   isOpen,
   componentName,
+  category,
   onClose,
   onSave,
 }) => {
@@ -26,6 +28,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('E-Transfer');
   const [platform, setPlatform] = useState<string>('');
   const [taxPercent, setTaxPercent] = useState<string>('0');
+  const [healthPercent, setHealthPercent] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +37,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
     if (isNaN(qtyNum) || qtyNum <= 0 || isNaN(priceNum) || priceNum < 0) return;
 
     const total = qtyNum * priceNum;
+    const parsedHealth = healthPercent.trim() !== '' ? Math.min(100, Math.max(0, parseFloat(healthPercent))) : undefined;
     onSave({
       date,
       condition,
@@ -43,7 +47,9 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
       paymentMethod,
       platform,
       taxPercent: parseFloat(taxPercent) || 0,
+      healthPercent: category === 'Storage' ? parsedHealth : undefined,
     });
+    setHealthPercent('');
     onClose();
   };
 
@@ -172,6 +178,21 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
                 placeholder="0"
               />
             </div>
+            {category === 'Storage' && (
+              <div>
+                <label className="block text-zinc-300 font-medium mb-1 text-xs">Health (%)</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  max="100"
+                  value={healthPercent}
+                  onChange={(e) => setHealthPercent(e.target.value)}
+                  className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
+                  placeholder="100"
+                />
+              </div>
+            )}
           </div>
         </div>
 

@@ -25,6 +25,7 @@ export const ModeAKnownParts: React.FC<ModeAKnownPartsProps> = ({ build }) => {
         {build.parts.map((part, idx) => {
           const component = state.components.find((candidate) => candidate.id === part.componentId);
           const entry = component?.purchaseHistory.find((candidate) => candidate.id === part.purchaseEntryId);
+          const storageHealth = part.category === 'Storage' ? (entry?.healthPercent ?? component?.healthPercent) : undefined;
           const category = getCategoryPresentation(part.category);
           const details = [
             ...(component?.tags || []).filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0),
@@ -32,6 +33,7 @@ export const ModeAKnownParts: React.FC<ModeAKnownPartsProps> = ({ build }) => {
               ? component.specifications.trim()
               : undefined,
             entry?.condition,
+            storageHealth !== undefined ? `${storageHealth}%` : undefined,
             !hideSupplierNames && entry?.platform ? normalizePlatform(String(entry.platform)) : undefined,
             entry?.paymentMethod,
             entry?.date ? formatReadableDate(entry.date) || entry.date : undefined,

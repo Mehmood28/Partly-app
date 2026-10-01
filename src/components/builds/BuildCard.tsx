@@ -621,12 +621,14 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   {sortByCategory(build.parts).map((part, partIdx) => {
                     const comp = state.components.find((c) => c.id === part.componentId);
                     const purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
+                    const storageHealth = part.category === 'Storage' ? (purchaseEntry?.healthPercent ?? comp?.healthPercent) : undefined;
                     const category = getCategoryPresentation(part.category);
                     // Assignment cost is immutable, so every row total always reconciles to Build Cost.
                     const unitCost = part.unitCostAtAssignment;
                     const totalCost = unitCost * part.quantity;
                     const metadata = [
                       purchaseEntry?.condition,
+                      storageHealth !== undefined ? `${storageHealth}%` : undefined,
                       !hideSupplierNames && purchaseEntry?.platform ? normalizePlatform(String(purchaseEntry.platform)) : undefined,
                       purchaseEntry?.paymentMethod ? String(purchaseEntry.paymentMethod) : undefined,
                       purchaseEntry?.date ? formatReadableDate(purchaseEntry.date) || purchaseEntry.date : undefined,

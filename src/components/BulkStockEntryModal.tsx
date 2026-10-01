@@ -22,6 +22,7 @@ export interface ParsedBulkStockItem {
   vendor?: Platform;
   date?: string;
   paymentMethod?: PaymentMethod;
+  healthPercent?: number;
 }
 
 interface BulkStockEntryModalProps {
@@ -304,6 +305,23 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                             fitLongestOption={false}
                           />
                         </label>
+                        {item.category === 'Storage' && (
+                          <label className="col-span-1 md:col-span-3"><span>Health (%)</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              max="100"
+                              value={item.healthPercent !== undefined ? item.healthPercent : ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                updateParsedItem(idx, 'healthPercent', val === '' ? undefined : Math.min(100, Math.max(0, parseInt(val, 10) || 0)));
+                              }}
+                              placeholder="100"
+                              className="app-field w-full font-mono"
+                            />
+                          </label>
+                        )}
                         <div className="col-span-2 flex items-end justify-end md:col-span-3">
                           <button 
                             type="button"

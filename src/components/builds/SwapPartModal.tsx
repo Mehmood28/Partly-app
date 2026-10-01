@@ -163,6 +163,15 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                       <span>{totalAvailable} in stock</span>
                       <span>·</span>
                       <span>Avg. {formatCurrency(avgPrice)}{totalAvailable > 1 ? '/ea' : ''}</span>
+                      {comp.category === 'Storage' && (() => {
+                        const h = comp.healthPercent ?? validEntries.find(e => typeof e.healthPercent === 'number')?.healthPercent;
+                        return typeof h === 'number' ? (
+                          <>
+                            <span>·</span>
+                            <span>{h}%</span>
+                          </>
+                        ) : null;
+                      })()}
                     </>
                   }
                 />
@@ -175,7 +184,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
                         <div className="swap-batch-details">
                           <strong>{entry.availableQty} available · {formatCurrency(entry.unitPrice)}{entry.availableQty > 1 ? '/ea' : ''}</strong>
                           <span>
-                            {entry.condition} · {entry.date}
+                            {entry.condition}{comp.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''} · {entry.date}
                             {!hideSupplierNames && entry.platform ? ` · ${entry.platform}` : ''}
                           </span>
                         </div>

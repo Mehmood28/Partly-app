@@ -177,10 +177,14 @@
   .app-button-danger:hover { border-color: rgba(255,102,127,.55); background: rgba(255,102,127,.14); color: #ff9aab; }
 
   .app-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: 1px solid var(--app-line);
     background: rgba(13,20,22,.72);
     font-weight: 650;
     white-space: nowrap;
+    line-height: 1;
     transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
   }
 
@@ -234,8 +238,10 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .app-button-outline { border-color:var(--app-lime); color:var(--app-lime); background:transparent; }
 .custom-select-trigger { box-sizing:border-box; height:44px; min-height:44px; padding-block:0; font-size:14px; }
 .custom-select-option-selected { border-color:rgba(185,239,104,.22); background:rgba(185,239,104,.075); color:#eef5e8; }
-.app-chip { min-height:36px; font-size:13px; color:#bbc5ce; border-radius:8px; }
+.app-chip { height:22px; min-height:22px; padding:0 8px; font-size:11px; line-height:1; color:#bbc5ce; border-radius:6px; }
 .app-chip-active { color:var(--app-lime); border-color:var(--app-lime); background:rgba(185,239,104,.045); box-shadow:none; }
+.app-category-chip, .category-filters .app-chip { height:24px !important; min-height:24px !important; padding:0 9px !important; font-size:11.5px !important; line-height:1 !important; }
+.app-subcategory-chip { height:22px !important; min-height:22px !important; padding:0 7.5px !important; font-size:10.5px !important; line-height:1 !important; }
 .app-ledger { background:transparent; border:0; border-radius:0; }
 .app-segmented { background:transparent; border-color:var(--app-line); border-radius:9px; padding:3px; gap:3px; }
 .app-segmented > button { border:0; border-radius:6px; min-height:44px; color:#b1bac4; font-size:14px; }
@@ -484,7 +490,9 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 [data-bottom-sheet-modal] h3 { font-size:16px; letter-spacing:-.01em; text-transform:none; }
 [data-bottom-sheet-modal] label { font-size:13px; text-transform:none; letter-spacing:0; color:#b5c2cc; }
 [data-bottom-sheet-modal] input:not([type=checkbox]):not([type=radio]), [data-bottom-sheet-modal] select, [data-bottom-sheet-modal] textarea { font-size:14px; min-height:42px; border-radius:6px; background-color:#191f22; }
-[data-bottom-sheet-modal] button:not([role=checkbox]) { min-height:36px; }
+[data-bottom-sheet-modal] button:not([role=checkbox]):not(.app-chip):not(.app-category-chip):not(.app-subcategory-chip) { min-height:36px; }
+[data-bottom-sheet-modal] .app-category-chip, [data-bottom-sheet-modal] .category-filters .app-chip { height:24px !important; min-height:24px !important; }
+[data-bottom-sheet-modal] .app-subcategory-chip { height:22px !important; min-height:22px !important; }
 @media (max-width:639px) {
   .app-main { padding:0 12px 8px; }
   .partly-header { margin-bottom:0; }
@@ -548,7 +556,9 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .inventory-capital > div { padding:8px 3px; }
   .inventory-actions > button { flex:1; }
   .category-filters { gap:6px; }
-  .app-chip { padding:0 10px; font-size:12px; min-height:34px; }
+  .app-chip { height:22px; min-height:22px; padding:0 7px; font-size:10.5px; line-height:1; }
+  .app-category-chip, .category-filters .app-chip, [data-bottom-sheet-modal] .app-category-chip { height:24px !important; min-height:24px !important; padding:0 8px !important; font-size:11px !important; }
+  .app-subcategory-chip, [data-bottom-sheet-modal] .app-subcategory-chip { height:22px !important; min-height:22px !important; padding:0 7px !important; font-size:10.5px !important; }
   .app-segmented > button { font-size:12px; min-height:42px; }
   .stock-card-header { padding:9px 11px; }
   .stock-card-header > div { position:relative; }
@@ -574,7 +584,9 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .stock-sort-control > div > button { height:36px; min-height:36px; padding-inline:9px; font-size:10px; }
   .stock-inventory-layout .inventory-filters > div { gap:7px; }
   .stock-inventory-layout .category-filters { gap:4px; }
-  .stock-inventory-layout .app-chip { min-height:34px; padding-inline:8px; font-size:10px; }
+  .stock-inventory-layout .app-chip { height:22px; min-height:22px; padding-inline:7px; font-size:10.5px; line-height:1; }
+  .stock-inventory-layout .category-filters .app-chip, .stock-inventory-layout .app-category-chip { height:24px !important; min-height:24px !important; padding-inline:8px !important; font-size:11px !important; }
+  .stock-inventory-layout .app-subcategory-chip { height:22px !important; min-height:22px !important; padding-inline:7px !important; font-size:10.5px !important; }
   .stock-inventory-layout .inventory-group { padding:6px 0 2px; }
   .inventory-group-heading { gap:7px; font-size:11px; white-space:nowrap; }
   .inventory-group-heading > span:first-child { font-size:12px; }
@@ -930,7 +942,7 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 [data-bottom-sheet-modal] .stock-modal input:not([type=checkbox]):not([type=radio]),
 [data-bottom-sheet-modal] .stock-modal select { box-sizing:border-box; height:34px !important; min-height:34px !important; padding-block:0; }
 [data-bottom-sheet-modal] .stock-modal .custom-select-trigger { box-sizing:border-box; height:34px !important; min-height:34px !important; padding-block:0 !important; }
-[data-bottom-sheet-modal] .stock-modal button:not([role=checkbox]) { min-height:34px; font-size:11px; }
+[data-bottom-sheet-modal] .stock-modal button:not([role=checkbox]):not(.app-chip):not(.app-category-chip):not(.app-subcategory-chip) { min-height:34px; font-size:11px; }
 [data-bottom-sheet-modal] .stock-modal .w-10.h-10,
 [data-bottom-sheet-modal] .stock-modal .w-9.h-9 { width:34px; height:34px; border-radius:7px; }
 [data-bottom-sheet-modal] .stock-modal .rounded-xl { border-radius:7px; }
@@ -945,7 +957,7 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   [data-bottom-sheet-modal] .stock-modal .custom-select-trigger { height:36px !important; min-height:36px !important; padding-block:0 !important; font-size:12px; }
   [data-bottom-sheet-modal] .stock-modal textarea { font-size:11px; }
   [data-bottom-sheet-modal] .stock-modal textarea.h-44 { height:116px; }
-  [data-bottom-sheet-modal] .stock-modal button:not([role=checkbox]) { min-height:34px; font-size:11px; }
+  [data-bottom-sheet-modal] .stock-modal button:not([role=checkbox]):not(.app-chip):not(.app-category-chip):not(.app-subcategory-chip) { min-height:34px; font-size:11px; }
   [data-bottom-sheet-modal] .stock-modal .p-5 { padding:9px; }
   [data-bottom-sheet-modal] .stock-modal .px-5 { padding-left:9px; padding-right:9px; }
   [data-bottom-sheet-modal] .stock-modal .pt-3 { padding-top:7px; }
@@ -1088,7 +1100,7 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 .buy-pc-modal .manual-part-costs span { font-size:10px; }
 .buy-pc-modal .manual-part-tags { padding-top:5px; }
 .buy-pc-modal .manual-part-tags > div { gap:4px; }
-.buy-pc-modal .manual-part-tags button { min-height:34px !important; padding:1px 6px; font-size:10px; }
+.buy-pc-modal .manual-part-tags button { min-height:22px !important; height:22px !important; padding:0 6px; font-size:10px; line-height:1; }
 .buy-pc-footer button { min-height:34px !important; padding-block:4px; }
 
 /* Sale dialogs use the same compact ledgers and field rhythm as Stock. */
@@ -1398,7 +1410,7 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 .buy-pc-modal .manual-part-costs input { min-height:34px !important; height:34px !important; font-size:10px; }
 .buy-pc-modal .manual-part-costs span,
 .buy-pc-modal .manual-part-tags button { font-size:10px; }
-.buy-pc-modal .manual-part-tags button { min-height:34px !important; }
+.buy-pc-modal .manual-part-tags button { min-height:22px !important; height:22px !important; }
 
 /* Final mobile readability floor: compact without requiring zoom. */
 @media(max-width:639px) {
@@ -1439,5 +1451,5 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .buy-pc-modal .manual-part-costs input { min-height:34px !important; height:34px !important; font-size:10px; }
   .buy-pc-modal .manual-part-costs span,
   .buy-pc-modal .manual-part-tags button { font-size:10px; }
-  .buy-pc-modal .manual-part-tags button { min-height:34px !important; }
+  .buy-pc-modal .manual-part-tags button { min-height:22px !important; height:22px !important; }
 }

@@ -14,7 +14,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { ConfirmModal } from './ConfirmModal';
-import { getUnassignedBatches } from '../utils/helpers';
+import { getUnassignedBatches, SUB_CATEGORIES } from '../utils/helpers';
 import { resolvePurchaseEntrySeller } from '../utils/tradeInOrigin';
 
 interface ComponentModalProps {
@@ -62,6 +62,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
   );
   const [condition, setCondition] = useState<Condition>('New Open Box');
   const [taxPercent, setTaxPercent] = useState<string>('0');
+  const [healthPercent, setHealthPercent] = useState<string>('');
 
   const prevInitialCompRef = React.useRef(initialComponent);
 
@@ -74,6 +75,12 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         setCategory(initialComponent.category || 'GPU');
         setSpecifications(typeof initialComponent.specifications === 'string' ? initialComponent.specifications : '');
         setTagsRaw((initialComponent.tags || []).join(', '));
+        const initialHealth = initialComponent.healthPercent !== undefined
+          ? initialComponent.healthPercent.toString()
+          : (initialComponent.purchaseHistory?.[0]?.healthPercent !== undefined
+              ? initialComponent.purchaseHistory[0].healthPercent.toString()
+              : '');
+        setHealthPercent(initialHealth);
         setIncludePurchase(false);
         setEditingPurchaseId(null);
       } else {
@@ -82,6 +89,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         setCategory('GPU');
         setSpecifications('');
         setTagsRaw('');
+        setHealthPercent('');
         setIncludePurchase(true);
         setEditingPurchaseId(null);
         resetPurchaseForm();
@@ -95,6 +103,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     setCategory('GPU');
     setSpecifications('');
     setTagsRaw('');
+    setHealthPercent('');
     setIncludePurchase(true);
     setEditingPurchaseId(null);
     resetPurchaseForm();
@@ -109,6 +118,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     setPurchaseDate(new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }));
     setCondition('New Open Box');
     setTaxPercent('0');
+    setHealthPercent('');
   };
 
   const handleEditPurchase = (ph: PurchaseEntry) => {
@@ -121,6 +131,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     setPurchaseDate(ph.date);
     setCondition(ph.condition);
     setTaxPercent((ph.taxPercent || 0).toString());
+    setHealthPercent(ph.healthPercent !== undefined ? ph.healthPercent.toString() : '');
   };
 
   const handleCancelEditPurchase = () => {
@@ -140,6 +151,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     if (editingPurchaseId && initialComponent) {
       const priceNum = parseFloat(unitPrice) || 0;
       const qtyNum = parseInt(quantity, 10) || 1;
+      const parsedHealth = healthPercent.trim() !== '' ? Math.min(100, Math.max(0, parseFloat(healthPercent))) : undefined;
       const updatedEntry = {
         date: purchaseDate,
         condition,
@@ -149,6 +161,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         paymentMethod,
         platform,
         taxPercent: parseFloat(taxPercent) || 0,
+        healthPercent: category === 'Storage' ? parsedHealth : undefined,
       };
       
       const parsedTags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
@@ -160,6 +173,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
           specifications,
           tags: parsedTags.length > 0 ? parsedTags : undefined,
           purchaseHistory: initialComponent?.purchaseHistory || [],
+          healthPercent: category === 'Storage' ? parsedHealth : undefined,
         },
         undefined,
         initialComponent.id,
@@ -183,6 +197,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
 
     const priceNum = parseFloat(unitPrice) || 0;
     const qtyNum = parseInt(quantity, 10) || 1;
+    const parsedHealth = healthPercent.trim() !== '' ? Math.min(100, Math.max(0, parseFloat(healthPercent))) : undefined;
 
     let purchaseEntry: Omit<PurchaseEntry, 'id'> | undefined = undefined;
     if (includePurchase) {
@@ -195,6 +210,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         paymentMethod,
         platform,
         taxPercent: parseFloat(taxPercent) || 0,
+        healthPercent: category === 'Storage' ? parsedHealth : undefined,
       };
     }
 
@@ -205,6 +221,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
       specifications,
       tags: parsedTags.length > 0 ? parsedTags : undefined,
       purchaseHistory: initialComponent?.purchaseHistory || [],
+      healthPercent: category === 'Storage' ? parsedHealth : undefined,
     };
 
     const result = onSave(
@@ -260,7 +277,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <div className="sm:col-span-2">
+            <div className={category === 'Storage' ? 'sm:col-span-1' : 'sm:col-span-2'}>
               <label className="block text-zinc-300 font-medium mb-1 text-xs">Model Name *</label>
               <input
                 type="text"
@@ -282,6 +299,23 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                 className={selectedCompId !== 'NEW' && !initialComponent ? "opacity-70 pointer-events-none" : ""}
               />
             </div>
+
+            {category === 'Storage' && (
+              <div>
+                <label className="block text-zinc-300 font-medium mb-1 text-xs">Health (%)</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  max="100"
+                  value={healthPercent}
+                  onChange={(e) => setHealthPercent(e.target.value)}
+                  disabled={selectedCompId !== 'NEW' && !initialComponent}
+                  className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
+                  placeholder="100"
+                />
+              </div>
+            )}
             
             <div className="col-span-full">
               <label className="block text-zinc-300 font-medium mb-1 text-xs">Tags (Comma Separated)</label>
@@ -293,6 +327,35 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                 className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-sans"
                 placeholder="e.g. AM5, DDR5, White"
               />
+              {SUB_CATEGORIES[category] && SUB_CATEGORIES[category].length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1.5">
+                  {SUB_CATEGORIES[category].map((tag) => {
+                    const currentTags = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean);
+                    const isSelected = currentTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        disabled={selectedCompId !== 'NEW' && !initialComponent}
+                        onClick={() => {
+                          if (isSelected) {
+                            setTagsRaw(currentTags.filter((t) => t !== tag).join(', '));
+                          } else {
+                            setTagsRaw([...currentTags, tag].join(', '));
+                          }
+                        }}
+                        className={`app-chip app-subcategory-chip px-2.5 ${
+                          isSelected
+                            ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.08] text-[#9FF8F4]'
+                            : ''
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -473,6 +536,21 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                     placeholder="0"
                   />
                 </div>
+                {category === 'Storage' && (
+                  <div>
+                    <label className="block text-zinc-300 font-medium mb-1 text-xs">Health (%)</label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min="0"
+                      max="100"
+                      value={healthPercent}
+                      onChange={(e) => setHealthPercent(e.target.value)}
+                      className="app-field h-11 bg-[#0B1113] px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
+                      placeholder="100"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

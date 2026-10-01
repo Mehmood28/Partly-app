@@ -52,10 +52,12 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
           {sortByCategory(selectedParts).map((part, idx) => {
             const comp = components.find((c) => c.id === part.componentId);
             const purchaseEntry = comp?.purchaseHistory?.find((pe) => pe.id === part.purchaseEntryId);
+            const storageHealth = part.category === 'Storage' ? (purchaseEntry?.healthPercent ?? comp?.healthPercent) : undefined;
 
             const category = getCategoryPresentation(part.category);
             const metadata = [
               purchaseEntry?.condition,
+              storageHealth !== undefined ? `${storageHealth}%` : undefined,
               !hideSupplierNames && purchaseEntry?.platform ? normalizePlatform(String(purchaseEntry.platform)) : undefined,
               purchaseEntry?.paymentMethod ? String(purchaseEntry.paymentMethod) : undefined,
               purchaseEntry?.date ? formatReadableDate(purchaseEntry.date) || purchaseEntry.date : undefined,

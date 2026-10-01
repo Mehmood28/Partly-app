@@ -231,7 +231,7 @@ async function startServer() {
         return res.status(400).json({ error: 'No text or images provided' });
       }
       
-      const systemInstruction = "You are a PC hardware inventory assistant.\nExtract PC parts from the provided text or images. Ensure you categorize them correctly.\nIMPORTANT PARSING RULES:\n1. Extract metadata from header lines formatted like 'Vendor: [Name] | Date: [Date] | Payment: [Method] | Condition: [Condition]'.\n2. Apply these parsed metadata values (Vendor, Date, Payment, Condition) directly to EVERY item parsed in the batch.\n3. Map payment methods exactly to allowed tags (e.g., 'E-Transfer', 'Cash', 'PayPal', 'Credit Card', etc.).\n4. Parse dates accurately as 'YYYY-MM-DD' (e.g., '2023-10-25').\n5. Ensure exact decimal unit prices (e.g., 157.93) are preserved precisely without rounding.\n6. If an item specifies a quantity (e.g., '5x'), ensure 'quantity' is 5 and 'unitCost' is the exact per-unit cost.";
+      const systemInstruction = "You are a PC hardware inventory assistant.\nExtract PC parts from the provided text or images. Ensure you categorize them correctly.\nIMPORTANT PARSING RULES:\n1. Extract metadata from header lines formatted like 'Vendor: [Name] | Date: [Date] | Payment: [Method] | Condition: [Condition]'.\n2. Apply these parsed metadata values (Vendor, Date, Payment, Condition) directly to EVERY item parsed in the batch.\n3. Map payment methods exactly to allowed tags (e.g., 'E-Transfer', 'Cash', 'PayPal', 'Credit Card', etc.).\n4. Parse dates accurately as 'YYYY-MM-DD' (e.g., '2023-10-25').\n5. Ensure exact decimal unit prices (e.g., 157.93) are preserved precisely without rounding.\n6. If an item specifies a quantity (e.g., '5x'), ensure 'quantity' is 5 and 'unitCost' is the exact per-unit cost.\n7. For Storage components (SSDs, NVMe drives, HDDs), extract the health percentage if mentioned in text or receipts (e.g., '1TB 980 Pro 95% health' -> healthPercent: 95). Extract this as an integer 0-100.";
 
       const responseSchema = {
         type: Type.ARRAY,
@@ -245,7 +245,8 @@ async function startServer() {
             condition: { type: Type.STRING, description: "Condition: Sealed, New Open Box, New No Box, Used Open Box, or Used No Box" },
             vendor: { type: Type.STRING, description: "Vendor name from the metadata header" },
             date: { type: Type.STRING, description: "Purchase date in YYYY-MM-DD format" },
-            paymentMethod: { type: Type.STRING, description: "Payment method: Cash, E-Transfer, PayPal, Credit Card, etc." }
+            paymentMethod: { type: Type.STRING, description: "Payment method: Cash, E-Transfer, PayPal, Credit Card, etc." },
+            healthPercent: { type: Type.INTEGER, description: "SSD health percentage (0-100) if mentioned for storage items" }
           },
           required: ["name", "category", "quantity", "unitCost", "condition"]
         }

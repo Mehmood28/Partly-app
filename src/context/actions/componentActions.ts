@@ -230,6 +230,7 @@ export const handleSaveComponent = (
                   paymentMethod: updatedPurchaseEntry.entry.paymentMethod,
                   platform: updatedPurchaseEntry.entry.platform,
                   taxPercent: validatedUpdatedEntry!.taxPercent,
+                  healthPercent: updatedPurchaseEntry.entry.healthPercent !== undefined ? (Number.isFinite(Number(updatedPurchaseEntry.entry.healthPercent)) ? Number(updatedPurchaseEntry.entry.healthPercent) : undefined) : e.healthPercent,
                   notes: updatedPurchaseEntry.entry.notes || '',
                 }
               : { ...e }
@@ -247,6 +248,7 @@ export const handleSaveComponent = (
           paymentMethod: newPurchaseEntry.paymentMethod,
           platform: newPurchaseEntry.platform,
           taxPercent: validatedNewEntry!.taxPercent,
+          healthPercent: newPurchaseEntry.healthPercent !== undefined ? (Number.isFinite(Number(newPurchaseEntry.healthPercent)) ? Number(newPurchaseEntry.healthPercent) : undefined) : undefined,
           notes: newPurchaseEntry.notes || '',
         };
 
@@ -416,6 +418,7 @@ export const handleSaveComponent = (
                     paymentMethod: updatedPurchaseEntry.entry.paymentMethod,
                     platform: updatedPurchaseEntry.entry.platform,
                     taxPercent: validatedUpdatedEntry!.taxPercent,
+                    healthPercent: updatedPurchaseEntry.entry.healthPercent !== undefined ? (Number.isFinite(Number(updatedPurchaseEntry.entry.healthPercent)) ? Number(updatedPurchaseEntry.entry.healthPercent) : undefined) : e.healthPercent,
                     notes: updatedPurchaseEntry.entry.notes || '',
                   }
                 : { ...e }
@@ -433,6 +436,7 @@ export const handleSaveComponent = (
             paymentMethod: newPurchaseEntry.paymentMethod,
             platform: newPurchaseEntry.platform,
             taxPercent: validatedNewEntry!.taxPercent,
+            healthPercent: newPurchaseEntry.healthPercent !== undefined ? (Number.isFinite(Number(newPurchaseEntry.healthPercent)) ? Number(newPurchaseEntry.healthPercent) : undefined) : undefined,
             notes: newPurchaseEntry.notes || '',
           };
 
@@ -884,6 +888,7 @@ export const handleAddPurchaseEntry = (
     paymentMethod: entry.paymentMethod,
     platform: entry.platform,
     taxPercent,
+    healthPercent: entry.healthPercent !== undefined ? (Number.isFinite(Number(entry.healthPercent)) ? Number(entry.healthPercent) : undefined) : undefined,
     notes: entry.notes || '',
   };
 
@@ -1014,6 +1019,7 @@ export const handleUpdatePurchaseEntry = (
                       paymentMethod: entry.paymentMethod,
                       platform: entry.platform,
                       taxPercent: taxPercent,
+                      healthPercent: entry.healthPercent !== undefined ? (Number.isFinite(Number(entry.healthPercent)) ? Number(entry.healthPercent) : undefined) : e.healthPercent,
                       notes: entry.notes || '',
                     }
                   : { ...e }

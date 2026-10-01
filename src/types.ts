@@ -55,6 +55,7 @@ export interface PurchaseEntry {
   paymentMethod: PaymentMethod;
   platform: Platform;
   taxPercent?: number; // e.g. 13 for 13% tax
+  healthPercent?: number; // SSD health percentage (0-100)
   notes?: string;
   _originalComponentId?: string;
   sourceTradeInBuildId?: string;
@@ -70,6 +71,7 @@ export interface InventoryComponent {
   specifications: string; // e.g. "Black" or "2x16 GB · 6400MHz · CL32 · DDR5 · Black"
   purchaseHistory: PurchaseEntry[];
   tags?: string[];
+  healthPercent?: number; // SSD health percentage (0-100) for storage components
   targetMarketValuePerUnit?: number; // Target/estimated market value per unit
   assignedCount: number; // Number of units assigned to active or sold PC builds
   soldCount?: number; // Number of units sold individually as loose parts

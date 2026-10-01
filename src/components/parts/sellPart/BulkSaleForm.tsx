@@ -366,6 +366,9 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                     <div className="bulk-stock-meta text-[11px] text-zinc-400">
                       <span>{item.component.category}</span>
                       {item.entry.condition && <><span>·</span><span>{item.entry.condition}</span></>}
+                      {item.component.category === 'Storage' && typeof item.entry.healthPercent === 'number' && (
+                        <><span>·</span><span>{item.entry.healthPercent}%</span></>
+                      )}
                       <span>·</span>
                       <span>{item.availableQuantity} in stock</span>
                       <span>·</span>

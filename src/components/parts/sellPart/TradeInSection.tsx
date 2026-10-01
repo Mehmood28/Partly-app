@@ -169,10 +169,10 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                                 : [...prev, tag]
                             );
                           }}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-colors border ${
+                          className={`app-chip app-subcategory-chip px-2.5 font-mono ${
                             isSelected
-                              ? 'bg-[#B9EF68]/20 text-[#83E5DF] border-[#B9EF68]/40'
-                              : 'bg-[#0B1113] text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
+                              ? 'border-[#B9EF68]/50 bg-[#B9EF68]/[0.08] text-[#9FF8F4]'
+                              : 'text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
                           }`}
                         >
                           {tag}
@@ -296,10 +296,10 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                                 : [...prev, tag]
                             );
                           }}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-colors border ${
+                          className={`app-chip app-subcategory-chip px-2.5 font-mono ${
                             isSelected
-                              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                              : 'bg-[#0B1113] text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
+                              ? 'border-cyan-500/50 bg-cyan-500/[0.08] text-cyan-300'
+                              : 'text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
                           }`}
                         >
                           {tag}

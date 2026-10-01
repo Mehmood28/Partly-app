@@ -64,6 +64,18 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
   const categoryPresentation = getCategoryPresentation(component.category);
 
+  const storageHealth = React.useMemo(() => {
+    if (component.category !== 'Storage') return undefined;
+    if (typeof component.healthPercent === 'number') return component.healthPercent;
+    const batches = getUnassignedBatches(component, state.builds);
+    const batchWithHealth = batches.find(b => typeof b.entry.healthPercent === 'number');
+    if (batchWithHealth && typeof batchWithHealth.entry.healthPercent === 'number') {
+      return batchWithHealth.entry.healthPercent;
+    }
+    const entryWithHealth = (component.purchaseHistory || []).find(e => typeof e.healthPercent === 'number');
+    return entryWithHealth?.healthPercent;
+  }, [component, state.builds]);
+
   return (
     <div className={`app-panel stock-card border-white/[0.08] transition-colors hover:border-[#B9EF68]/40 ${isExpanded ? 'stock-card-expanded' : ''}`}>
       {/* Collapsed Header Bar - Clickable for mobile */}
@@ -90,6 +102,9 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
               {(component.tags || []).some((tag) => typeof tag === 'string' && Boolean(tag)) && <span>·</span>}
               <span>{unassignedQty} in stock</span>
               <span>· {formatCurrency(avgCost)} each</span>
+              {component.category === 'Storage' && storageHealth !== undefined && (
+                <span>· {storageHealth}%</span>
+              )}
             </div>
           </div>
         </div>
@@ -188,7 +203,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                             <span>{batch.availableQuantity} × {formatCurrency(entryUnitPrice)}</span>
                           </div>
                           <div className="stock-batch-line stock-batch-line-secondary">
-                            <span>{entry.condition}</span>
+                            <span>{entry.condition}{component.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''}</span>
                             <span><em>Payment</em><span className="stock-batch-value">{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span></span>
                             <strong>{formatCurrency(entryTotal)}</strong>
                           </div>

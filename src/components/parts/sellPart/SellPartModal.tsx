@@ -499,6 +499,9 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                     <div className="text-[11px] text-zinc-400 font-mono">
                       {preselectedComponent.category}
                       {typeof preselectedComponent.specifications === 'string' && preselectedComponent.specifications ? ` · ${preselectedComponent.specifications}` : ''}
+                      {preselectedComponent.category === 'Storage' && typeof (selectedBatch?.entry.healthPercent ?? preselectedComponent.healthPercent) === 'number' && (
+                        ` · ${(selectedBatch?.entry.healthPercent ?? preselectedComponent.healthPercent)}%`
+                      )}
                     </div>
                   </div>
                   <div className="shrink-0 text-right font-mono text-xs">
@@ -554,7 +557,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                       onChange={handleBatchChange}
                       options={availableBatches.map(b => ({
                         value: b.entry.id,
-                        label: `${b.entry.date} · ${b.entry.condition} · ${formatCurrency(b.unitCost)} each (${b.availableQuantity} available)${!hideSupplierNames && b.entry.platform ? ` · ${b.entry.platform}` : ''}`,
+                        label: `${b.entry.date} · ${b.entry.condition}${currentComponent.category === 'Storage' && typeof b.entry.healthPercent === 'number' ? ` · ${b.entry.healthPercent}%` : ''} · ${formatCurrency(b.unitCost)} each (${b.availableQuantity} available)${!hideSupplierNames && b.entry.platform ? ` · ${b.entry.platform}` : ''}`,
                       }))}
                       placeholder="Select batch..."
                       fitLongestOption={false}

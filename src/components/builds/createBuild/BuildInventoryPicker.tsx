@@ -131,6 +131,10 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                               {comp.tags?.filter(Boolean).length ? <span>·</span> : null}
                               <span className="font-semibold text-[#83E5DF]">{totalUnassigned} in stock</span>
                               <span>· Avg {formatCurrency(weightedAvgCost)}{totalUnassigned > 1 ? '/ea' : ''}</span>
+                              {comp.category === 'Storage' && (() => {
+                                const h = comp.healthPercent ?? batches.find(b => typeof b.entry.healthPercent === 'number')?.entry.healthPercent ?? comp.purchaseHistory?.find(e => typeof e.healthPercent === 'number')?.healthPercent;
+                                return typeof h === 'number' ? <span>· {h}%</span> : null;
+                              })()}
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
@@ -153,7 +157,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                                   <div className="min-w-0 flex-1 font-mono text-[11px] sm:text-[11px]">
                                     <div className="font-bold text-zinc-200">{remainingUnassigned} available @ {formatCurrency(entry.unitPrice)}</div>
                                     <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-zinc-500">
-                                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}</span>
+                                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}{comp.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''}</span>
                                       {!hideSupplierNames && entry.platform && <span>· {normalizePlatform(String(entry.platform))}</span>}
                                       {entry.paymentMethod && <span>· {String(entry.paymentMethod)}</span>}
                                       {entry.date && <span>· {formatReadableDate(entry.date) || entry.date}</span>}

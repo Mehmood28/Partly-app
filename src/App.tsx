@@ -95,6 +95,7 @@ function AppContent() {
         totalPrice: (item.quantity || 1) * (item.unitCost || 0),
         paymentMethod: item.paymentMethod || 'Cash',
         platform: item.vendor || 'Other',
+        healthPercent: item.category === 'Storage' ? item.healthPercent : undefined,
         notes: 'Bulk imported'
       };
       
@@ -103,6 +104,7 @@ function AppContent() {
         category: item.category,
         specifications: '',
         purchaseHistory: [ph],
+        healthPercent: item.category === 'Storage' ? item.healthPercent : undefined,
         targetMarketValuePerUnit: (item.unitCost || 0) * 1.5, // Default market-value estimate.
       };
     });
@@ -290,6 +292,7 @@ function AppContent() {
       <PurchaseEntryModal
         isOpen={!!purchaseModalComponentId && activeTab === 'inventory'}
         componentName={targetComponentForPurchase ? targetComponentForPurchase.name : ''}
+        category={targetComponentForPurchase?.category}
         onClose={handleClosePurchaseModal}
         onSave={(entryData) => {
           if (purchaseModalComponentId) addPurchaseEntry(purchaseModalComponentId, entryData);

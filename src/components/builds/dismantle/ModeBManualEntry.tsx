@@ -213,9 +213,9 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                             : [...prev, tag];
                           handleUpdatePart(part.id, { tags: newTags });
                         }}
-                        className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors border ${
+                        className={`app-chip app-subcategory-chip px-2 ${
                           isSelected
-                            ? 'bg-[#B9EF68]/20 text-[#83E5DF] border-[#B9EF68]/40'
+                            ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.08] text-[#9FF8F4]'
                             : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:bg-white/[0.08] hover:text-zinc-200'
                         }`}
                       >

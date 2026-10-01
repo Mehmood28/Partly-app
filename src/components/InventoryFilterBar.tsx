@@ -55,7 +55,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
             onCategoryChange('ALL');
             onSubCategoryChange?.('');
           }}
-          className={`app-chip px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
+          className={`app-chip app-category-chip px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
             activeCategory === 'ALL'
               ? 'app-chip-active'
               : ''
@@ -76,7 +76,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 onCategoryChange(cat);
                 onSubCategoryChange?.('');
               }}
-              className={`app-chip px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
+              className={`app-chip app-category-chip px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
                 isActive
                   ? 'app-chip-active'
                   : ''
@@ -98,7 +98,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 key={sub}
                 type="button"
                 onClick={() => onSubCategoryChange?.(activeSubCategory === sub ? '' : sub)}
-                className={`app-chip min-h-[32px] px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
+                className={`app-chip app-subcategory-chip px-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
                 isActive
                   ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.08] text-[#9FF8F4]'
                     : ''

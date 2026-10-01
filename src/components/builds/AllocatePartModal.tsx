@@ -131,6 +131,15 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
                       <span>{unassignedQty} in stock</span>
                       <span>·</span>
                       <span>Avg. {formatCurrency(avgPrice)}{totalAvailable > 1 ? '/ea' : ''}</span>
+                      {comp.category === 'Storage' && (() => {
+                        const h = comp.healthPercent ?? availableBatches.find(b => typeof b.entry.healthPercent === 'number')?.entry.healthPercent;
+                        return typeof h === 'number' ? (
+                          <>
+                            <span>·</span>
+                            <span>{h}%</span>
+                          </>
+                        ) : null;
+                      })()}
                     </>
                   }
                 />
@@ -145,7 +154,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
                           <div className="swap-batch-details">
                             <strong>{availableQuantity} available · {formatCurrency(unitCost)}{availableQuantity > 1 ? '/ea' : ''}</strong>
                             <span>
-                              {entry.condition}
+                              {entry.condition}{comp.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''}
                               {entry.paymentMethod ? ` · ${entry.paymentMethod}` : ''}
                               {!hideSupplierNames && entry.platform ? ` · ${normalizePlatform(String(entry.platform))}` : ''}
                               {entry.date ? ` · ${formatReadableDate(entry.date) || entry.date}` : ''}
