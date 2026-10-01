@@ -150,7 +150,9 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
 
   if (isPartSale) {
     netProfit = tx.profitMargin ?? 0;
-    partsCost = Math.max(0, salePrice - netProfit);
+    partsCost = tx.soldUnitCost !== undefined
+      ? tx.soldUnitCost * (tx.quantity || 1)
+      : Math.max(0, salePrice - netProfit);
     profitMarginPercent = calculateProfitMarginPercent(netProfit, salePrice);
   }
 

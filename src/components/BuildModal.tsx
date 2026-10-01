@@ -56,7 +56,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
         setName(initialData.name || '');
         setNotes(initialData.notes || '');
         setStatus((initialData.status as BuildStatus) || 'Listed for Sale');
-        setSalePrice(initialData.estimatedCost?.toString() || initialData.salePrice?.toString() || '');
+        setSalePrice(initialData.salePrice?.toString() || initialData.estimatedCost?.toString() || '');
         setSelectedParts(initialData.parts || []);
         setImageUrl(initialData.imageUrl || '');
         const wDays = initialData.warrantyDays ?? 30;

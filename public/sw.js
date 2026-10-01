@@ -1,4 +1,4 @@
-const CACHE_NAME = 'partly-shell-20260923-system-launch';
+const CACHE_NAME = 'partly-shell-20261001-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -14,7 +14,25 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => Promise.allSettled(STATIC_ASSETS.map((asset) => cache.add(asset))))
+      .then(async (cache) => {
+        await Promise.allSettled(STATIC_ASSETS.map((asset) => cache.add(asset)));
+        try {
+          const response = await fetch('/index.html');
+          if (response && response.ok) {
+            const html = await response.text();
+            const assetUrls = [];
+            const scriptMatches = html.matchAll(/src=["'](\/assets\/[^"']+)["']/g);
+            for (const m of scriptMatches) assetUrls.push(m[1]);
+            const cssMatches = html.matchAll(/href=["'](\/assets\/[^"']+)["']/g);
+            for (const m of cssMatches) assetUrls.push(m[1]);
+            if (assetUrls.length > 0) {
+              await Promise.allSettled(assetUrls.map((url) => cache.add(url)));
+            }
+          }
+        } catch {
+          // Graceful fallback if offline during install
+        }
+      })
       .then(() => self.skipWaiting())
   );
 });
@@ -47,7 +65,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(async () => (await caches.match('/index.html')) || Response.error())
+        .catch(async () => (await caches.match('/index.html')) || (await caches.match('/')) || Response.error())
     );
     return;
   }
@@ -69,7 +87,7 @@ self.addEventListener('fetch', (event) => {
       }
       return fetch(event.request)
         .then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+          if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
             return response;
           }
           const responseToCache = response.clone();

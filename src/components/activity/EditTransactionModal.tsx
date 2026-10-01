@@ -19,6 +19,8 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
   const { hideSupplierNames } = usePrivacy();
   const isPurchase = tx?.type === 'PURCHASE';
   const isMasked = !!(isPurchase && hideSupplierNames);
+  const hasStoredUnitCost = tx?.type === 'SALE' && tx?.soldUnitCost !== undefined;
+  const totalUnitCost = hasStoredUnitCost && tx ? (tx.soldUnitCost ?? 0) * (tx.quantity || 1) : 0;
 
   const [editTitle, setEditTitle] = useState<string>('');
   const [editItemSummary, setEditItemSummary] = useState<string>('');
@@ -29,6 +31,18 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
   const [editPlatform, setEditPlatform] = useState<string>('');
   const [editPaymentMethod, setEditPaymentMethod] = useState<string>('');
   const [editDate, setEditDate] = useState<string>('');
+
+  const handleAmountChange = (val: string) => {
+    setEditAmount(val);
+    if (hasStoredUnitCost) {
+      const parsed = parseFloat(val);
+      if (!isNaN(parsed)) {
+        setEditProfit((parsed - totalUnitCost).toFixed(2));
+      } else {
+        setEditProfit('');
+      }
+    }
+  };
 
   const getMaskedTitle = (rawTitle: string, platform?: string) => {
     let t = rawTitle;
@@ -68,7 +82,13 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       setTitleEdited(false);
       setSummaryEdited(false);
       setEditAmount(String(tx.totalAmount ?? 0));
-      setEditProfit(String(tx.profitMargin ?? 0));
+      if (tx.type === 'SALE' && tx.soldUnitCost !== undefined) {
+        const costBasis = (tx.soldUnitCost ?? 0) * (tx.quantity || 1);
+        const derivedProfit = (tx.totalAmount ?? 0) - costBasis;
+        setEditProfit(derivedProfit.toFixed(2));
+      } else {
+        setEditProfit(String(tx.profitMargin ?? 0));
+      }
       setEditPlatform(tx.platform || '');
       setEditPaymentMethod(tx.paymentMethod || '');
       setEditDate(tx.dateSortable || '');
@@ -81,12 +101,20 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     e.preventDefault();
     const finalTitle = isMasked && !titleEdited ? tx.title : editTitle.trim();
     const finalSummary = isMasked && !summaryEdited ? tx.itemNameOrSummary : editItemSummary.trim();
+    let finalProfit = editProfit;
+    if (hasStoredUnitCost) {
+      const parsedAmount = parseFloat(editAmount);
+      if (!isNaN(parsedAmount)) {
+        finalProfit = (parsedAmount - totalUnitCost).toFixed(2);
+      }
+    }
+
     const prepared = prepareTransactionEdit({
       type: tx.type,
       title: finalTitle,
       itemNameOrSummary: finalSummary,
       totalAmount: editAmount,
-      profitMargin: editProfit,
+      profitMargin: finalProfit,
       platform: editPlatform,
       paymentMethod: editPaymentMethod,
       dateSortable: editDate,
@@ -166,7 +194,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                   min="0"
                   required
                   value={editAmount}
-                  onChange={(e) => setEditAmount(e.target.value)}
+                  onChange={(e) => handleAmountChange(e.target.value)}
                   className="app-field h-9 min-h-9 pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono"
                 />
               </div>
@@ -174,7 +202,14 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
 
             {tx.type === 'SALE' && (
               <div>
-                <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Net Profit ($)</label>
+                <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">
+                  Net Profit ($)
+                  {hasStoredUnitCost && (
+                    <span className="ml-1 text-[10px] text-zinc-400 font-normal">
+                      (Cost: ${totalUnitCost.toFixed(2)})
+                    </span>
+                  )}
+                </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none font-mono">$</span>
                   <input
@@ -182,9 +217,12 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                     inputMode="decimal"
                     step="0.01"
                     required
+                    readOnly={hasStoredUnitCost}
                     value={editProfit}
                     onChange={(e) => setEditProfit(e.target.value)}
-                    className="app-field h-9 min-h-9 pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono"
+                    className={`app-field h-9 min-h-9 pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono ${
+                      hasStoredUnitCost ? 'opacity-80 bg-white/[0.03] cursor-not-allowed' : ''
+                    }`}
                     placeholder="e.g. 150.00"
                   />
                 </div>

@@ -120,32 +120,39 @@ export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({
   };
 
   const handleStartBuild = (recBuild: RecommendedBuild) => {
-    const buildParts: PCBuildPart[] = recBuild.parts.map(p => {
-      const comp = state.components.find(c => c.id === p.id);
-      let purchaseEntryId = comp?.purchaseHistory?.[0]?.id;
-      let unitCost = p.avgCost || (comp?.purchaseHistory?.[0]?.unitPrice ?? 0);
+    const buildParts: PCBuildPart[] = [];
 
-      if (comp) {
-        const unassignedBatches = getUnassignedBatches(comp, state.builds);
-        const availableBatch = unassignedBatches.find(b => b.availableQuantity > 0);
-        if (availableBatch) {
-          purchaseEntryId = availableBatch.entry.id;
-          unitCost = availableBatch.unitCost;
-        }
-      }
+    for (const p of recBuild.parts) {
+      const comp = state.components.find((c) => c.id === p.id);
+      if (!comp) continue;
 
-      return {
-        componentId: p.id,
-        componentName: p.name,
-        category: p.category,
-        quantity: p.assignedQty || 1,
+      const unassignedQty = calculateUnassignedQuantityStrict(comp, state.builds);
+      if (unassignedQty <= 0) continue;
+
+      const unassignedBatches = getUnassignedBatches(comp, state.builds);
+      const availableBatch = unassignedBatches.find((b) => b.availableQuantity > 0);
+      if (!availableBatch) continue;
+
+      const purchaseEntryId = availableBatch.entry.id;
+      const unitCost = availableBatch.unitCost;
+
+      buildParts.push({
+        componentId: comp.id,
+        componentName: comp.name,
+        category: comp.category,
+        quantity: Math.min(p.assignedQty || 1, availableBatch.availableQuantity),
         unitCostAtAssignment: unitCost,
-        purchaseEntryId
-      };
-    });
+        purchaseEntryId,
+      });
+    }
 
-    const cpuName = buildParts.find(p => p.category === 'CPU')?.componentName || 'CPU';
-    const gpuName = buildParts.find(p => p.category === 'GPU')?.componentName || '';
+    if (buildParts.length === 0) {
+      setCustomError('The parts for this build are no longer available in stock.');
+      return;
+    }
+
+    const cpuName = buildParts.find((p) => p.category === 'CPU')?.componentName || 'CPU';
+    const gpuName = buildParts.find((p) => p.category === 'GPU')?.componentName || '';
     const defaultTitle = recBuild.name || formatShortCpuAndGpu(cpuName, gpuName);
 
     onOpenAddBuild({

@@ -22,15 +22,15 @@
       }
     </style>
     <script>
-      // Early global error suppression for iframe cross-origin warnings
+      // Early global error suppression strictly for sandbox iframe cross-origin access warnings
       window.addEventListener(
         'error',
         function (event) {
-          const msg = event.message || (event.error && event.error.message) || '';
-          if (
-            msg.includes('SecurityError') ||
-            msg.includes('cross-origin frame')
-          ) {
+          const msg = String(event.message || (event.error && event.error.message) || '');
+          const isCrossOriginFrameNoise =
+            msg.includes('cross-origin frame') ||
+            (msg.includes('Blocked a frame') && msg.includes('cross-origin'));
+          if (isCrossOriginFrameNoise) {
             event.stopImmediatePropagation();
             event.preventDefault();
             return false;
