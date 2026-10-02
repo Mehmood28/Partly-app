@@ -3,7 +3,7 @@ import { useInventory } from '../../../context/InventoryContext';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { useToast } from '../../../context/ToastContext';
 import { CATEGORIES, ComponentCategory, InventoryComponent, PaymentMethod, Platform } from '../../../types';
-import { calculateAverageUnitCost, calculateUnassignedQuantityStrict, filterAndSortComponents, formatCurrency, getAllBatchesWithRemaining, SortOption } from '../../../utils/helpers';
+import { calculateEffectiveUnitCost, calculateUnassignedQuantityStrict, filterAndSortComponents, formatCurrency, getAllBatchesWithRemaining, SortOption } from '../../../utils/helpers';
 import { normalizePlatform } from '../../../utils/platformDisplay';
 import { BottomSheetModal } from '../../ui/BottomSheetModal';
 import { CustomSelect } from '../../ui/CustomSelect';
@@ -97,7 +97,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
   const effectiveUnitCost = selectedBatch
     ? selectedBatch.unitCost
     : currentComponent
-    ? calculateAverageUnitCost(currentComponent)
+    ? calculateEffectiveUnitCost(currentComponent, state.builds)
     : 0;
 
   const maxQty = selectedBatch
@@ -120,7 +120,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
         setSelectedEntryId(targetEntryId);
 
         const batch = batches.find((b) => b.entry.id === targetEntryId) || batches[0];
-        const unitCost = batch ? batch.unitCost : calculateAverageUnitCost(comp);
+        const unitCost = batch ? batch.unitCost : calculateEffectiveUnitCost(comp, state.builds);
         const estValue = getEstimatedNumericValue(comp, unitCost);
         setUnitSalePrice(estValue.toFixed(2));
         setTotalSalePrice(estValue.toFixed(2));
@@ -179,7 +179,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
       const batches = getAllBatchesWithRemaining(comp, state.builds).filter((b) => b.availableQuantity > 0);
       const firstEntryId = batches[0]?.entry.id || comp.purchaseHistory?.[0]?.id || '';
       setSelectedEntryId(firstEntryId);
-      const unitCost = batches[0] ? batches[0].unitCost : calculateAverageUnitCost(comp);
+      const unitCost = batches[0] ? batches[0].unitCost : calculateEffectiveUnitCost(comp, state.builds);
       const estValue = getEstimatedNumericValue(comp, unitCost);
       setUnitSalePrice(estValue.toFixed(2));
       setTotalSalePrice((estValue * quantity).toFixed(2));

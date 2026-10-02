@@ -320,6 +320,26 @@ export function calculateUnassignedValueStrict(
   return batches.reduce((sum, batch) => sum + (batch.unitCost * batch.availableQuantity), 0);
 }
 
+/**
+ * Calculates the effective unit cost of a component.
+ * When builds are provided, it computes the weighted average unit cost of unassigned in-stock units.
+ * If out of stock or builds are not provided, it falls back to the historical all-time average unit cost.
+ */
+export function calculateEffectiveUnitCost(
+  component: InventoryComponent,
+  builds?: PCBuild[],
+  precomputedMap?: Record<string, { explicitSum: number, unlinkedSum?: number, batches: Record<string, number> }>
+): number {
+  if (builds && builds.length > 0) {
+    const unassignedQty = calculateUnassignedQuantityStrict(component, builds, precomputedMap);
+    if (unassignedQty > 0) {
+      const unassignedVal = calculateUnassignedValueStrict(component, builds, precomputedMap);
+      return unassignedVal / unassignedQty;
+    }
+  }
+  return calculateAverageUnitCost(component);
+}
+
 
 export function calculateBuildPartsCost(build: PCBuild): number {
   const parts = build.parts || [];
@@ -688,18 +708,38 @@ export function filterAndSortComponents(
   };
 
   // 5. Sorting
+  const costMap = new Map<string, number>();
+  const getCompCost = (comp: InventoryComponent): number => {
+    let cost = costMap.get(comp.id);
+    if (cost === undefined) {
+      cost = calculateEffectiveUnitCost(comp, options.builds, precomputedMap);
+      costMap.set(comp.id, cost);
+    }
+    return cost;
+  };
+
+  const stockMap = new Map<string, number>();
+  const getCompStock = (comp: InventoryComponent): number => {
+    let stock = stockMap.get(comp.id);
+    if (stock === undefined) {
+      stock = calculateUnassignedQuantityStrict(comp, options.builds || [], precomputedMap);
+      stockMap.set(comp.id, stock);
+    }
+    return stock;
+  };
+
   return filtered.sort((a, b) => {
     if (options.sortBy === 'highest-price') {
-      return calculateAverageUnitCost(b) - calculateAverageUnitCost(a);
+      return getCompCost(b) - getCompCost(a);
     }
     if (options.sortBy === 'lowest-price') {
-      return calculateAverageUnitCost(a) - calculateAverageUnitCost(b);
+      return getCompCost(a) - getCompCost(b);
     }
     if (options.sortBy === 'highest-stock') {
-      return calculateUnassignedQuantityStrict(b, options.builds || [], precomputedMap) - calculateUnassignedQuantityStrict(a, options.builds || [], precomputedMap);
+      return getCompStock(b) - getCompStock(a);
     }
     if (options.sortBy === 'lowest-stock') {
-      return calculateUnassignedQuantityStrict(a, options.builds || [], precomputedMap) - calculateUnassignedQuantityStrict(b, options.builds || [], precomputedMap);
+      return getCompStock(a) - getCompStock(b);
     }
     
     // Default sorting (newest-purchase)

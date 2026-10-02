@@ -4,7 +4,7 @@ import { GoalBar } from './GoalBar';
 import { InventoryComponent, PCBuildPart } from '../types';
 import { 
   calculateUnassignedQuantityStrict, 
-  calculateAverageUnitCost, 
+  calculateEffectiveUnitCost, 
   precomputeAssignedBatches,
   getUnassignedBatches 
 } from '../utils/helpers';
@@ -43,7 +43,7 @@ export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({
       const pool = state.components.map(c => ({
         ...c,
         unassignedQty: calculateUnassignedQuantityStrict(c, state.builds, precomputedMap),
-        avgCost: calculateAverageUnitCost(c)
+        avgCost: calculateEffectiveUnitCost(c, state.builds, precomputedMap)
       })).filter(c => c.unassignedQty > 0);
       
       if (pool.length === 0) {

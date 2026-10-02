@@ -99,6 +99,16 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
               .map((comp) => calculateComponentBatchesWithStock(comp, builds, selectedParts, initialBuildId))
               .filter((g) => g.totalUnassigned > 0 || g.batches.length > 0);
 
+            if (sortBy === 'lowest-price') {
+              componentGroups.sort((a, b) => a.weightedAvgCost - b.weightedAvgCost);
+            } else if (sortBy === 'highest-price') {
+              componentGroups.sort((a, b) => b.weightedAvgCost - a.weightedAvgCost);
+            } else if (sortBy === 'highest-stock') {
+              componentGroups.sort((a, b) => b.totalUnassigned - a.totalUnassigned);
+            } else if (sortBy === 'lowest-stock') {
+              componentGroups.sort((a, b) => a.totalUnassigned - b.totalUnassigned);
+            }
+
             if (componentGroups.length === 0) return null;
 
             return (

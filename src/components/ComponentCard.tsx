@@ -5,7 +5,7 @@ import { useInventory } from '../context/InventoryContext';
 import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import {
-  calculateAverageUnitCost,
+  calculateEffectiveUnitCost,
   calculateUnassignedQuantityStrict,
   calculateUnassignedValueStrict,
   formatCurrency,
@@ -60,7 +60,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
   const unassignedQty = calculateUnassignedQuantityStrict(component, state.builds);
   const unassignedVal = calculateUnassignedValueStrict(component, state.builds);
-  const avgCost = unassignedQty > 0 ? unassignedVal / unassignedQty : calculateAverageUnitCost(component);
+  const avgCost = calculateEffectiveUnitCost(component, state.builds);
 
   const categoryPresentation = getCategoryPresentation(component.category);
 
