@@ -27,8 +27,7 @@ export function classifyTransaction(
     isSale &&
     (!!(tx.relatedComponentId && builds.some((b) => b.id === tx.relatedComponentId)) ||
       (tx.title ? tx.title.startsWith('Sold (PC)') || tx.title.startsWith('PC Sold') : false) ||
-      (tx.relatedComponentId ? tx.relatedComponentId.startsWith('build-') : false) ||
-      (tx.detailsList ? tx.detailsList.length > 0 && tx.detailsList.some((d) => d && d.includes('x ')) : false));
+      (tx.relatedComponentId ? tx.relatedComponentId.startsWith('build-') : false));
 
   const isPartSale = isSale && !isPCSale;
 

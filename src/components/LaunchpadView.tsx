@@ -159,7 +159,8 @@ export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({
       name: defaultTitle,
       parts: buildParts,
       status: 'Listed for Sale',
-      estimatedCost: recBuild.estimatedPrice,
+      salePrice: recBuild.estimatedPrice,
+      estimatedCost: recBuild.totalCost,
       notes: recBuild.notes ? `AI Synergy: ${recBuild.notes}` : 'Generated from custom AI request.'
     });
   };

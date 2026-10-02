@@ -24,7 +24,6 @@ const GEMINI_MODEL_CANDIDATES = [
 // Inventory extraction is a short, structured task. Keep the more capable
 // model ordering for build generation, where reasoning matters more.
 const BULK_IMPORT_MODELS = [
-  'gemini-3.5-flash-lite',
   'gemini-3.1-flash-lite',
   'gemini-3.8-flash',
 ] as const;
