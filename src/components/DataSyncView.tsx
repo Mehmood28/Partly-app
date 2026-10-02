@@ -36,7 +36,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
   isActive = true,
   onResetData,
 }) => {
-  const { state, importData, recordBackup, lastBackupTimestamp } = useInventory();
+  const { state, importData, recordBackup, lastBackupTimestamp, isHydrated } = useInventory();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const totalComponentsCount = state.components.length;
   const totalBuildsCount = state.builds.length;
@@ -90,6 +90,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
   // JSON Export execution
   const executeExportJSON = () => {
+    if (!isHydrated) return;
     try {
       const dataStr = JSON.stringify(state, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
@@ -280,8 +281,14 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
             <div className="data-actions">
               <button
-                onClick={() => setIsExportJsonConfirmOpen(true)}
-                className="data-action group"
+                onClick={() => {
+                  if (isHydrated) {
+                    setIsExportJsonConfirmOpen(true);
+                  }
+                }}
+                disabled={!isHydrated}
+                className={`data-action group ${!isHydrated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={!isHydrated ? 'Waiting for local database to finish loading...' : undefined}
               >
                 <div className="flex items-center justify-between mb-2">
                   <FileDown className="w-4 h-4 text-[#B9EF68]" />
@@ -292,7 +299,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
                     Export Backup (.json)
                   </div>
                   <div className="text-[11px] text-zinc-400 mt-0.5">
-                    Save offline backup file
+                    {!isHydrated ? 'Loading database...' : 'Save offline backup file'}
                   </div>
                 </div>
               </button>
@@ -521,7 +528,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
 
       {/* Export JSON Confirm Modal */}
       <ConfirmModal
-        isOpen={isExportJsonConfirmOpen && isActive}
+        isOpen={isExportJsonConfirmOpen && isActive && isHydrated}
         title="Export JSON Backup?"
         message={`Save an offline backup containing ${totalComponentsCount} components, ${totalBuildsCount} builds, and ${state.transactions.length} transaction records?`}
         confirmText="Export Backup"

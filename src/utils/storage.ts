@@ -74,6 +74,21 @@ export const getDefaultAppState = (): AppState => {
 };
 
 /**
+ * Creates a lightweight snapshot of AppState for the synchronous localStorage mirror
+ * by omitting heavy base64 build photos. Authoritative full-resolution images remain in IndexedDB.
+ */
+export const createLightweightStateMirror = (state: AppState): AppState => {
+  return {
+    ...state,
+    builds: state.builds.map((build) => {
+      if (!build.imageUrl) return build;
+      const { imageUrl: _discarded, ...rest } = build;
+      return rest;
+    }),
+  };
+};
+
+/**
  * Versioned persistence envelope definitions and validators
  */
 export const ENVELOPE_FORMAT = 'partly_versioned_envelope' as const;
@@ -349,8 +364,16 @@ export const persistAppState = async (
   let localError: unknown = null;
 
   // Mirror synchronously so the latest change survives an immediate close or background event.
+  // Strip heavy base64 image data to prevent exceeding browser localStorage quota (~5MB).
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
+    const localEnvelope: StorageEnvelope = {
+      format: ENVELOPE_FORMAT,
+      version: ENVELOPE_VERSION,
+      revision,
+      savedAt: envelope.savedAt,
+      state: createLightweightStateMirror(state),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(localEnvelope));
     localSuccess = true;
   } catch (err) {
     localError = err;
@@ -578,7 +601,7 @@ export const resolveInitialAppState = (): Promise<ResolutionResult> => {
       if (localCandidate?.revision) setHighestKnownRevision(localCandidate.revision);
 
       // 4. Select winner deterministically
-      const winner = selectWinningCandidate(idbCandidate, localCandidate);
+      let winner = selectWinningCandidate(idbCandidate, localCandidate);
 
       if (!winner) {
         const defaultState = getDefaultAppState();
@@ -588,6 +611,34 @@ export const resolveInitialAppState = (): Promise<ResolutionResult> => {
           winnerSource: 'default',
           reconciled: true,
         };
+      }
+
+      // Image Inheritance Guard:
+      // If localCandidate won due to a higher revision (e.g. tab closed before async IDB write completed),
+      // restore any existing imageUrls from idbCandidate for matching builds that still lack imageUrl in the local mirror.
+      // This prevents the stripped localStorage mirror from permanently wiping photos out of IndexedDB.
+      if (winner.source === 'localstorage' && idbCandidate?.state?.builds?.length) {
+        const idbBuildsMap = new Map(
+          idbCandidate.state.builds
+            .filter((b) => Boolean(b.imageUrl))
+            .map((b) => [b.id, b.imageUrl!])
+        );
+
+        if (idbBuildsMap.size > 0) {
+          const restoredBuilds = winner.state.builds.map((b) => {
+            if (!b.imageUrl && idbBuildsMap.has(b.id)) {
+              return { ...b, imageUrl: idbBuildsMap.get(b.id) };
+            }
+            return b;
+          });
+          winner = {
+            ...winner,
+            state: {
+              ...winner.state,
+              builds: restoredBuilds,
+            },
+          };
+        }
       }
 
       // 5. Reconcile / migrate backends without altering contained AppState
@@ -617,7 +668,7 @@ export const resolveInitialAppState = (): Promise<ResolutionResult> => {
           !localCandidate.isEnvelope ||
           localCandidate.revision < winner.revision ||
           (localCandidate.revision === winner.revision &&
-            !areAppStatesEqual(winner.state, localCandidate.state));
+            !areAppStatesEqual(createLightweightStateMirror(winner.state), localCandidate.state));
 
         // Only the backend that is NOT the winner source should be rewritten
         const needsIdbUpdate = winner.source !== 'indexeddb' && idbNeedsReconcile;
@@ -648,7 +699,14 @@ export const resolveInitialAppState = (): Promise<ResolutionResult> => {
             if (needsLocalUpdate) {
               localWriteSuccess = false;
               try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(envelopeToSave));
+                const localEnvelopeToSave: StorageEnvelope = {
+                  format: ENVELOPE_FORMAT,
+                  version: ENVELOPE_VERSION,
+                  revision: winner.revision,
+                  savedAt: winner.savedAt || new Date().toISOString(),
+                  state: createLightweightStateMirror(winner.state),
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(localEnvelopeToSave));
                 localWriteSuccess = true;
               } catch (err) {
                 console.warn('Failed to reconcile localStorage:', err);
