@@ -67,6 +67,26 @@ export function calculateUnassignedQuantity(component: InventoryComponent): numb
   return Math.max(0, totalQty - assigned);
 }
 
+export function formatCategoryPlural(category: string): string {
+  const cat = (category || '').trim();
+  const lower = cat.toLowerCase();
+  if (lower === 'motherboard') return 'Motherboards';
+  if (lower === 'cooling' || lower === 'cooler') return 'Coolers';
+  if (lower === 'cpu') return 'CPUs';
+  if (lower === 'gpu') return 'GPUs';
+  if (lower === 'ram' || lower === 'memory') return 'RAM';
+  if (lower === 'storage' || lower === 'ssd' || lower === 'hdd' || lower === 'nvme') return 'Storage Drives';
+  if (lower === 'psu' || lower === 'power supply') return 'Power Supplies';
+  if (lower === 'case') return 'Cases';
+  if (lower === 'fan' || lower === 'fans') return 'Fans';
+  if (lower === 'monitor') return 'Monitors';
+  if (lower === 'peripheral' || lower === 'peripherals') return 'Peripherals';
+  if (lower === 'accessory' || lower === 'accessories') return 'Accessories';
+  if (lower === 'other') return 'Parts';
+  if (cat.endsWith('s') || cat.endsWith('S')) return cat;
+  return `${cat}s`;
+}
+
 
 
 /**
@@ -752,39 +772,39 @@ export function autoTagComponent(name: string, specs: string, category: string):
   const tags: string[] = [];
 
   if (category === 'CPU') {
-    if (/ryzen.*(1\d\d\d|2\d\d\d|3\d\d\d|4\d\d\d|5\d\d\d)|b450|x570|b550|am4/i.test(text)) tags.push('AM4');
-    else if (/ryzen.*(7\d\d\d|8\d\d\d|9\d\d\d)|b650|x670|x870|am5/i.test(text)) tags.push('AM5');
-    else if (/core|intel|i3|i5|i7|i9|lga/i.test(text)) tags.push('Intel');
+    if (/ryzen.*(7\d\d\d|8\d\d\d|9\d\d\d)|b650|x670|x870|am5/i.test(text)) tags.push('AM5');
+    else if (/ryzen.*(1\d\d\d|2\d\d\d|3\d\d\d|4\d\d\d|5\d\d\d)|b450|x570|b550|am4/i.test(text)) tags.push('AM4');
+    else if (/core|intel|i3|i5|i7|i9|lga|ultra/i.test(text)) tags.push('Intel');
   } 
   else if (category === 'Motherboard') {
-    if (/b450|x570|b550|a320|x470|am4/i.test(text)) tags.push('AM4');
-    else if (/b650|x670|b850|x870|a620|am5/i.test(text)) tags.push('AM5');
+    if (/b650|x670|b850|x870|a620|am5/i.test(text)) tags.push('AM5');
+    else if (/b450|x570|b550|a320|x470|am4/i.test(text)) tags.push('AM4');
     else if (/b660|b760|z690|z790|z890|h610|intel|lga/i.test(text)) tags.push('Intel');
   }
   else if (category === 'GPU') {
-    if (/rtx.*50\d\d/i.test(text)) tags.push('50 Series');
-    else if (/rtx.*40\d\d/i.test(text)) tags.push('40 Series');
-    else if (/rtx.*30\d\d/i.test(text)) tags.push('30 Series');
-    else if (/rx|radeon|amd/i.test(text)) tags.push('AMD');
+    if (/(?:rtx\s*|geforce\s*)?50\d\d|50-series|50\s*series/i.test(text)) tags.push('50 Series');
+    else if (/(?:rtx\s*|geforce\s*)?40\d\d|40-series|40\s*series/i.test(text)) tags.push('40 Series');
+    else if (/(?:rtx\s*|geforce\s*)?30\d\d|30-series|30\s*series/i.test(text)) tags.push('30 Series');
+    else if (/(?:rx\s*[56789]\d\d\d)|radeon|amd/i.test(text)) tags.push('AMD');
   }
   else if (category === 'RAM') {
     if (/ddr5/i.test(text)) tags.push('DDR5');
     else if (/ddr4/i.test(text)) tags.push('DDR4');
   }
   else if (category === 'Storage') {
-    if (/gen5|pcie 5/i.test(text)) tags.push('Gen5');
-    else if (/gen4|pcie 4/i.test(text)) tags.push('Gen4');
-    else if (/gen3|pcie 3/i.test(text)) tags.push('Gen3');
+    if (/gen\s*5|pcie\s*5/i.test(text)) tags.push('GEN5');
+    else if (/gen\s*4|pcie\s*4/i.test(text)) tags.push('GEN4');
+    else if (/gen\s*3|pcie\s*3/i.test(text)) tags.push('GEN3');
+    if (/sata|2\.5["\s]|hdd|hard drive/i.test(text)) tags.push('SATA');
   }
   else if (category === 'Cooling') {
     if (/360mm|360/i.test(text)) tags.push('360mm');
     else if (/240mm|240/i.test(text)) tags.push('240mm');
     else if (/air|tower|cooler|nh-|assassin/i.test(text)) tags.push('Air Coolers');
   }
-
   else if (category === 'PSU' || category === 'Case') {
-    if (/\bwhite\b/i.test(text)) tags.push('WHITE');
-    if (/\bblack\b/i.test(text)) tags.push('BLACK');
+    if (/\bwhite\b/i.test(text)) tags.push('White');
+    if (/\bblack\b/i.test(text)) tags.push('Black');
   }
 
   return tags;
@@ -921,11 +941,31 @@ export function getConditionDotColor(condition: string): string {
   return 'bg-zinc-500';
 }
 
+export function normalizeTag(tag: string): string {
+  if (!tag) return '';
+  const trimmed = tag.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower === 'gen5') return 'GEN5';
+  if (lower === 'gen4') return 'GEN4';
+  if (lower === 'gen3') return 'GEN3';
+  if (lower === 'sata') return 'SATA';
+  if (lower === 'white') return 'White';
+  if (lower === 'black') return 'Black';
+  return trimmed;
+}
+
+export function normalizeTags(tags?: (string | null | undefined)[]): string[] {
+  if (!Array.isArray(tags)) return [];
+  return tags
+    .filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+    .map(normalizeTag);
+}
+
 export const SUB_CATEGORIES: Record<string, string[]> = {
   CPU: ['AM5', 'AM4', 'Intel'],
   RAM: ['DDR5', 'DDR4'],
   GPU: ['50 Series', '40 Series', '30 Series', 'AMD'],
-  Storage: ['Gen5', 'Gen4', 'Gen3'],
+  Storage: ['GEN5', 'GEN4', 'GEN3', 'SATA'],
   Motherboard: ['AM5', 'AM4', 'Intel'],
   PSU: ['Black', 'White'],
   Case: ['Black', 'White'],
@@ -936,13 +976,13 @@ export const determineSubCategory = (comp: import('../types').InventoryComponent
   const possible = SUB_CATEGORIES[comp.category] || [];
   const nameLower = String(comp.name || '').toLowerCase();
   const specLower = typeof comp.specifications === 'string' ? comp.specifications.toLowerCase() : (comp.specifications ? String(comp.specifications).toLowerCase() : '');
-  const compTags = Array.isArray(comp.tags) ? comp.tags : [];
-  const inferredTags = autoTagComponent(comp.name || '', comp.specifications || '', comp.category);
+  const compTags = Array.isArray(comp.tags) ? comp.tags.map(t => String(t || '').trim().toLowerCase()) : [];
+  const inferredTags = autoTagComponent(comp.name || '', comp.specifications || '', comp.category).map(t => t.toLowerCase());
   for (const sub of possible) {
     const subLower = sub.toLowerCase();
     if (nameLower.includes(subLower) || 
-        compTags.some(t => typeof t === 'string' && t.toLowerCase() === subLower) ||
-        inferredTags.some(tag => tag.toLowerCase() === subLower) ||
+        compTags.includes(subLower) ||
+        inferredTags.includes(subLower) ||
         (specLower && specLower.includes(subLower))) {
       return sub;
     }

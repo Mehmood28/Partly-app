@@ -17,6 +17,7 @@ import { BuyPCModal } from './components/builds/BuyPCModal';
 import { SellPartModal } from './components/parts/sellPart/SellPartModal';
 import { BulkStockEntryModal, ParsedBulkStockItem } from './components/BulkStockEntryModal';
 import { InventoryComponent, PCBuild, PurchaseEntry } from './types';
+import { autoTagComponent, normalizeTags } from './utils/helpers';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -94,15 +95,20 @@ function AppContent() {
         unitPrice: item.unitCost || 0,
         totalPrice: (item.quantity || 1) * (item.unitCost || 0),
         paymentMethod: item.paymentMethod || 'Cash',
-        platform: item.vendor || 'Other',
+        platform: item.seller || 'Other',
         healthPercent: item.category === 'Storage' ? item.healthPercent : undefined,
         notes: 'Bulk imported'
       };
       
+      const itemTags = (item.tags && item.tags.length > 0)
+        ? normalizeTags(item.tags)
+        : autoTagComponent(item.name || '', '', item.category);
+
       return {
         name: item.name,
         category: item.category,
         specifications: '',
+        tags: itemTags.length > 0 ? itemTags : undefined,
         purchaseHistory: [ph],
         healthPercent: item.category === 'Storage' ? item.healthPercent : undefined,
         targetMarketValuePerUnit: (item.unitCost || 0) * 1.5, // Default market-value estimate.
@@ -135,12 +141,8 @@ function AppContent() {
     const targetId = existingComponentId || (editingComponent ? editingComponent.id : undefined);
     return saveComponent({
       componentData: {
-        name: compData.name,
-        category: compData.category,
-        specifications: compData.specifications,
-        tags: compData.tags,
-        targetMarketValuePerUnit: compData.targetMarketValuePerUnit,
-        purchaseHistory: compData.purchaseHistory,
+        ...compData,
+        healthPercent: compData.category === 'Storage' ? compData.healthPercent : undefined,
       },
       existingComponentId: targetId,
       newPurchaseEntry: purchaseEntry,

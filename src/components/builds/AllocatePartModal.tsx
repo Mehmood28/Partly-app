@@ -1,22 +1,20 @@
-import React, { useState, useDeferredValue } from 'react';
-import { PCBuild, ComponentCategory } from '../../types';
+import React, { useState, useDeferredValue, useMemo } from 'react';
+import { PCBuild, ComponentCategory, CATEGORIES } from '../../types';
 import {
   calculateUnassignedQuantityStrict,
-  getAllBatchesWithRemaining,
+  calculateUnassignedValueStrict,
+  precomputeAssignedBatches,
   filterAndSortComponents,
-  formatReadableDate,
   formatCurrency,
   SortOption,
 } from '../../utils/helpers';
-import { X, Box } from 'lucide-react';
+import { X, Box, Layers } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
-import { usePrivacy } from '../../context/PrivacyContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { InventoryFilterBar } from '../InventoryFilterBar';
 import { ConfirmModal } from '../ConfirmModal';
 import { useToast } from '../../context/ToastContext';
-import { normalizePlatform } from '../../utils/platformDisplay';
-import { InventoryPartAccordionHeader } from './InventoryPartAccordionHeader';
+import { ComponentCard } from '../ComponentCard';
 
 interface AllocatePartModalProps {
   build: PCBuild | null;
@@ -27,7 +25,6 @@ interface AllocatePartModalProps {
 export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isOpen = true, onClose }) => {
   const { state, allocatePartToBuild } = useInventory();
   const { showToast } = useToast();
-  const { hideSupplierNames } = usePrivacy();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest-purchase');
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -46,30 +43,51 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
   const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'ALL'>('ALL');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('');
 
-  const filteredComponents = filterAndSortComponents(state.components, {
+  const filteredComponents = useMemo(() => filterAndSortComponents(state.components, {
     searchQuery: deferredSearchQuery,
     category: activeCategoryTab === 'ALL' ? undefined : activeCategoryTab,
     subCategory: activeSubCategory,
     onlyAvailable: true,
     builds: state.builds,
     sortBy,
-  });
+  }), [state.components, deferredSearchQuery, activeCategoryTab, activeSubCategory, sortBy, state.builds]);
+
+  const groupedComponents = useMemo(() => {
+    const precomputedMap = precomputeAssignedBatches(state.builds);
+    if (activeCategoryTab !== 'ALL') {
+      const items = filteredComponents.filter(c => calculateUnassignedQuantityStrict(c, state.builds, precomputedMap) > 0);
+      const totalUnits = items.reduce((sum, c) => sum + calculateUnassignedQuantityStrict(c, state.builds, precomputedMap), 0);
+      const totalVal = items.reduce((sum, c) => sum + calculateUnassignedValueStrict(c, state.builds, precomputedMap), 0);
+      return [{ category: activeCategoryTab, items, totalUnits, totalVal }].filter(g => g.items.length > 0 && g.totalUnits > 0);
+    }
+    return CATEGORIES.map((category) => {
+      const items = filteredComponents.filter((c) => c.category === category && calculateUnassignedQuantityStrict(c, state.builds, precomputedMap) > 0);
+      const totalUnits = items.reduce((sum, c) => {
+        return sum + calculateUnassignedQuantityStrict(c, state.builds, precomputedMap);
+      }, 0);
+      const totalVal = items.reduce((sum, c) => sum + calculateUnassignedValueStrict(c, state.builds, precomputedMap), 0);
+      return { category, items, totalUnits, totalVal };
+    }).filter((group) => group.items.length > 0 && group.totalUnits > 0);
+  }, [filteredComponents, activeCategoryTab, state.builds]);
 
   if (!build) return null;
 
+  const hasAnyItems = groupedComponents.some(g => g.items.length > 0);
+
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="workspace" className="build-modal stock-modal max-w-xl">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="workspace" className="build-modal stock-modal max-w-2xl sm:max-w-3xl w-full">
       <div className="allocate-modal-content w-full">
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <div className="allocate-modal-header flex items-center justify-between border-b border-white/[0.08] pb-2">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
             <Box className="w-4 h-4 text-[#B9EF68]" /> Allocate Inventory Component
           </h3>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.12] bg-[#141c1f] text-zinc-400 hover:text-white hover:border-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
         <p className="text-xs text-zinc-400 font-sans">
@@ -100,124 +118,108 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
         </div>
 
         <div className="allocate-results modal-results-list overflow-y-auto pr-1">
-          {filteredComponents.length === 0 ? (
+          {!hasAnyItems ? (
             <div className="text-center py-8 px-4 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/[0.08] rounded-xl bg-[#101719]/50 mt-2">
               <Box className="w-7 h-7 mb-2 text-zinc-500" />
               <p className="text-xs font-medium text-zinc-400">No compatible parts found</p>
             </div>
-          ) : filteredComponents.map((comp) => {
-            const batches = getAllBatchesWithRemaining(comp, state.builds);
-            const availableBatches = batches.filter((b) => b.availableQuantity > 0);
-            if (availableBatches.length === 0) return null;
-            const unassignedQty = calculateUnassignedQuantityStrict(comp, state.builds);
-            const totalAvailable = availableBatches.reduce((sum, b) => sum + b.availableQuantity, 0);
-            const avgPrice =
-              totalAvailable > 0
-                ? availableBatches.reduce((sum, b) => sum + b.unitCost * b.availableQuantity, 0) / totalAvailable
-                : 0;
-            const isExpanded = expandedPartId === comp.id;
-
-            return (
-              <div key={comp.id} className={`swap-component-row ${isExpanded ? 'is-expanded' : ''}`}>
-                <InventoryPartAccordionHeader
-                  category={comp.category}
-                  name={comp.name}
-                  isExpanded={isExpanded}
-                  onToggle={() => setExpandedPartId(isExpanded ? null : comp.id)}
-                  metadata={
-                    <>
-                      {comp.tags?.filter(Boolean).map((tag) => <span key={tag}>{tag}</span>)}
-                      {comp.specifications && <span>{comp.specifications}</span>}
-                      <span>{unassignedQty} in stock</span>
-                      <span>·</span>
-                      <span>Avg. {formatCurrency(avgPrice)}{totalAvailable > 1 ? '/ea' : ''}</span>
-                      {comp.category === 'Storage' && (() => {
-                        const h = comp.healthPercent ?? availableBatches.find(b => typeof b.entry.healthPercent === 'number')?.entry.healthPercent;
-                        return typeof h === 'number' ? (
-                          <>
-                            <span>·</span>
-                            <span>{h}%</span>
-                          </>
-                        ) : null;
-                      })()}
-                    </>
-                  }
-                />
-                
-                {isExpanded && (
-                  <div className="swap-batches">
-                    {availableBatches.map(({ entry, availableQuantity, unitCost }) => {
-                      const quantityKey = `${comp.id}:${entry.id}`;
-                      const quantityValue = allocationQuantities[quantityKey] ?? '1';
-                      return (
-                        <div key={entry.id} className="allocate-batch-row">
-                          <div className="swap-batch-details">
-                            <strong>{availableQuantity} available · {formatCurrency(unitCost)}{availableQuantity > 1 ? '/ea' : ''}</strong>
-                            <span>
-                              {entry.condition}{comp.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''}
-                              {entry.paymentMethod ? ` · ${entry.paymentMethod}` : ''}
-                              {!hideSupplierNames && entry.platform ? ` · ${normalizePlatform(String(entry.platform))}` : ''}
-                              {entry.date ? ` · ${formatReadableDate(entry.date) || entry.date}` : ''}
-                            </span>
-                          </div>
-                          <div className="allocate-batch-actions">
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              min="1"
-                              max={availableQuantity}
-                              step="1"
-                              value={quantityValue}
-                              onChange={(event) => {
-                                const value = event.target.value;
-                                setAllocationQuantities((current) => ({
-                                  ...current,
-                                  [quantityKey]: value,
-                                }));
-                              }}
-                              aria-label={`Quantity of ${comp.name} to assign`}
-                              className="app-field h-8 w-14 px-1 text-center font-mono text-xs"
-                            />
-                            <button
+          ) : (
+            groupedComponents.map((group) => (
+              <div key={group.category} className="mb-2">
+                <div className="inventory-group inventory-group-heading">
+                  <span className="flex items-center gap-2 text-xs font-bold text-zinc-100 sm:text-sm">
+                    <Layers className="h-4 w-4 text-[#B9EF68]" />
+                    {group.category}
+                  </span>
+                  <span>—</span>
+                  <span>{group.totalUnits} in stock</span>
+                  <span>—</span>
+                  <span className="font-semibold text-zinc-200">{formatCurrency(group.totalVal)}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-[5px]">
+                  {group.items.map((comp) => (
+                    <ComponentCard
+                      key={comp.id}
+                      component={comp}
+                      isExpanded={expandedPartId === comp.id}
+                      onToggle={() => setExpandedPartId(expandedPartId === comp.id ? null : comp.id)}
+                      showAdminActions={false}
+                      renderBatchActions={(batch) => {
+                        const quantityKey = `${comp.id}:${batch.entry.id}`;
+                        const rawVal = Number(allocationQuantities[quantityKey]);
+                        const quantityValue = Math.min(
+                          batch.availableQuantity,
+                          Math.max(1, Number.isFinite(rawVal) && rawVal > 0 ? rawVal : 1)
+                        );
+                        return (
+                          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            {/* - + Stepper */}
+                            <div className="flex h-[24px] items-center rounded-md border border-[#B9EF68]/30 bg-[#0e1518] overflow-hidden shrink-0">
+                              <button
                                 type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const requestedQuantity = Number(quantityValue);
-                                  if (
-                                    !Number.isFinite(requestedQuantity) ||
-                                    !Number.isInteger(requestedQuantity) ||
-                                    requestedQuantity <= 0
-                                  ) {
-                                    showToast('Quantity must be a positive whole number.', 'error');
-                                    return;
-                                  }
-                                  if (requestedQuantity > availableQuantity) {
-                                    showToast(`Only ${availableQuantity} available from this batch.`, 'error');
-                                    return;
-                                  }
-                                  setPendingAllocation({
-                                    componentId: comp.id,
-                                    componentName: comp.name,
-                                    entryId: entry.id,
-                                    condition: entry.condition,
-                                    date: entry.date,
-                                    unitCost,
-                                    quantity: requestedQuantity,
-                                  });
+                                onClick={() => {
+                                  setAllocationQuantities((current) => ({
+                                    ...current,
+                                    [quantityKey]: Math.max(1, quantityValue - 1).toString(),
+                                  }));
                                 }}
-                                className="app-button app-button-primary shrink-0 px-3"
+                                disabled={quantityValue <= 1}
+                                className="flex h-full w-[17px] items-center justify-center text-[#B9EF68] hover:bg-[#B9EF68]/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer"
+                                aria-label="Decrease quantity"
                               >
-                                Assign
+                                <svg viewBox="0 0 16 16" className="w-2.5 h-2.5 fill-current">
+                                  <rect x="2" y="7" width="12" height="2" rx="1" />
+                                </svg>
                               </button>
+                              <span className="flex h-full min-w-[16px] px-0.5 items-center justify-center font-mono text-[11px] font-bold leading-none text-[#B9EF68] border-x border-[#B9EF68]/20 select-none">
+                                {quantityValue}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAllocationQuantities((current) => ({
+                                    ...current,
+                                    [quantityKey]: Math.min(batch.availableQuantity, quantityValue + 1).toString(),
+                                  }));
+                                }}
+                                disabled={quantityValue >= batch.availableQuantity}
+                                className="flex h-full w-[17px] items-center justify-center text-[#B9EF68] hover:bg-[#B9EF68]/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer"
+                                aria-label="Increase quantity"
+                              >
+                                <svg viewBox="0 0 16 16" className="w-2.5 h-2.5 fill-current">
+                                  <rect x="2" y="7" width="12" height="2" rx="1" />
+                                  <rect x="7" y="2" width="2" height="12" rx="1" />
+                                </svg>
+                              </button>
+                            </div>
+
+                            {/* Assign Button (exact Sell button color) */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPendingAllocation({
+                                  componentId: comp.id,
+                                  componentName: comp.name,
+                                  entryId: batch.entry.id,
+                                  condition: batch.entry.condition,
+                                  date: batch.entry.date,
+                                  unitCost: batch.unitCost,
+                                  quantity: quantityValue,
+                                });
+                              }}
+                              className="flex h-[24px] items-center justify-center leading-none rounded-md border border-[#B9EF68]/35 px-2 text-[11px] font-semibold text-[#B9EF68] transition-colors hover:bg-[#B9EF68]/10 hover:text-white shrink-0 cursor-pointer"
+                            >
+                              <span className="leading-none pt-[0.5px]">Assign</span>
+                            </button>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-            );
-          })}
+            ))
+          )}
         </div>
       </div>
 

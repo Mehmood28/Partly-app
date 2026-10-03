@@ -1,5 +1,6 @@
 import localforage from 'localforage';
 import { AppState, InventoryComponent, PCBuild, TransactionLogItem } from '../types';
+import { normalizeTags } from './helpers';
 
 export const STORAGE_KEY = 'pc_inventory_tracker_v2';
 export const DB_NAME = 'PartlyPCInventoryDB';
@@ -41,10 +42,33 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
   const parsedObj = parsed as Record<string, unknown>;
   const { sheetStats: _obsoleteSheetStats, ...parsedWithoutSheetStats } = parsedObj;
   const components = Array.isArray(parsedObj.components)
-    ? (cloneStoredValue(parsedObj.components) as InventoryComponent[])
+    ? (cloneStoredValue(parsedObj.components) as InventoryComponent[]).map((comp) => {
+        if (!comp || !Array.isArray(comp.tags)) return comp;
+        return {
+          ...comp,
+          tags: normalizeTags(comp.tags),
+        };
+      })
     : [];
   const builds = Array.isArray(parsedObj.builds)
-    ? (cloneStoredValue(parsedObj.builds) as PCBuild[])
+    ? (cloneStoredValue(parsedObj.builds) as PCBuild[]).map((build) => {
+        if (!build) return build;
+        const normalizeBreakdown = (items?: PCBuild['acquisitionComponentBreakdown']) => {
+          if (!Array.isArray(items)) return items;
+          return items.map((item) => {
+            if (!item || !Array.isArray(item.tags)) return item;
+            return {
+              ...item,
+              tags: normalizeTags(item.tags),
+            };
+          });
+        };
+        return {
+          ...build,
+          acquisitionComponentBreakdown: normalizeBreakdown(build.acquisitionComponentBreakdown),
+          tradeInComponentBreakdown: normalizeBreakdown(build.tradeInComponentBreakdown),
+        };
+      })
     : [];
   const transactions = Array.isArray(parsedObj.transactions)
     ? (cloneStoredValue(parsedObj.transactions) as TransactionLogItem[])

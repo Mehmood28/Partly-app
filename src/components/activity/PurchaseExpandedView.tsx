@@ -28,7 +28,7 @@ interface PurchaseDisplayItem {
   paymentMethod?: string;
 }
 
-export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, isBulkPurchase, isPCPurchase, matchedComp, purchasedBuild, hasConflictingLiveBuildLinks = false, components }) => {
+export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, isPCPurchase, matchedComp, purchasedBuild, hasConflictingLiveBuildLinks = false, components }) => {
   const { hideSupplierNames } = usePrivacy();
   // A purchased PC can later be parted out to Stock. Those entries preserve the
   // original purchase transaction, so prefer them for the purchase ledger. If
@@ -40,7 +40,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
   ].filter(Boolean).map((value) => String(value).trim().toLowerCase());
   const sourceBuildId = tx.relatedComponentId?.trim() || purchasedBuild?.id;
   const orphanedBuild = !!sourceBuildId && !purchasedBuild;
-  const partedOutItems = isPCPurchase && !hasConflictingLiveBuildLinks
+  const partedOutItems: PurchaseDisplayItem[] = isPCPurchase && !hasConflictingLiveBuildLinks
     ? components.flatMap((component) => component.purchaseHistory
       .filter((entry) => {
         const entrySourceTransactionId = entry.sourcePurchaseTransactionId?.trim();
@@ -69,7 +69,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
         paymentMethod: entry.paymentMethod,
       })))
     : [];
-  const acquisitionItems = purchasedBuild?.acquisitionComponentBreakdown?.map((item) => ({
+  const acquisitionItems: PurchaseDisplayItem[] = purchasedBuild?.acquisitionComponentBreakdown?.map((item) => ({
     category: item.category,
     itemName: item.name,
     quantity: item.quantity,
@@ -81,31 +81,83 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
     paymentMethod: tx.paymentMethod,
   })) || [];
   const detailItems = (tx.detailsList || []).map((detail) => parseBatchItem(detail, components, tx));
-  const purchaseDisplayItems: PurchaseDisplayItem[] = partedOutItems.length > 0
-    ? partedOutItems
-    : acquisitionItems.length > 0
-      ? acquisitionItems
-      : detailItems;
-  const purchasedItems = sortByCategory(purchaseDisplayItems);
-  return (
-    <div className="record-detail purchase-expanded-detail space-y-4">
-      {purchasedItems.length > 0 ? <section>
-        <h4>Purchase items <span>· {purchasedItems.length} {purchasedItems.length === 1 ? 'item' : 'items'}</span></h4>
-        <div className="purchase-items">
-          <div className="purchase-item-head"><span>Item / details</span><span>Qty</span><span>Unit price</span><span>Payment</span></div>
-          {purchasedItems.map((item, index) => <div key={index} className="purchase-item">
-            <div className="purchase-item-name"><strong>{item.itemName}</strong><span>{[
-              ...(item.tags || []),
-              (isBulkPurchase || isPCPurchase) ? item.condition : undefined,
-              !hideSupplierNames && item.platform ? normalizePlatform(item.platform) : undefined,
-            ].filter(Boolean).join(' · ')}</span></div>
+  const fallbackSingleItems: PurchaseDisplayItem[] = (partedOutItems.length === 0 && acquisitionItems.length === 0 && detailItems.length === 0 && matchedComp)
+    ? [{
+        category: matchedComp.category,
+        itemName: matchedComp.name,
+        quantity: tx.quantity || tx.relatedComponentQty || 1,
+        unitPrice: (tx.quantity && tx.quantity > 0 && tx.totalAmount !== undefined) ? (tx.totalAmount / tx.quantity) : (tx.totalAmount || 0),
+        totalPrice: tx.totalAmount || 0,
+        tags: matchedComp.tags || [],
+        condition: tx.originalPurchaseEntrySnapshot?.condition || matchedComp.purchaseHistory?.[0]?.condition,
+        platform: tx.platform,
+        paymentMethod: tx.paymentMethod,
+      }]
+    : [];
+  const pcCombinedItems = isPCPurchase
+    ? [...acquisitionItems, ...partedOutItems]
+    : [];
+
+  const purchaseDisplayItems: PurchaseDisplayItem[] = isPCPurchase && pcCombinedItems.length > 0
+    ? pcCombinedItems
+    : partedOutItems.length > 0
+      ? partedOutItems
+      : acquisitionItems.length > 0
+        ? acquisitionItems
+        : detailItems.length > 0
+          ? detailItems
+          : fallbackSingleItems;
+
+  const isSplitPC = isPCPurchase && acquisitionItems.length > 0 && partedOutItems.length > 0;
+  const sortedInBuild = sortByCategory(acquisitionItems);
+  const sortedPartedOut = sortByCategory(partedOutItems);
+  const sortedAllPurchased = sortByCategory(purchaseDisplayItems);
+
+  const renderPartsTable = (title: string, items: PurchaseDisplayItem[]) => (
+    <section>
+      <h4>{title} <span>· {items.length} {items.length === 1 ? 'part' : 'parts'}</span></h4>
+      <div className="purchase-items">
+        <div className="purchase-item-head"><span>Part / details</span><span>Qty</span><span>Unit price</span><span>Payment</span></div>
+        {items.map((item, index) => (
+          <div key={index} className="purchase-item">
+            <div className="purchase-item-name">
+              <strong>{item.itemName}</strong>
+              <span>{[
+                ...(item.tags || []),
+                item.condition,
+                !hideSupplierNames && item.platform ? normalizePlatform(item.platform) : undefined,
+              ].filter(Boolean).join(' · ')}</span>
+            </div>
             <div data-label="Qty">{item.quantity}</div>
             <div data-label="Unit price">{formatCurrency(item.unitPrice)}</div>
             <div data-label="Payment">{item.paymentMethod || tx.paymentMethod || '—'}</div>
-          </div>)}
-        </div>
-      </section> : matchedComp ? <section><h4>Purchased component</h4><p className="text-zinc-100">{matchedComp.name}</p><p>{[matchedComp.category, ...(matchedComp.tags || [])].join(' · ')}</p></section> : null}
-      {tx.notes && <dl className="purchase-record-details detail-list"><div><dt>Notes</dt><dd>{tx.notes}</dd></div></dl>}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+
+  return (
+    <div className="record-detail purchase-expanded-detail flex flex-col gap-2.5">
+      {isSplitPC ? (
+        <>
+          {renderPartsTable('Parts in Build', sortedInBuild)}
+          {renderPartsTable('Parted Out Parts', sortedPartedOut)}
+        </>
+      ) : sortedAllPurchased.length > 0 ? (
+        renderPartsTable('Purchased parts', sortedAllPurchased)
+      ) : matchedComp ? (
+        <section>
+          <h4>Purchased part</h4>
+          <p className="text-zinc-100">{matchedComp.name}</p>
+          <p>{[matchedComp.category, ...(matchedComp.tags || [])].join(' · ')}</p>
+        </section>
+      ) : null}
+      {tx.notes && (
+        <dl className="purchase-record-details detail-list">
+          <div><dt>Notes</dt><dd>{tx.notes}</dd></div>
+        </dl>
+      )}
     </div>
   );
 };

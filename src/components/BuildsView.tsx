@@ -223,26 +223,29 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
     <div className="builds-view flex flex-col">
       {/* Build workbench */}
       <div className="builds-toolbar">
-        <div className="min-w-0">
-          <h2 className="app-page-title flex items-center gap-2">
-            <div className="builds-title-icon">
-              <Hammer className="h-4 w-4" />
-            </div>
-            PC Builds
-          </h2>
-          <p className="app-page-copy builds-page-copy">Builds, allocation, listings, and completed sales.</p>
+        <div className="flex items-start gap-1.5 min-w-0">
+          <div className="builds-title-icon">
+            <Hammer className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0 flex flex-col justify-center">
+            <h2 className="app-page-title">
+              <span>PC Builds</span>
+            </h2>
+            <p className="app-page-copy builds-page-copy">Builds, allocation, listings, and completed sales.</p>
+          </div>
         </div>
 
         <div className="builds-primary-actions">
           <button
             onClick={onOpenBuyPC}
-            className="app-button flex shrink-0 items-center justify-center gap-1.5 px-3 text-[#9FF8F4]"
+            className="app-button app-button-primary flex shrink-0 items-center justify-center gap-1.5 px-3"
           >
             <ShoppingCart className="w-3.5 h-3.5" /> Buy PC
           </button>
           <button
             onClick={() => onOpenAddBuild()}
-            className="app-button app-button-primary flex shrink-0 items-center justify-center gap-1.5 px-3"
+            className="app-button builds-btn-create flex shrink-0 items-center justify-center gap-1.5 px-3"
+            style={{ background: 'linear-gradient(95deg, #83e5df 0%, #b9ef68 100%)', color: '#101709', border: 'none' }}
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Create New PC Build
           </button>
@@ -257,36 +260,40 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Available')} 
             data-active={statusFilter === 'Available'}
-            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
+            className="flex items-center justify-center gap-1 overflow-hidden px-1 whitespace-nowrap"
           >
-            Available ({availableCount})
+            <span className="truncate">Available</span>
+            <span className="shrink-0 font-mono text-[11px] opacity-75">({availableCount})</span>
           </button>
 
           <button 
             type="button"
             onClick={() => handleTabChange('Pending')} 
             data-active={statusFilter === 'Pending'}
-            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
+            className="flex items-center justify-center gap-1 overflow-hidden px-1 whitespace-nowrap"
           >
-            Pending ({pendingCount})
+            <span className="truncate">Pending</span>
+            <span className="shrink-0 font-mono text-[11px] opacity-75">({pendingCount})</span>
           </button>
 
           <button 
             type="button"
             onClick={() => handleTabChange('Trade-Ins')} 
             data-active={statusFilter === 'Trade-Ins'}
-            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
+            className="flex items-center justify-center gap-1 overflow-hidden px-1 whitespace-nowrap"
           >
-            Trade-Ins ({tradeInCount})
+            <span className="truncate">Trade-Ins</span>
+            <span className="shrink-0 font-mono text-[11px] opacity-75">({tradeInCount})</span>
           </button>
 
           <button 
             type="button"
             onClick={() => handleTabChange('Sold')} 
             data-active={statusFilter === 'Sold'}
-            className="inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap px-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em] sm:text-[11px]"
+            className="flex items-center justify-center gap-1 overflow-hidden px-1 whitespace-nowrap"
           >
-            Sold ({soldCount})
+            <span className="truncate">Sold</span>
+            <span className="shrink-0 font-mono text-[11px] opacity-75">({soldCount})</span>
           </button>
         </div>
 
@@ -350,7 +357,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           </p>
         </div>
       ) : !isVirtualized ? (
-        <div className="space-y-1.5 pr-1">
+        <div className="flex flex-col gap-[5px] pr-1">
           {filteredBuilds.map((build) => (
             <React.Fragment key={build.id}>{renderBuildRow(build)}</React.Fragment>
           ))}
@@ -387,7 +394,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
                     left: 0,
                     width: '100%',
                     transform: `translateY(${virtualRow.start}px)`,
-                    paddingBottom: '6px',
+                    paddingBottom: '5px',
                   }}
                 >
                   {renderBuildRow(build)}

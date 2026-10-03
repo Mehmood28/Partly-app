@@ -47,7 +47,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
     : [];
 
   return (
-    <div className={`inventory-filter-bar w-full space-y-3 ${compactControls ? 'is-compact' : ''}`}>
+    <div className={`inventory-filter-bar w-full space-y-2 ${compactControls ? 'is-compact' : ''}`}>
       {showCategories && <div className="category-filters">
         <button
           type="button"
@@ -90,7 +90,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       
       {/* Sub-Category Pills (Fully Visible Wrapping Layout) */}
       {currentSubCats.length > 0 && (
-        <div className="flex w-full flex-wrap items-center gap-1.5">
+        <div className="flex w-full flex-wrap items-center gap-1.5 -mt-0.5">
           {currentSubCats.map(sub => {
             const isActive = activeSubCategory === sub;
             return (
@@ -112,7 +112,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       )}
 
       {/* Controls Row: Search & Sort */}
-      {(showSearch || (showSort && onSortByChange)) && <div className="inventory-filter-controls flex w-full min-w-0 max-w-full flex-col gap-2.5 sm:flex-row">
+      {(showSearch || (showSort && onSortByChange)) && <div className="inventory-filter-controls flex w-full min-w-0 max-w-full flex-col gap-2 sm:flex-row">
         {showSearch && (
         <div className="relative flex-1 min-w-0 w-full max-w-full group">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400 pointer-events-none" />

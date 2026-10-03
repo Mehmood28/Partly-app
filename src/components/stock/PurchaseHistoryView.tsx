@@ -128,7 +128,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search purchase logs, vendor, platform..."
+            placeholder="Search purchase logs, seller, platform..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="app-field pl-9 pr-8 text-xs placeholder:text-zinc-600 sm:text-sm"
@@ -168,7 +168,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
           <p className="text-xs text-zinc-400">Try changing your search query.</p>
         </div>
       ) : !isVirtualized ? (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-[5px]">
           {sortedTransactions.map((tx) => (
             <React.Fragment key={tx.id}>{renderTransactionRow(tx)}</React.Fragment>
           ))}
@@ -204,7 +204,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
                     left: 0,
                     width: '100%',
                     transform: `translateY(${virtualRow.start}px)`,
-                    paddingBottom: '6px',
+                    paddingBottom: '5px',
                   }}
                 >
                   {renderTransactionRow(tx)}

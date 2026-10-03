@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, Receipt, CheckCircle2, ArrowRightLeft } from 'l
 import { InventoryComponent, TransactionLogItem } from '../../types';
 import {
   formatCurrency,
+  normalizeTag,
 } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { usePrivacy } from '../../context/PrivacyContext';
@@ -32,6 +33,7 @@ interface TransactionCardHeaderProps {
   saleDate?: string;
   matchedComp?: InventoryComponent;
   conditionStr?: string;
+  categoryStr?: string;
 }
 
 /**
@@ -62,14 +64,17 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
   saleDate,
   matchedComp,
   conditionStr,
+  categoryStr,
 }) => {
   const { hideSupplierNames } = usePrivacy();
   const recordedDate = saleDate || tx.dateSortable || tx.timestamp;
   const StatusIcon = isPartSale ? CheckCircle2 : isExchange ? ArrowRightLeft : Receipt;
+  const resolvedCategory = categoryStr || (isBulkPurchase ? 'Bulk' : isPCPurchase ? 'PC' : (matchedComp?.category || '—'));
+  const resolvedCondition = conditionStr || (isPurchase ? 'MIXED' : '—');
   const fields = [
-    { label: 'Category', value: isBulkPurchase ? 'Bulk' : isPCPurchase ? 'PC' : (matchedComp?.category || '—') },
-    { label: 'Condition', value: conditionStr || '—' },
-    { label: 'Supplier', value: !hideSupplierNames && platform ? normalizePlatform(platform) : '—' },
+    { label: 'Category', value: resolvedCategory },
+    { label: 'Condition', value: resolvedCondition },
+    { label: 'Seller', value: !hideSupplierNames && platform ? normalizePlatform(platform) : '—' },
     { label: 'Payment', value: paymentMethod || '—' },
   ];
 
@@ -116,7 +121,7 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
           <dl className="record-finances" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))' }}>
             {isExchange && <><div><dt>Outgoing</dt><dd>{formatCurrency(outgoingCostBasis)}</dd></div><div><dt>Cash</dt><dd>{formatCurrency(cashPaidOnTop)}</dd></div><div><dt>Incoming</dt><dd>{formatCurrency(incomingCostBasis)}</dd></div></>}
           </dl>
-          <div className="record-metadata">{matchedComp?.category && <span>{matchedComp.category}</span>}{matchedComp?.tags?.map((tag) => <span key={tag}>{tag}</span>)}{conditionStr && <span>{conditionStr}</span>}{buyerName && <span>{buyerName}</span>}{platform && <span>{normalizePlatform(platform)}</span>}{paymentMethod && <span>{paymentMethod}</span>}</div>
+          <div className="record-metadata">{matchedComp?.category && <span>{matchedComp.category}</span>}{matchedComp?.tags?.map((tag) => <span key={tag}>{normalizeTag(tag)}</span>)}{conditionStr && <span>{conditionStr}</span>}{buyerName && <span>{buyerName}</span>}{platform && <span>{normalizePlatform(platform)}</span>}{paymentMethod && <span>{paymentMethod}</span>}</div>
         </>
       )}
     </button>

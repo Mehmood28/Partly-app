@@ -27,7 +27,7 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onCl
       {isOpen && (
         <div 
           data-bottom-sheet-modal="true" role="dialog" aria-modal="true"
-          className="pointer-events-none fixed inset-0 z-[300] flex items-end justify-center px-4 pb-[max(4.75rem,env(safe-area-inset-bottom))] pt-3 sm:items-center sm:p-5"
+          className="pointer-events-none fixed inset-0 z-[300] flex items-end justify-center px-1.5 pb-[max(4.75rem,env(safe-area-inset-bottom))] pt-3 sm:items-center sm:p-5"
           style={{ height: '100dvh', width: '100vw' }}
         >
           <motion.div 
@@ -45,7 +45,7 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onCl
             exit={{ y: 10, opacity: 0, scale: 0.98 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
             data-modal-layout={layout}
-            className={`pointer-events-auto relative flex w-full flex-col rounded-[14px] border border-white/[0.12] bg-[#0b1113]/98 p-3.5 shadow-[0_28px_80px_rgba(0,0,0,0.82)] backdrop-blur-xl sm:rounded-2xl sm:p-5 ${layout === 'workspace' ? 'modal-layout-workspace' : 'modal-layout-content'} ${className}`}
+            className={`pointer-events-auto relative flex w-full max-w-[calc(100vw-12px)] sm:max-w-3xl flex-col rounded-[14px] border border-white/[0.12] bg-[#0b1113]/98 p-3 shadow-[0_28px_80px_rgba(0,0,0,0.82)] backdrop-blur-xl sm:rounded-2xl sm:p-5 ${layout === 'workspace' ? 'modal-layout-workspace' : 'modal-layout-content'} ${className}`}
           >
             {children}
           </motion.div>

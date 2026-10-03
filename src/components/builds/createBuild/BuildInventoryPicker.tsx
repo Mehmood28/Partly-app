@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Tag, Plus, ChevronUp, ChevronDown } from 'lucide-react';
 import { CATEGORIES, ComponentCategory, InventoryComponent, PCBuild, PCBuildPart } from '../../../types';
-import { filterAndSortComponents, formatCurrency, formatReadableDate, getConditionDotColor, SortOption } from '../../../utils/helpers';
+import { filterAndSortComponents, formatCurrency, formatReadableDate, getConditionDotColor, normalizeTag, SortOption } from '../../../utils/helpers';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { InventoryFilterBar } from '../../InventoryFilterBar';
 import { normalizePlatform } from '../../../utils/platformDisplay';
@@ -81,7 +81,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
       />
 
       <div
-        className="build-inventory-list space-y-2"
+        className="build-inventory-list flex flex-col gap-[5px]"
       >
         {filteredComponents.length === 0 ? (
           <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-4 text-center text-xs text-zinc-400 font-sans">
@@ -112,7 +112,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
             if (componentGroups.length === 0) return null;
 
             return (
-              <div key={cat} className="space-y-2">
+              <div key={cat} className="flex flex-col gap-[5px]">
                 <div className="text-xs font-bold text-zinc-300 flex items-center gap-1.5 pt-2 font-display">
                   <CategoryIcon
                     category={cat}
@@ -120,7 +120,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                     fallbackClassName="w-3.5 h-3.5 text-zinc-400"
                   /> {cat} Parts
                 </div>
-                <div className="grid grid-cols-1 gap-1.5">
+                <div className="grid grid-cols-1 gap-[5px]">
                   {componentGroups.map(({ comp, batches, totalUnassigned, weightedAvgCost }) => {
                     const isExpanded = expandedInventoryPartId === comp.id;
                     return (
@@ -137,7 +137,10 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                           <div className="flex flex-col min-w-0 flex-1 pr-2">
                             <span className="text-xs font-semibold leading-snug text-zinc-100 break-words font-sans">{comp.name}</span>
                             <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[11px] text-zinc-500">
-                              {comp.tags?.filter(Boolean).map((tag, idx) => <span key={idx}>{idx > 0 ? '· ' : ''}{tag}</span>)}
+                              {comp.tags?.filter(Boolean).map((tag, idx) => {
+                                const displayTag = normalizeTag(tag);
+                                return <span key={idx}>{idx > 0 ? '· ' : ''}{displayTag}</span>;
+                              })}
                               {comp.tags?.filter(Boolean).length ? <span>·</span> : null}
                               <span className="font-semibold text-[#83E5DF]">{totalUnassigned} in stock</span>
                               <span>· Avg {formatCurrency(weightedAvgCost)}{totalUnassigned > 1 ? '/ea' : ''}</span>

@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 
 let aiClient: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI {
@@ -16,16 +16,13 @@ function getAI(): GoogleGenAI {
 
 const GEMINI_MODEL_CANDIDATES = [
   'gemini-3.8-flash',
-  'gemini-3.7-flash',
   'gemini-3.1-flash-lite',
-  'gemini-flash-latest',
 ] as const;
 
-// Inventory extraction is a short, structured task. Keep the more capable
-// model ordering for build generation, where reasoning matters more.
+// Inventory extraction is a short, structured task.
 const BULK_IMPORT_MODELS = [
-  'gemini-3.1-flash-lite',
   'gemini-3.8-flash',
+  'gemini-3.1-flash-lite',
 ] as const;
 
 function parseModelJsonResponse(
@@ -88,6 +85,23 @@ function parseModelJsonResponse(
   return parsed;
 }
 
+async function callWithTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMsg: string): Promise<T> {
+  let timer: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      const err: any = new Error(timeoutMsg);
+      err.status = 'DEADLINE_EXCEEDED';
+      reject(err);
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 async function generateGeminiContent(params: {
   systemInstruction?: string;
   contents: any;
@@ -98,49 +112,55 @@ async function generateGeminiContent(params: {
   let lastError: any = null;
 
   const models = params.fastBulkImport ? BULK_IMPORT_MODELS : GEMINI_MODEL_CANDIDATES;
+  const timeoutMs = 90000;
+
   for (const model of models) {
-    for (let attempt = 0; attempt < (params.fastBulkImport ? 1 : 2); attempt++) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
       const started = performance.now();
       try {
-        const response = await ai.models.generateContent({
-          model,
-          contents: params.contents,
-          config: {
-            systemInstruction: params.systemInstruction,
-            responseMimeType: params.responseSchema ? 'application/json' : undefined,
-            responseSchema: params.responseSchema,
-            thinkingConfig: params.fastBulkImport ? {
-              thinkingLevel: model.includes('flash-lite') ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW,
-            } : undefined,
-          },
-        });
+        const config: any = {
+          systemInstruction: params.systemInstruction,
+          responseMimeType: params.responseSchema ? 'application/json' : undefined,
+          responseSchema: params.responseSchema,
+        };
+
+        const response = await callWithTimeout(
+          ai.models.generateContent({
+            model,
+            contents: params.contents,
+            config,
+          }),
+          timeoutMs,
+          `Request to ${model} timed out after ${timeoutMs}ms`
+        );
+
         if (response && response.text) {
-          if (params.fastBulkImport) console.info(`[bulk import] ${model} completed in ${Math.round(performance.now() - started)}ms`);
+          if (params.fastBulkImport) {
+            console.info(`[bulk import] ${model} completed in ${Math.round(performance.now() - started)}ms`);
+          }
           return response;
         }
       } catch (err: any) {
         lastError = err;
-        if (params.fastBulkImport) console.warn(`[bulk import] ${model} failed after ${Math.round(performance.now() - started)}ms: ${err?.status || err?.code || 'request error'}`);
-        const errMsg = err?.message || String(err);
-        const isTransient = 
-          err?.status === 'UNAVAILABLE' || 
-          errMsg.includes('503') || 
-          errMsg.includes('high demand') || 
-          errMsg.includes('429') ||
-          errMsg.includes('RESOURCE_EXHAUSTED');
-        
-        if (isTransient && attempt === 0) {
-          // Brief pause before retry for transient spikes
-          await new Promise(resolve => setTimeout(resolve, 800));
+        const isTransient =
+          err?.status === 503 ||
+          err?.code === 503 ||
+          String(err?.message || '').includes('503') ||
+          err?.status === 429 ||
+          err?.status === 'DEADLINE_EXCEEDED' ||
+          String(err?.message || '').includes('timed out');
+
+        if (isTransient && attempt === 1) {
+          // Brief 1s backoff before retrying
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
-        
-        // If not transient or retry also failed, move to next model
         break;
       }
     }
   }
-  
+
+  console.error(`[AI generate failed across candidates]`, lastError?.message || lastError);
   throw lastError || new Error('All Gemini model endpoints are currently at peak capacity. Please retry in a moment.');
 }
 
@@ -230,7 +250,31 @@ async function startServer() {
         return res.status(400).json({ error: 'No text or images provided' });
       }
       
-      const systemInstruction = "You are a PC hardware inventory assistant.\nExtract PC parts from the provided text or images. Ensure you categorize them correctly.\nIMPORTANT PARSING RULES:\n1. Extract metadata from header lines formatted like 'Vendor: [Name] | Date: [Date] | Payment: [Method] | Condition: [Condition]'.\n2. Apply these parsed metadata values (Vendor, Date, Payment, Condition) directly to EVERY item parsed in the batch.\n3. Map payment methods exactly to allowed tags (e.g., 'E-Transfer', 'Cash', 'PayPal', 'Credit Card', etc.).\n4. Parse dates accurately as 'YYYY-MM-DD' (e.g., '2023-10-25').\n5. Ensure exact decimal unit prices (e.g., 157.93) are preserved precisely without rounding.\n6. If an item specifies a quantity (e.g., '5x'), ensure 'quantity' is 5 and 'unitCost' is the exact per-unit cost.\n7. For Storage components (SSDs, NVMe drives, HDDs), extract the health percentage if mentioned in text or receipts (e.g., '1TB 980 Pro 95% health' -> healthPercent: 95). Extract this as an integer 0-100.";
+      const systemInstruction = `You are a high-precision PC hardware inventory parser.
+Extract individual PC components, quantities, costs, and purchase metadata from the user's input text or images.
+Accept ANY text format: formatted headers (e.g. 'Seller: Roop | Date: 2024-05-22'), multi-line notes, unstructured free-form lists, chat logs, single-line entries, or receipts.
+
+CRITICAL FIELD RULES:
+1. 'name': Clean product title ONLY (e.g. '1TB NVMe GEN4 SSD', 'Ryzen 7 7800X3D', 'RTX 4070 Super'). DO NOT include seller names, dates, or prices in the name.
+2. 'seller': Concise seller or store name ONLY (e.g. 'Roop', 'Best Buy', 'Memory Express', 'Amazon', 'Facebook'). Maximum 1-3 words. NEVER concatenate item names, specs, conditions, prices, reasoning, commentary, or markdown into 'seller'. If no seller is mentioned or identifiable, leave it empty ("").
+3. 'date': Purchase date formatted as YYYY-MM-DD (e.g. '2024-05-22'). If no date is found, leave it empty ("").
+4. 'paymentMethod': One of 'Cash', 'E-Transfer', 'PayPal', 'Credit Card', 'Debit', 'Crypto', or 'Other'. If not mentioned, default to 'Cash'.
+5. 'condition': Exactly one of 'Sealed', 'New Open Box', 'New No Box', 'Used Open Box', or 'Used No Box'. Default to 'Used Open Box' if used/unspecified.
+6. 'quantity': Integer quantity (e.g. '5x' -> 5). Default to 1.
+7. 'unitCost': Exact numeric per-unit cost without currency symbols (e.g. 100.00). If cost is not mentioned, omit or set to 0.
+8. 'healthPercent': ONLY for Storage items when an explicit health percentage is stated (e.g. '98% health' -> 98). NEVER guess or default to 100—leave absent if not stated.
+9. 'tags': Preset sub-category tags:
+   - CPU: AM5, AM4, Intel
+   - RAM: DDR5, DDR4
+   - GPU: 50 Series, 40 Series, 30 Series, AMD
+   - Storage: GEN5, GEN4, GEN3, SATA
+   - Motherboard: AM5, AM4, Intel
+   - PSU: Black, White
+   - Case: Black, White
+   - Cooling: 360mm, 240mm, Air Coolers
+
+ABSOLUTE NEGATIVE CONSTRAINT:
+NEVER output internal reasoning, thought process, explanations, or phrases like "(inferred...)" or "per instructions" into ANY field value. Every field must contain ONLY its clean extracted value.`;
 
       const responseSchema = {
         type: Type.ARRAY,
@@ -239,10 +283,15 @@ async function startServer() {
           properties: {
             name: { type: Type.STRING, description: "Full name of the component, e.g. Ryzen 7 7700" },
             category: { type: Type.STRING, description: "Category: GPU, CPU, RAM, Storage, Motherboard, PSU, Case, Cooling, Fans, Accessories, or Other" },
+            tags: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+              description: "Array of sub-category tags matching allowed presets (e.g. ['AM5'], ['GEN4'], ['DDR5'], ['White'], ['SATA'])"
+            },
             quantity: { type: Type.INTEGER, description: "Quantity of this item" },
             unitCost: { type: Type.NUMBER, description: "Exact cost per single unit as a decimal number without rounding" },
             condition: { type: Type.STRING, description: "Condition: Sealed, New Open Box, New No Box, Used Open Box, or Used No Box" },
-            vendor: { type: Type.STRING, description: "Vendor name from the metadata header" },
+            seller: { type: Type.STRING, description: "Clean seller or store name ONLY (e.g. 'Roop', 'Best Buy'). Maximum 1-3 words. Never include explanations." },
             date: { type: Type.STRING, description: "Purchase date in YYYY-MM-DD format" },
             paymentMethod: { type: Type.STRING, description: "Payment method: Cash, E-Transfer, PayPal, Credit Card, etc." },
             healthPercent: { type: Type.INTEGER, description: "SSD health percentage (0-100) if mentioned for storage items" }
@@ -258,12 +307,54 @@ async function startServer() {
         fastBulkImport: true,
       });
       
-      const data = parseModelJsonResponse(response.text, 'array');
+      const rawData = parseModelJsonResponse(response.text, 'array');
+      const data = (Array.isArray(rawData) ? rawData : []).map((item: any) => {
+        const itemTags = Array.isArray(item.tags) ? item.tags : [];
+        let cleanSeller = '';
+        const rawSeller = item.seller || item.vendor;
+        if (rawSeller && typeof rawSeller === 'string') {
+          let str = rawSeller.trim();
+          if (str.includes('\n')) str = str.split('\n')[0].trim();
+          str = str.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim();
+          str = str.replace(/^(?:Seller|Vendor)\s*:\s*/i, '').trim();
+          if (str.length > 30) {
+            const firstWord = str.split(/[\s,;|]/)[0];
+            str = firstWord.length > 1 ? firstWord : str.slice(0, 30);
+          }
+          cleanSeller = str;
+        }
+
+        let cleanName = String(item.name || '').trim();
+        if (cleanSeller && cleanName) {
+          const escapedSeller = cleanSeller.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          cleanName = cleanName.replace(new RegExp(`^${escapedSeller}\\s+`, 'i'), '').trim();
+        }
+
+        const { vendor: _v, ...restItem } = item;
+        return {
+          ...restItem,
+          name: cleanName || item.name,
+          seller: cleanSeller,
+          tags: itemTags.map((t: string) => {
+            const trimmed = String(t || '').trim();
+            const lower = trimmed.toLowerCase();
+            if (lower === 'gen5') return 'GEN5';
+            if (lower === 'gen4') return 'GEN4';
+            if (lower === 'gen3') return 'GEN3';
+            if (lower === 'sata') return 'SATA';
+            return trimmed;
+          }).filter(Boolean),
+        };
+      });
       res.setHeader('Server-Timing', `bulk-import;dur=${Math.round(performance.now() - started)}`);
       res.json(data);
     } catch (err: any) {
-      console.error(err);
-      res.status(500).json({ error: err.message || 'Error parsing bulk entry' });
+      console.error('Bulk entry error:', err?.message || err);
+      let errorMessage = err?.message || 'Error parsing bulk entry';
+      if (errorMessage.includes('503') || errorMessage.includes('high demand') || errorMessage.includes('UNAVAILABLE') || errorMessage.includes('capacity')) {
+        errorMessage = 'AI service is temporarily experiencing high demand from the provider. Please try extracting again in a few seconds.';
+      }
+      res.status(500).json({ error: errorMessage });
     }
   });
 

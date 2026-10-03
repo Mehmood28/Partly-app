@@ -468,10 +468,10 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-[#0B1113] p-2.5 rounded-xl border border-white/[0.08] min-w-0">
                 <div className="text-[11px] text-zinc-400 font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-cyan-300 shrink-0" /> Purchased From
+                  <User className="w-3.5 h-3.5 text-cyan-300 shrink-0" /> Seller
                 </div>
                 <div className="text-zinc-200 font-medium truncate text-xs">
-                  {build.purchaseSeller || 'Not recorded'}
+                  {build.purchaseSeller ? `Seller: ${build.purchaseSeller}` : 'Not recorded'}
                 </div>
               </div>
               <div className="bg-[#0B1113] p-2.5 rounded-xl border border-white/[0.08] min-w-0">

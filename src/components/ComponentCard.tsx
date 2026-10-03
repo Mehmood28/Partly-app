@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { InventoryComponent } from '../types';
+import { InventoryComponent, PurchaseEntry } from '../types';
 import { ConfirmModal } from './ConfirmModal';
 import { useInventory } from '../context/InventoryContext';
 import { usePrivacy } from '../context/PrivacyContext';
@@ -12,6 +12,7 @@ import {
   formatReadableDate,
   getCategoryPresentation,
   getUnassignedBatches,
+  normalizeTag,
 } from '../utils/helpers';
 import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin } from '../utils/tradeInOrigin';
 import { normalizePlatform } from '../utils/platformDisplay';
@@ -28,6 +29,15 @@ interface ComponentCardProps {
   isExpanded?: boolean;
   onToggle?: () => void;
   component: InventoryComponent;
+  showAdminActions?: boolean;
+  renderBatchActions?: (
+    batch: { entry: PurchaseEntry; availableQuantity: number; unitCost: number },
+    component: InventoryComponent
+  ) => React.ReactNode;
+  renderBatchFooter?: (
+    batch: { entry: PurchaseEntry; availableQuantity: number; unitCost: number },
+    component: InventoryComponent
+  ) => React.ReactNode;
   onAddPurchaseEntry?: (componentId: string) => void;
   onDeletePurchaseEntry?: (componentId: string, entryId: string) => { success: boolean; error?: string } | void;
   onEditComponent?: (component: InventoryComponent) => void;
@@ -40,6 +50,9 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   isExpanded: propIsExpanded,
   onToggle,
   component,
+  showAdminActions = true,
+  renderBatchActions,
+  renderBatchFooter,
   onAddPurchaseEntry,
   onDeletePurchaseEntry,
   onEditComponent,
@@ -98,13 +111,26 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
               <span className="stock-total">{formatCurrency(unassignedVal)}</span>
             </div>
             <div className="stock-summary">
-              {(component.tags || []).filter((tag): tag is string => typeof tag === 'string' && Boolean(tag)).map((tag, idx) => <span key={`${tag}-${idx}`}>{idx > 0 && '· '}{tag}</span>)}
-              {(component.tags || []).some((tag) => typeof tag === 'string' && Boolean(tag)) && <span>·</span>}
-              <span>{unassignedQty} in stock</span>
-              <span>· {formatCurrency(avgCost)} each</span>
-              {component.category === 'Storage' && storageHealth !== undefined && (
-                <span>· {storageHealth}%</span>
-              )}
+              {(() => {
+                const items: React.ReactNode[] = [];
+                const validTags = (component.tags || []).filter(
+                  (tag): tag is string => typeof tag === 'string' && Boolean(tag)
+                );
+                validTags.forEach((tag) => {
+                  items.push(normalizeTag(tag));
+                });
+                items.push(`${unassignedQty} in stock`);
+                items.push(`${formatCurrency(avgCost)} each`);
+                if (component.category === 'Storage' && storageHealth !== undefined) {
+                  items.push(`${storageHealth}%`);
+                }
+                return items.map((item, idx) => (
+                  <React.Fragment key={idx}>
+                    {idx > 0 && <span className="text-zinc-500 select-none">·</span>}
+                    <span>{item}</span>
+                  </React.Fragment>
+                ));
+              })()}
             </div>
           </div>
         </div>
@@ -115,16 +141,17 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
         <div className="stock-expanded">
 
           {/* Expanded Action Toolbar */}
-          <div className="grid grid-cols-3 gap-2">
+          {showAdminActions && (onAddPurchaseEntry || onEditComponent || onDeleteComponent) && (
+            <div className="stock-admin-toolbar">
               {onAddPurchaseEntry && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onAddPurchaseEntry(component.id);
                   }}
-                  className="app-button app-button-outline flex items-center justify-center gap-1.5 whitespace-nowrap px-2"
+                  className="app-button app-button-outline flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-2 text-[11px] font-semibold"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Add Stock
+                  <Plus className="w-3 h-3" /> Add Stock
                 </button>
               )}
               {onEditComponent && (
@@ -133,9 +160,9 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                     e.stopPropagation();
                     onEditComponent(component);
                   }}
-                  className="app-button flex items-center justify-center gap-1.5 whitespace-nowrap px-2"
+                  className="app-button flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-2 text-[11px] font-semibold"
                 >
-                  <Pencil className="w-3.5 h-3.5" /> Edit
+                  <Pencil className="w-3 h-3" /> Edit
                 </button>
               )}
               {onDeleteComponent && (
@@ -144,12 +171,13 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                     e.stopPropagation();
                     setShowDeleteConfirm(true);
                   }}
-                  className="app-button app-button-danger flex items-center justify-center gap-1.5 whitespace-nowrap px-2"
+                  className="app-button app-button-danger flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-2 text-[11px] font-semibold"
                 >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                  <Trash2 className="w-3 h-3" /> Delete
                 </button>
               )}
-          </div>
+            </div>
+          )}
 
           {/* Available inventory batches. */}
           <div>
@@ -190,48 +218,61 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                       ? resolvePartedOutEntryOrigin(entry, state.transactions, state.builds)
                       : null;
 
-                    const source = isPartedOutTradeInBatch
-                      ? (tradeInOrigin?.buyerName ? `Trade-in: ${tradeInOrigin.buyerName}` : 'Trade-in')
+                    const sellerText = isPartedOutTradeInBatch
+                      ? (tradeInOrigin?.buyerName ? `Traded in by ${tradeInOrigin.buyerName}` : 'Trade-in')
                       : (!hideSupplierNames && entry.platform ? normalizePlatform(String(entry.platform)) : '—');
 
                     return (
                       <React.Fragment key={entry.id}>
-                        <div className="stock-batch-compact">
+                        <div className={`stock-batch-compact ${renderBatchFooter ? '!pr-0' : ''}`}>
                           <div className="stock-batch-line stock-batch-line-primary">
                             <strong>{formatReadableDate(entry.date) || entry.date}</strong>
-                            <span><em>Supplier</em><span className="stock-batch-value">{source}</span></span>
-                            <span>{batch.availableQuantity} × {formatCurrency(entryUnitPrice)}</span>
+                            <span><em>Seller</em><span className="stock-batch-value">{sellerText}</span></span>
+                            <span>{batch.availableQuantity > 1 ? `${batch.availableQuantity} × ${formatCurrency(entryUnitPrice)}` : ''}</span>
                           </div>
                           <div className="stock-batch-line stock-batch-line-secondary">
                             <span>{entry.condition}{component.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''}</span>
                             <span><em>Payment</em><span className="stock-batch-value">{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span></span>
                             <strong>{formatCurrency(entryTotal)}</strong>
                           </div>
-                          <div className="batch-actions">
-                            {onSellPart && batch.availableQuantity > 0 && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onSellPart(component, entry.id);
-                                }}
-                                className="flex min-h-8 items-center gap-1 rounded-lg border border-[#83E5DF]/25 px-2.5 text-xs font-semibold text-[#9FF8F4] transition-colors hover:bg-[#83E5DF]/10 hover:text-white"
-                              >
-                                <Tag className="w-3 h-3" /> Sell
-                              </button>
-                            )}
-                            {onDeletePurchaseEntry && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeletingEntryId(entry.id);
-                                }}
-                                className="rounded-lg p-1 text-rose-400 transition-colors hover:bg-rose-500/10 hover:text-rose-300"
-                                title="Delete entry"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
+                          {!renderBatchFooter && (
+                            <div className="batch-actions">
+                              {renderBatchActions ? (
+                                renderBatchActions(batch, component)
+                              ) : (
+                                <>
+                                  {onSellPart && batch.availableQuantity > 0 && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onSellPart(component, entry.id);
+                                      }}
+                                      className="flex h-[26px] items-center gap-1 rounded-lg border border-[#83E5DF]/25 px-2 text-xs font-semibold text-[#9FF8F4] transition-colors hover:bg-[#83E5DF]/10 hover:text-white"
+                                    >
+                                      <Tag className="w-3 h-3" /> Sell
+                                    </button>
+                                  )}
+                                  {onDeletePurchaseEntry && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeletingEntryId(entry.id);
+                                      }}
+                                      className="flex h-[26px] items-center justify-center rounded-lg border border-rose-500/25 px-2 text-xs font-semibold text-rose-400 transition-colors hover:bg-rose-500/10 hover:text-rose-300"
+                                      title="Delete entry"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          )}
+                          {renderBatchFooter && (
+                            <div className="mt-2 pt-2 border-t border-white/[0.08] flex items-center justify-end">
+                              {renderBatchFooter(batch, component)}
+                            </div>
+                          )}
                         </div>
                       </React.Fragment>
                     );

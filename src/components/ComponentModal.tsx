@@ -15,7 +15,7 @@ import { useToast } from '../context/ToastContext';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { ConfirmModal } from './ConfirmModal';
 import { getUnassignedBatches, SUB_CATEGORIES } from '../utils/helpers';
-import { resolvePurchaseEntrySeller } from '../utils/tradeInOrigin';
+import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin, resolvePurchaseEntrySeller } from '../utils/tradeInOrigin';
 
 interface ComponentModalProps {
   isOpen: boolean;
@@ -46,7 +46,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
   const [name, setName] = useState<string>('');
   const [category, setCategory] = useState<ComponentCategory>('GPU');
   const [specifications, setSpecifications] = useState<string>('');
-  const [tagsRaw, setTagsRaw] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Purchase Entry Details
   const [includePurchase, setIncludePurchase] = useState<boolean>(true);
@@ -72,9 +72,20 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
       if (initialComponent) {
         setSelectedCompId(initialComponent.id);
         setName(initialComponent.name || '');
-        setCategory(initialComponent.category || 'GPU');
+        const compCat = initialComponent.category || 'GPU';
+        setCategory(compCat);
         setSpecifications(typeof initialComponent.specifications === 'string' ? initialComponent.specifications : '');
-        setTagsRaw((initialComponent.tags || []).join(', '));
+        
+        const validPresets = SUB_CATEGORIES[compCat] || [];
+        const matchedTags: string[] = [];
+        (initialComponent.tags || []).forEach((t) => {
+          const match = validPresets.find((p) => p.toLowerCase() === t.trim().toLowerCase());
+          if (match && !matchedTags.includes(match)) {
+            matchedTags.push(match);
+          }
+        });
+        setSelectedTags(matchedTags);
+
         const initialHealth = initialComponent.healthPercent !== undefined
           ? initialComponent.healthPercent.toString()
           : (initialComponent.purchaseHistory?.[0]?.healthPercent !== undefined
@@ -88,7 +99,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         setName('');
         setCategory('GPU');
         setSpecifications('');
-        setTagsRaw('');
+        setSelectedTags([]);
         setHealthPercent('');
         setIncludePurchase(true);
         setEditingPurchaseId(null);
@@ -97,12 +108,18 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     }
   }, [initialComponent]);
 
+  const handleCategoryChange = (newCat: ComponentCategory) => {
+    setCategory(newCat);
+    const newPresets = SUB_CATEGORIES[newCat] || [];
+    setSelectedTags((prevTags) => prevTags.filter((tag) => newPresets.includes(tag)));
+  };
+
   const handleCloseAndReset = () => {
     setSelectedCompId('NEW');
     setName('');
     setCategory('GPU');
     setSpecifications('');
-    setTagsRaw('');
+    setSelectedTags([]);
     setHealthPercent('');
     setIncludePurchase(true);
     setEditingPurchaseId(null);
@@ -164,14 +181,12 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         healthPercent: category === 'Storage' ? parsedHealth : undefined,
       };
       
-      const parsedTags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
-
       const result = onSave(
         {
           name: name.trim(),
           category,
           specifications,
-          tags: parsedTags.length > 0 ? parsedTags : undefined,
+          tags: selectedTags.length > 0 ? selectedTags : undefined,
           purchaseHistory: initialComponent?.purchaseHistory || [],
           healthPercent: category === 'Storage' ? parsedHealth : undefined,
         },
@@ -214,12 +229,11 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
       };
     }
 
-    const parsedTags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
     const compData: Omit<InventoryComponent, 'id' | 'assignedCount'> = {
       name: name.trim(),
       category,
       specifications,
-      tags: parsedTags.length > 0 ? parsedTags : undefined,
+      tags: selectedTags.length > 0 ? selectedTags : undefined,
       purchaseHistory: initialComponent?.purchaseHistory || [],
       healthPercent: category === 'Storage' ? parsedHealth : undefined,
     };
@@ -294,7 +308,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
               <label className="block text-zinc-300 font-medium mb-1 text-xs">Category *</label>
               <CustomSelect
                 value={category}
-                onChange={(val) => setCategory(val as ComponentCategory)}
+                onChange={(val) => handleCategoryChange(val as ComponentCategory)}
                 options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
                 className={selectedCompId !== 'NEW' && !initialComponent ? "opacity-70 pointer-events-none" : ""}
               />
@@ -318,43 +332,46 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
             )}
             
             <div className="col-span-full">
-              <label className="block text-zinc-300 font-medium mb-1 text-xs">Tags (Comma Separated)</label>
-              <input
-                type="text"
-                value={tagsRaw}
-                onChange={(e) => setTagsRaw(e.target.value)}
-                disabled={selectedCompId !== 'NEW' && !initialComponent}
-                className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-sans"
-                placeholder="e.g. AM5, DDR5, White"
-              />
-              {SUB_CATEGORIES[category] && SUB_CATEGORIES[category].length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-1.5">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-zinc-300 font-medium text-xs font-sans">
+                  Category Tags
+                </label>
+                {selectedTags.length > 0 && (
+                  <span className="text-[11px] text-zinc-500 font-mono">
+                    {selectedTags.length} selected
+                  </span>
+                )}
+              </div>
+              {SUB_CATEGORIES[category] && SUB_CATEGORIES[category].length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
                   {SUB_CATEGORIES[category].map((tag) => {
-                    const currentTags = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean);
-                    const isSelected = currentTags.includes(tag);
+                    const isSelected = selectedTags.includes(tag);
+                    const isDisabled = selectedCompId !== 'NEW' && !initialComponent;
                     return (
                       <button
                         key={tag}
                         type="button"
-                        disabled={selectedCompId !== 'NEW' && !initialComponent}
+                        disabled={isDisabled}
                         onClick={() => {
-                          if (isSelected) {
-                            setTagsRaw(currentTags.filter((t) => t !== tag).join(', '));
-                          } else {
-                            setTagsRaw([...currentTags, tag].join(', '));
-                          }
+                          setSelectedTags((prev) =>
+                            prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                          );
                         }}
-                        className={`app-chip app-subcategory-chip px-2.5 ${
+                        className={`app-chip app-subcategory-chip px-2.5 transition-all text-xs font-mono ${
                           isSelected
-                            ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.08] text-[#9FF8F4]'
-                            : ''
-                        }`}
+                            ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.12] text-[#9FF8F4] font-semibold'
+                            : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:bg-white/[0.08] hover:text-zinc-200'
+                        } ${isDisabled ? 'opacity-60 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
                       >
                         {tag}
                       </button>
                     );
                   })}
                 </div>
+              ) : (
+                <p className="text-[11px] text-zinc-500 italic py-1 font-sans">
+                  No predefined tag presets available for this category.
+                </p>
               )}
             </div>
           </div>
@@ -373,16 +390,18 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                         tx.incomingComponentId === liveComponent.id &&
                         tx.incomingPurchaseEntryId === ph.id
                 );
-                const purchaseSeller = resolvePurchaseEntrySeller(
-                  ph,
-                  state.transactions,
-                  state.builds
-                );
+                const isPartedOutTradeInBatch = isPartedOutTradeInEntry(ph);
+                const tradeInOrigin = isPartedOutTradeInBatch
+                  ? resolvePartedOutEntryOrigin(ph, state.transactions, state.builds)
+                  : null;
+                const displaySeller = isPartedOutTradeInBatch
+                  ? (tradeInOrigin?.buyerName ? `Traded in by ${tradeInOrigin.buyerName}` : 'Trade-in')
+                  : (ph.platform ? `Seller: ${ph.platform}` : 'Unknown');
                 return (
                   <div key={ph.id} className="flex items-center justify-between bg-[#101719] border border-white/[0.08] p-2.5 rounded-xl">
                     <div className="text-xs">
                       <div className="text-zinc-200 font-medium flex items-center gap-1.5 flex-wrap">
-                        <span>{ph.date}{!hideSupplierNames ? ` · ${purchaseSeller || 'Unknown'}` : ''}</span>
+                        <span>{ph.date}{!hideSupplierNames ? ` · ${displaySeller}` : ''}</span>
                         {isTradeUp && (
                           <span className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0 px-1.5 py-0.5 rounded text-[11px] font-mono font-medium uppercase leading-none inline-flex items-center">
                             TRADE UP

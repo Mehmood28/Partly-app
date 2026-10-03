@@ -6,7 +6,7 @@ import {
   PurchaseEntry,
   TransactionLogItem,
 } from '../../types';
-import { autoTagComponent, computeUnresolvedLegacyReservation, formatCurrency, getAllBatchesWithRemaining } from '../../utils/helpers';
+import { autoTagComponent, computeUnresolvedLegacyReservation, formatCategoryPlural, formatCurrency, getAllBatchesWithRemaining } from '../../utils/helpers';
 import {
   SellComponentPartData,
   BulkSaleLine,
@@ -266,6 +266,9 @@ export const handleSaveComponent = (
           itemNameOrSummary: targetComp.name,
           relatedComponentId: targetComp.id, // Surviving target component ID
           relatedComponentQty: validatedNewEntry!.quantity,
+          relatedPurchaseEntryId: createdEntry.id,
+          originalPurchaseEntrySnapshot: { ...createdEntry },
+          detailsList: [`${validatedNewEntry!.quantity}x ${targetComp.name} (${formatCurrency(validatedNewEntry!.unitPrice)}/ea)`],
         };
 
         sourceHistory = [{ ...createdEntry }, ...sourceHistory].sort(
@@ -317,8 +320,15 @@ export const handleSaveComponent = (
         if (v > 0) combinedReservation[k] = (combinedReservation[k] || 0) + v;
       }
 
+      const mergedHealth = targetComp.category === 'Storage'
+        ? (componentData.healthPercent !== undefined
+            ? componentData.healthPercent
+            : (targetComp.healthPercent ?? sourceComp.healthPercent))
+        : undefined;
+
       const mergedTarget: InventoryComponent = {
         ...targetComp,
+        healthPercent: mergedHealth,
         specifications: finalSpecs,
         targetMarketValuePerUnit: finalTargetMv,
         tags: combinedTags,
@@ -454,6 +464,9 @@ export const handleSaveComponent = (
             itemNameOrSummary: componentData.name || c.name,
             relatedComponentId: existingComponentId,
             relatedComponentQty: validatedNewEntry!.quantity,
+            relatedPurchaseEntryId: createdEntry.id,
+            originalPurchaseEntrySnapshot: { ...createdEntry },
+            detailsList: [`${validatedNewEntry!.quantity}x ${componentData.name || c.name} (${formatCurrency(validatedNewEntry!.unitPrice)}/ea)`],
           };
 
           updatedHistory = [{ ...createdEntry }, ...updatedHistory].sort(
@@ -469,9 +482,19 @@ export const handleSaveComponent = (
           }
         }
 
+        const finalCategory = componentData.category !== undefined ? componentData.category : c.category;
+        const resolvedHealth = finalCategory === 'Storage'
+          ? (componentData.healthPercent !== undefined
+              ? componentData.healthPercent
+              : (updatedPurchaseEntry?.entry.healthPercent !== undefined
+                  ? (Number.isFinite(Number(updatedPurchaseEntry.entry.healthPercent)) ? Number(updatedPurchaseEntry.entry.healthPercent) : undefined)
+                  : (newPurchaseEntry?.healthPercent !== undefined ? (Number.isFinite(Number(newPurchaseEntry.healthPercent)) ? Number(newPurchaseEntry.healthPercent) : undefined) : c.healthPercent)))
+          : undefined;
+
         return {
           ...c,
           ...otherUpdates,
+          healthPercent: resolvedHealth,
           tags,
           purchaseHistory: updatedHistory,
           unresolvedLegacyReservationByPurchaseEntryId: currentReservation,
@@ -554,6 +577,7 @@ export const handleAddComponent = (
       paymentMethod: ph.paymentMethod,
       platform: ph.platform,
       taxPercent,
+      healthPercent: ph.healthPercent !== undefined ? (Number.isFinite(Number(ph.healthPercent)) ? Number(ph.healthPercent) : undefined) : undefined,
       notes: ph.notes || '',
     };
     newPurchaseEntries.push(entry);
@@ -572,6 +596,9 @@ export const handleAddComponent = (
       itemNameOrSummary: compData.name,
       relatedComponentId: existingComp ? existingComp.id : undefined,
       relatedComponentQty: quantity,
+      relatedPurchaseEntryId: entry.id,
+      originalPurchaseEntrySnapshot: { ...entry },
+      detailsList: [`${quantity}x ${compData.name} (${formatCurrency(unitPrice)}/ea)`],
     });
   }
 
@@ -599,8 +626,15 @@ export const handleAddComponent = (
       }
     }
 
+    const mergedTags = Array.from(new Set([...(existingComp.tags || []), ...(tags || [])].filter(Boolean)));
     const updatedComp: InventoryComponent = {
       ...existingComp,
+      tags: mergedTags.length > 0 ? mergedTags : undefined,
+      healthPercent: compData.category === 'Storage'
+        ? (compData.healthPercent !== undefined
+            ? compData.healthPercent
+            : (newPurchaseEntries[0]?.healthPercent ?? existingComp.healthPercent))
+        : existingComp.healthPercent,
       purchaseHistory: [
         ...trulyNewEntries.map((pe) => ({ ...pe })),
         ...(existingComp.purchaseHistory || []).map((pe) => ({ ...pe })),
@@ -622,6 +656,9 @@ export const handleAddComponent = (
       id: newCompId,
       assignedCount: 0,
       tags,
+      healthPercent: compData.category === 'Storage'
+        ? (compData.healthPercent !== undefined ? compData.healthPercent : newPurchaseEntries[0]?.healthPercent)
+        : undefined,
       purchaseHistory: newPurchaseEntries.map((pe) => ({ ...pe })),
     };
     return {
@@ -682,6 +719,7 @@ export const handleAddComponents = (
         paymentMethod: ph.paymentMethod,
         platform: ph.platform,
         taxPercent,
+        healthPercent: ph.healthPercent !== undefined ? (Number.isFinite(Number(ph.healthPercent)) ? Number(ph.healthPercent) : undefined) : undefined,
         notes: ph.notes || '',
       });
       compTotalQuantity += quantity;
@@ -697,7 +735,7 @@ export const handleAddComponents = (
   const newTxs: TransactionLogItem[] = [];
   
   const firstPh = parsedComps[0]?.entries[0];
-  const vendor = firstPh?.platform || 'Other';
+  const seller = firstPh?.platform || 'Other';
   const fallbackDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
   const paymentMethod = firstPh?.paymentMethod || 'Cash';
   
@@ -706,18 +744,30 @@ export const handleAddComponents = (
   const newestDate = allDates[allDates.length - 1];
   const displayTimestamp = oldestDate === newestDate ? newestDate : `${oldestDate} - ${newestDate}`;
 
+  const uniqueCategories = Array.from(new Set(compsData.map((c) => c.category).filter(Boolean)));
+  let bulkSummaryTitle = '';
+  if (compsData.length === 1) {
+    const singleName = compsData[0].name;
+    bulkSummaryTitle = overallTotalQuantity > 1 ? `Purchased ${overallTotalQuantity}x ${singleName}` : `Purchased ${singleName}`;
+  } else if (uniqueCategories.length === 1) {
+    const catPlural = formatCategoryPlural(uniqueCategories[0]);
+    bulkSummaryTitle = `Purchased ${overallTotalQuantity}x ${catPlural}`;
+  } else {
+    bulkSummaryTitle = `Purchased Mixed Parts (${overallTotalQuantity} ${overallTotalQuantity === 1 ? 'Part' : 'Parts'})`;
+  }
+
   const newTx: TransactionLogItem = {
     id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
     type: 'PURCHASE',
-    title: `Bulk Purchase: ${vendor}`,
+    title: `Bulk Purchase: ${seller}`,
     timestamp: displayTimestamp,
     dateSortable: newestDate,
     itemCount: compsData.length,
     quantity: overallTotalQuantity,
     totalAmount: overallTotalAmount,
-    platform: vendor,
+    platform: seller,
     paymentMethod,
-    itemNameOrSummary: `Bulk added ${compsData.length} items from ${vendor}`,
+    itemNameOrSummary: bulkSummaryTitle,
     detailsList: parsedComps.map((c) => {
       const qty = c.compTotalQuantity || 1;
       const cost = c.entries.length > 0 ? (c.compTotalPrice / qty) : 0;
@@ -754,8 +804,15 @@ export const handleAddComponents = (
         }
       }
 
+      const mergedTags = Array.from(new Set([...(existingComp.tags || []), ...(tags || [])].filter(Boolean)));
       const updatedComp: InventoryComponent = {
         ...existingComp,
+        tags: mergedTags.length > 0 ? mergedTags : undefined,
+        healthPercent: compData.category === 'Storage'
+          ? (compData.healthPercent !== undefined
+              ? compData.healthPercent
+              : (entries[0]?.healthPercent ?? existingComp.healthPercent))
+          : existingComp.healthPercent,
         purchaseHistory: [
           ...trulyNewEntries,
           ...(existingComp.purchaseHistory || []),
@@ -770,6 +827,9 @@ export const handleAddComponents = (
         id: newCompId,
         assignedCount: 0,
         tags,
+        healthPercent: compData.category === 'Storage'
+          ? (compData.healthPercent !== undefined ? compData.healthPercent : entries[0]?.healthPercent)
+          : undefined,
         purchaseHistory: entries,
       };
       componentsToKeep.push(newComp);
@@ -916,6 +976,9 @@ export const handleAddPurchaseEntry = (
         const res = computeUnresolvedLegacyReservation(c, prev.builds);
         return {
           ...c,
+          healthPercent: c.category === 'Storage'
+            ? (newPurchaseEntry.healthPercent !== undefined ? newPurchaseEntry.healthPercent : c.healthPercent)
+            : c.healthPercent,
           purchaseHistory: [
             { ...newPurchaseEntry },
             ...(c.purchaseHistory || []).map((pe) => ({ ...pe })),
@@ -985,6 +1048,7 @@ export const handleUpdatePurchaseEntry = (
   
   // Check no-op
   const existingEntry = batch.entry;
+  const normalizedNewHealth = entry.healthPercent !== undefined ? (Number.isFinite(Number(entry.healthPercent)) ? Number(entry.healthPercent) : undefined) : undefined;
   if (
     existingEntry.date === entry.date &&
     existingEntry.condition === entry.condition &&
@@ -994,6 +1058,7 @@ export const handleUpdatePurchaseEntry = (
     existingEntry.paymentMethod === entry.paymentMethod &&
     existingEntry.platform === entry.platform &&
     Number(existingEntry.taxPercent ?? 0) === taxPercent &&
+    existingEntry.healthPercent === normalizedNewHealth &&
     (existingEntry.notes || '') === (entry.notes || '')
   ) {
     return { nextState: prev, success: true };
@@ -1006,6 +1071,9 @@ export const handleUpdatePurchaseEntry = (
         if (c.id === componentId) {
           return {
             ...c,
+            healthPercent: c.category === 'Storage'
+              ? (normalizedNewHealth !== undefined ? normalizedNewHealth : c.healthPercent)
+              : c.healthPercent,
             purchaseHistory: (c.purchaseHistory || [])
               .map((e) =>
                 e.id === entryId
@@ -1019,7 +1087,7 @@ export const handleUpdatePurchaseEntry = (
                       paymentMethod: entry.paymentMethod,
                       platform: entry.platform,
                       taxPercent: taxPercent,
-                      healthPercent: entry.healthPercent !== undefined ? (Number.isFinite(Number(entry.healthPercent)) ? Number(entry.healthPercent) : undefined) : e.healthPercent,
+                      healthPercent: normalizedNewHealth !== undefined ? normalizedNewHealth : e.healthPercent,
                       notes: entry.notes || '',
                     }
                   : { ...e }

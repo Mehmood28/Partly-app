@@ -12,6 +12,8 @@ import { TradeUpExpandedView } from './TradeUpExpandedView';
 import { classifyTransaction } from '../../utils/transactionClassification';
 import { parseBatchItem } from './activityHelpers';
 import { calculateProfitMarginPercent } from '../../utils/financialDisplay';
+import { formatCategoryPlural } from '../../utils/helpers';
+import { generateBuildTitleFromParts } from '../../utils/buildTitle';
 
 export interface TransactionActivityCardProps {
   isActive?: boolean;
@@ -99,6 +101,60 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
     }
   }
 
+  const purchaseNames = [
+    purchasedBuild?.name,
+    tx.itemNameOrSummary,
+    tx.title?.replace(/^Purchased:\s*/i, ''),
+  ].filter(Boolean).map((value) => String(value).trim().toLowerCase());
+  const sourceBuildId = tx.relatedComponentId?.trim() || purchasedBuild?.id;
+  const orphanedBuild = !!sourceBuildId && !purchasedBuild;
+  const pcPartedOutItems = isPCPurchase && !hasConflictingLiveBuildLinks
+    ? state.components.flatMap((component) => component.purchaseHistory
+      .filter((entry) => {
+        const entrySourceTransactionId = entry.sourcePurchaseTransactionId?.trim();
+        const entrySourceBuildId = entry.sourcePurchasedBuildId?.trim();
+        if (entrySourceTransactionId || entrySourceBuildId) {
+          if (orphanedBuild && !entrySourceTransactionId) return false;
+          const transactionMatches = !entrySourceTransactionId || entrySourceTransactionId === tx.id;
+          const buildMatches = !entrySourceBuildId || (!!sourceBuildId && entrySourceBuildId === sourceBuildId);
+          return transactionMatches && buildMatches;
+        }
+        return !orphanedBuild && !!entry.notes && purchaseNames.some((name) =>
+          entry.notes!.toLowerCase().includes(`purchased pc: ${name}`)
+        );
+      })
+      .map((entry) => ({
+        category: component.category,
+        itemName: component.name,
+        condition: entry.condition,
+        platform: entry.platform,
+        paymentMethod: entry.paymentMethod,
+      })))
+    : [];
+
+  const parsedPurchaseItems = isPurchase
+    ? (tx.detailsList || []).map((detail) => parseBatchItem(detail, state.components, tx))
+    : [];
+
+  const effectivePurchaseItems = isPCPurchase
+    ? [...(purchasedBuild?.acquisitionComponentBreakdown?.map((item) => ({
+        category: item.category,
+        itemName: item.name,
+        condition: undefined,
+        platform: tx.platform,
+        paymentMethod: tx.paymentMethod,
+      })) || []), ...pcPartedOutItems]
+    : parsedPurchaseItems;
+
+  // Linked component for part sales, single purchases & exchanges
+  const matchedComp: InventoryComponent | undefined = (!isExchange && tx.relatedComponentId)
+    ? state.components.find(c => c.id === tx.relatedComponentId)
+    : (singletonPurchaseItem?.comp || (isPurchase && tx.itemNameOrSummary ? state.components.find(c => {
+        const cName = String(c.name || '').toLowerCase().trim();
+        const tName = String(tx.itemNameOrSummary || '').toLowerCase().trim();
+        return cName === tName || (cName && tName && (cName.includes(tName) || tName.includes(cName)));
+      }) : undefined));
+
   // Clean Display Title
   let displayTitle = tx.title || '';
   let subCategoryLabel = '';
@@ -109,26 +165,61 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
     displayTitle = tx.itemNameOrSummary ? String(tx.itemNameOrSummary) : (tx.title ? String(tx.title).replace(/^(Sold \(Part\)|Part Sold):\s*/i, '') : 'Part Sale');
     subCategoryLabel = 'PART SOLD';
   } else if (isPurchase) {
-    displayTitle = singletonPurchaseItem?.itemName || tx.itemNameOrSummary || (tx.title ? String(tx.title).replace(/^Purchased:\s*/i, '') : 'Purchase');
-    if (hideSupplierNames) {
-      if (tx.platform) {
-        const escaped = tx.platform.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        displayTitle = displayTitle
-          .replace(new RegExp(`^Bulk Purchase:\\s*${escaped}$`, 'i'), 'Bulk Purchase')
-          .replace(new RegExp(`\\s+from\\s+${escaped}$`, 'i'), '')
-          .trim();
-      }
-      displayTitle = displayTitle
-        .replace(/^Bulk Purchase:\s*.+$/i, 'Bulk Purchase')
-        .replace(/^(Bulk added\s+\d+\s+items?)\s+from\s+.+$/i, '$1');
-    }
     subCategoryLabel = isPCPurchase ? 'PC PURCHASE' : 'PURCHASE';
-  }
+    if (isPCPurchase || purchasedBuild) {
+      const allOriginalParts = effectivePurchaseItems.map(p => ({
+        category: p.category as any,
+        componentName: p.itemName,
+      }));
+      const hasCpuOrGpu = allOriginalParts.some(p => p.category === 'CPU' || p.category === 'GPU');
+      let originalGeneratedName = '';
+      if (hasCpuOrGpu) {
+        originalGeneratedName = generateBuildTitleFromParts(allOriginalParts);
+      }
+      const rawPcName = originalGeneratedName || tx.itemNameOrSummary || tx.title?.replace(/^Purchased:\s*/i, '') || purchasedBuild?.name || 'PC';
+      const cleanPCName = String(rawPcName).replace(/^Purchased\s*(PC:?)?\s*/i, '').trim();
+      displayTitle = `Purchased PC: ${cleanPCName || 'Custom PC'}`;
+    } else {
+      const detailItems = parsedPurchaseItems;
+      const totalQty = tx.quantity || tx.relatedComponentQty || (detailItems.length > 0 ? detailItems.reduce((acc, it) => acc + (it.quantity || 1), 0) : singletonPurchaseItem?.quantity) || 1;
+      const itemNames = Array.from(new Set(detailItems.map(it => it.itemName).filter(Boolean)));
+      const categories = Array.from(new Set(detailItems.map(it => it.category).filter((c) => Boolean(c) && c !== 'Other')));
 
-  // Linked component for part sales, single purchases & exchanges
-  const matchedComp: InventoryComponent | undefined = (!isExchange && tx.relatedComponentId)
-    ? state.components.find(c => c.id === tx.relatedComponentId)
-    : singletonPurchaseItem?.comp;
+      if (detailItems.length > 0) {
+        if (detailItems.length === 1 || itemNames.length === 1) {
+          const singleName = detailItems[0].itemName.replace(/^\d+x\s+/i, '');
+          displayTitle = totalQty > 1 ? `Purchased ${totalQty}x ${singleName}` : `Purchased ${singleName}`;
+        } else if (categories.length === 1) {
+          const catPlural = formatCategoryPlural(categories[0]);
+          displayTitle = `Purchased ${totalQty}x ${catPlural}`;
+        } else {
+          displayTitle = `Purchased Mixed Parts (${totalQty} ${totalQty === 1 ? 'Part' : 'Parts'})`;
+        }
+      } else if (singletonPurchaseItem) {
+        const singleName = singletonPurchaseItem.itemName.replace(/^\d+x\s+/i, '');
+        displayTitle = totalQty > 1 ? `Purchased ${totalQty}x ${singleName}` : `Purchased ${singleName}`;
+      } else if (matchedComp) {
+        const compName = matchedComp.name.replace(/^\d+x\s+/i, '');
+        displayTitle = totalQty > 1 ? `Purchased ${totalQty}x ${compName}` : `Purchased ${compName}`;
+      } else if (tx.itemNameOrSummary) {
+        const raw = String(tx.itemNameOrSummary).trim();
+        if (/^Bulk added\s+\d+\s+items?/i.test(raw) || /^Bulk purchase/i.test(raw)) {
+          if (categories.length === 1) {
+            const catPlural = formatCategoryPlural(categories[0]);
+            displayTitle = `Purchased ${totalQty}x ${catPlural}`;
+          } else {
+            displayTitle = `Purchased Mixed Parts (${totalQty} ${totalQty === 1 ? 'Part' : 'Parts'})`;
+          }
+        } else {
+          const clean = raw.replace(/^Purchased:?\s*/i, '').trim();
+          const cleanWithoutQty = clean.replace(/^\d+x\s+/i, '');
+          displayTitle = totalQty > 1 ? `Purchased ${totalQty}x ${cleanWithoutQty}` : `Purchased ${clean}`;
+        }
+      } else {
+        displayTitle = totalQty > 1 ? `Purchased ${totalQty}x Parts` : `Purchased Part`;
+      }
+    }
+  }
 
   const matchedOutgoingComp: InventoryComponent | undefined = isExchange && tx.outgoingComponentId
     ? state.components.find(c => c.id === tx.outgoingComponentId)
@@ -174,14 +265,27 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
       ? storedSnapshot
       : undefined;
     conditionStr = exactPurchaseEntry?.condition || matchingSnapshot?.condition || '';
-    if (!conditionStr && (isBulkPurchase || (tx.quantity && tx.quantity > 1 && !matchedComp))) {
+
+    if (!conditionStr && matchedComp?.purchaseHistory && matchedComp.purchaseHistory.length > 0) {
+      const txDate = tx.dateSortable || tx.timestamp;
+      const dateMatch = matchedComp.purchaseHistory.find((entry) => entry.date === txDate || entry.platform === tx.platform);
+      if (dateMatch?.condition) {
+        conditionStr = dateMatch.condition;
+      } else {
+        const uniqueConditions = [...new Set(matchedComp.purchaseHistory.map((e) => e.condition).filter(Boolean))];
+        if (uniqueConditions.length === 1) {
+          conditionStr = uniqueConditions[0];
+        } else if (uniqueConditions.length > 1) {
+          conditionStr = 'MIXED';
+        }
+      }
+    }
+
+    if (!conditionStr && (isBulkPurchase || (tx.quantity && tx.quantity > 1))) {
       conditionStr = 'MIXED';
     }
   }
 
-  const parsedPurchaseItems = isPurchase
-    ? (tx.detailsList || []).map((detail) => parseBatchItem(detail, state.components, tx))
-    : [];
   const usablePurchaseValue = (value?: string) => {
     const normalized = String(value || '').trim();
     return normalized && !/^(n\/?a|unknown|none|—|-)$/i.test(normalized) ? normalized : undefined;
@@ -192,18 +296,52 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
   ) => {
     const uniqueValues = [...new Set(values.map(usablePurchaseValue).filter(Boolean) as string[])];
     if (uniqueValues.length === 1) return uniqueValues[0];
-    if (uniqueValues.length > 1) return 'Mixed';
+    if (uniqueValues.length > 1) return 'MIXED';
     return usablePurchaseValue(fallback);
   };
   const purchasePlatform = isPurchase
-    ? resolvedPurchaseValue(parsedPurchaseItems.map((item) => item.platform), tx.platform)
+    ? resolvedPurchaseValue(effectivePurchaseItems.map((item) => item.platform), tx.platform)
     : platform;
   const purchasePaymentMethod = isPurchase
-    ? resolvedPurchaseValue(parsedPurchaseItems.map((item) => item.paymentMethod), tx.paymentMethod)
+    ? resolvedPurchaseValue(effectivePurchaseItems.map((item) => item.paymentMethod), tx.paymentMethod)
     : paymentMethod;
-  const purchaseCondition = isPurchase
-    ? resolvedPurchaseValue(parsedPurchaseItems.map((item) => item.condition), conditionStr)
-    : conditionStr;
+  
+  const itemConditions = effectivePurchaseItems.map((item) => item.condition).filter(Boolean);
+  let purchaseCondition = conditionStr;
+  if (itemConditions.length > 0) {
+    const uniqueItemConditions = [...new Set(itemConditions)];
+    if (uniqueItemConditions.length === 1) {
+      purchaseCondition = uniqueItemConditions[0];
+    } else if (uniqueItemConditions.length > 1) {
+      purchaseCondition = 'MIXED';
+    }
+  }
+  if (isPurchase && (!purchaseCondition || purchaseCondition === '—' || purchaseCondition === '-')) {
+    if (isBulkPurchase || (tx.quantity && tx.quantity > 1)) {
+      purchaseCondition = 'MIXED';
+    } else if (matchedComp?.purchaseHistory?.[0]?.condition) {
+      purchaseCondition = matchedComp.purchaseHistory[0].condition;
+    } else {
+      purchaseCondition = 'MIXED';
+    }
+  }
+
+  const parsedCategories = effectivePurchaseItems.map((item) => item.category).filter((c) => Boolean(c) && c !== 'Other');
+  let resolvedCategory = '';
+  if (isPCPurchase) {
+    resolvedCategory = 'PC';
+  } else if (parsedCategories.length > 0) {
+    const uniqueCats = [...new Set(parsedCategories)];
+    if (uniqueCats.length === 1) {
+      resolvedCategory = uniqueCats[0];
+    } else {
+      resolvedCategory = 'Bulk';
+    }
+  } else if (matchedComp?.category) {
+    resolvedCategory = matchedComp.category;
+  } else if (isBulkPurchase) {
+    resolvedCategory = 'Bulk';
+  }
 
   return (
     <div className="app-panel transaction-card group flex flex-col transition-colors">
@@ -232,11 +370,12 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
         saleDate={saleDate}
         matchedComp={matchedComp}
         conditionStr={purchaseCondition}
+        categoryStr={resolvedCategory}
       />
 
       {/* Expanded Details Section */}
       {isExpanded && (
-        <div className="record-expanded space-y-4">
+        <div className="record-expanded flex flex-col">
           {/* Action Buttons Row - Only for real sales / purchases */}
           {!isExchange && (
             <TransactionCardActions

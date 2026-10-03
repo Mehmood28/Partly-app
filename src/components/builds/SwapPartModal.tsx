@@ -2,13 +2,12 @@ import React, { useState, useDeferredValue } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useInventory } from '../../context/InventoryContext';
-import { usePrivacy } from '../../context/PrivacyContext';
 import { useToast } from '../../context/ToastContext';
 import { Box, ArrowRightLeft, X } from 'lucide-react';
 import { formatCurrency, getUnassignedBatches, filterAndSortComponents, determineSubCategory, SortOption } from '../../utils/helpers';
 import { ConfirmModal } from '../ConfirmModal';
 import { InventoryFilterBar } from '../InventoryFilterBar';
-import { InventoryPartAccordionHeader } from './InventoryPartAccordionHeader';
+import { ComponentCard } from '../ComponentCard';
 
 interface SwapPartModalProps {
   build: PCBuild;
@@ -19,7 +18,6 @@ interface SwapPartModalProps {
 
 export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart, isOpen = true, onClose }) => {
   const { state, swapPartInBuild } = useInventory();
-  const { hideSupplierNames } = usePrivacy();
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -99,15 +97,20 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
   };
 
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="workspace" className="build-modal stock-modal max-w-xl">
+    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="workspace" className="build-modal stock-modal max-w-2xl sm:max-w-3xl w-full">
       <div className="swap-modal-content w-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 shrink-0">
+        <div className="swap-modal-header flex items-center justify-between border-b border-white/[0.08] pb-2 shrink-0">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
             <ArrowRightLeft className="w-4 h-4 text-[#B9EF68]" /> Swap {currentPart.category}
           </h3>
-          <button onClick={onClose} aria-label="Close modal" className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]">
-            <X className="w-5 h-5" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close modal"
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.12] bg-[#141c1f] text-zinc-400 hover:text-white hover:border-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -126,7 +129,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         )}
 
         {/* Search & Filters */}
-        <div className="shrink-0 w-full max-w-full min-w-0">
+        <div className="swap-filter-bar shrink-0 w-full max-w-full min-w-0">
           <InventoryFilterBar
             components={state.components}
             builds={state.builds}
@@ -145,82 +148,44 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
 
         {/* List */}
         <div className="swap-results modal-results-list overflow-y-auto pr-1">
-          {filteredParts.map(({ comp, validEntries, totalAvailable, avgPrice, subCategory }) => {
-            const isExpanded = expandedPartId === comp.id;
-
-            return (
-              <div key={comp.id} className={`swap-component-row ${isExpanded ? 'is-expanded' : ''}`}>
-                {/* Main Accordion Header */}
-                <InventoryPartAccordionHeader
-                  category={comp.category}
-                  name={comp.name}
-                  isExpanded={isExpanded}
-                  onToggle={() => setExpandedPartId(isExpanded ? null : comp.id)}
-                  metadata={
-                    <>
-                      {subCategory && <span>{subCategory}</span>}
-                      {subCategory && <span>·</span>}
-                      <span>{totalAvailable} in stock</span>
-                      <span>·</span>
-                      <span>Avg. {formatCurrency(avgPrice)}{totalAvailable > 1 ? '/ea' : ''}</span>
-                      {comp.category === 'Storage' && (() => {
-                        const h = comp.healthPercent ?? validEntries.find(e => typeof e.healthPercent === 'number')?.healthPercent;
-                        return typeof h === 'number' ? (
-                          <>
-                            <span>·</span>
-                            <span>{h}%</span>
-                          </>
-                        ) : null;
-                      })()}
-                    </>
-                  }
-                />
-
-                {/* Expanded Batches */}
-                {isExpanded && (
-                  <div className="swap-batches">
-                    {validEntries.map(entry => (
-                      <div key={entry.id} className="swap-batch-row">
-                        <div className="swap-batch-details">
-                          <strong>{entry.availableQty} available · {formatCurrency(entry.unitPrice)}{entry.availableQty > 1 ? '/ea' : ''}</strong>
-                          <span>
-                            {entry.condition}{comp.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''} · {entry.date}
-                            {!hideSupplierNames && entry.platform ? ` · ${entry.platform}` : ''}
-                          </span>
-                        </div>
-                        <div className="shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setErrorMsg(null);
-                              setPendingSwap({
-                                componentId: comp.id,
-                                componentName: comp.name,
-                                purchaseEntryId: entry.id,
-                                targetQty: currentPart.quantity || 1,
-                                condition: entry.condition,
-                                date: entry.date,
-                                unitPrice: entry.unitPrice,
-                              });
-                            }}
-                            className="app-button app-button-primary shrink-0 px-3"
-                          >
-                            Swap
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {filteredParts.length === 0 && (
+          {filteredParts.length === 0 ? (
             <div className="text-center py-12 px-4 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/[0.08] rounded-xl bg-[#101719]/50 mt-4">
               <Box className="w-8 h-8 mb-3 text-zinc-500" />
               <p className="text-sm font-medium text-zinc-400">No compatible parts found</p>
               <p className="text-xs text-zinc-500 mt-1 max-w-[250px] mx-auto">Try adjusting your search or filters, or ensure there is active stock.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-[5px]">
+              {filteredParts.map(({ comp }) => (
+                <ComponentCard
+                  key={comp.id}
+                  component={comp}
+                  isExpanded={expandedPartId === comp.id}
+                  onToggle={() => setExpandedPartId(expandedPartId === comp.id ? null : comp.id)}
+                  showAdminActions={false}
+                  renderBatchActions={(batch) => (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setErrorMsg(null);
+                        setPendingSwap({
+                          componentId: comp.id,
+                          componentName: comp.name,
+                          purchaseEntryId: batch.entry.id,
+                          targetQty: currentPart.quantity || 1,
+                          condition: batch.entry.condition,
+                          date: batch.entry.date,
+                          unitPrice: batch.unitCost,
+                        });
+                      }}
+                      className="flex h-[26px] items-center justify-center leading-none gap-1 rounded-lg border border-[#B9EF68]/35 px-2 text-xs font-semibold text-[#B9EF68] transition-colors hover:bg-[#B9EF68]/10 hover:text-white shrink-0 cursor-pointer"
+                    >
+                      <ArrowRightLeft className="w-3 h-3 text-[#B9EF68]" /> <span className="leading-none pt-[0.5px]">Swap</span>
+                    </button>
+                  )}
+                />
+              ))}
             </div>
           )}
         </div>

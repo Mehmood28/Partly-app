@@ -157,7 +157,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
           <p className="text-xs text-zinc-400">Try changing your search query or selling/trading components from stock.</p>
         </div>
       ) : !isVirtualized ? (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-[5px]">
           {sortedDisplayItems.map((item) => (
             <React.Fragment key={item.id}>{renderTransactionRow(item)}</React.Fragment>
           ))}
@@ -193,7 +193,7 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
                     left: 0,
                     width: '100%',
                     transform: `translateY(${virtualRow.start}px)`,
-                    paddingBottom: '6px',
+                    paddingBottom: '5px',
                   }}
                 >
                   {renderTransactionRow(item)}
