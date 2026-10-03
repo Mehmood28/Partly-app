@@ -246,7 +246,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             className="app-button flex items-center justify-center gap-1.5 px-2 sm:px-3 text-xs font-bold text-[#0d1612] bg-gradient-to-r from-[#b9ef68] to-[#83e5df] border-none whitespace-nowrap shadow-sm hover:brightness-105 transition-all"
             style={{ background: 'linear-gradient(90deg, #b9ef68 0%, #83e5df 100%)', color: '#0d1612', border: 'none' }}
           >
-            <ShoppingCart className="w-3.5 h-3.5 text-[#0d1612] shrink-0" /> Buy PC
+            <ShoppingCart className="w-3.5 h-3.5 text-current shrink-0" /> Buy PC
           </button>
           <button
             onClick={() => setIsQuickQuoteOpen(true)}
@@ -254,14 +254,14 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             style={{ background: 'linear-gradient(90deg, #83e5df 0%, #b9ef68 100%)', color: '#0d1612', border: 'none' }}
             title="Open Quick Quote sandbox tool"
           >
-            <Calculator className="w-3.5 h-3.5 text-[#0d1612] shrink-0" /> Quick Quote
+            <Calculator className="w-3.5 h-3.5 text-current shrink-0" /> Quick Quote
           </button>
           <button
             onClick={() => onOpenAddBuild()}
             className="app-button flex items-center justify-center gap-1.5 px-2 sm:px-3 text-xs font-bold text-[#0d1612] bg-gradient-to-r from-[#b9ef68] to-[#83e5df] border-none whitespace-nowrap shadow-sm hover:brightness-105 transition-all"
             style={{ background: 'linear-gradient(90deg, #b9ef68 0%, #83e5df 100%)', color: '#0d1612', border: 'none' }}
           >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5] text-[#0d1612] shrink-0" /> New Build
+            <Plus className="w-3.5 h-3.5 stroke-[2.5] text-current shrink-0" /> New Build
           </button>
         </div>
       </div>
@@ -269,12 +269,12 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       {/* Filter controls */}
       <div className="app-panel builds-controls">
         {/* Status Filter Tabs: Planned, Available, Pending, Trade-Ins, Sold */}
-        <div className="app-segmented build-status-tabs grid-cols-5">
+        <div className="app-segmented build-status-tabs flex overflow-x-auto no-scrollbar sm:grid sm:grid-cols-5">
           <button 
             type="button"
             onClick={() => handleTabChange('Planned')} 
             data-active={statusFilter === 'Planned'}
-            className="flex items-center justify-center gap-1 overflow-hidden px-1 whitespace-nowrap"
+            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Planned</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({plannedCount})</span>
@@ -284,7 +284,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Available')} 
             data-active={statusFilter === 'Available'}
-            className="flex items-center justify-center gap-1 overflow-hidden px-1 whitespace-nowrap"
+            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Available</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({availableCount})</span>
@@ -294,7 +294,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Pending')} 
             data-active={statusFilter === 'Pending'}
-            className="flex items-center justify-center gap-1 overflow-hidden px-1 whitespace-nowrap"
+            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Pending</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({pendingCount})</span>
@@ -304,7 +304,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Trade-Ins')} 
             data-active={statusFilter === 'Trade-Ins'}
-            className="flex items-center justify-center gap-1 overflow-hidden px-1 whitespace-nowrap"
+            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Trade-Ins</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({tradeInCount})</span>
@@ -314,7 +314,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Sold')} 
             data-active={statusFilter === 'Sold'}
-            className="flex items-center justify-center gap-1 overflow-hidden px-1 whitespace-nowrap"
+            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Sold</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({soldCount})</span>

@@ -1,5 +1,7 @@
-import { InventoryComponent, TransactionLogItem } from '../../types';
-import { autoTagComponent } from '../../utils/helpers';
+import { InventoryComponent, TransactionLogItem, PurchaseEntry, PCBuild } from '../../types';
+import { autoTagComponent, formatCategoryPlural } from '../../utils/helpers';
+import { classifyTransaction } from '../../utils/transactionClassification';
+import { generateBuildTitleFromParts } from '../../utils/buildTitle';
 
 export interface ParsedBatchItem {
   itemName: string;
@@ -12,6 +14,7 @@ export interface ParsedBatchItem {
   platform: string;
   paymentMethod: string;
   comp?: InventoryComponent;
+  entry?: PurchaseEntry;
 }
 
 export function inferCategory(name: string): string {
@@ -152,6 +155,182 @@ export const parseBatchItem = (
     condition,
     platform: itemPlatform,
     paymentMethod: itemPaymentMethod,
-    comp
+    comp,
+    entry: purchaseEntry,
   };
 };
+
+export function getCleanTransactionTitle(
+  tx: TransactionLogItem,
+  components: InventoryComponent[],
+  builds: PCBuild[]
+): string {
+  const classification = classifyTransaction(tx, builds);
+  const isExchange = classification.isExchange;
+  const isPartSale = classification.isPartSale;
+  const isPurchase = classification.isPurchase;
+  const isBulkPurchase = classification.isBulkPurchase;
+
+  if (isExchange) {
+    return tx.itemNameOrSummary
+      ? String(tx.itemNameOrSummary)
+      : tx.title
+      ? String(tx.title).replace(/^Trade Up:\s*/i, '')
+      : 'Trade Up';
+  }
+
+  if (isPartSale) {
+    return tx.itemNameOrSummary
+      ? String(tx.itemNameOrSummary)
+      : tx.title
+      ? String(tx.title).replace(/^(Sold \(Part\)|Part Sold):\s*/i, '')
+      : 'Part Sale';
+  }
+
+  if (isPurchase) {
+    const relatedBuildId = tx.relatedComponentId?.trim();
+    const purchasedBuild: PCBuild | undefined = builds.find((build) => {
+      const purchaseTransactionId = build.purchaseTransactionId?.trim();
+      const matchesRelatedBuild = !relatedBuildId || build.id === relatedBuildId;
+      const matchesPurchaseTransaction = !purchaseTransactionId || purchaseTransactionId === tx.id;
+      const hasMatchingLink = relatedBuildId ? build.id === relatedBuildId : purchaseTransactionId === tx.id;
+      return matchesRelatedBuild && matchesPurchaseTransaction && hasMatchingLink;
+    });
+
+    const isPCPurchase = tx.purchaseKind === 'PC' || !!purchasedBuild;
+
+    if (isPCPurchase || purchasedBuild) {
+      const sourceBuildId = tx.relatedComponentId?.trim() || purchasedBuild?.id;
+      const orphanedBuild = !!sourceBuildId && !purchasedBuild;
+      const purchaseNames = [
+        purchasedBuild?.name,
+        tx.itemNameOrSummary,
+        tx.title?.replace(/^Purchased:\s*/i, ''),
+      ]
+        .filter(Boolean)
+        .map((value) => String(value).trim().toLowerCase());
+
+      const pcPartedOutItems = components.flatMap((component) =>
+        (component.purchaseHistory || [])
+          .filter((entry) => {
+            const entrySourceTransactionId = entry.sourcePurchaseTransactionId?.trim();
+            const entrySourceBuildId = entry.sourcePurchasedBuildId?.trim();
+            if (entrySourceTransactionId || entrySourceBuildId) {
+              if (orphanedBuild && !entrySourceTransactionId) return false;
+              const transactionMatches = !entrySourceTransactionId || entrySourceTransactionId === tx.id;
+              const buildMatches = !entrySourceBuildId || (!!sourceBuildId && entrySourceBuildId === sourceBuildId);
+              return transactionMatches && buildMatches;
+            }
+            return (
+              !orphanedBuild &&
+              !!entry.notes &&
+              purchaseNames.some((name) =>
+                entry.notes!.toLowerCase().includes(`purchased pc: ${name}`)
+              )
+            );
+          })
+          .map(() => ({
+            category: component.category,
+            itemName: component.name,
+          }))
+      );
+
+      const effectivePurchaseItems = [
+        ...(purchasedBuild?.acquisitionComponentBreakdown?.map((item) => ({
+          category: item.category,
+          itemName: item.name,
+        })) || []),
+        ...pcPartedOutItems,
+      ];
+
+      const allOriginalParts = effectivePurchaseItems.map((p) => ({
+        category: p.category as any,
+        componentName: p.itemName,
+      }));
+      const hasCpuOrGpu = allOriginalParts.some((p) => p.category === 'CPU' || p.category === 'GPU');
+      let originalGeneratedName = '';
+      if (hasCpuOrGpu) {
+        originalGeneratedName = generateBuildTitleFromParts(allOriginalParts);
+      }
+      const rawPcName =
+        originalGeneratedName ||
+        tx.itemNameOrSummary ||
+        tx.title?.replace(/^Purchased:\s*/i, '') ||
+        purchasedBuild?.name ||
+        'PC';
+      const cleanPCName = String(rawPcName).replace(/^Purchased\s*(PC:?)?\s*/i, '').trim();
+      return `Purchased PC: ${cleanPCName || 'Custom PC'}`;
+    }
+
+    const parsedPurchaseItems = (tx.detailsList || []).map((detail) =>
+      parseBatchItem(detail, components, tx)
+    );
+    const singletonPurchaseItem =
+      !isBulkPurchase && tx.detailsList?.length === 1
+        ? parseBatchItem(tx.detailsList[0], components, tx)
+        : undefined;
+
+    const matchedComp: InventoryComponent | undefined = tx.relatedComponentId
+      ? components.find((c) => c.id === tx.relatedComponentId)
+      : singletonPurchaseItem?.comp ||
+        (tx.itemNameOrSummary
+          ? components.find((c) => {
+              const cName = String(c.name || '').toLowerCase().trim();
+              const tName = String(tx.itemNameOrSummary || '').toLowerCase().trim();
+              return (
+                cName === tName ||
+                (cName && tName && (cName.includes(tName) || tName.includes(cName)))
+              );
+            })
+          : undefined);
+
+    const detailItems = parsedPurchaseItems;
+    const totalQty =
+      tx.quantity ||
+      tx.relatedComponentQty ||
+      (detailItems.length > 0
+        ? detailItems.reduce((acc, it) => acc + (it.quantity || 1), 0)
+        : singletonPurchaseItem?.quantity) ||
+      1;
+    const itemNames = Array.from(new Set(detailItems.map((it) => it.itemName).filter(Boolean)));
+    const categories = Array.from(
+      new Set(detailItems.map((it) => it.category).filter((c) => Boolean(c) && c !== 'Other'))
+    );
+
+    if (detailItems.length > 0) {
+      if (detailItems.length === 1 || itemNames.length === 1) {
+        const singleName = detailItems[0].itemName.replace(/^\d+x\s+/i, '');
+        return totalQty > 1 ? `Purchased ${totalQty}x ${singleName}` : `Purchased ${singleName}`;
+      } else if (categories.length === 1) {
+        const catPlural = formatCategoryPlural(categories[0]);
+        return `Purchased ${totalQty}x ${catPlural}`;
+      } else {
+        return `Purchased Mixed Parts (${totalQty} ${totalQty === 1 ? 'Part' : 'Parts'})`;
+      }
+    } else if (singletonPurchaseItem) {
+      const singleName = singletonPurchaseItem.itemName.replace(/^\d+x\s+/i, '');
+      return totalQty > 1 ? `Purchased ${totalQty}x ${singleName}` : `Purchased ${singleName}`;
+    } else if (matchedComp) {
+      const compName = matchedComp.name.replace(/^\d+x\s+/i, '');
+      return totalQty > 1 ? `Purchased ${totalQty}x ${compName}` : `Purchased ${compName}`;
+    } else if (tx.itemNameOrSummary) {
+      const raw = String(tx.itemNameOrSummary).trim();
+      if (/^Bulk added\s+\d+\s+items?/i.test(raw) || /^Bulk purchase/i.test(raw)) {
+        if (categories.length === 1) {
+          const catPlural = formatCategoryPlural(categories[0]);
+          return `Purchased ${totalQty}x ${catPlural}`;
+        } else {
+          return `Purchased Mixed Parts (${totalQty} ${totalQty === 1 ? 'Part' : 'Parts'})`;
+        }
+      } else {
+        const clean = raw.replace(/^Purchased:?\s*/i, '').trim();
+        const cleanWithoutQty = clean.replace(/^\d+x\s+/i, '');
+        return totalQty > 1 ? `Purchased ${totalQty}x ${cleanWithoutQty}` : `Purchased ${clean}`;
+      }
+    } else {
+      return totalQty > 1 ? `Purchased ${totalQty}x Parts` : `Purchased Part`;
+    }
+  }
+
+  return tx.title || '';
+}

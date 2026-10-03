@@ -28,13 +28,13 @@ export function formatCleanSpecs(
   let parts: SpecComponentItem[] = [];
 
   if (Array.isArray(input)) {
-    parts = input;
+    parts = input.filter(Boolean);
   } else if (input && typeof input === 'object') {
     if (allComponents) {
       const presentation = getBuildPresentation(input as PCBuild, allComponents);
-      parts = presentation.allComponents;
+      parts = (presentation?.allComponents || []).filter(Boolean);
     } else {
-      parts = (input as PCBuild).parts || [];
+      parts = ((input as PCBuild).parts || []).filter(Boolean);
     }
   }
 
@@ -46,16 +46,24 @@ export function formatCleanSpecs(
 
   for (const group of CATEGORY_ORDER) {
     const matchedParts = parts.filter((p) => {
+      if (!p) return false;
       const cat = String(p.category || '').toLowerCase().trim();
       return group.aliases.some((alias) => cat === alias) || cat === group.key.toLowerCase();
     });
 
     if (matchedParts.length > 0) {
-      const partNames = matchedParts.map((p) => {
-        const name = p.name || p.componentName || 'Unknown Component';
-        return p.quantity && p.quantity > 1 ? `${p.quantity}x ${name}` : name;
-      });
-      specLines.push(`• ${group.label}: ${partNames.join(' + ')}`);
+      const partNames = matchedParts
+        .map((p) => {
+          if (!p) return null;
+          const rawName = p.name || p.componentName;
+          const name = rawName ? String(rawName).trim() : 'Unknown Component';
+          const qty = typeof p.quantity === 'number' && Number.isFinite(p.quantity) ? p.quantity : 1;
+          return qty > 1 ? `${qty}x ${name}` : name;
+        })
+        .filter(Boolean);
+      if (partNames.length > 0) {
+        specLines.push(`• ${group.label}: ${partNames.join(' + ')}`);
+      }
     }
   }
 
@@ -64,16 +72,24 @@ export function formatCleanSpecs(
     CATEGORY_ORDER.flatMap((g) => [g.key.toLowerCase(), ...g.aliases])
   );
   const leftoverParts = parts.filter((p) => {
+    if (!p) return false;
     const cat = String(p.category || '').toLowerCase().trim();
     return !processedCategories.has(cat);
   });
 
   if (leftoverParts.length > 0) {
-    const leftoverNames = leftoverParts.map((p) => {
-      const name = p.name || p.componentName || 'Unknown Component';
-      return p.quantity && p.quantity > 1 ? `${p.quantity}x ${name}` : name;
-    });
-    specLines.push(`• Other: ${leftoverNames.join(' + ')}`);
+    const leftoverNames = leftoverParts
+      .map((p) => {
+        if (!p) return null;
+        const rawName = p.name || p.componentName;
+        const name = rawName ? String(rawName).trim() : 'Unknown Component';
+        const qty = typeof p.quantity === 'number' && Number.isFinite(p.quantity) ? p.quantity : 1;
+        return qty > 1 ? `${qty}x ${name}` : name;
+      })
+      .filter(Boolean);
+    if (leftoverNames.length > 0) {
+      specLines.push(`• Other: ${leftoverNames.join(' + ')}`);
+    }
   }
 
   return `PC Specifications:\n${specLines.join('\n')}`;
@@ -97,8 +113,26 @@ export async function copyCleanSpecs(
       await targetClipboard.writeText(specText);
       return { success: true, text: specText };
     } catch (_e) {
-      // fallback
+      // fallback below
     }
   }
+
+  if (typeof document !== 'undefined') {
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = specText;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      if (successful) return { success: true, text: specText };
+    } catch (_err) {
+      // ignore
+    }
+  }
+
   return { success: false, text: specText };
 }

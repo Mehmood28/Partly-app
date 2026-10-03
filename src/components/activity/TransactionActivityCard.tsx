@@ -10,10 +10,8 @@ import { PartSaleExpandedView } from './PartSaleExpandedView';
 import { PurchaseExpandedView } from './PurchaseExpandedView';
 import { TradeUpExpandedView } from './TradeUpExpandedView';
 import { classifyTransaction } from '../../utils/transactionClassification';
-import { parseBatchItem } from './activityHelpers';
+import { parseBatchItem, getCleanTransactionTitle } from './activityHelpers';
 import { calculateProfitMarginPercent } from '../../utils/financialDisplay';
-import { formatCategoryPlural } from '../../utils/helpers';
-import { generateBuildTitleFromParts } from '../../utils/buildTitle';
 
 export interface TransactionActivityCardProps {
   isActive?: boolean;
@@ -156,69 +154,14 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
       }) : undefined));
 
   // Clean Display Title
-  let displayTitle = tx.title || '';
+  const displayTitle = getCleanTransactionTitle(tx, state.components, state.builds);
   let subCategoryLabel = '';
   if (isExchange) {
-    displayTitle = tx.itemNameOrSummary ? String(tx.itemNameOrSummary) : (tx.title ? String(tx.title).replace(/^Trade Up:\s*/i, '') : 'Trade Up');
     subCategoryLabel = 'TRADE UP';
   } else if (isPartSale) {
-    displayTitle = tx.itemNameOrSummary ? String(tx.itemNameOrSummary) : (tx.title ? String(tx.title).replace(/^(Sold \(Part\)|Part Sold):\s*/i, '') : 'Part Sale');
     subCategoryLabel = 'PART SOLD';
   } else if (isPurchase) {
     subCategoryLabel = isPCPurchase ? 'PC PURCHASE' : 'PURCHASE';
-    if (isPCPurchase || purchasedBuild) {
-      const allOriginalParts = effectivePurchaseItems.map(p => ({
-        category: p.category as any,
-        componentName: p.itemName,
-      }));
-      const hasCpuOrGpu = allOriginalParts.some(p => p.category === 'CPU' || p.category === 'GPU');
-      let originalGeneratedName = '';
-      if (hasCpuOrGpu) {
-        originalGeneratedName = generateBuildTitleFromParts(allOriginalParts);
-      }
-      const rawPcName = originalGeneratedName || tx.itemNameOrSummary || tx.title?.replace(/^Purchased:\s*/i, '') || purchasedBuild?.name || 'PC';
-      const cleanPCName = String(rawPcName).replace(/^Purchased\s*(PC:?)?\s*/i, '').trim();
-      displayTitle = `Purchased PC: ${cleanPCName || 'Custom PC'}`;
-    } else {
-      const detailItems = parsedPurchaseItems;
-      const totalQty = tx.quantity || tx.relatedComponentQty || (detailItems.length > 0 ? detailItems.reduce((acc, it) => acc + (it.quantity || 1), 0) : singletonPurchaseItem?.quantity) || 1;
-      const itemNames = Array.from(new Set(detailItems.map(it => it.itemName).filter(Boolean)));
-      const categories = Array.from(new Set(detailItems.map(it => it.category).filter((c) => Boolean(c) && c !== 'Other')));
-
-      if (detailItems.length > 0) {
-        if (detailItems.length === 1 || itemNames.length === 1) {
-          const singleName = detailItems[0].itemName.replace(/^\d+x\s+/i, '');
-          displayTitle = totalQty > 1 ? `Purchased ${totalQty}x ${singleName}` : `Purchased ${singleName}`;
-        } else if (categories.length === 1) {
-          const catPlural = formatCategoryPlural(categories[0]);
-          displayTitle = `Purchased ${totalQty}x ${catPlural}`;
-        } else {
-          displayTitle = `Purchased Mixed Parts (${totalQty} ${totalQty === 1 ? 'Part' : 'Parts'})`;
-        }
-      } else if (singletonPurchaseItem) {
-        const singleName = singletonPurchaseItem.itemName.replace(/^\d+x\s+/i, '');
-        displayTitle = totalQty > 1 ? `Purchased ${totalQty}x ${singleName}` : `Purchased ${singleName}`;
-      } else if (matchedComp) {
-        const compName = matchedComp.name.replace(/^\d+x\s+/i, '');
-        displayTitle = totalQty > 1 ? `Purchased ${totalQty}x ${compName}` : `Purchased ${compName}`;
-      } else if (tx.itemNameOrSummary) {
-        const raw = String(tx.itemNameOrSummary).trim();
-        if (/^Bulk added\s+\d+\s+items?/i.test(raw) || /^Bulk purchase/i.test(raw)) {
-          if (categories.length === 1) {
-            const catPlural = formatCategoryPlural(categories[0]);
-            displayTitle = `Purchased ${totalQty}x ${catPlural}`;
-          } else {
-            displayTitle = `Purchased Mixed Parts (${totalQty} ${totalQty === 1 ? 'Part' : 'Parts'})`;
-          }
-        } else {
-          const clean = raw.replace(/^Purchased:?\s*/i, '').trim();
-          const cleanWithoutQty = clean.replace(/^\d+x\s+/i, '');
-          displayTitle = totalQty > 1 ? `Purchased ${totalQty}x ${cleanWithoutQty}` : `Purchased ${clean}`;
-        }
-      } else {
-        displayTitle = totalQty > 1 ? `Purchased ${totalQty}x Parts` : `Purchased Part`;
-      }
-    }
   }
 
   const matchedOutgoingComp: InventoryComponent | undefined = isExchange && tx.outgoingComponentId

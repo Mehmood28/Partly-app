@@ -1,7 +1,7 @@
 import React from 'react';
 import { CustomSelect } from '../../ui/CustomSelect';
 import { ComponentCategory, CATEGORIES } from '../../../types';
-import { SUB_CATEGORIES, formatCurrency } from '../../../utils/helpers';
+import { SUB_CATEGORIES, formatCurrency, getConflictingTags } from '../../../utils/helpers';
 import { Plus, Trash2, Lock, Unlock } from 'lucide-react';
 import { ExtractedPartInput } from './dismantleHelpers';
 
@@ -208,9 +208,14 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                         type="button"
                         onClick={() => {
                           const prev = part.tags || [];
-                          const newTags = prev.includes(tag) 
-                            ? prev.filter(t => t !== tag) 
-                            : [...prev, tag];
+                          let newTags: string[];
+                          if (prev.includes(tag)) {
+                            newTags = prev.filter((t) => t !== tag);
+                          } else {
+                            const conflicting = getConflictingTags(tag, part.category).map((c) => c.toLowerCase());
+                            const filtered = prev.filter((t) => !conflicting.includes(t.toLowerCase()));
+                            newTags = [...filtered, tag];
+                          }
                           handleUpdatePart(part.id, { tags: newTags });
                         }}
                         className={`app-chip app-subcategory-chip px-2 ${

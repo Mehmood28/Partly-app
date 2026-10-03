@@ -971,6 +971,37 @@ export const SUB_CATEGORIES: Record<string, string[]> = {
   Case: ['Black', 'White'],
   Cooling: ['360mm', '240mm', 'Air Coolers'],
 };
+
+export const MUTUALLY_EXCLUSIVE_TAG_GROUPS: string[][] = [
+  // GPU generations & platform
+  ['50 Series', '40 Series', '30 Series', 'AMD'],
+  // CPU / Motherboard platforms/sockets
+  ['AM5', 'AM4', 'Intel'],
+  // RAM generations
+  ['DDR5', 'DDR4'],
+  // Storage interfaces/generations
+  ['GEN5', 'GEN4', 'GEN3', 'SATA'],
+  // Colors (PSU / Case)
+  ['Black', 'White'],
+  // Cooler form factors
+  ['360mm', '240mm', 'Air Coolers'],
+];
+
+export const getConflictingTags = (tag: string, category?: string): string[] => {
+  const tagLower = tag.toLowerCase().trim();
+  for (const group of MUTUALLY_EXCLUSIVE_TAG_GROUPS) {
+    if (group.some((t) => t.toLowerCase() === tagLower)) {
+      return group;
+    }
+  }
+  if (category && SUB_CATEGORIES[category]) {
+    const presets = SUB_CATEGORIES[category];
+    if (presets.some((t) => t.toLowerCase() === tagLower)) {
+      return presets;
+    }
+  }
+  return [tag];
+};
 export const determineSubCategory = (comp: import('../types').InventoryComponent) => {
   if (!comp) return null;
   const possible = SUB_CATEGORIES[comp.category] || [];

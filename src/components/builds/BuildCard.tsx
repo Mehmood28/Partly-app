@@ -344,9 +344,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Delete Draft
                       </button>
-                    ) : (
-                      <div />
-                    )}
+                    ) : null}
 
                     <button
                       type="button"

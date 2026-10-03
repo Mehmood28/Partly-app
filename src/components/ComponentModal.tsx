@@ -14,7 +14,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { ConfirmModal } from './ConfirmModal';
-import { getUnassignedBatches, SUB_CATEGORIES } from '../utils/helpers';
+import { getUnassignedBatches, SUB_CATEGORIES, getConflictingTags } from '../utils/helpers';
 import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin, resolvePurchaseEntrySeller } from '../utils/tradeInOrigin';
 
 interface ComponentModalProps {
@@ -81,7 +81,11 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         (initialComponent.tags || []).forEach((t) => {
           const match = validPresets.find((p) => p.toLowerCase() === t.trim().toLowerCase());
           if (match && !matchedTags.includes(match)) {
-            matchedTags.push(match);
+            const conflicting = getConflictingTags(match, compCat).map((c) => c.toLowerCase());
+            const hasConflict = matchedTags.some((existing) => conflicting.includes(existing.toLowerCase()));
+            if (!hasConflict) {
+              matchedTags.push(match);
+            }
           }
         });
         setSelectedTags(matchedTags);
@@ -111,7 +115,29 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
   const handleCategoryChange = (newCat: ComponentCategory) => {
     setCategory(newCat);
     const newPresets = SUB_CATEGORIES[newCat] || [];
-    setSelectedTags((prevTags) => prevTags.filter((tag) => newPresets.includes(tag)));
+    setSelectedTags((prevTags) => {
+      const valid = prevTags.filter((tag) => newPresets.includes(tag));
+      const resolved: string[] = [];
+      for (const t of valid) {
+        const conflicting = getConflictingTags(t, newCat).map((c) => c.toLowerCase());
+        if (!resolved.some((r) => conflicting.includes(r.toLowerCase()))) {
+          resolved.push(t);
+        }
+      }
+      return resolved;
+    });
+  };
+
+  const handleTagToggle = (tag: string) => {
+    setSelectedTags((prev) => {
+      if (prev.includes(tag)) {
+        return prev.filter((t) => t !== tag);
+      }
+      const conflicting = getConflictingTags(tag, category);
+      const conflictingNormalized = conflicting.map((c) => c.toLowerCase());
+      const filtered = prev.filter((t) => !conflictingNormalized.includes(t.toLowerCase()));
+      return [...filtered, tag];
+    });
   };
 
   const handleCloseAndReset = () => {
@@ -352,11 +378,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                         key={tag}
                         type="button"
                         disabled={isDisabled}
-                        onClick={() => {
-                          setSelectedTags((prev) =>
-                            prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-                          );
-                        }}
+                        onClick={() => handleTagToggle(tag)}
                         className={`app-chip app-subcategory-chip px-2.5 transition-all text-xs font-mono ${
                           isSelected
                             ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.12] text-[#9FF8F4] font-semibold'

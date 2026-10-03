@@ -54,6 +54,7 @@ export interface PurchaseEntry {
   totalPrice: number;
   paymentMethod: PaymentMethod;
   platform: Platform;
+  seller?: Platform;
   taxPercent?: number; // e.g. 13 for 13% tax
   healthPercent?: number; // SSD health percentage (0-100)
   notes?: string;
@@ -76,6 +77,8 @@ export interface InventoryComponent {
   assignedCount: number; // Number of units assigned to active or sold PC builds
   soldCount?: number; // Number of units sold individually as loose parts
   unresolvedLegacyReservationByPurchaseEntryId?: Record<string, number>; // Availability fallback metadata for unlinked legacy allocations
+  seller?: Platform;
+  platform?: Platform;
 }
 
 export interface PCBuildPart {
@@ -147,6 +150,7 @@ export interface TransactionLogItem {
   totalAmount: number; // Sale price, purchase cost, or cash paid on top
   profitMargin?: number; // e.g. +160.00 for sales, 0 for exchanges
   platform?: Platform;
+  seller?: Platform;
   paymentMethod?: PaymentMethod;
   secondaryPaymentMethod?: PaymentMethod;
   itemNameOrSummary: string; // e.g. "1 TB Lexar NQ780" or "Gigabyte Windforce RTX 5070 Ti"

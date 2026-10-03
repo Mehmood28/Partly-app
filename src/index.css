@@ -295,6 +295,7 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .goal-editor input { width:140px; padding:8px; }
 .goal-editor button { padding:8px 12px; }
 .home-section { padding:24px 0; border-bottom:1px solid var(--app-line); }
+.home-layout .home-section:last-child, .launchpad-layout .home-section:last-child { border-bottom:0; padding-bottom:0; }
 .overview-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
 .overview-stat { position:relative; display:flex; align-items:flex-start; flex-direction:column; min-width:0; padding:16px; border:1px solid var(--app-line); border-radius:4px; text-align:left; background:transparent; }
 .overview-stat-action { cursor:pointer; }
@@ -532,7 +533,7 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .goal-track { height:6px; }
   .home-section { padding:12px 0; }
   .home-layout .home-section + .home-section, .launchpad-layout .home-section + .home-section { padding-top:12px; }
-  .ai-request { border-bottom:0; padding-bottom:0; }
+  .home-layout .home-section:last-child, .launchpad-layout .home-section:last-child, .ai-request { border-bottom:0; padding-bottom:0; }
   .home-section .section-heading { margin-bottom:10px; }
   .home-section .section-heading h2,.home-section .section-heading h3 { font-size:17px; }
   .overview-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; }

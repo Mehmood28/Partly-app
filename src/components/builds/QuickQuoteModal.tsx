@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { X, Calculator, Copy, CheckCircle2 } from 'lucide-react';
 import { ComponentCategory, InventoryComponent, PCBuildPart } from '../../types';
 import { useInventory } from '../../context/InventoryContext';
@@ -46,7 +46,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
     return () => cancelAnimationFrame(frame);
   }, [isOpen]);
 
-  const handleResetAndClose = () => {
+  const handleResetAndClose = useCallback(() => {
     setSalePrice('');
     setSelectedParts([]);
     setSearchQuery('');
@@ -54,29 +54,35 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
     setActiveSubCategory('');
     setCopiedSpecs(false);
     onClose();
-  };
+  }, [onClose]);
+
+  const handleResetQuote = useCallback(() => {
+    setSalePrice('');
+    setSelectedParts([]);
+  }, []);
 
   // Parts management (held purely in memory)
-  const handleAddPart = (comp: InventoryComponent, entryId: string) => {
+  const handleAddPart = useCallback((comp: InventoryComponent, entryId: string) => {
     const entry = comp.purchaseHistory.find((e) => e.id === entryId);
     if (!entry) return;
     const avgCost = entry.unitPrice;
 
-    const existingIndex = selectedParts.findIndex(
-      (p) => p.componentId === comp.id && p.purchaseEntryId === entryId
-    );
+    setSelectedParts((prev) => {
+      const existingIndex = prev.findIndex(
+        (p) => p.componentId === comp.id && p.purchaseEntryId === entryId
+      );
 
-    if (existingIndex >= 0) {
-      const existing = selectedParts[existingIndex];
-      const updated = [...selectedParts];
-      updated[existingIndex] = {
-        ...existing,
-        quantity: existing.quantity + 1,
-      };
-      setSelectedParts(updated);
-    } else {
-      setSelectedParts([
-        ...selectedParts,
+      if (existingIndex >= 0) {
+        const existing = prev[existingIndex];
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...existing,
+          quantity: existing.quantity + 1,
+        };
+        return updated;
+      }
+      return [
+        ...prev,
         {
           componentId: comp.id,
           purchaseEntryId: entryId,
@@ -85,11 +91,11 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
           quantity: 1,
           unitCostAtAssignment: avgCost,
         },
-      ]);
-    }
-  };
+      ];
+    });
+  }, []);
 
-  const handleUpdatePartQty = (componentId: string, entryId: string | undefined, delta: number) => {
+  const handleUpdatePartQty = useCallback((componentId: string, entryId: string | undefined, delta: number) => {
     setSelectedParts((prev) =>
       prev
         .map((part) => {
@@ -102,24 +108,27 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
         })
         .filter((p): p is PCBuildPart => p !== null)
     );
-  };
+  }, []);
 
-  const handleRemovePart = (componentId: string, entryId?: string) => {
+  const handleRemovePart = useCallback((componentId: string, entryId?: string) => {
     setSelectedParts((prev) =>
       prev.filter((p) => !(p.componentId === componentId && p.purchaseEntryId === entryId))
     );
-  };
+  }, []);
 
-  const totalBuildCost = selectedParts.reduce(
-    (sum, p) => sum + p.quantity * p.unitCostAtAssignment,
-    0
+  const totalBuildCost = useMemo(
+    () => selectedParts.reduce((sum, p) => sum + p.quantity * p.unitCostAtAssignment, 0),
+    [selectedParts]
   );
 
-  const targetPrice = parseFloat(salePrice) || 0;
-  const profit = targetPrice > 0 ? targetPrice - totalBuildCost : 0;
-  const margin = targetPrice > 0 ? (profit / targetPrice) * 100 : 0;
+  const { targetPrice, profit, margin } = useMemo(() => {
+    const price = parseFloat(salePrice) || 0;
+    const p = price > 0 ? price - totalBuildCost : 0;
+    const m = price > 0 ? (p / price) * 100 : 0;
+    return { targetPrice: price, profit: p, margin: m };
+  }, [salePrice, totalBuildCost]);
 
-  const handleCopySpecs = async () => {
+  const handleCopySpecs = useCallback(async () => {
     if (selectedParts.length === 0) {
       showToast('Select at least one part to copy specifications.', 'error');
       return;
@@ -132,7 +141,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
     } else {
       showToast('Failed to copy clean PC specs to clipboard.', 'error');
     }
-  };
+  }, [selectedParts, showToast]);
 
   return (
     <BottomSheetModal
@@ -234,10 +243,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
           <div className="flex items-center gap-2 w-full">
             <button
               type="button"
-              onClick={() => {
-                setSalePrice('');
-                setSelectedParts([]);
-              }}
+              onClick={handleResetQuote}
               className="app-button px-3.5 text-xs text-zinc-300 hover:text-white shrink-0"
             >
               Reset Quote
@@ -254,14 +260,16 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
               onClick={handleCopySpecs}
               className="app-button app-button-primary flex-1 min-w-0 flex items-center justify-center gap-1.5 px-4"
             >
-              <span className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+              <span className="flex items-center justify-center gap-1.5 whitespace-nowrap overflow-hidden">
                 {copiedSpecs ? (
                   <>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-950 shrink-0" /> Copied!
+                    <CheckCircle2 className="w-4 h-4 text-emerald-950 shrink-0" />
+                    <span>Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4 shrink-0" /> Copy Specs ({selectedParts.length} Parts)
+                    <Copy className="w-4 h-4 shrink-0" />
+                    <span className="truncate">Copy Specs ({selectedParts.length} Parts)</span>
                   </>
                 )}
               </span>

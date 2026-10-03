@@ -766,6 +766,7 @@ export const handleAddComponents = (
     quantity: overallTotalQuantity,
     totalAmount: overallTotalAmount,
     platform: seller,
+    seller,
     paymentMethod,
     itemNameOrSummary: bulkSummaryTitle,
     detailsList: parsedComps.map((c) => {
@@ -777,6 +778,11 @@ export const handleAddComponents = (
   newTxs.push(newTx);
 
   parsedComps.forEach(({ compData, entries }) => {
+    entries.forEach((e) => {
+      e.sourcePurchaseTransactionId = newTx.id;
+      e.seller = seller;
+      if (!e.platform) e.platform = seller;
+    });
     const existingCompIndex = findUniqueCatalogMatchIndex(componentsToKeep, compData);
     
     const tags = compData.tags ? [...compData.tags] : autoTagComponent(compData.name, compData.specifications, compData.category);

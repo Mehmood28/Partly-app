@@ -1,6 +1,7 @@
-import { AppState, ComponentCategory, TransactionLogItem, InventoryComponent, PurchaseEntry, PCBuild, PaymentMethod } from '../../types';
+import { AppState, ComponentCategory, TransactionLogItem, InventoryComponent, PurchaseEntry, PCBuild, PaymentMethod, Platform } from '../../types';
 import { autoTagComponent, getAllBatchesWithRemaining, parseDateLocal } from '../../utils/helpers';
 import { classifyTransaction } from '../../utils/transactionClassification';
+import { parseBatchItem } from '../../components/activity/activityHelpers';
 
 const inferCategory = (name: string): ComponentCategory => {
   const n = (name || '').toLowerCase();
@@ -136,13 +137,19 @@ export const handleUpdateTransaction = (
     };
   }
 
-  const hasPlatformUpdate = Object.prototype.hasOwnProperty.call(updates, 'platform');
-  if (hasPlatformUpdate && updates.platform !== undefined && typeof updates.platform !== 'string') {
-    return { nextState: prev, success: false, error: 'Transaction platform must be text.' };
+  const hasSellerUpdate =
+    Object.prototype.hasOwnProperty.call(updates, 'seller') ||
+    Object.prototype.hasOwnProperty.call(updates, 'platform');
+  const rawSellerUpdate = updates.seller !== undefined ? updates.seller : updates.platform;
+  if (hasSellerUpdate && rawSellerUpdate !== undefined && typeof rawSellerUpdate !== 'string') {
+    return { nextState: prev, success: false, error: 'Transaction seller must be text.' };
   }
-  const platform = hasPlatformUpdate
-    ? updates.platform?.trim() || undefined
-    : targetTx.platform;
+  const seller = hasSellerUpdate
+    ? rawSellerUpdate?.trim() || undefined
+    : (targetTx.seller || targetTx.platform);
+
+  const oldSeller = (targetTx.seller || targetTx.platform || '').trim();
+  const isSellerChanged = hasSellerUpdate && (seller || '') !== oldSeller;
 
   const validPaymentMethods: readonly PaymentMethod[] = [
     'E-Transfer',
@@ -161,23 +168,161 @@ export const handleUpdateTransaction = (
     return { nextState: prev, success: false, error: 'Invalid payment method.' };
   }
 
+  let updatedSnapshot = targetTx.originalPurchaseEntrySnapshot;
+  if (isSellerChanged && updatedSnapshot) {
+    updatedSnapshot = {
+      ...updatedSnapshot,
+      platform: (seller || '') as Platform,
+      seller: (seller || '') as Platform,
+    };
+  }
+
   const updatedTarget: TransactionLogItem = {
     ...targetTx,
     title,
     itemNameOrSummary,
     totalAmount,
     profitMargin,
-    platform,
+    platform: seller,
+    seller,
     paymentMethod,
     dateSortable,
+    originalPurchaseEntrySnapshot: updatedSnapshot,
   };
 
+  let updatedComponents = prev.components;
+
+  if (isSellerChanged) {
+    const targetEntryIds = new Set<string>();
+    const targetCompIds = new Set<string>();
+
+    // 1. Direct link on PurchaseEntry (sourcePurchaseTransactionId)
+    prev.components.forEach((comp) => {
+      (comp.purchaseHistory || []).forEach((pe) => {
+        if (pe.sourcePurchaseTransactionId === targetTx.id) {
+          targetEntryIds.add(pe.id);
+          targetCompIds.add(comp.id);
+        }
+      });
+    });
+
+    // 2. Direct link on transaction (relatedPurchaseEntryId, relatedComponentId)
+    if (targetTx.relatedPurchaseEntryId) {
+      targetEntryIds.add(targetTx.relatedPurchaseEntryId);
+    }
+    if (targetTx.relatedComponentId) {
+      targetCompIds.add(targetTx.relatedComponentId);
+    }
+
+    // 3. For bulk purchases and itemized purchases with detailsList:
+    if (targetTx.detailsList && targetTx.detailsList.length > 0) {
+      targetTx.detailsList.forEach((detail) => {
+        const parsed = parseBatchItem(detail, prev.components, targetTx);
+        if (parsed.comp) {
+          targetCompIds.add(parsed.comp.id);
+          if (parsed.entry) {
+            targetEntryIds.add(parsed.entry.id);
+          } else {
+            const match = (parsed.comp.purchaseHistory || []).find(
+              (e) =>
+                e.sourcePurchaseTransactionId === targetTx.id ||
+                (oldSeller && (e.seller === oldSeller || e.platform === oldSeller)) ||
+                e.date === targetTx.dateSortable ||
+                e.date === targetTx.timestamp
+            );
+            if (match) {
+              targetEntryIds.add(match.id);
+            }
+          }
+        }
+      });
+    }
+
+    // 4. Single-item purchase with relatedComponentId without explicit entry link
+    if (targetTx.type === 'PURCHASE' && targetTx.relatedComponentId) {
+      const comp = prev.components.find((c) => c.id === targetTx.relatedComponentId);
+      if (comp) {
+        targetCompIds.add(comp.id);
+        const match = (comp.purchaseHistory || []).find(
+          (e) =>
+            e.sourcePurchaseTransactionId === targetTx.id ||
+            (oldSeller && (e.seller === oldSeller || e.platform === oldSeller)) ||
+            e.date === targetTx.dateSortable ||
+            e.date === targetTx.timestamp
+        );
+        if (match) {
+          targetEntryIds.add(match.id);
+        }
+      }
+    }
+
+    // 5. Parted out PC purchase entries or trade-in entries
+    prev.components.forEach((comp) => {
+      (comp.purchaseHistory || []).forEach((pe) => {
+        if (
+          pe.sourcePurchaseTransactionId === targetTx.id ||
+          (targetTx.incomingTradeInBuildId && pe.sourceTradeInBuildId === targetTx.incomingTradeInBuildId) ||
+          (targetTx.relatedComponentId && pe.sourcePurchasedBuildId === targetTx.relatedComponentId)
+        ) {
+          targetEntryIds.add(pe.id);
+          targetCompIds.add(comp.id);
+        }
+      });
+    });
+
+    updatedComponents = prev.components.map((comp) => {
+      const hasMatchingEntries = (comp.purchaseHistory || []).some(
+        (pe) => targetEntryIds.has(pe.id) || pe.sourcePurchaseTransactionId === targetTx.id
+      );
+      const isTargetComp = targetCompIds.has(comp.id);
+
+      if (!hasMatchingEntries && !isTargetComp) {
+        return comp;
+      }
+
+      const updatedHistory = (comp.purchaseHistory || []).map((pe) => {
+        if (targetEntryIds.has(pe.id) || pe.sourcePurchaseTransactionId === targetTx.id) {
+          return {
+            ...pe,
+            platform: (seller || '') as Platform,
+            seller: (seller || '') as Platform,
+            sourcePurchaseTransactionId: targetTx.id,
+          };
+        }
+        return pe;
+      });
+
+      return {
+        ...comp,
+        seller: (seller || comp.seller || '') as Platform,
+        platform: (seller || comp.platform || '') as Platform,
+        purchaseHistory: updatedHistory,
+      };
+    });
+  }
+
+  const updatedBuilds = isSellerChanged
+    ? prev.builds.map((build) => {
+        const isTargetBuild =
+          build.purchaseTransactionId === targetTx.id ||
+          (targetTx.incomingTradeInBuildId && build.id === targetTx.incomingTradeInBuildId) ||
+          (targetTx.relatedComponentId && build.id === targetTx.relatedComponentId);
+        if (!isTargetBuild) return build;
+        return {
+          ...build,
+          purchaseSeller: seller,
+        };
+      })
+    : prev.builds;
+
   const isNoOp =
+    !isSellerChanged &&
     updatedTarget.title === targetTx.title &&
     updatedTarget.itemNameOrSummary === targetTx.itemNameOrSummary &&
     Object.is(updatedTarget.totalAmount, targetTx.totalAmount) &&
     Object.is(updatedTarget.profitMargin, targetTx.profitMargin) &&
     updatedTarget.platform === targetTx.platform &&
+    updatedTarget.seller === targetTx.seller &&
     updatedTarget.paymentMethod === targetTx.paymentMethod &&
     updatedTarget.dateSortable === targetTx.dateSortable;
   if (isNoOp) {
@@ -188,6 +333,8 @@ export const handleUpdateTransaction = (
     nextState: {
       ...prev,
       transactions: prev.transactions.map((t) => (t.id === id ? updatedTarget : t)),
+      components: updatedComponents,
+      builds: updatedBuilds,
     },
     success: true,
   };

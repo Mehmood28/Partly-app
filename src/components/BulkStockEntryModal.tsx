@@ -6,7 +6,7 @@ import { CATEGORIES, ComponentCategory, Condition, PaymentMethod, Platform } fro
 import { usePrivacy } from '../context/PrivacyContext';
 import { CustomSelect } from './ui/CustomSelect';
 import { useToast } from '../context/ToastContext';
-import { autoTagComponent, normalizeTag, normalizeTags, SUB_CATEGORIES } from '../utils/helpers';
+import { autoTagComponent, normalizeTag, normalizeTags, SUB_CATEGORIES, getConflictingTags } from '../utils/helpers';
 
 const CATEGORY_OPTIONS = CATEGORIES.map((value) => ({ value, label: value }));
 const CONDITION_OPTIONS = ['Sealed', 'New Open Box', 'New No Box', 'Used Open Box', 'Used No Box']
@@ -172,9 +172,14 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
       const currentTags = item.tags || [];
       const normalized = normalizeTag(tag);
       const exists = currentTags.some((t) => t.toLowerCase() === normalized.toLowerCase());
-      const updatedTags = exists
-        ? currentTags.filter((t) => t.toLowerCase() !== normalized.toLowerCase())
-        : [...currentTags, normalized];
+      let updatedTags: string[];
+      if (exists) {
+        updatedTags = currentTags.filter((t) => t.toLowerCase() !== normalized.toLowerCase());
+      } else {
+        const conflicting = getConflictingTags(tag, item.category).map((c) => c.toLowerCase());
+        const filtered = currentTags.filter((t) => !conflicting.includes(t.toLowerCase()));
+        updatedTags = [...filtered, normalized];
+      }
       newItems[index] = {
         ...item,
         tags: normalizeTags(updatedTags),

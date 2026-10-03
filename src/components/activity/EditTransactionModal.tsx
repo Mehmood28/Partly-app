@@ -6,6 +6,7 @@ import { usePrivacy } from '../../context/PrivacyContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useToast } from '../../context/ToastContext';
 import { prepareTransactionEdit } from './transactionEditParsers';
+import { getCleanTransactionTitle } from './activityHelpers';
 
 interface EditTransactionModalProps {
   tx: TransactionLogItem | null;
@@ -14,7 +15,7 @@ interface EditTransactionModalProps {
 }
 
 export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, isOpen = true, onClose }) => {
-  const { updateTransaction } = useInventory();
+  const { state, updateTransaction } = useInventory();
   const { showToast } = useToast();
   const { hideSupplierNames } = usePrivacy();
   const isPurchase = tx?.type === 'PURCHASE';
@@ -28,7 +29,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
   const [summaryEdited, setSummaryEdited] = useState<boolean>(false);
   const [editAmount, setEditAmount] = useState<string>('');
   const [editProfit, setEditProfit] = useState<string>('');
-  const [editPlatform, setEditPlatform] = useState<string>('');
+  const [editSeller, setEditSeller] = useState<string>('');
   const [editPaymentMethod, setEditPaymentMethod] = useState<string>('');
   const [editDate, setEditDate] = useState<string>('');
 
@@ -44,10 +45,10 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     }
   };
 
-  const getMaskedTitle = (rawTitle: string, platform?: string) => {
+  const getMaskedTitle = (rawTitle: string, seller?: string) => {
     let t = rawTitle;
-    if (platform) {
-      const escaped = platform.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (seller) {
+      const escaped = seller.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       t = t
         .replace(new RegExp(`^Bulk Purchase:\\s*${escaped}$`, 'i'), 'Bulk Purchase')
         .replace(new RegExp(`^Purchased:\\s*${escaped}$`, 'i'), 'Purchased')
@@ -59,10 +60,10 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       .trim();
   };
 
-  const getMaskedSummary = (rawSummary: string, platform?: string) => {
+  const getMaskedSummary = (rawSummary: string, seller?: string) => {
     let s = rawSummary;
-    if (platform) {
-      const escaped = platform.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (seller) {
+      const escaped = seller.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       s = s
         .replace(new RegExp(`^Bulk Purchase:\\s*${escaped}$`, 'i'), 'Bulk Purchase')
         .replace(new RegExp(`^Purchased:\\s*${escaped}$`, 'i'), 'Purchased')
@@ -77,8 +78,9 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
 
   useEffect(() => {
     if (tx) {
-      setEditTitle(tx.title);
-      setEditItemSummary(tx.itemNameOrSummary);
+      const cleanTitle = getCleanTransactionTitle(tx, state.components, state.builds);
+      setEditTitle(cleanTitle || tx.title || '');
+      setEditItemSummary(tx.itemNameOrSummary || '');
       setTitleEdited(false);
       setSummaryEdited(false);
       setEditAmount(String(tx.totalAmount ?? 0));
@@ -89,17 +91,18 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       } else {
         setEditProfit(String(tx.profitMargin ?? 0));
       }
-      setEditPlatform(tx.platform || '');
+      setEditSeller(tx.seller || tx.platform || '');
       setEditPaymentMethod(tx.paymentMethod || '');
       setEditDate(tx.dateSortable || '');
     }
-  }, [tx]);
+  }, [tx, state.components, state.builds]);
 
   if (!tx) return null;
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalTitle = isMasked && !titleEdited ? tx.title : editTitle.trim();
+    const cleanInitialTitle = getCleanTransactionTitle(tx, state.components, state.builds);
+    const finalTitle = isMasked && !titleEdited ? (cleanInitialTitle || tx.title) : editTitle.trim();
     const finalSummary = isMasked && !summaryEdited ? tx.itemNameOrSummary : editItemSummary.trim();
     let finalProfit = editProfit;
     if (hasStoredUnitCost) {
@@ -115,7 +118,8 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       itemNameOrSummary: finalSummary,
       totalAmount: editAmount,
       profitMargin: finalProfit,
-      platform: editPlatform,
+      seller: editSeller,
+      platform: editSeller,
       paymentMethod: editPaymentMethod,
       dateSortable: editDate,
     });
@@ -157,7 +161,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
             <input
               type="text"
               required
-              value={isMasked && !titleEdited ? getMaskedTitle(editTitle, tx.platform) : editTitle}
+              value={isMasked && !titleEdited ? getMaskedTitle(editTitle, editSeller) : editTitle}
               onChange={(e) => {
                 setTitleEdited(true);
                 setEditTitle(e.target.value);
@@ -172,7 +176,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
             <input
               type="text"
               required
-              value={isMasked && !summaryEdited ? getMaskedSummary(editItemSummary, tx.platform) : editItemSummary}
+              value={isMasked && !summaryEdited ? getMaskedSummary(editItemSummary, editSeller) : editItemSummary}
               onChange={(e) => {
                 setSummaryEdited(true);
                 setEditItemSummary(e.target.value);
@@ -242,14 +246,14 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Platform</label>
+              <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Seller</label>
               <input
                 type={isMasked ? "password" : "text"}
                 autoComplete="off"
-                value={editPlatform}
-                onChange={(e) => setEditPlatform(e.target.value)}
+                value={editSeller}
+                onChange={(e) => setEditSeller(e.target.value)}
                 className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
-                placeholder={isMasked ? "••••••••" : "e.g. Kijiji / Amazon"}
+                placeholder={isMasked ? "••••••••" : "e.g. Memory Express / Amazon / Roop"}
               />
             </div>
 

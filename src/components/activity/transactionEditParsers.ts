@@ -17,7 +17,8 @@ export interface TransactionEditInputs {
   itemNameOrSummary: string;
   totalAmount: string;
   profitMargin: string;
-  platform: string;
+  seller?: string;
+  platform?: string;
   paymentMethod: string;
   dateSortable: string;
 }
@@ -30,6 +31,7 @@ export type PreparedTransactionEdit =
         itemNameOrSummary: string;
         totalAmount: number;
         profitMargin?: number;
+        seller?: string;
         platform?: string;
         paymentMethod?: PaymentMethod;
         dateSortable: string;
@@ -73,6 +75,9 @@ export const prepareTransactionEdit = (
     return { success: false, error: 'Select a valid payment method.' };
   }
 
+  const rawSeller = (inputs.seller !== undefined ? inputs.seller : inputs.platform) || '';
+  const seller = rawSeller.trim() || undefined;
+
   return {
     success: true,
     value: {
@@ -80,7 +85,8 @@ export const prepareTransactionEdit = (
       itemNameOrSummary,
       totalAmount: amountResult.value,
       profitMargin,
-      platform: inputs.platform.trim() || undefined,
+      seller,
+      platform: seller,
       paymentMethod: paymentMethodValue
         ? (paymentMethodValue as PaymentMethod)
         : undefined,

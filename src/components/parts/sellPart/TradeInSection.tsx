@@ -1,7 +1,7 @@
 import React from 'react';
 import { CustomSelect } from '../../ui/CustomSelect';
 import { ComponentCategory, CATEGORIES } from '../../../types';
-import { SUB_CATEGORIES, formatCurrency } from '../../../utils/helpers';
+import { SUB_CATEGORIES, formatCurrency, getConflictingTags } from '../../../utils/helpers';
 import { ArrowRightLeft, TrendingUp, UserCheck } from 'lucide-react';
 
 export type TradeDirection = 'CUSTOMER_TRADE_IN' | 'TRADE_UP';
@@ -53,6 +53,17 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
 }) => {
   const parsedCashPaid = Math.max(0, parseFloat(cashPaidOnTop) || 0);
   const incomingCostBasis = outgoingCostBasis + parsedCashPaid;
+
+  const handleTradeTagToggle = (tag: string) => {
+    setSelectedTradeTags((prev) => {
+      if (prev.includes(tag)) {
+        return prev.filter((t) => t !== tag);
+      }
+      const conflicting = getConflictingTags(tag, tradeInPartCategory).map((c) => c.toLowerCase());
+      const filtered = prev.filter((t) => !conflicting.includes(t.toLowerCase()));
+      return [...filtered, tag];
+    });
+  };
 
   return (
     <div className="trade-in-section space-y-3 border-y border-white/[0.08] py-3">
@@ -162,13 +173,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                         <button
                           key={tag}
                           type="button"
-                          onClick={() => {
-                            setSelectedTradeTags((prev) =>
-                              prev.includes(tag)
-                                ? prev.filter((t) => t !== tag)
-                                : [...prev, tag]
-                            );
-                          }}
+                          onClick={() => handleTradeTagToggle(tag)}
                           className={`app-chip app-subcategory-chip px-2.5 font-mono ${
                             isSelected
                               ? 'border-[#B9EF68]/50 bg-[#B9EF68]/[0.08] text-[#9FF8F4]'
@@ -289,13 +294,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                         <button
                           key={tag}
                           type="button"
-                          onClick={() => {
-                            setSelectedTradeTags((prev) =>
-                              prev.includes(tag)
-                                ? prev.filter((t) => t !== tag)
-                                : [...prev, tag]
-                            );
-                          }}
+                          onClick={() => handleTradeTagToggle(tag)}
                           className={`app-chip app-subcategory-chip px-2.5 font-mono ${
                             isSelected
                               ? 'border-cyan-500/50 bg-cyan-500/[0.08] text-cyan-300'
