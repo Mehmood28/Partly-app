@@ -14,6 +14,7 @@ interface BuildSelectedPartsListProps {
   salePrice: string;
   onUpdatePartQty: (componentId: string, entryId: string | undefined, delta: number) => void;
   onRemovePart: (componentId: string, entryId?: string) => void;
+  hideTotalsHeader?: boolean;
 }
 
 export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
@@ -23,6 +24,7 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
   salePrice,
   onUpdatePartQty,
   onRemovePart,
+  hideTotalsHeader = false,
 }) => {
   const { hideSupplierNames } = usePrivacy();
   const targetPrice = parseFloat(salePrice) || 0;
@@ -36,10 +38,12 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
           <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-2 whitespace-nowrap shrink-0 font-display">
             <Box className="w-4 h-4 text-[#B9EF68] shrink-0" /> Selected Parts ({selectedParts.length})
           </h4>
-          <div className="flex shrink-0 items-center divide-x divide-white/[0.1] font-mono text-[11px]">
-            <span className="pr-2 text-zinc-500">COST <strong className="ml-1 text-zinc-200">{formatCurrency(totalBuildCost)}</strong></span>
-            <span className={`pl-2 ${getProfitTextColor(targetPrice > 0 ? profit : 0)}`}>PROFIT <strong className="ml-1">{formatSignedCurrency(targetPrice > 0 ? profit : 0)}</strong>{targetPrice > 0 ? ` · ${Math.round(margin)}%` : ''}</span>
-          </div>
+          {!hideTotalsHeader && (
+            <div className="flex shrink-0 items-center divide-x divide-white/[0.1] font-mono text-[11px]">
+              <span className="pr-2 text-zinc-500">COST <strong className="ml-1 text-zinc-200">{formatCurrency(totalBuildCost)}</strong></span>
+              <span className={`pl-2 ${getProfitTextColor(targetPrice > 0 ? profit : 0)}`}>PROFIT <strong className="ml-1">{formatSignedCurrency(targetPrice > 0 ? profit : 0)}</strong>{targetPrice > 0 ? ` · ${Math.round(margin)}%` : ''}</span>
+            </div>
+          )}
         </div>
       </div>
 

@@ -87,7 +87,7 @@ export interface PCBuildPart {
   unitCostAtAssignment: number; // Weighted average cost per unit at time of build
 }
 
-export type BuildStatus = 'In Progress' | 'Listed for Sale' | 'Sold' | 'Trade-In Processing';
+export type BuildStatus = 'Planned' | 'Pending' | 'Available' | 'Sold' | 'Trade-In Processing';
 
 export type PCBuildAcquisitionSource = 'Built' | 'Trade-In' | 'Purchased';
 
@@ -110,7 +110,7 @@ export interface PCBuild {
   status: BuildStatus;
   createdDate: string;
   builtDate?: string; // Date when the PC was physically built
-  completionDate?: string; // Date when rig was marked Listed for Sale or Completed
+  completionDate?: string; // Date when rig was marked Available or Completed
   daysOnMarket?: number; // Days between completion and sale
   estimatedCost?: number;
   notes?: string;

@@ -214,7 +214,7 @@ export const handlePurchasePC = (
     name: buildName,
     parts: [],
     acquisitionComponentBreakdown: normalizedBreakdown,
-    status: 'In Progress',
+    status: 'Pending',
     createdDate: purchase.purchaseDate,
     estimatedCost: purchase.purchasePrice,
     acquisitionSource: 'Purchased',
@@ -268,7 +268,7 @@ export const handleUpdateBuildStatus = (
   let newSourceSaleTransactionId = targetBuild.sourceSaleTransactionId;
   if (
     targetBuild.acquisitionSource === 'Trade-In' &&
-    targetBuild.status === 'In Progress' &&
+    targetBuild.status === 'Pending' &&
     status === 'Trade-In Processing' &&
     !newSourceSaleTransactionId
   ) {
@@ -278,16 +278,22 @@ export const handleUpdateBuildStatus = (
     }
   }
 
-  // Automatically set completionDate if it transitions to 'Listed for Sale' and doesn't have one
+  // Automatically set completionDate & builtDate if it transitions to 'Available' and doesn't have one
   const newCompletionDate =
-    status === 'Listed for Sale' && !targetBuild.completionDate
+    status === 'Available' && !targetBuild.completionDate
       ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
       : targetBuild.completionDate || undefined;
+
+  const newBuiltDate =
+    status === 'Available' && !targetBuild.builtDate
+      ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+      : targetBuild.builtDate;
 
   const updatedTarget: PCBuild = {
     ...targetBuild,
     status,
     completionDate: newCompletionDate,
+    builtDate: newBuiltDate,
     sourceSaleTransactionId: newSourceSaleTransactionId,
     ...(status !== 'Sold'
       ? {
@@ -2353,14 +2359,14 @@ export const handleRelistBuild = (
   // Atomically update:
   // - Remove only the exact linked SALE transaction
   // - Remove only the exact pristine incoming trade-in build, when one exists
-  // - Change outgoing build to 'Listed for Sale', clear sale metadata & saleTransactionId, keep allocated parts unchanged
+  // - Change outgoing build to 'Available', clear sale metadata & saleTransactionId, keep allocated parts unchanged
   const updatedBuilds = prev.builds
     .filter((b) => b.id !== validatedIncomingBuildId)
     .map((b) => {
       if (b.id === targetBuild.id) {
         return {
           ...b,
-          status: 'Listed for Sale' as const,
+          status: 'Available' as const,
           salePrice: undefined,
           saleDate: undefined,
           platformSoldOn: undefined,

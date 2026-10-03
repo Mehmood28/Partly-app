@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PCBuild, PCBuildPart } from '../../types';
+import { BuildStatus, PCBuild, PCBuildPart } from '../../types';
 import { CheckCircle2, Clock, FileText, Pencil, Trash2, ChevronUp, ChevronDown, X, PlusCircle, Tag, DollarSign, Copy, ArrowRightLeft, Image as ImageIcon, Loader2, AlertCircle, Wrench, User, Calendar, List, MoreVertical } from 'lucide-react';
 import { calculateBuildPartsCost, formatCurrency, formatReadableDate, getCategoryPresentation, getConditionDotColor } from '../../utils/helpers';
 import { generateInvoice } from '../../utils/invoiceGenerator';
@@ -16,13 +16,14 @@ import { hasShareableBuildImage, shareBuildImageToDiscord } from './discordShare
 import { SoldBuildTransactionPanel } from './SoldBuildTransactionPanel';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { ConfirmModal } from '../ConfirmModal';
-import { canDeleteBuildDraft, canDismantleBuild, canPartOutAcquiredPC, canMoveToTradeIns } from '../../utils/buildEligibility';
+import { canDeleteBuildDraft, canDismantleBuild, canPartOutAcquiredPC } from '../../utils/buildEligibility';
 import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
 import { calculateProfitMarginPercent, formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
 import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils/acquiredPC';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { CopyAdWarrantyModal } from './CopyAdWarrantyModal';
+import { copyCleanSpecs } from '../../utils/cleanSpecsHelper';
 import { isWarrantyPreset } from '../../utils/warranty';
 
 interface BuildCardProps {
@@ -36,7 +37,7 @@ interface BuildCardProps {
   onItemize?: (build: PCBuild) => void;
   onSell: (build: PCBuild) => void;
   onAllocate: (build: PCBuild) => void;
-  updateStatus: (id: string, status: 'In Progress' | 'Listed for Sale' | 'Trade-In Processing') => void;
+  updateStatus: (id: string, status: BuildStatus) => void;
   removePart: (
     buildId: string,
     partId: string,
@@ -71,6 +72,19 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const [quantityPartData, setQuantityPartData] = useState<PCBuildPart | null>(null);
   const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedSpecs, setCopiedSpecs] = useState(false);
+
+  const handleCopySpecs = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const result = await copyCleanSpecs(build, state.components);
+    if (result.success) {
+      showToast('Copied clean PC specs to clipboard!', 'success');
+      setCopiedSpecs(true);
+      setTimeout(() => setCopiedSpecs(false), 2000);
+    } else {
+      showToast('Failed to copy clean PC specs to clipboard.', 'error');
+    }
+  };
 
   // Confirmation modal state
   const [confirmModalConfig, setConfirmModalConfig] = useState<{
@@ -286,61 +300,88 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 >
                   <PlusCircle className="w-3.5 h-3.5 text-[#B9EF68]" /> Add Part
                 </button>
-                {!isSold && isAcquired && onItemize && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onItemize(build); }}
-                    className="app-button"
-                    title={acquiredBreakdown.length > 0 ? 'Edit acquired PC component breakdown' : 'Itemize acquired PC into components'}
-                  >
-                    <FileText className="w-3.5 h-3.5" /> {acquiredBreakdown.length > 0 ? 'Edit Breakdown' : 'Itemize'}
-                  </button>
-                )}
-                {!isSold && onDismantle && (isAcquired ? canPartOutAcquiredPC(build) : canDismantleBuild(build)) && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDismantle(build); }}
-                    className="app-button"
-                    title={isAcquired ? 'Part out acquired PC into inventory parts' : 'Dismantle rig and return parts to stock'}
-                  >
-                    <Wrench className="w-3.5 h-3.5" /> {isAcquired ? 'Part Out' : 'Dismantle'}
-                  </button>
-                )}
-                {isSold && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmModalConfig({
-                        isOpen: true,
-                        title: 'Relist Build?',
-                        message: `Relist "${build.name}" for sale? The build will return to available status, its sale transaction will be reversed, and its allocated parts will be preserved.`,
-                        confirmText: 'Relist Build',
-                        variant: 'emerald',
-                        onConfirm: () => {
-                          setConfirmModalConfig(null);
-                          const result = relistBuild(build.id);
-                          if (!result.success) {
-                            showToast(result.error || 'Failed to relist build.', 'error');
-                          } else {
-                            showToast(`Relisted "${build.name}" for sale!`);
-                          }
-                        },
-                      });
-                    }}
-                    className="app-button"
-                    title="Relist Build"
-                  >
-                    <ArrowRightLeft className="w-3.5 h-3.5" /> Relist
-                  </button>
-                )}
-                {canDeleteBuildDraft(build) && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(build); }}
-                    className="app-button app-button-danger"
-                    title="Delete empty draft build"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete Draft
-                  </button>
-                )}
-                {isSold && (
+
+                {!isSold ? (
+                  <>
+                    <button
+                      onClick={handleCopySpecs}
+                      className="app-button"
+                      title="Copy clean PC specs"
+                    >
+                      {copiedSpecs ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedSpecs ? 'Copied!' : 'Copy Specs'}
+                    </button>
+                    <button
+                      onClick={handleCopyAdClick}
+                      className="app-button"
+                      title="Copy full marketplace ad copy"
+                    >
+                      {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? 'Copied!' : 'Copy Ad'}
+                    </button>
+
+                    {onDismantle && (isAcquired ? canPartOutAcquiredPC(build) : canDismantleBuild(build)) ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDismantle(build); }}
+                        className="app-button"
+                        title={isAcquired ? 'Part out acquired PC into inventory parts' : 'Dismantle rig and return parts to stock'}
+                      >
+                        <Wrench className="w-3.5 h-3.5" /> {isAcquired ? 'Part Out' : 'Dismantle'}
+                      </button>
+                    ) : isAcquired && onItemize ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onItemize(build); }}
+                        className="app-button"
+                        title={acquiredBreakdown.length > 0 ? 'Edit acquired PC component breakdown' : 'Itemize acquired PC into components'}
+                      >
+                        <FileText className="w-3.5 h-3.5" /> {acquiredBreakdown.length > 0 ? 'Edit Breakdown' : 'Itemize'}
+                      </button>
+                    ) : canDeleteBuildDraft(build) ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(build); }}
+                        className="app-button app-button-danger"
+                        title="Delete empty draft build"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete Draft
+                      </button>
+                    ) : (
+                      <div />
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleShareImageDiscord}
+                      disabled={!hasBuildImage || imageShareStatus === 'loading' || imageShareStatus === 'success'}
+                      className={`app-button ${
+                        !hasBuildImage
+                          ? 'border-white/[0.05] text-zinc-600 bg-[#0B1113]/60 cursor-not-allowed opacity-60'
+                          : imageShareStatus === 'success'
+                          ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10 cursor-default'
+                          : imageShareStatus === 'error'
+                          ? 'border-rose-500/40 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20'
+                          : 'border-white/[0.08] text-zinc-200 bg-[#0B1113] hover:border-[#B9EF68]/40'
+                      }`}
+                      title={
+                        !hasBuildImage
+                          ? 'Add a build image to enable sharing'
+                          : imageShareError || 'Share build as rendered image to Discord'
+                      }
+                    >
+                      {imageShareStatus === 'loading' ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#B9EF68]" />
+                      ) : imageShareStatus === 'success' ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <ImageIcon className="w-3.5 h-3.5" />
+                      )}
+                      {imageShareStatus === 'loading'
+                        ? 'Rendering...'
+                        : imageShareStatus === 'success'
+                        ? 'Shared!'
+                        : 'Share Image'}
+                    </button>
+                  </>
+                ) : (
                   <>
                     <button
                       onClick={(e) => { e.stopPropagation(); onSell(build); }}
@@ -369,49 +410,65 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     >
                       <FileText className="w-3.5 h-3.5" /> Invoice
                     </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmModalConfig({
+                          isOpen: true,
+                          title: 'Relist Build?',
+                          message: `Relist "${build.name}" for sale? The build will return to available status, its sale transaction will be reversed, and its allocated parts will be preserved.`,
+                          confirmText: 'Relist Build',
+                          variant: 'emerald',
+                          onConfirm: () => {
+                            setConfirmModalConfig(null);
+                            const result = relistBuild(build.id);
+                            if (!result.success) {
+                              showToast(result.error || 'Failed to relist build.', 'error');
+                            } else {
+                              showToast(`Relisted "${build.name}" for sale!`);
+                            }
+                          },
+                        });
+                      }}
+                      className="app-button"
+                      title="Relist Build"
+                    >
+                      <ArrowRightLeft className="w-3.5 h-3.5" /> Relist
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleShareImageDiscord}
+                      disabled={!hasBuildImage || imageShareStatus === 'loading' || imageShareStatus === 'success'}
+                      className={`app-button ${
+                        !hasBuildImage
+                          ? 'border-white/[0.05] text-zinc-600 bg-[#0B1113]/60 cursor-not-allowed opacity-60'
+                          : imageShareStatus === 'success'
+                          ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10 cursor-default'
+                          : imageShareStatus === 'error'
+                          ? 'border-rose-500/40 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20'
+                          : 'border-white/[0.08] text-zinc-200 bg-[#0B1113] hover:border-[#B9EF68]/40'
+                      }`}
+                      title={
+                        !hasBuildImage
+                          ? 'Add a build image to enable sharing'
+                          : imageShareError || 'Share build as rendered image to Discord'
+                      }
+                    >
+                      {imageShareStatus === 'loading' ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#B9EF68]" />
+                      ) : imageShareStatus === 'success' ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <ImageIcon className="w-3.5 h-3.5" />
+                      )}
+                      {imageShareStatus === 'loading'
+                        ? 'Rendering...'
+                        : imageShareStatus === 'success'
+                        ? 'Shared!'
+                        : 'Share Image'}
+                    </button>
                   </>
                 )}
-                {!isSold && (
-                  <button
-                    onClick={handleCopyAdClick}
-                    className="app-button"
-                  >
-                    {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? 'Copied!' : 'Copy Ad'}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleShareImageDiscord}
-                  disabled={!hasBuildImage || imageShareStatus === 'loading' || imageShareStatus === 'success'}
-                  className={`app-button ${
-                    !hasBuildImage
-                      ? 'border-white/[0.05] text-zinc-600 bg-[#0B1113]/60 cursor-not-allowed opacity-60'
-                      : imageShareStatus === 'success'
-                      ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10 cursor-default'
-                      : imageShareStatus === 'error'
-                      ? 'border-rose-500/40 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20'
-                      : 'border-white/[0.08] text-zinc-200 bg-[#0B1113] hover:border-[#B9EF68]/40'
-                  }`}
-                  title={
-                    !hasBuildImage
-                      ? 'Add a build image to enable sharing'
-                      : imageShareError || 'Share build as rendered image to Discord'
-                  }
-                >
-                  {imageShareStatus === 'loading' ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#B9EF68]" />
-                  ) : imageShareStatus === 'success' ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <ImageIcon className="w-3.5 h-3.5" />
-                  )}
-                  {imageShareStatus === 'loading'
-                    ? 'Rendering...'
-                    : imageShareStatus === 'success'
-                    ? 'Shared!'
-                    : 'Share Image'}
-                </button>
               </div>
             </div>
             {build.imageUrl ? (
@@ -722,7 +779,20 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           {!isSold && (
             <div className="border-t border-white/[0.08] pt-3">
               <div className="build-workflow-actions grid grid-cols-2 gap-2 pt-0.5">
-                {build.status === 'Listed for Sale' && (
+                {build.status === 'Planned' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateStatus(build.id, 'Available');
+                      showToast(`Marked "${build.name}" as Available!`, 'success');
+                    }}
+                    className="app-button mark-available-action flex items-center justify-center gap-1 px-3"
+                    title="Mark build as Available"
+                  >
+                    <Tag className="w-3.5 h-3.5" /> Mark Available
+                  </button>
+                )}
+                {build.status === 'Available' && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -734,7 +804,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                         variant: 'violet',
                         onConfirm: () => {
                           setConfirmModalConfig(null);
-                          updateStatus(build.id, 'In Progress');
+                          updateStatus(build.id, 'Pending');
                         },
                       });
                     }}
@@ -744,43 +814,27 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     <Clock className="w-3.5 h-3.5" /> Mark Pending
                   </button>
                 )}
-                {build.status === 'In Progress' && (
-                  <>
-                    {canMoveToTradeIns(build) ? (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          updateStatus(build.id, 'Trade-In Processing');
-                          showToast(`Moved "${build.name}" to Trade-Ins`);
-                        }}
-                        className="bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 hover:bg-cyan-500/15 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl text-xs font-medium"
-                        title="Move legacy trade-in build to Trade-Ins"
-                      >
-                        <ArrowRightLeft className="w-3.5 h-3.5" /> Move to Trade-Ins
-                      </button>
-                    ) : (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setConfirmModalConfig({
-                            isOpen: true,
-                            title: 'Mark Build Available?',
-                            message: `Mark "${build.name}" as available for sale?`,
-                            confirmText: 'Mark Available',
-                            variant: 'violet',
-                            onConfirm: () => {
-                              setConfirmModalConfig(null);
-                              updateStatus(build.id, 'Listed for Sale');
-                            },
-                          });
-                        }}
-                        className="app-button mark-available-action flex items-center gap-1 px-3"
-                        title="Mark build as Available"
-                      >
-                        <Tag className="w-3.5 h-3.5" /> Mark Available
-                      </button>
-                    )}
-                  </>
+                {build.status === 'Pending' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmModalConfig({
+                        isOpen: true,
+                        title: 'Mark Build Available?',
+                        message: `Mark "${build.name}" as available for sale?`,
+                        confirmText: 'Mark Available',
+                        variant: 'violet',
+                        onConfirm: () => {
+                          setConfirmModalConfig(null);
+                          updateStatus(build.id, 'Available');
+                        },
+                      });
+                    }}
+                    className="app-button mark-available-action flex items-center gap-1 px-3"
+                    title="Mark build as Available"
+                  >
+                    <Tag className="w-3.5 h-3.5" /> Mark Available
+                  </button>
                 )}
                 {build.status === 'Trade-In Processing' && (
                   <button
@@ -794,7 +848,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                         variant: 'violet',
                         onConfirm: () => {
                           setConfirmModalConfig(null);
-                          updateStatus(build.id, 'Listed for Sale');
+                          updateStatus(build.id, 'Available');
                         },
                       });
                     }}

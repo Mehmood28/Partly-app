@@ -2,12 +2,12 @@ import React from 'react';
 import { Home, Package, BarChart3, Hammer, FolderSync, LucideIcon } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 
-interface SidebarProps {
-  activeTab: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data';
-  setActiveTab: (tab: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data') => void;
+interface BottomNavProps {
+  activeTab: 'home' | 'inventory' | 'builds' | 'analytics' | 'data';
+  setActiveTab: (tab: 'home' | 'inventory' | 'builds' | 'analytics' | 'data') => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = React.memo(({
+export const BottomNav: React.FC<BottomNavProps> = React.memo(({
   activeTab,
   setActiveTab,
 }) => {
@@ -21,7 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
     }
   };
 
-  const handleTabClick = (tabId: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data') => {
+  const handleTabClick = (tabId: 'home' | 'inventory' | 'builds' | 'analytics' | 'data') => {
     if (activeTab === tabId) {
       scrollToTop();
     } else {
@@ -29,8 +29,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
     }
   };
 
-  const tabs: Array<{ id: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data'; label: string; icon: LucideIcon; hasBadge?: boolean }> = [
-    { id: 'launchpad', label: 'Home', icon: Home },
+  const tabs: Array<{ id: 'home' | 'inventory' | 'builds' | 'analytics' | 'data'; label: string; icon: LucideIcon; hasBadge?: boolean }> = [
+    { id: 'home', label: 'Home', icon: Home },
     { id: 'inventory', label: 'Stock', icon: Package },
     { id: 'builds', label: 'Builds', icon: Hammer },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },

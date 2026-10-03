@@ -8,16 +8,16 @@ import {
   precomputeAssignedBatches,
   getUnassignedBatches 
 } from '../utils/helpers';
-import { RecommendedBuild, LaunchpadViewProps } from './launchpad/launchpadTypes';
+import { RecommendedBuild, HomeViewProps, LaunchpadViewProps } from './home/homeTypes';
 import { formatShortCpuAndGpu } from '../utils/buildTitle';
-import { DashboardQuickStats } from './launchpad/DashboardQuickStats';
-import { DashboardQuickActions } from './launchpad/DashboardQuickActions';
-import { CustomAIBuildRequest } from './launchpad/CustomAIBuildRequest';
-import { CustomBuildResultCard } from './launchpad/CustomBuildResultCard';
+import { DashboardQuickStats } from './home/DashboardQuickStats';
+import { DashboardQuickActions } from './home/DashboardQuickActions';
+import { CustomAIBuildRequest } from './home/CustomAIBuildRequest';
+import { CustomBuildResultCard } from './home/CustomBuildResultCard';
 
-export type { RecommendedBuild, LaunchpadViewProps };
+export type { RecommendedBuild, HomeViewProps, LaunchpadViewProps };
 
-export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({ 
+export const HomeView: React.FC<HomeViewProps> = React.memo(({ 
   setActiveTab, 
   onNavigateToBuilds,
   onOpenAddBuild, 
@@ -158,7 +158,7 @@ export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({
     onOpenAddBuild({
       name: defaultTitle,
       parts: buildParts,
-      status: 'Listed for Sale',
+      status: 'Available',
       salePrice: recBuild.estimatedPrice,
       estimatedCost: recBuild.totalCost,
       notes: recBuild.notes ? `AI Synergy: ${recBuild.notes}` : 'Generated from custom AI request.'
@@ -166,7 +166,7 @@ export const LaunchpadView: React.FC<LaunchpadViewProps> = React.memo(({
   };
 
   return (
-    <div className="launchpad-layout pb-2">
+    <div className="home-layout pb-2">
       {/* Monthly Profit Goal */}
       <GoalBar />
       

@@ -63,8 +63,15 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
             };
           });
         };
+        let normalizedStatus = build.status;
+        if ((normalizedStatus as unknown) === 'In Progress') {
+          normalizedStatus = 'Pending';
+        } else if ((normalizedStatus as unknown) === 'Listed for Sale') {
+          normalizedStatus = 'Available';
+        }
         return {
           ...build,
+          status: normalizedStatus,
           acquisitionComponentBreakdown: normalizeBreakdown(build.acquisitionComponentBreakdown),
           tradeInComponentBreakdown: normalizeBreakdown(build.tradeInComponentBreakdown),
         };
@@ -271,7 +278,20 @@ export const parseBackupObject = (json: unknown): ParseBackupResult => {
   }
 
   const components = hasComponentsArray ? (candidate.components as InventoryComponent[]) : [];
-  const builds = hasBuildsArray ? (candidate.builds as PCBuild[]) : [];
+  const rawBuilds = hasBuildsArray ? (candidate.builds as PCBuild[]) : [];
+  const builds = rawBuilds.map((build) => {
+    if (!build) return build;
+    let normalizedStatus = build.status;
+    if ((normalizedStatus as unknown) === 'In Progress') {
+      normalizedStatus = 'Pending';
+    } else if ((normalizedStatus as unknown) === 'Listed for Sale') {
+      normalizedStatus = 'Available';
+    }
+    return {
+      ...build,
+      status: normalizedStatus,
+    };
+  });
   const transactions = hasTransactionsArray ? (candidate.transactions as TransactionLogItem[]) : [];
 
   return {

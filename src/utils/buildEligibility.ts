@@ -49,11 +49,11 @@ export function canPartOutAcquiredPC(build: PCBuild | null | undefined): boolean
 }
 
 /**
- * Legacy trade-in in "In Progress" status can be moved to "Trade-In Processing"
+ * Legacy trade-in in "Pending" status can be moved to "Trade-In Processing"
  */
 export function canMoveToTradeIns(build: PCBuild | null | undefined): boolean {
   if (!build) return false;
-  return build.acquisitionSource === 'Trade-In' && build.status === 'In Progress' && !build.sourceSaleTransactionId;
+  return build.acquisitionSource === 'Trade-In' && build.status === 'Pending' && !build.sourceSaleTransactionId;
 }
 
 /**

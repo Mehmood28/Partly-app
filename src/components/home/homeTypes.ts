@@ -14,10 +14,12 @@ export interface RecommendedBuild {
   warning?: string;
 }
 
-export interface LaunchpadViewProps {
-  setActiveTab: (tab: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data') => void;
+export interface HomeViewProps {
+  setActiveTab: (tab: 'home' | 'inventory' | 'builds' | 'analytics' | 'data') => void;
   onNavigateToBuilds?: (filter?: 'Available' | 'Pending' | 'Sold') => void;
   onOpenAddBuild: (initialData?: Partial<PCBuild>) => void;
   onOpenAddComponent?: () => void;
   onOpenBulkEntry?: () => void;
 }
+
+export type LaunchpadViewProps = HomeViewProps;

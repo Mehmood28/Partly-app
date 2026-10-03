@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { InventoryProvider, useInventory } from './context/InventoryContext';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { PrivacyProvider } from './context/PrivacyContext';
-import { Sidebar } from './components/Sidebar';
+import { BottomNav } from './components/BottomNav';
 import { TopBar } from './components/TopBar';
-import { LaunchpadView } from './components/LaunchpadView';
+import { HomeView } from './components/HomeView';
 import { StockView } from './components/StockView';
 import { BuildsView, FilterStatus } from './components/BuildsView';
 import { AnalyticsView } from './components/AnalyticsView';
@@ -31,7 +31,7 @@ function AppContent() {
     resetToDefault,
   } = useInventory();
 
-  const [activeTab, setActiveTab] = useState<'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data'>('launchpad');
+  const [activeTab, setActiveTab] = useState<'home' | 'inventory' | 'builds' | 'analytics' | 'data'>('home');
   const [buildsStatusFilter, setBuildsStatusFilter] = useState<FilterStatus>('Available');
 
   // Modals state
@@ -50,7 +50,7 @@ function AppContent() {
   const [sellPartPreselectedComp, setSellPartPreselectedComp] = useState<InventoryComponent | null>(null);
   const [sellPartPreselectedEntryId, setSellPartPreselectedEntryId] = useState<string | null>(null);
 
-  const handleTabChange = React.useCallback((tab: 'launchpad' | 'inventory' | 'builds' | 'analytics' | 'data') => {
+  const handleTabChange = React.useCallback((tab: 'home' | 'inventory' | 'builds' | 'analytics' | 'data') => {
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
@@ -216,7 +216,7 @@ function AppContent() {
 
   return (
     <div className="min-h-dvh bg-transparent text-zinc-100 font-sans selection:bg-[#A8FF3E]/25 selection:text-white flex flex-col md:flex-row">
-      <Sidebar
+      <BottomNav
         activeTab={activeTab}
         setActiveTab={handleTabChange}
       />
@@ -230,9 +230,9 @@ function AppContent() {
       {/* Main Container */}
       <main className="app-page app-main flex w-full flex-1 flex-col">
         <React.Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-8 h-8 border-4 border-[#A8FF3E]/30 border-t-[#A8FF3E] rounded-full animate-spin"></div></div>}>
-          {/* Launchpad Tab */}
-          <div className={activeTab === 'launchpad' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
-            <LaunchpadView
+          {/* Home Tab */}
+          <div className={activeTab === 'home' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
+            <HomeView
               setActiveTab={handleTabChange}
               onNavigateToBuilds={handleNavigateToBuilds}
               onOpenAddBuild={(data) => {

@@ -1,10 +1,16 @@
 import React from 'react';
 import { Wand2 } from 'lucide-react';
+import { BuildStatus } from '../../../types';
 import { WarrantyFields } from '../WarrantyFields';
+import { CustomSelect } from '../../ui/CustomSelect';
 
 interface BuildBasicDetailsProps {
   name: string;
   onNameChange: (value: string) => void;
+  status: BuildStatus;
+  onStatusChange: (status: BuildStatus) => void;
+  builtDate: string;
+  onBuiltDateChange: (date: string) => void;
   salePrice: string;
   onSalePriceChange: (value: string) => void;
   notes: string;
@@ -19,6 +25,10 @@ interface BuildBasicDetailsProps {
 export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
   name,
   onNameChange,
+  status,
+  onStatusChange,
+  builtDate,
+  onBuiltDateChange,
   salePrice,
   onSalePriceChange,
   notes,
@@ -51,6 +61,31 @@ export const BuildBasicDetails: React.FC<BuildBasicDetailsProps> = ({
           placeholder="e.g. 7700 + 4070 CUSTOM"
         />
       </div>
+
+      <div>
+        <label className="block text-zinc-300 font-medium mb-1 text-xs">Status</label>
+        <CustomSelect
+          value={status === 'Available' ? 'Available' : 'Planned'}
+          onChange={(value) => onStatusChange(value as BuildStatus)}
+          options={[
+            { value: 'Planned', label: 'Planned' },
+            { value: 'Available', label: 'Available' },
+          ]}
+        />
+      </div>
+
+      <div>
+        <label className="block text-zinc-300 font-medium mb-1 text-xs">
+          Built Date {status === 'Available' ? '*' : '(Optional)'}
+        </label>
+        <input
+          type="date"
+          value={builtDate}
+          onChange={(e) => onBuiltDateChange(e.target.value)}
+          className="app-field px-3 text-xs [color-scheme:dark]"
+        />
+      </div>
+
       <div>
         <label className="block text-zinc-300 font-medium mb-1 text-xs">Target Sale Price</label>
         <div className="relative">

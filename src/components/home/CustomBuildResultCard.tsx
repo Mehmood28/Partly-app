@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles, X, Hammer } from 'lucide-react';
-import { RecommendedBuild } from './launchpadTypes';
+import { RecommendedBuild } from './homeTypes';
 import { sortByCategory } from '../../utils/sorting';
 import { formatCurrency } from '../../utils/helpers';
 import { formatSignedCurrency, getProfitBadgeClasses } from '../../utils/financialDisplay';

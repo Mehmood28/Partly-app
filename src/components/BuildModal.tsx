@@ -23,9 +23,12 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
   const { state } = useInventory();
   const { showToast } = useToast();
 
+  const getTodayDate = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+
   const [name, setName] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
-  const [status, setStatus] = useState<BuildStatus>('Listed for Sale');
+  const [status, setStatus] = useState<BuildStatus>('Planned');
+  const [builtDate, setBuiltDate] = useState<string>('');
   const [warrantyDays, setWarrantyDays] = useState<string>('30');
   const [customWarrantyDays, setCustomWarrantyDays] = useState<string>('');
   const [salePrice, setSalePrice] = useState<string>('');
@@ -49,13 +52,22 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
     setSearchQuery('');
   }, []);
 
+  const handleStatusChange = (newStatus: BuildStatus) => {
+    setStatus(newStatus);
+    if (newStatus === 'Available' && !builtDate) {
+      setBuiltDate(getTodayDate());
+    }
+  };
+
   useEffect(() => {
     if (initialData !== prevInitialDataRef.current) {
       prevInitialDataRef.current = initialData;
       if (initialData) {
         setName(initialData.name || '');
         setNotes(initialData.notes || '');
-        setStatus((initialData.status as BuildStatus) || 'Listed for Sale');
+        const initStatus = (initialData.status as BuildStatus) || 'Planned';
+        setStatus(initStatus);
+        setBuiltDate(initialData.builtDate || (initStatus === 'Available' ? getTodayDate() : ''));
         setSalePrice(initialData.salePrice?.toString() || initialData.estimatedCost?.toString() || '');
         setSelectedParts(initialData.parts || []);
         setImageUrl(initialData.imageUrl || '');
@@ -71,7 +83,8 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
       } else {
         setName('');
         setNotes('');
-        setStatus('Listed for Sale');
+        setStatus('Planned');
+        setBuiltDate('');
         setWarrantyDays('30');
         setCustomWarrantyDays('');
         setSalePrice('');
@@ -96,9 +109,10 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
   const handleCloseAndReset = () => {
     setName('');
     setNotes('');
-    setStatus('Listed for Sale');
-        setWarrantyDays('30');
-        setCustomWarrantyDays('');
+    setStatus('Planned');
+    setBuiltDate('');
+    setWarrantyDays('30');
+    setCustomWarrantyDays('');
     setSalePrice('');
     setSelectedParts([]);
     setImageUrl('');
@@ -231,6 +245,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
       notes: notes.trim() || undefined,
       parts: selectedParts,
       status,
+      builtDate: builtDate.trim() || undefined,
       salePrice: !isNaN(priceNum) && priceNum >= 0 ? priceNum : undefined,
       imageUrl: imageUrl || undefined,
     });
@@ -262,6 +277,10 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
           <BuildBasicDetails
             name={name}
             onNameChange={handleNameChange}
+            status={status}
+            onStatusChange={handleStatusChange}
+            builtDate={builtDate}
+            onBuiltDateChange={setBuiltDate}
             salePrice={salePrice}
             onSalePriceChange={setSalePrice}
             notes={notes}
