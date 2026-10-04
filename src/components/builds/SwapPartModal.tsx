@@ -4,7 +4,7 @@ import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useInventory } from '../../context/InventoryContext';
 import { useToast } from '../../context/ToastContext';
 import { Box, ArrowRightLeft, X } from 'lucide-react';
-import { formatCurrency, getUnassignedBatches, filterAndSortComponents, determineSubCategory, SortOption } from '../../utils/helpers';
+import { formatCurrency, getUnassignedBatches, filterAndSortComponents, getConflictingTags, determineSubCategory, SortOption } from '../../utils/helpers';
 import { ConfirmModal } from '../ConfirmModal';
 import { InventoryFilterBar } from '../InventoryFilterBar';
 import { ComponentCard } from '../ComponentCard';
@@ -21,7 +21,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
-  const [activeFilter, setActiveFilter] = useState('');
+  const [activeSubTags, setActiveSubTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('newest-purchase');
   const [expandedPartId, setExpandedPartId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -35,10 +35,23 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
     unitPrice: number;
   } | null>(null);
 
+  const handleSubTagToggle = (tag: string) => {
+    setActiveSubTags((prev) => {
+      const isAlreadyActive = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
+      if (isAlreadyActive) {
+        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+      }
+      const conflicting = getConflictingTags(tag, currentPart.category);
+      const conflictingNormalized = conflicting.map((c) => c.toLowerCase());
+      const filtered = prev.filter((t) => !conflictingNormalized.includes(t.toLowerCase()));
+      return [...filtered, tag];
+    });
+  };
+
   const categoryParts = filterAndSortComponents(state.components, {
     searchQuery: deferredSearchQuery,
     category: currentPart.category,
-    subCategory: activeFilter,
+    subTags: activeSubTags,
     sortBy,
     builds: state.builds,
     onlyAvailable: true,
@@ -137,8 +150,8 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
             onSearchChange={setSearchQuery}
             activeCategory={currentPart.category}
             onCategoryChange={() => undefined}
-            activeSubCategory={activeFilter}
-            onSubCategoryChange={setActiveFilter}
+            activeSubTags={activeSubTags}
+            onSubTagToggle={handleSubTagToggle}
             sortBy={sortBy}
             onSortByChange={setSortBy}
             showCategories={false}

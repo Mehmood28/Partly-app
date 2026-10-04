@@ -745,9 +745,9 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
  .analytics-view .report-toolbar > div:last-child > div { min-width:0; width:auto; }
  .analytics-view .report-toolbar > div:last-child > div:last-child { flex:2; }
 }
-.allocate-results .stock-batch-compact { padding-right: 98px; }
+.allocate-results .stock-batch-compact { padding-right: 104px; }
 @media(max-width:639px) {
- .allocate-results .stock-batch-compact { padding-right: 94px; }
+ .allocate-results .stock-batch-compact { padding-right: 102px; }
 }
 .build-status-tabs button { text-transform:none; letter-spacing:0; }
 .data-section > div > div > div:first-child > svg { width:22px; height:22px; }

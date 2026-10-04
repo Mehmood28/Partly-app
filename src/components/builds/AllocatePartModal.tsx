@@ -6,6 +6,7 @@ import {
   precomputeAssignedBatches,
   filterAndSortComponents,
   formatCurrency,
+  getConflictingTags,
   SortOption,
 } from '../../utils/helpers';
 import { X, Box, Layers } from 'lucide-react';
@@ -41,16 +42,34 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
   } | null>(null);
 
   const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'ALL'>('ALL');
-  const [activeSubCategory, setActiveSubCategory] = useState<string>('');
+  const [activeSubTags, setActiveSubTags] = useState<string[]>([]);
+
+  const handleCategoryChange = (c: string) => {
+    setActiveCategoryTab(c as ComponentCategory | 'ALL');
+    setActiveSubTags([]);
+  };
+
+  const handleSubTagToggle = (tag: string) => {
+    setActiveSubTags((prev) => {
+      const isAlreadyActive = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
+      if (isAlreadyActive) {
+        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+      }
+      const conflicting = getConflictingTags(tag, activeCategoryTab === 'ALL' ? undefined : activeCategoryTab);
+      const conflictingNormalized = conflicting.map((c) => c.toLowerCase());
+      const filtered = prev.filter((t) => !conflictingNormalized.includes(t.toLowerCase()));
+      return [...filtered, tag];
+    });
+  };
 
   const filteredComponents = useMemo(() => filterAndSortComponents(state.components, {
     searchQuery: deferredSearchQuery,
     category: activeCategoryTab === 'ALL' ? undefined : activeCategoryTab,
-    subCategory: activeSubCategory,
+    subTags: activeSubTags,
     onlyAvailable: true,
     builds: state.builds,
     sortBy,
-  }), [state.components, deferredSearchQuery, activeCategoryTab, activeSubCategory, sortBy, state.builds]);
+  }), [state.components, deferredSearchQuery, activeCategoryTab, activeSubTags, sortBy, state.builds]);
 
   const groupedComponents = useMemo(() => {
     const precomputedMap = precomputeAssignedBatches(state.builds);
@@ -106,10 +125,10 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             activeCategory={activeCategoryTab}
-            onCategoryChange={(c) => { setActiveCategoryTab(c as ComponentCategory | 'ALL'); setActiveSubCategory(''); }}
+            onCategoryChange={handleCategoryChange}
             onlyAvailable={true}
-            activeSubCategory={activeSubCategory}
-            onSubCategoryChange={setActiveSubCategory}
+            activeSubTags={activeSubTags}
+            onSubTagToggle={handleSubTagToggle}
             builds={state.builds}
             sortBy={sortBy}
             onSortByChange={setSortBy}
@@ -154,7 +173,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
                         return (
                           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                             {/* - + Stepper */}
-                            <div className="flex h-[24px] items-center rounded-md border border-[#B9EF68]/30 bg-[#0e1518] overflow-hidden shrink-0">
+                            <div className="flex h-[26px] min-h-[26px] items-center rounded-md border border-[#B9EF68]/30 bg-[#0e1518] overflow-hidden shrink-0">
                               <button
                                 type="button"
                                 onClick={() => {
@@ -164,14 +183,14 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
                                   }));
                                 }}
                                 disabled={quantityValue <= 1}
-                                className="flex h-full w-[17px] items-center justify-center text-[#B9EF68] hover:bg-[#B9EF68]/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer"
+                                className="flex !h-[26px] !min-h-[26px] w-[16px] min-w-[16px] max-w-[16px] !p-0 items-center justify-center text-[#B9EF68] hover:bg-[#B9EF68]/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer shrink-0"
                                 aria-label="Decrease quantity"
                               >
                                 <svg viewBox="0 0 16 16" className="w-2.5 h-2.5 fill-current">
                                   <rect x="2" y="7" width="12" height="2" rx="1" />
                                 </svg>
                               </button>
-                              <span className="flex h-full min-w-[16px] px-0.5 items-center justify-center font-mono text-[11px] font-bold leading-none text-[#B9EF68] border-x border-[#B9EF68]/20 select-none">
+                              <span className="flex !h-[26px] !min-h-[26px] w-[16px] min-w-[16px] max-w-[16px] !p-0 items-center justify-center font-mono text-[11px] font-bold leading-none text-[#B9EF68] border-x border-[#B9EF68]/20 select-none shrink-0">
                                 {quantityValue}
                               </span>
                               <button
@@ -183,7 +202,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
                                   }));
                                 }}
                                 disabled={quantityValue >= batch.availableQuantity}
-                                className="flex h-full w-[17px] items-center justify-center text-[#B9EF68] hover:bg-[#B9EF68]/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer"
+                                className="flex !h-[26px] !min-h-[26px] w-[16px] min-w-[16px] max-w-[16px] !p-0 items-center justify-center text-[#B9EF68] hover:bg-[#B9EF68]/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer shrink-0"
                                 aria-label="Increase quantity"
                               >
                                 <svg viewBox="0 0 16 16" className="w-2.5 h-2.5 fill-current">
@@ -207,7 +226,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
                                   quantity: quantityValue,
                                 });
                               }}
-                              className="flex h-[24px] items-center justify-center leading-none rounded-md border border-[#B9EF68]/35 px-2 text-[11px] font-semibold text-[#B9EF68] transition-colors hover:bg-[#B9EF68]/10 hover:text-white shrink-0 cursor-pointer"
+                              className="flex h-[26px] min-h-[26px] items-center justify-center leading-none rounded-md border border-[#B9EF68]/35 px-2 text-[11px] font-semibold text-[#B9EF68] transition-colors hover:bg-[#B9EF68]/10 hover:text-white shrink-0 cursor-pointer"
                             >
                               <span className="leading-none pt-[0.5px]">Assign</span>
                             </button>

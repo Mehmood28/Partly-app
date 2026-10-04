@@ -723,9 +723,17 @@ export function filterAndSortComponents(
         );
       });
       if (!matchesAllSubTags) return false;
-    } else if (options.subCategory) {
-      const compSub = determineSubCategory(comp);
-      if (compSub !== options.subCategory) return false;
+    } else if (options.subCategory && options.subCategory.trim()) {
+      const compTags = (comp.tags || []).map((t) => (typeof t === 'string' ? t.toLowerCase().trim() : ''));
+      const compNameLower = String(comp.name || '').toLowerCase();
+      const compSpecLower = String(comp.specifications || '').toLowerCase();
+      const target = options.subCategory.toLowerCase().trim();
+      const matches =
+        compTags.includes(target) ||
+        compNameLower.includes(target) ||
+        compSpecLower.includes(target) ||
+        determineSubCategory(comp)?.toLowerCase() === target;
+      if (!matches) return false;
     }
 
     return true;

@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { BuildSelectedPartsList } from './createBuild/BuildSelectedPartsList';
 import { BuildInventoryPicker } from './createBuild/BuildInventoryPicker';
-import { formatCurrency } from '../../utils/helpers';
+import { formatCurrency, getConflictingTags } from '../../utils/helpers';
 import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 import { copyCleanSpecs } from '../../utils/cleanSpecsHelper';
 
@@ -22,7 +22,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
   const [salePrice, setSalePrice] = useState<string>('');
   const [selectedParts, setSelectedParts] = useState<PCBuildPart[]>([]);
   const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'All' | 'ALL'>('ALL');
-  const [activeSubCategory, setActiveSubCategory] = useState<string>('');
+  const [activeSubTags, setActiveSubTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedSpecs, setCopiedSpecs] = useState<boolean>(false);
 
@@ -30,13 +30,25 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
 
   const handleCategoryChange = useCallback((category: string) => {
     setActiveCategoryTab(category as ComponentCategory | 'All' | 'ALL');
+    setActiveSubTags([]);
     setSearchQuery('');
   }, []);
 
-  const handleSubCategoryChange = useCallback((subCat: string) => {
-    setActiveSubCategory(subCat);
-    setSearchQuery('');
-  }, []);
+  const handleSubTagToggle = useCallback((tag: string) => {
+    setActiveSubTags((prev) => {
+      const isAlreadyActive = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
+      if (isAlreadyActive) {
+        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+      }
+      const conflicting = getConflictingTags(
+        tag,
+        activeCategoryTab === 'ALL' || activeCategoryTab === 'All' ? undefined : activeCategoryTab
+      );
+      const conflictingNormalized = conflicting.map((c) => c.toLowerCase());
+      const filtered = prev.filter((t) => !conflictingNormalized.includes(t.toLowerCase()));
+      return [...filtered, tag];
+    });
+  }, [activeCategoryTab]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -51,7 +63,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
     setSelectedParts([]);
     setSearchQuery('');
     setActiveCategoryTab('ALL');
-    setActiveSubCategory('');
+    setActiveSubTags([]);
     setCopiedSpecs(false);
     onClose();
   }, [onClose]);
@@ -59,6 +71,10 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
   const handleResetQuote = useCallback(() => {
     setSalePrice('');
     setSelectedParts([]);
+    setSearchQuery('');
+    setActiveCategoryTab('ALL');
+    setActiveSubTags([]);
+    setCopiedSpecs(false);
   }, []);
 
   // Parts management (held purely in memory)
@@ -232,8 +248,8 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
             onSearchQueryChange={setSearchQuery}
             activeCategoryTab={activeCategoryTab}
             onCategoryChange={handleCategoryChange}
-            activeSubCategory={activeSubCategory}
-            onSubCategoryChange={handleSubCategoryChange}
+            activeSubTags={activeSubTags}
+            onSubTagToggle={handleSubTagToggle}
             onAddPart={handleAddPart}
           />
         </div>

@@ -3,7 +3,7 @@ import { useInventory } from '../../../context/InventoryContext';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { useToast } from '../../../context/ToastContext';
 import { CATEGORIES, ComponentCategory, InventoryComponent, PaymentMethod, Platform } from '../../../types';
-import { calculateEffectiveUnitCost, calculateUnassignedQuantityStrict, filterAndSortComponents, formatCurrency, getAllBatchesWithRemaining, SortOption } from '../../../utils/helpers';
+import { calculateEffectiveUnitCost, calculateUnassignedQuantityStrict, filterAndSortComponents, formatCurrency, getAllBatchesWithRemaining, getConflictingTags, SortOption } from '../../../utils/helpers';
 import { normalizePlatform } from '../../../utils/platformDisplay';
 import { BottomSheetModal } from '../../ui/BottomSheetModal';
 import { CustomSelect } from '../../ui/CustomSelect';
@@ -38,8 +38,26 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
   const [selectedEntryId, setSelectedEntryId] = useState<string>('');
   const [partSearch, setPartSearch] = useState('');
   const [partCategory, setPartCategory] = useState('ALL');
-  const [partSubCategory, setPartSubCategory] = useState('');
+  const [partSubTags, setPartSubTags] = useState<string[]>([]);
   const [partSort, setPartSort] = useState<SortOption>('newest-purchase');
+
+  const handlePartCategoryChange = (cat: string) => {
+    setPartCategory(cat);
+    setPartSubTags([]);
+  };
+
+  const handlePartSubTagToggle = (tag: string) => {
+    setPartSubTags((prev) => {
+      const isAlreadyActive = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
+      if (isAlreadyActive) {
+        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+      }
+      const conflicting = getConflictingTags(tag, partCategory === 'ALL' ? undefined : partCategory);
+      const conflictingNormalized = conflicting.map((c) => c.toLowerCase());
+      const filtered = prev.filter((t) => !conflictingNormalized.includes(t.toLowerCase()));
+      return [...filtered, tag];
+    });
+  };
 
   const [quantity, setQuantity] = useState<number>(1);
   const [unitSalePrice, setUnitSalePrice] = useState<string>('');
@@ -67,7 +85,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
     builds: state.builds,
     searchQuery: partSearch,
     category: partCategory,
-    subCategory: partSubCategory,
+    subTags: partSubTags,
     sortBy: partSort,
     onlyAvailable: true,
   });
@@ -153,7 +171,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
     setSelectedEntryId('');
     setPartSearch('');
     setPartCategory('ALL');
-    setPartSubCategory('');
+    setPartSubTags([]);
     setPartSort('newest-purchase');
     setQuantity(1);
     setUnitSalePrice('');
@@ -521,9 +539,9 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                     searchQuery={partSearch}
                     onSearchChange={setPartSearch}
                     activeCategory={partCategory}
-                    onCategoryChange={setPartCategory}
-                    activeSubCategory={partSubCategory}
-                    onSubCategoryChange={setPartSubCategory}
+                    onCategoryChange={handlePartCategoryChange}
+                    activeSubTags={partSubTags}
+                    onSubTagToggle={handlePartSubTagToggle}
                     sortBy={partSort}
                     onSortByChange={setPartSort}
                     compactControls

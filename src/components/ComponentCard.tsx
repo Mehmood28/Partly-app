@@ -29,6 +29,7 @@ interface ComponentCardProps {
   isExpanded?: boolean;
   onToggle?: () => void;
   component: InventoryComponent;
+  draftSelectedParts?: import('../types').PCBuildPart[];
   showAdminActions?: boolean;
   renderBatchActions?: (
     batch: { entry: PurchaseEntry; availableQuantity: number; unitCost: number },
@@ -50,6 +51,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   isExpanded: propIsExpanded,
   onToggle,
   component,
+  draftSelectedParts,
   showAdminActions = true,
   renderBatchActions,
   renderBatchFooter,
@@ -71,7 +73,11 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
 
-  const unassignedQty = calculateUnassignedQuantityStrict(component, state.builds);
+  const rawUnassignedQty = calculateUnassignedQuantityStrict(component, state.builds);
+  const totalDraftQty = draftSelectedParts
+    ? draftSelectedParts.reduce((sum, p) => (p.componentId === component.id ? sum + p.quantity : sum), 0)
+    : 0;
+  const unassignedQty = Math.max(0, rawUnassignedQty - totalDraftQty);
   const unassignedVal = calculateUnassignedValueStrict(component, state.builds);
   const avgCost = calculateEffectiveUnitCost(component, state.builds);
 
@@ -180,7 +186,15 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
           {/* Available inventory batches. */}
           <div>
             {(() => {
-              const visibleBatches = getUnassignedBatches(component, state.builds);
+              const visibleBatches = getUnassignedBatches(component, state.builds).map((batch) => {
+                const draftQty = draftSelectedParts
+                  ? draftSelectedParts.reduce((sum, p) => (p.componentId === component.id && p.purchaseEntryId === batch.entry.id ? sum + p.quantity : sum), 0)
+                  : 0;
+                return {
+                  ...batch,
+                  availableQuantity: Math.max(0, batch.availableQuantity - draftQty),
+                };
+              });
 
               if (component.purchaseHistory.length === 0) {
                 return (

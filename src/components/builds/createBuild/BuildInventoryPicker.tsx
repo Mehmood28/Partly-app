@@ -1,26 +1,24 @@
 import React, { useState, useMemo } from 'react';
-import { Tag, Plus, ChevronUp, ChevronDown } from 'lucide-react';
+import { Tag, Plus } from 'lucide-react';
 import { CATEGORIES, ComponentCategory, InventoryComponent, PCBuild, PCBuildPart } from '../../../types';
-import { filterAndSortComponents, formatCurrency, formatReadableDate, getConditionDotColor, normalizeTag, SortOption } from '../../../utils/helpers';
-import { usePrivacy } from '../../../context/PrivacyContext';
+import { filterAndSortComponents, SortOption } from '../../../utils/helpers';
 import { InventoryFilterBar } from '../../InventoryFilterBar';
-import { normalizePlatform } from '../../../utils/platformDisplay';
-import {
-  calculateComponentBatchesWithStock,
-} from './buildModalHelpers';
+import { ComponentCard } from '../../ComponentCard';
 import { CategoryIcon } from '../../ui/CategoryIcon';
 
 interface BuildInventoryPickerProps {
   components: InventoryComponent[];
   builds: PCBuild[];
-  selectedParts: PCBuildPart[];
+  selectedParts?: PCBuildPart[];
   initialBuildId?: string;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   activeCategoryTab: ComponentCategory | 'All' | 'ALL';
   onCategoryChange: (category: string) => void;
-  activeSubCategory: string;
-  onSubCategoryChange: (subCat: string) => void;
+  activeSubCategory?: string;
+  onSubCategoryChange?: (subCat: string) => void;
+  activeSubTags?: string[];
+  onSubTagToggle?: (tag: string) => void;
   onAddPart: (comp: InventoryComponent, entryId: string) => void;
 }
 
@@ -28,16 +26,16 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
   components,
   builds,
   selectedParts,
-  initialBuildId,
   searchQuery,
   onSearchQueryChange,
   activeCategoryTab,
   onCategoryChange,
   activeSubCategory,
   onSubCategoryChange,
+  activeSubTags,
+  onSubTagToggle,
   onAddPart,
 }) => {
-  const { hideSupplierNames } = usePrivacy();
   const [expandedInventoryPartId, setExpandedInventoryPartId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('newest-purchase');
 
@@ -46,11 +44,12 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
       searchQuery,
       category: activeCategoryTab === 'All' || activeCategoryTab === 'ALL' ? undefined : activeCategoryTab,
       subCategory: activeSubCategory,
+      subTags: activeSubTags,
       onlyAvailable: true,
       builds,
       sortBy,
     });
-  }, [components, searchQuery, activeCategoryTab, activeSubCategory, builds, sortBy]);
+  }, [components, searchQuery, activeCategoryTab, activeSubCategory, activeSubTags, builds, sortBy]);
 
   const handleAddPartClick = (comp: InventoryComponent, entryId: string) => {
     setExpandedInventoryPartId(null);
@@ -75,6 +74,8 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
         onlyAvailable={true}
         activeSubCategory={activeSubCategory}
         onSubCategoryChange={onSubCategoryChange}
+        activeSubTags={activeSubTags}
+        onSubTagToggle={onSubTagToggle}
         builds={builds}
         sortBy={sortBy}
         onSortByChange={setSortBy}
@@ -95,22 +96,6 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
             const catComps = filteredComponents.filter((c) => c.category === cat);
             if (catComps.length === 0) return null;
 
-            const componentGroups = catComps
-              .map((comp) => calculateComponentBatchesWithStock(comp, builds, selectedParts, initialBuildId))
-              .filter((g) => g.totalUnassigned > 0 || g.batches.length > 0);
-
-            if (sortBy === 'lowest-price') {
-              componentGroups.sort((a, b) => a.weightedAvgCost - b.weightedAvgCost);
-            } else if (sortBy === 'highest-price') {
-              componentGroups.sort((a, b) => b.weightedAvgCost - a.weightedAvgCost);
-            } else if (sortBy === 'highest-stock') {
-              componentGroups.sort((a, b) => b.totalUnassigned - a.totalUnassigned);
-            } else if (sortBy === 'lowest-stock') {
-              componentGroups.sort((a, b) => a.totalUnassigned - b.totalUnassigned);
-            }
-
-            if (componentGroups.length === 0) return null;
-
             return (
               <div key={cat} className="flex flex-col gap-[5px]">
                 <div className="text-xs font-bold text-zinc-300 flex items-center gap-1.5 pt-2 font-display">
@@ -121,82 +106,39 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
                   /> {cat} Parts
                 </div>
                 <div className="grid grid-cols-1 gap-[5px]">
-                  {componentGroups.map(({ comp, batches, totalUnassigned, weightedAvgCost }) => {
+                  {catComps.map((comp) => {
                     const isExpanded = expandedInventoryPartId === comp.id;
                     return (
-                      <div key={comp.id} className="picker-part flex flex-col overflow-hidden text-xs transition-all hover:border-[#B9EF68]/30">
-                        <button
-                          type="button"
-                          aria-expanded={isExpanded}
-                          className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedInventoryPartId(isExpanded ? null : comp.id);
-                          }}
-                        >
-                          <div className="flex flex-col min-w-0 flex-1 pr-2">
-                            <span className="text-xs font-semibold leading-snug text-zinc-100 break-words font-sans">{comp.name}</span>
-                            <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[11px] text-zinc-500">
-                              {comp.tags?.filter(Boolean).map((tag, idx) => {
-                                const displayTag = normalizeTag(tag);
-                                return <span key={idx}>{idx > 0 ? '· ' : ''}{displayTag}</span>;
-                              })}
-                              {comp.tags?.filter(Boolean).length ? <span>·</span> : null}
-                              <span className="font-semibold text-[#83E5DF]">{totalUnassigned} in stock</span>
-                              <span>· Avg {formatCurrency(weightedAvgCost)}{totalUnassigned > 1 ? '/ea' : ''}</span>
-                              {comp.category === 'Storage' && (() => {
-                                const h = comp.healthPercent ?? batches.find(b => typeof b.entry.healthPercent === 'number')?.entry.healthPercent ?? comp.purchaseHistory?.find(e => typeof e.healthPercent === 'number')?.healthPercent;
-                                return typeof h === 'number' ? <span>· {h}%</span> : null;
-                              })()}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {isExpanded ? (
-                              <ChevronUp className="w-4 h-4 text-zinc-400" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4 text-zinc-400" />
-                            )}
-                          </div>
-                        </button>
-
-                        {isExpanded && (
-                          <div className="flex flex-col gap-2.5 border-t border-white/[0.08] bg-[#0b1113] p-3 text-xs">
-                            <div className="flex flex-col gap-2">
-                              {batches.map(({ entry, remainingUnassigned }) => (
-                                <div
-                                  key={entry.id}
-                                  className="picker-batch flex items-center justify-between gap-2 px-3 py-2.5 transition-all hover:border-[#B9EF68]/30"
-                                >
-                                  <div className="min-w-0 flex-1 font-mono text-[11px] sm:text-[11px]">
-                                    <div className="font-bold text-zinc-200">{remainingUnassigned} available @ {formatCurrency(entry.unitPrice)}</div>
-                                    <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-zinc-500">
-                                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${getConditionDotColor(entry.condition)}`} />{entry.condition}{comp.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''}</span>
-                                      {!hideSupplierNames && entry.platform && <span>· {normalizePlatform(String(entry.platform))}</span>}
-                                      {entry.paymentMethod && <span>· {String(entry.paymentMethod)}</span>}
-                                      {entry.date && <span>· {formatReadableDate(entry.date) || entry.date}</span>}
-                                    </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    disabled={remainingUnassigned <= 0}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleAddPartClick(comp, entry.id);
-                                    }}
-                                    className={`font-semibold px-3 py-1.5 rounded-lg text-xs transition-all shrink-0 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
-                                      remainingUnassigned > 0
-                                        ? 'app-button-primary border px-3 text-[#07100B]'
-                                        : 'opacity-40 pointer-events-none bg-white/[0.04] text-zinc-500 border border-white/[0.06]'
-                                    }`}
-                                  >
-                                    <Plus className="w-3.5 h-3.5" /> Add
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <ComponentCard
+                        key={comp.id}
+                        component={comp}
+                        draftSelectedParts={selectedParts}
+                        isExpanded={isExpanded}
+                        onToggle={() => setExpandedInventoryPartId(isExpanded ? null : comp.id)}
+                        showAdminActions={false}
+                        renderBatchActions={(batch) => {
+                          const isUsedUp = batch.availableQuantity <= 0;
+                          return (
+                            <button
+                              type="button"
+                              disabled={isUsedUp}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isUsedUp) {
+                                  handleAddPartClick(comp, batch.entry.id);
+                                }
+                              }}
+                              className={`font-semibold px-3 py-1.5 rounded-lg text-xs transition-all shrink-0 flex items-center gap-1 focus-visible:outline-none ${
+                                !isUsedUp
+                                  ? 'app-button-primary border px-3 text-[#07100B]'
+                                  : 'opacity-40 pointer-events-none bg-white/[0.04] text-zinc-500 border border-white/[0.06]'
+                              }`}
+                            >
+                              <Plus className="w-3.5 h-3.5" /> {isUsedUp ? 'Added' : 'Add'}
+                            </button>
+                          );
+                        }}
+                      />
                     );
                   })}
                 </div>

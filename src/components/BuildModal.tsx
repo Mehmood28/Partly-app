@@ -9,7 +9,7 @@ import { BuildSelectedPartsList } from './builds/createBuild/BuildSelectedPartsL
 import { BuildInventoryPicker } from './builds/createBuild/BuildInventoryPicker';
 import { generateBuildTitleFromParts } from './builds/createBuild/buildModalHelpers';
 import { calculateComponentBatchesWithStock } from './builds/createBuild/buildModalHelpers';
-import { getAllBatchesWithRemaining } from '../utils/helpers';
+import { getAllBatchesWithRemaining, getConflictingTags } from '../utils/helpers';
 import { isWarrantyPreset } from '../utils/warranty';
 
 interface BuildModalProps {
@@ -35,7 +35,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
   const [selectedParts, setSelectedParts] = useState<PCBuildPart[]>([]);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'All' | 'ALL'>('ALL');
-  const [activeSubCategory, setActiveSubCategory] = useState<string>('');
+  const [activeSubTags, setActiveSubTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -44,13 +44,25 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
 
   const handleCategoryChange = useCallback((category: string) => {
     setActiveCategoryTab(category as ComponentCategory | 'All' | 'ALL');
+    setActiveSubTags([]);
     setSearchQuery('');
   }, []);
 
-  const handleSubCategoryChange = useCallback((subCat: string) => {
-    setActiveSubCategory(subCat);
-    setSearchQuery('');
-  }, []);
+  const handleSubTagToggle = useCallback((tag: string) => {
+    setActiveSubTags((prev) => {
+      const isAlreadyActive = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
+      if (isAlreadyActive) {
+        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+      }
+      const conflicting = getConflictingTags(
+        tag,
+        activeCategoryTab === 'ALL' || activeCategoryTab === 'All' ? undefined : activeCategoryTab
+      );
+      const conflictingNormalized = conflicting.map((c) => c.toLowerCase());
+      const filtered = prev.filter((t) => !conflictingNormalized.includes(t.toLowerCase()));
+      return [...filtered, tag];
+    });
+  }, [activeCategoryTab]);
 
   const handleStatusChange = (newStatus: BuildStatus) => {
     setStatus(newStatus);
@@ -94,7 +106,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
       }
       setSearchQuery('');
       setActiveCategoryTab('ALL');
-      setActiveSubCategory('');
+      setActiveSubTags([]);
     }
   }, [initialData]);
 
@@ -118,7 +130,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
     setImageUrl('');
     setSearchQuery('');
     setActiveCategoryTab('ALL');
-    setActiveSubCategory('');
+    setActiveSubTags([]);
     hasAutoFilledRef.current = false;
     onClose();
   };
@@ -310,8 +322,8 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
             onSearchQueryChange={setSearchQuery}
             activeCategoryTab={activeCategoryTab}
             onCategoryChange={handleCategoryChange}
-            activeSubCategory={activeSubCategory}
-            onSubCategoryChange={handleSubCategoryChange}
+            activeSubTags={activeSubTags}
+            onSubTagToggle={handleSubTagToggle}
             onAddPart={handleAddPart}
           />
         </div>

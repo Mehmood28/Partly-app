@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useInventory } from '../../../context/InventoryContext';
 import { useToast } from '../../../context/ToastContext';
 import { CATEGORIES, PaymentMethod, InventoryComponent, PurchaseEntry } from '../../../types';
-import { getAllBatchesWithRemaining, formatCurrency, filterAndSortComponents, SortOption } from '../../../utils/helpers';
+import { getAllBatchesWithRemaining, formatCurrency, filterAndSortComponents, getConflictingTags, SortOption } from '../../../utils/helpers';
 import { InventoryFilterBar } from '../../InventoryFilterBar';
 import { CustomSelect } from '../../ui/CustomSelect';
 import { PAYMENT_METHODS } from './SaleDetailsForm';
@@ -58,8 +58,26 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
   // Search & filter for available batches pool
   const [batchSearch, setBatchSearch] = useState<string>('');
   const [batchCategory, setBatchCategory] = useState<string>('ALL');
-  const [batchSubCategory, setBatchSubCategory] = useState('');
+  const [batchSubTags, setBatchSubTags] = useState<string[]>([]);
   const [batchSort, setBatchSort] = useState<SortOption>('newest-purchase');
+
+  const handleBatchCategoryChange = (cat: string) => {
+    setBatchCategory(cat);
+    setBatchSubTags([]);
+  };
+
+  const handleBatchSubTagToggle = (tag: string) => {
+    setBatchSubTags((prev) => {
+      const isAlreadyActive = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
+      if (isAlreadyActive) {
+        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+      }
+      const conflicting = getConflictingTags(tag, batchCategory === 'ALL' ? undefined : batchCategory);
+      const conflictingNormalized = conflicting.map((c) => c.toLowerCase());
+      const filtered = prev.filter((t) => !conflictingNormalized.includes(t.toLowerCase()));
+      return [...filtered, tag];
+    });
+  };
 
   // Compute all available batches with unassigned quantity > 0
   const allAvailableBatches = useMemo<AvailableBatchItem[]>(() => {
@@ -118,7 +136,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
     const q = batchSearch.trim().toLowerCase();
     const sortedComponents = filterAndSortComponents(state.components, {
       category: batchCategory,
-      subCategory: batchSubCategory,
+      subTags: batchSubTags,
       sortBy: batchSort,
       builds: state.builds,
       onlyAvailable: true,
@@ -138,7 +156,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
       (sortIndex.get(a.component.id) ?? 0) - (sortIndex.get(b.component.id) ?? 0) ||
       (b.entry.date || '').localeCompare(a.entry.date || '')
     );
-  }, [allAvailableBatches, batchSearch, batchCategory, batchSubCategory, batchSort, state.components, state.builds]);
+  }, [allAvailableBatches, batchSearch, batchCategory, batchSubTags, batchSort, state.components, state.builds]);
 
   // Map of batch keys to easily check if added
   const selectedBatchKeys = useMemo(() => {
@@ -331,9 +349,9 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
           searchQuery={batchSearch}
           onSearchChange={setBatchSearch}
           activeCategory={batchCategory}
-          onCategoryChange={setBatchCategory}
-          activeSubCategory={batchSubCategory}
-          onSubCategoryChange={setBatchSubCategory}
+          onCategoryChange={handleBatchCategoryChange}
+          activeSubTags={batchSubTags}
+          onSubTagToggle={handleBatchSubTagToggle}
           sortBy={batchSort}
           onSortByChange={setBatchSort}
           compactControls

@@ -104,43 +104,70 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       
       {/* Secondary Tag Group Filter Bar (Single Horizontal Scrolling Row with Dividers) */}
       {currentTagGroups.length > 0 && (
-        <div className="subcategory-filters flex w-full overflow-x-auto no-scrollbar gap-1.5 items-center whitespace-nowrap">
-          {currentTagGroups.map((group, groupIdx) => (
-            <React.Fragment key={group.label}>
-              {groupIdx > 0 && (
-                <div
-                  className="h-3 w-px bg-white/20 shrink-0 mx-0.5"
-                  aria-hidden="true"
-                />
-              )}
-              {group.tags.map((sub) => {
-                const isActive = activeSubTags
-                  ? activeSubTags.some((t) => t.toLowerCase() === sub.toLowerCase())
-                  : activeSubCategory === sub;
-                return (
-                  <button
-                    key={sub}
-                    type="button"
-                    onClick={() => {
-                      if (onSubTagToggle) {
-                        onSubTagToggle(sub);
-                      } else if (onSubCategoryChange) {
-                        onSubCategoryChange(activeSubCategory === sub ? '' : sub);
-                      }
-                    }}
-                    data-active={isActive}
-                    className={`app-chip app-subcategory-chip flex items-center justify-center flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
-                      isActive
-                        ? 'app-chip-active text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
-                        : 'text-[#b1bac4] border border-zinc-800 bg-transparent hover:border-zinc-700 hover:text-zinc-200'
-                    }`}
-                  >
-                    <span className="whitespace-nowrap text-[10.5px] font-medium leading-none">{sub}</span>
-                  </button>
-                );
-              })}
-            </React.Fragment>
-          ))}
+        <div className="subcategory-filters flex w-full overflow-x-auto no-scrollbar py-0.5">
+          <div className={compactControls ? 'flex items-center gap-1.5' : 'app-segmented flex items-center p-[2px] gap-[2px] rounded-[7px] border border-white/[0.08] bg-[#0d1416] shrink-0'}>
+            {currentTagGroups.map((group, groupIdx) => (
+              <React.Fragment key={group.label}>
+                {groupIdx > 0 && (
+                  <div
+                    className="h-3 w-px bg-white/20 shrink-0 mx-1 self-center"
+                    aria-hidden="true"
+                  />
+                )}
+                {group.tags.map((sub) => {
+                  const isActive = activeSubTags
+                    ? activeSubTags.some((t) => t.toLowerCase() === sub.toLowerCase())
+                    : activeSubCategory === sub;
+
+                  if (!compactControls) {
+                    return (
+                      <button
+                        key={sub}
+                        type="button"
+                        onClick={() => {
+                          if (onSubTagToggle) {
+                            onSubTagToggle(sub);
+                          } else if (onSubCategoryChange) {
+                            onSubCategoryChange(activeSubCategory === sub ? '' : sub);
+                          }
+                        }}
+                        data-active={isActive}
+                        className={`relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[20px] ${
+                          isActive
+                            ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                            : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <span className="whitespace-nowrap">{sub}</span>
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={sub}
+                      type="button"
+                      onClick={() => {
+                        if (onSubTagToggle) {
+                          onSubTagToggle(sub);
+                        } else if (onSubCategoryChange) {
+                          onSubCategoryChange(activeSubCategory === sub ? '' : sub);
+                        }
+                      }}
+                      data-active={isActive}
+                      className={`app-chip app-subcategory-chip flex items-center justify-center flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
+                        isActive
+                          ? 'app-chip-active text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                          : 'text-[#b1bac4] border border-zinc-800 bg-transparent hover:border-zinc-700 hover:text-zinc-200'
+                      }`}
+                    >
+                      <span className="whitespace-nowrap text-[10.5px] font-medium leading-none">{sub}</span>
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       )}
 
