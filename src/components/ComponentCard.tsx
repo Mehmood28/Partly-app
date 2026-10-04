@@ -73,13 +73,35 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
 
-  const rawUnassignedQty = calculateUnassignedQuantityStrict(component, state.builds);
-  const totalDraftQty = draftSelectedParts
-    ? draftSelectedParts.reduce((sum, p) => (p.componentId === component.id ? sum + p.quantity : sum), 0)
-    : 0;
-  const unassignedQty = Math.max(0, rawUnassignedQty - totalDraftQty);
-  const unassignedVal = calculateUnassignedValueStrict(component, state.builds);
-  const avgCost = calculateEffectiveUnitCost(component, state.builds);
+  const visibleBatches = React.useMemo(() => {
+    return getUnassignedBatches(component, state.builds).map((batch) => {
+      const draftQty = draftSelectedParts
+        ? draftSelectedParts.reduce(
+            (sum, p) =>
+              p.componentId === component.id && p.purchaseEntryId === batch.entry.id
+                ? sum + p.quantity
+                : sum,
+            0
+          )
+        : 0;
+      return {
+        ...batch,
+        availableQuantity: Math.max(0, batch.availableQuantity - draftQty),
+      };
+    });
+  }, [component, state.builds, draftSelectedParts]);
+
+  const unassignedQty = draftSelectedParts
+    ? visibleBatches.reduce((sum, b) => sum + b.availableQuantity, 0)
+    : calculateUnassignedQuantityStrict(component, state.builds);
+
+  const unassignedVal = draftSelectedParts
+    ? visibleBatches.reduce((sum, b) => sum + b.availableQuantity * b.unitCost, 0)
+    : calculateUnassignedValueStrict(component, state.builds);
+
+  const avgCost = draftSelectedParts
+    ? (unassignedQty > 0 ? unassignedVal / unassignedQty : 0)
+    : calculateEffectiveUnitCost(component, state.builds);
 
   const categoryPresentation = getCategoryPresentation(component.category);
 
@@ -186,16 +208,6 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
           {/* Available inventory batches. */}
           <div>
             {(() => {
-              const visibleBatches = getUnassignedBatches(component, state.builds).map((batch) => {
-                const draftQty = draftSelectedParts
-                  ? draftSelectedParts.reduce((sum, p) => (p.componentId === component.id && p.purchaseEntryId === batch.entry.id ? sum + p.quantity : sum), 0)
-                  : 0;
-                return {
-                  ...batch,
-                  availableQuantity: Math.max(0, batch.availableQuantity - draftQty),
-                };
-              });
-
               if (component.purchaseHistory.length === 0) {
                 return (
                   <div className="text-xs text-zinc-500 italic p-3 bg-[#0B1113] border-y border-white/[0.06]">
