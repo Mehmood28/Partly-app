@@ -101,7 +101,7 @@ function AppContent() {
       };
       
       const itemTags = (item.tags && item.tags.length > 0)
-        ? normalizeTags(item.tags)
+        ? normalizeTags(item.tags, item.category)
         : [];
 
       return {

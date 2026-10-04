@@ -15,14 +15,18 @@ function getAI(): GoogleGenAI {
 }
 
 const GEMINI_MODEL_CANDIDATES = [
-  'gemini-3.8-flash',
+  'gemini-3.1-flash-lite',
   'gemini-flash-latest',
+  'gemini-3.8-flash',
+  'gemini-3.1-pro-preview',
 ] as const;
 
-// Inventory extraction is a short, structured task.
+// Fast, high-quota structured extraction models
 const BULK_IMPORT_MODELS = [
-  'gemini-3.8-flash',
+  'gemini-3.1-flash-lite',
   'gemini-flash-latest',
+  'gemini-3.8-flash',
+  'gemini-3.1-pro-preview',
 ] as const;
 
 function parseModelJsonResponse(
@@ -85,6 +89,105 @@ function parseModelJsonResponse(
   return parsed;
 }
 
+function deterministicParseBulkText(text: string): any[] {
+  const lines = (text || '')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !/^(item|part|name|qty|price|cost|seller|notes)\b/i.test(l));
+
+  if (lines.length === 0) return [];
+
+  return lines.map((line) => {
+    let remaining = line;
+
+    // 1. Quantity (e.g. 10x, 2x, 5 pcs)
+    let quantity = 1;
+    const qtyMatch = remaining.match(/^(\d+)\s*(?:x|pcs|units|ct)?\s+/i) || remaining.match(/\b(\d+)\s*(?:x|pcs|units|ct)\b/i);
+    if (qtyMatch) {
+      quantity = Math.max(1, parseInt(qtyMatch[1], 10) || 1);
+      remaining = remaining.replace(qtyMatch[0], ' ').trim();
+    }
+
+    // 2. Unit cost or price ($225.99, $225)
+    let unitCost = 0;
+    const costMatch = remaining.match(/\$\s*(\d+(?:\.\d+)?)/) || remaining.match(/\b(\d+\.\d{2})\b/);
+    if (costMatch) {
+      unitCost = parseFloat(costMatch[1]) || 0;
+      remaining = remaining.replace(costMatch[0], ' ').trim();
+    }
+
+    // 3. Health percent for storage (e.g. 98% health)
+    let healthPercent: number | undefined = undefined;
+    const healthMatch = remaining.match(/\b(\d{1,3})%\s*(?:health)?/i);
+    if (healthMatch) {
+      const parsedHealth = parseInt(healthMatch[1], 10);
+      if (parsedHealth >= 0 && parsedHealth <= 100) {
+        healthPercent = parsedHealth;
+      }
+      remaining = remaining.replace(healthMatch[0], ' ').trim();
+    }
+
+    // 4. Condition
+    let condition = 'Used Open Box';
+    if (/\b(sealed|brand new in box|bnib|nib)\b/i.test(remaining)) {
+      condition = 'Sealed';
+      remaining = remaining.replace(/\b(sealed|brand new in box|bnib|nib)\b/gi, ' ').trim();
+    } else if (/\b(new open box|open box)\b/i.test(remaining)) {
+      condition = 'New Open Box';
+      remaining = remaining.replace(/\b(new open box|open box)\b/gi, ' ').trim();
+    } else if (/\b(new no box)\b/i.test(remaining)) {
+      condition = 'New No Box';
+      remaining = remaining.replace(/\b(new no box)\b/gi, ' ').trim();
+    } else if (/\b(used no box)\b/i.test(remaining)) {
+      condition = 'Used No Box';
+      remaining = remaining.replace(/\b(used no box)\b/gi, ' ').trim();
+    } else if (/\b(used open box|used)\b/i.test(remaining)) {
+      condition = 'Used Open Box';
+      remaining = remaining.replace(/\b(used open box|used)\b/gi, ' ').trim();
+    }
+
+    // 5. Seller (Amazon, Newegg, Best Buy, Facebook, Memory Express, etc.)
+    let seller: string | undefined = undefined;
+    const sellerMatch = remaining.match(/\b(amazon|newegg|best buy|memory express|canada computers|facebook|kijiji|ebay|marketplace|fb marketplace|cc|me)\b/i);
+    if (sellerMatch) {
+      seller = sellerMatch[1];
+      remaining = remaining.replace(sellerMatch[0], ' ').trim();
+    }
+
+    // 6. Category
+    let category = 'Other';
+    const lower = remaining.toLowerCase();
+    if (/\b(rtx|gtx|radeon|rx\s*\d|geforce|graphics card|gpu|arc\s*a)\b/i.test(lower)) category = 'GPU';
+    else if (/\b(ryzen|intel|core\s*i[3579]|cpu|processor|threadripper|7800x3d|7700|7600|5600|14900|13700|12600)\b/i.test(lower)) category = 'CPU';
+    else if (/\b(ddr[45]|ram|memory|vengeance|trident|fury|corsair\s*rgb)\b/i.test(lower)) category = 'RAM';
+    else if (/\b(ssd|nvme|m\.2|hard\s*drive|hdd|sata|evo|sn\d{3}|barracuda|kc3000|pm9a1)\b/i.test(lower)) category = 'Storage';
+    else if (/\b(motherboard|mobo|b650|b550|z790|z690|x670|b850|am4|am5|lga)\b/i.test(lower)) category = 'Motherboard';
+    else if (/\b(psu|power\s*supply|gold|bronze|platinum|watt|\b\d{3,4}w\b|corsair\s*rm)\b/i.test(lower)) category = 'PSU';
+    else if (/\b(cooler|aio|liquid|fan|heatsink|noctua|kraken|assassin|360mm|240mm|hydroshift)\b/i.test(lower)) category = 'Cooling';
+    else if (/\b(case|chassis|h9|h5|h7|o11|4000d|pop\s*air|ch160)\b/i.test(lower)) category = 'Case';
+
+    let cleanName = remaining
+      .replace(/^[,\-–—:\s]+|[,\-–—:\s]+$/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    if (!cleanName) {
+      cleanName = line;
+    }
+
+    return {
+      name: cleanName,
+      category,
+      quantity,
+      unitCost,
+      condition,
+      seller,
+      healthPercent: category === 'Storage' ? healthPercent : undefined,
+      tags: [],
+    };
+  });
+}
+
 async function callWithTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMsg: string): Promise<T> {
   let timer: NodeJS.Timeout;
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -144,18 +247,27 @@ async function generateGeminiContent(params: {
       } catch (err: any) {
         lastError = err;
         const isTimeout = err?.status === 'DEADLINE_EXCEEDED' || String(err?.message || '').includes('timed out');
+        const isQuotaExceeded =
+          err?.status === 429 ||
+          err?.code === 429 ||
+          err?.error?.code === 429 ||
+          err?.status === 'RESOURCE_EXHAUSTED' ||
+          String(err?.message || '').includes('429') ||
+          String(err?.message || '').includes('quota') ||
+          String(err?.message || '').includes('RESOURCE_EXHAUSTED');
+
+        // If quota is exhausted or request timed out, fail over to the next candidate model immediately without looping
+        if (isQuotaExceeded || isTimeout) {
+          console.warn(`[AI generate] ${model} ${isQuotaExceeded ? 'quota limit reached' : 'timed out'}, falling over to next model candidate...`);
+          break;
+        }
+
         const isTransient =
           err?.status === 503 ||
           err?.code === 503 ||
           String(err?.message || '').includes('503') ||
-          err?.status === 429 ||
-          isTimeout;
-
-        // If it timed out, do not waste time retrying the exact same frozen model; fail over to next candidate immediately
-        if (isTimeout) {
-          console.warn(`[AI generate] ${model} timed out after ${timeoutMs}ms, trying next candidate...`);
-          break;
-        }
+          String(err?.message || '').includes('UNAVAILABLE') ||
+          String(err?.message || '').includes('high demand');
 
         if (isTransient && attempt === 1) {
           // Brief 500ms backoff before retrying
@@ -168,7 +280,7 @@ async function generateGeminiContent(params: {
   }
 
   if (lastError?.status === 429 || lastError?.code === 429 || String(lastError?.message || '').includes('429') || String(lastError?.message || '').includes('quota')) {
-    console.warn(`[AI service quota reached]:`, lastError?.message || 'Daily free tier requests limit reached.');
+    console.warn(`[AI service quota reached]:`, lastError?.message || 'Daily free tier requests limit reached across model pool.');
     throw new Error('AI service quota reached for the day. Please retry later or use standard manual/deterministic workflows.');
   }
 
@@ -241,10 +353,9 @@ async function startServer() {
   app.use(express.json({ limit: '50mb' }));
 
   app.post('/api/parse-bulk-entry', async (req, res) => {
+    const started = performance.now();
+    const { text, images } = req.body;
     try {
-      const started = performance.now();
-      const { text, images } = req.body;
-      
       let parts: any[] = [];
       if (text) {
         parts.push({ text: "Parse the following text for PC components inventory:\n" + text });
@@ -362,6 +473,21 @@ NEVER output internal reasoning, thought process, explanations, or phrases like 
       res.json(data);
     } catch (err: any) {
       console.error('Bulk entry error:', err?.message || err);
+
+      // Deterministic fallback if text was provided and AI is unavailable / quota exhausted
+      if (text && typeof text === 'string' && text.trim().length > 0) {
+        try {
+          const fallbackData = deterministicParseBulkText(text);
+          if (fallbackData.length > 0) {
+            console.info(`[Bulk Import] Falling back to deterministic line parsing (${fallbackData.length} items parsed).`);
+            res.setHeader('Server-Timing', `bulk-import-fallback;dur=${Math.round(performance.now() - started)}`);
+            return res.json(fallbackData);
+          }
+        } catch (fallbackErr) {
+          console.error('Deterministic fallback error:', fallbackErr);
+        }
+      }
+
       let errorMessage = err?.message || 'Error parsing bulk entry';
       if (errorMessage.includes('503') || errorMessage.includes('high demand') || errorMessage.includes('UNAVAILABLE') || errorMessage.includes('capacity')) {
         errorMessage = 'AI service is temporarily experiencing high demand from the provider. Please try extracting again in a few seconds.';

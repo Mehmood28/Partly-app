@@ -6,7 +6,7 @@ import {
   PurchaseEntry,
   TransactionLogItem,
 } from '../../types';
-import { computeUnresolvedLegacyReservation, formatCategoryPlural, formatCurrency, getAllBatchesWithRemaining } from '../../utils/helpers';
+import { computeUnresolvedLegacyReservation, formatCategoryPlural, formatCurrency, getAllBatchesWithRemaining, normalizeTags } from '../../utils/helpers';
 import {
   SellComponentPartData,
   BulkSaleLine,
@@ -292,7 +292,7 @@ export const handleSaveComponent = (
         ...(sourceComp.tags || []),
         ...(componentData.tags || []),
       ];
-      const combinedTags = Array.from(new Set(rawCombinedTags.filter(Boolean)));
+      const combinedTags = normalizeTags(rawCombinedTags, targetComp.category);
 
       // 5. Keep target specifications and target market value when already populated; use source values only when absent
       const hasTargetSpecs = targetComp.specifications && Object.keys(targetComp.specifications).length > 0;
@@ -600,7 +600,7 @@ export const handleAddComponent = (
     });
   }
 
-  const tags = compData.tags ? [...compData.tags] : [];
+  const tags = compData.tags ? normalizeTags(compData.tags, compData.category) : [];
 
   if (existingComp) {
     const existingIds = new Set((existingComp.purchaseHistory || []).map((e) => e.id));
@@ -614,7 +614,7 @@ export const handleAddComponent = (
       }
     }
 
-    const mergedTags = Array.from(new Set([...(existingComp.tags || []), ...(tags || [])].filter(Boolean)));
+    const mergedTags = normalizeTags([...(existingComp.tags || []), ...(tags || [])], compData.category);
     const updatedComp: InventoryComponent = {
       ...existingComp,
       tags: mergedTags.length > 0 ? mergedTags : undefined,
@@ -643,7 +643,7 @@ export const handleAddComponent = (
       ...compData,
       id: newCompId,
       assignedCount: 0,
-      tags,
+      tags: tags.length > 0 ? tags : undefined,
       healthPercent: compData.category === 'Storage'
         ? (compData.healthPercent !== undefined ? compData.healthPercent : newPurchaseEntries[0]?.healthPercent)
         : undefined,
@@ -773,7 +773,7 @@ export const handleAddComponents = (
     });
     const existingCompIndex = findUniqueCatalogMatchIndex(componentsToKeep, compData);
     
-    const tags = compData.tags ? [...compData.tags] : [];
+    const tags = compData.tags ? normalizeTags(compData.tags, compData.category) : [];
 
     if (existingCompIndex !== -1) {
       const existingComp = componentsToKeep[existingCompIndex];
@@ -788,7 +788,7 @@ export const handleAddComponents = (
         }
       }
 
-      const mergedTags = Array.from(new Set([...(existingComp.tags || []), ...(tags || [])].filter(Boolean)));
+      const mergedTags = normalizeTags([...(existingComp.tags || []), ...(tags || [])], compData.category);
       const updatedComp: InventoryComponent = {
         ...existingComp,
         tags: mergedTags.length > 0 ? mergedTags : undefined,
@@ -810,7 +810,7 @@ export const handleAddComponents = (
         ...compData,
         id: newCompId,
         assignedCount: 0,
-        tags,
+        tags: tags.length > 0 ? tags : undefined,
         healthPercent: compData.category === 'Storage'
           ? (compData.healthPercent !== undefined ? compData.healthPercent : entries[0]?.healthPercent)
           : undefined,
@@ -836,10 +836,16 @@ export const handleUpdateComponent = (
 
   const target = prev.components[targetIndex];
   const { purchaseHistory: updatesPh, tags: updatesTags, ...otherUpdates } = updates;
+  const targetCategory = (otherUpdates.category || target.category) as any;
+  const resolvedTags = updatesTags
+    ? normalizeTags(updatesTags, targetCategory)
+    : target.tags
+    ? normalizeTags(target.tags, targetCategory)
+    : undefined;
   const updatedComponent: InventoryComponent = {
     ...target,
     ...otherUpdates,
-    tags: updatesTags ? [...updatesTags] : target.tags ? [...target.tags] : undefined,
+    tags: resolvedTags && resolvedTags.length > 0 ? resolvedTags : undefined,
     purchaseHistory: updatesPh
       ? updatesPh.map((pe) => ({ ...pe }))
       : (target.purchaseHistory || []).map((pe) => ({ ...pe })),

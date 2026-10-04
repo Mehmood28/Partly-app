@@ -46,7 +46,7 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         if (!comp || !Array.isArray(comp.tags)) return comp;
         return {
           ...comp,
-          tags: normalizeTags(comp.tags),
+          tags: normalizeTags(comp.tags, comp.category),
         };
       })
     : [];
@@ -59,7 +59,7 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
             if (!item || !Array.isArray(item.tags)) return item;
             return {
               ...item,
-              tags: normalizeTags(item.tags),
+              tags: normalizeTags(item.tags, item.category),
             };
           });
         };

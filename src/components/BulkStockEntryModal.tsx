@@ -107,7 +107,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
           name: cleanName || item.name,
           seller: (cleanSeller || undefined) as Platform | undefined,
           healthPercent: (item.category === 'Storage' && hasHealthMention) ? item.healthPercent : undefined,
-          tags: normalizeTags(item.tags || []),
+          tags: normalizeTags(item.tags || [], item.category),
         };
       });
       setParsedItems(enrichedData);
@@ -151,7 +151,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
       newItems[index] = {
         ...item,
         category: newCat,
-        tags: validOldTags,
+        tags: normalizeTags(validOldTags, newCat),
         healthPercent: newCat === 'Storage' ? item.healthPercent : undefined,
       };
       return newItems;
@@ -175,7 +175,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
       }
       newItems[index] = {
         ...item,
-        tags: normalizeTags(updatedTags),
+        tags: normalizeTags(updatedTags, item.category),
       };
       return newItems;
     });
@@ -306,21 +306,27 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
               </div>
             </>
           ) : (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between pb-0.5">
-                <h3 className="text-xs sm:text-sm font-bold text-white font-display">Quick Review ({parsedItems.length} found)</h3>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between pb-1 pt-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-[#B9EF68]" />
+                  <h3 className="text-xs sm:text-sm font-bold text-zinc-100 font-display">
+                    Quick Review <span className="text-xs font-normal text-zinc-400">({parsedItems.length} {parsedItems.length === 1 ? 'part' : 'parts'} found)</span>
+                  </h3>
+                </div>
                 <button
                   type="button"
                   onClick={() => setParsedItems([])}
-                  className="app-button bulk-btn-compact flex items-center gap-1 text-zinc-300 hover:text-white"
+                  className="app-button flex items-center justify-center gap-1.5 px-2.5 h-[28px] min-h-[28px] text-xs font-semibold text-zinc-300 hover:text-white rounded-md transition-all"
+                  title="Reset and start over"
                 >
-                  <RotateCcw className="w-3 h-3 text-zinc-400" /> Start Over
+                  <RotateCcw className="w-3.5 h-3.5 text-zinc-400" /> Start Over
                 </button>
               </div>
               
               <div className="divide-y divide-white/[0.07] border-y border-white/[0.08]">
                     {parsedItems.map((item, idx) => (
-                      <div key={idx} className="bulk-review-row grid grid-cols-2 gap-x-2 gap-y-1.5 py-1.5 md:grid-cols-12">
+                      <div key={idx} className="bulk-review-row grid grid-cols-2 gap-x-2 gap-y-1.5 py-2 md:grid-cols-12">
                         <label className="col-span-2 md:col-span-4"><span>Name</span>
                           <input
                             type="text"
@@ -416,7 +422,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                         ) : (
                           <div className="hidden md:block md:col-span-3" aria-hidden="true" />
                         )}
-                        <div className="col-span-2 md:col-span-12 flex items-center justify-between gap-2 pt-0.5">
+                        <div className="col-span-2 md:col-span-12 flex items-center justify-between gap-2 pt-1">
                           {SUB_CATEGORIES[item.category] && SUB_CATEGORIES[item.category].length > 0 ? (
                             <div className="flex flex-wrap items-center gap-1.5 min-w-0">
                               {SUB_CATEGORIES[item.category].map((tag) => {
@@ -428,13 +434,14 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                                     key={tag}
                                     type="button"
                                     onClick={() => toggleTag(idx, tag)}
-                                    className={`app-chip px-2.5 py-0.5 text-xs font-sans font-normal transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
+                                    data-active={isSelected}
+                                    className={`app-chip app-subcategory-chip px-2.5 h-[26px] min-h-[26px] rounded-md transition-all text-xs font-sans font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
                                       isSelected
-                                        ? 'border-[#B9EF68]/50 bg-[#B9EF68]/[0.08] text-[#B9EF68]'
-                                        : 'border-white/[0.08] bg-white/[0.02] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'
+                                        ? 'app-chip-active text-white border-[#B9EF68]'
+                                        : 'text-[#b1bac4] hover:text-zinc-200'
                                     }`}
                                   >
-                                    {tag}
+                                    <span className={isSelected ? 'text-white' : 'text-[#b1bac4]'}>{tag}</span>
                                   </button>
                                 );
                               })}
@@ -445,9 +452,10 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                           <button 
                             type="button"
                             onClick={() => removeParsedItem(idx)} 
-                            className="app-button bulk-btn-compact shrink-0 flex items-center gap-1 text-rose-300 hover:border-rose-500/35"
+                            className="app-button app-button-danger shrink-0 flex items-center justify-center gap-1.5 text-xs font-semibold px-2.5 h-[28px] min-h-[28px] rounded-md transition-all"
+                            title="Remove this item"
                           >
-                            <Trash2 className="w-3 h-3" /> Remove
+                            <Trash2 className="w-3.5 h-3.5" /> Remove
                           </button>
                         </div>
                       </div>
@@ -459,18 +467,18 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
 
         {/* Footer */}
         {parsedItems.length > 0 && (
-          <div className="flex shrink-0 justify-end gap-2.5 border-t border-white/[0.08] px-3 py-2.5 sm:px-4">
+          <div className="flex shrink-0 items-center justify-end gap-2.5 border-t border-white/[0.08] px-3 py-2.5 sm:px-4 bg-[#0B1113]">
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
+              className="app-button flex items-center justify-center px-4 h-[36px] min-h-[36px] rounded-lg text-xs font-semibold text-zinc-300 hover:text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirm}
-              className="app-button app-button-primary flex items-center gap-2 px-5"
+              className="app-button app-button-primary flex items-center justify-center gap-2 px-5 h-[36px] min-h-[36px] rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
             >
               <Save className="w-4 h-4" />
               Confirm & Save All to Stock

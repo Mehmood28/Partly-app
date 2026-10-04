@@ -14,7 +14,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { ConfirmModal } from './ConfirmModal';
-import { getUnassignedBatches, SUB_CATEGORIES, getConflictingTags, CATEGORY_TAG_GROUPS } from '../utils/helpers';
+import { getUnassignedBatches, SUB_CATEGORIES, getConflictingTags, CATEGORY_TAG_GROUPS, normalizeTags } from '../utils/helpers';
 import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin, resolvePurchaseEntrySeller } from '../utils/tradeInOrigin';
 
 interface ComponentModalProps {
@@ -88,7 +88,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
             }
           }
         });
-        setSelectedTags(matchedTags);
+        setSelectedTags(normalizeTags(matchedTags, compCat));
 
         const initialHealth = initialComponent.healthPercent !== undefined
           ? initialComponent.healthPercent.toString()
@@ -259,7 +259,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
       name: name.trim(),
       category,
       specifications,
-      tags: selectedTags.length > 0 ? selectedTags : undefined,
+      tags: selectedTags.length > 0 ? normalizeTags(selectedTags, category) : undefined,
       purchaseHistory: initialComponent?.purchaseHistory || [],
       healthPercent: category === 'Storage' ? parsedHealth : undefined,
     };

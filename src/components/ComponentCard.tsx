@@ -12,7 +12,7 @@ import {
   formatReadableDate,
   getCategoryPresentation,
   getUnassignedBatches,
-  normalizeTag,
+  normalizeTags,
 } from '../utils/helpers';
 import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin } from '../utils/tradeInOrigin';
 import { normalizePlatform } from '../utils/platformDisplay';
@@ -113,11 +113,8 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
             <div className="stock-summary">
               {(() => {
                 const items: React.ReactNode[] = [];
-                const validTags = (component.tags || [])
-                  .filter((tag): tag is string => typeof tag === 'string' && Boolean(tag.trim()))
-                  .map((tag) => normalizeTag(tag));
-                const uniqueTags = Array.from(new Set(validTags));
-                uniqueTags.forEach((tag) => {
+                const sortedTags = normalizeTags(component.tags, component.category);
+                sortedTags.forEach((tag) => {
                   items.push(tag);
                 });
                 items.push(`${unassignedQty} in stock`);
