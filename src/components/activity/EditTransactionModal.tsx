@@ -104,6 +104,11 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     const cleanInitialTitle = getCleanTransactionTitle(tx, state.components, state.builds);
     const finalTitle = isMasked && !titleEdited ? (cleanInitialTitle || tx.title) : editTitle.trim();
     const finalSummary = isMasked && !summaryEdited ? tx.itemNameOrSummary : editItemSummary.trim();
+    const overrideTitle = titleEdited
+      ? finalTitle
+      : summaryEdited
+      ? finalSummary
+      : tx.customTitleOverride;
     let finalProfit = editProfit;
     if (hasStoredUnitCost) {
       const parsedAmount = parseFloat(editAmount);
@@ -115,6 +120,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     const prepared = prepareTransactionEdit({
       type: tx.type,
       title: finalTitle,
+      customTitleOverride: overrideTitle,
       itemNameOrSummary: finalSummary,
       totalAmount: editAmount,
       profitMargin: finalProfit,

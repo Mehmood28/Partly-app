@@ -177,10 +177,15 @@ export const handleUpdateTransaction = (
     };
   }
 
+  const customTitleOverride = updates.customTitleOverride !== undefined
+    ? (updates.customTitleOverride ? updates.customTitleOverride.trim() : undefined)
+    : targetTx.customTitleOverride;
+
   const updatedTarget: TransactionLogItem = {
     ...targetTx,
     title,
     itemNameOrSummary,
+    customTitleOverride,
     totalAmount,
     profitMargin,
     platform: seller,

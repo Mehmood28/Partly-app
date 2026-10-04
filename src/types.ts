@@ -154,6 +154,7 @@ export interface TransactionLogItem {
   paymentMethod?: PaymentMethod;
   secondaryPaymentMethod?: PaymentMethod;
   itemNameOrSummary: string; // e.g. "1 TB Lexar NQ780" or "Gigabyte Windforce RTX 5070 Ti"
+  customTitleOverride?: string; // User-defined custom display title override
   detailsList?: string[]; // e.g. ["MSI MAG A850GN", "2 TB Lexar NQ780", "32 GB Teamgroup T-FORCE VULCAN"]
   relatedComponentId?: string;
   relatedComponentQty?: number;

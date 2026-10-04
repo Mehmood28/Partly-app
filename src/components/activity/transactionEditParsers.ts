@@ -14,6 +14,7 @@ export const TRANSACTION_PAYMENT_METHODS: readonly PaymentMethod[] = [
 export interface TransactionEditInputs {
   type: TransactionType;
   title: string;
+  customTitleOverride?: string;
   itemNameOrSummary: string;
   totalAmount: string;
   profitMargin: string;
@@ -28,6 +29,7 @@ export type PreparedTransactionEdit =
       success: true;
       value: {
         title: string;
+        customTitleOverride?: string;
         itemNameOrSummary: string;
         totalAmount: number;
         profitMargin?: number;
@@ -44,6 +46,10 @@ export const prepareTransactionEdit = (
 ): PreparedTransactionEdit => {
   const title = inputs.title.trim();
   if (!title) return { success: false, error: 'Record title is required.' };
+
+  const customTitleOverride = inputs.customTitleOverride !== undefined
+    ? inputs.customTitleOverride.trim() || undefined
+    : undefined;
 
   const itemNameOrSummary = inputs.itemNameOrSummary.trim();
   if (!itemNameOrSummary) return { success: false, error: 'Item or summary is required.' };
@@ -82,6 +88,7 @@ export const prepareTransactionEdit = (
     success: true,
     value: {
       title,
+      customTitleOverride,
       itemNameOrSummary,
       totalAmount: amountResult.value,
       profitMargin,

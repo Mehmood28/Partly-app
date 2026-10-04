@@ -162,6 +162,11 @@ export function getCleanTransactionTitle(
   components: InventoryComponent[],
   builds: PCBuild[]
 ): string {
+  // If user explicitly provided a custom title override, always respect it first
+  if (tx.customTitleOverride && tx.customTitleOverride.trim()) {
+    return tx.customTitleOverride.trim();
+  }
+
   const classification = classifyTransaction(tx, builds);
   const isExchange = classification.isExchange;
   const isPartSale = classification.isPartSale;
@@ -185,6 +190,14 @@ export function getCleanTransactionTitle(
   }
 
   if (isPurchase) {
+    // If tx.title was edited by the user to a custom name (not default template like 'Bulk Purchase: Amazon' or 'Purchased: Newegg' or 'Purchased')
+    if (
+      tx.title &&
+      !/^(Bulk Purchase|Purchased|Purchase):\s*/i.test(tx.title.trim()) &&
+      !/^(Purchased|Purchase)$/i.test(tx.title.trim())
+    ) {
+      return tx.title.trim();
+    }
     const relatedBuildId = tx.relatedComponentId?.trim();
     const purchasedBuild: PCBuild | undefined = builds.find((build) => {
       const purchaseTransactionId = build.purchaseTransactionId?.trim();
