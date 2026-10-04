@@ -1,6 +1,6 @@
 import localforage from 'localforage';
 import { AppState, InventoryComponent, PCBuild, TransactionLogItem } from '../types';
-import { normalizeTags } from './helpers';
+import { normalizeTags, roundToCents } from './helpers';
 
 export const STORAGE_KEY = 'pc_inventory_tracker_v2';
 export const DB_NAME = 'PartlyPCInventoryDB';
@@ -43,10 +43,21 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
   const { sheetStats: _obsoleteSheetStats, ...parsedWithoutSheetStats } = parsedObj;
   const components = Array.isArray(parsedObj.components)
     ? (cloneStoredValue(parsedObj.components) as InventoryComponent[]).map((comp) => {
-        if (!comp || !Array.isArray(comp.tags)) return comp;
+        if (!comp) return comp;
+        const normalizedHistory = Array.isArray(comp.purchaseHistory)
+          ? comp.purchaseHistory.map((ph) => {
+              if (!ph) return ph;
+              return {
+                ...ph,
+                unitPrice: typeof ph.unitPrice === 'number' ? roundToCents(ph.unitPrice) : ph.unitPrice,
+                totalPrice: typeof ph.totalPrice === 'number' ? roundToCents(ph.totalPrice) : ph.totalPrice,
+              };
+            })
+          : comp.purchaseHistory;
         return {
           ...comp,
-          tags: normalizeTags(comp.tags, comp.category),
+          tags: Array.isArray(comp.tags) ? normalizeTags(comp.tags, comp.category) : [],
+          purchaseHistory: normalizedHistory,
         };
       })
     : [];
@@ -56,10 +67,11 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         const normalizeBreakdown = (items?: PCBuild['acquisitionComponentBreakdown']) => {
           if (!Array.isArray(items)) return items;
           return items.map((item) => {
-            if (!item || !Array.isArray(item.tags)) return item;
+            if (!item) return item;
             return {
               ...item,
-              tags: normalizeTags(item.tags, item.category),
+              unitCost: typeof item.unitCost === 'number' ? roundToCents(item.unitCost) : item.unitCost,
+              tags: Array.isArray(item.tags) ? normalizeTags(item.tags, item.category) : item.tags,
             };
           });
         };
@@ -69,16 +81,39 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         } else if ((normalizedStatus as unknown) === 'Listed for Sale') {
           normalizedStatus = 'Available';
         }
+        const normalizedParts = Array.isArray(build.parts)
+          ? build.parts.map((p) => {
+              if (!p) return p;
+              return {
+                ...p,
+                unitCostAtAssignment:
+                  typeof p.unitCostAtAssignment === 'number'
+                    ? roundToCents(p.unitCostAtAssignment)
+                    : p.unitCostAtAssignment,
+              };
+            })
+          : build.parts;
         return {
           ...build,
           status: normalizedStatus,
+          salePrice: typeof build.salePrice === 'number' ? roundToCents(build.salePrice) : build.salePrice,
+          estimatedCost: typeof build.estimatedCost === 'number' ? roundToCents(build.estimatedCost) : build.estimatedCost,
+          parts: normalizedParts,
           acquisitionComponentBreakdown: normalizeBreakdown(build.acquisitionComponentBreakdown),
           tradeInComponentBreakdown: normalizeBreakdown(build.tradeInComponentBreakdown),
         };
       })
     : [];
   const transactions = Array.isArray(parsedObj.transactions)
-    ? (cloneStoredValue(parsedObj.transactions) as TransactionLogItem[])
+    ? (cloneStoredValue(parsedObj.transactions) as TransactionLogItem[]).map((tx) => {
+        if (!tx) return tx;
+        return {
+          ...tx,
+          totalAmount: typeof tx.totalAmount === 'number' ? roundToCents(tx.totalAmount) : tx.totalAmount,
+          profitMargin: typeof tx.profitMargin === 'number' ? roundToCents(tx.profitMargin) : tx.profitMargin,
+          soldUnitCost: typeof tx.soldUnitCost === 'number' ? roundToCents(tx.soldUnitCost) : tx.soldUnitCost,
+        };
+      })
     : [];
 
   let resolvedGoal = 10000;

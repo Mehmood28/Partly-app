@@ -154,17 +154,26 @@ function deterministicParseBulkText(text: string): any[] {
       remaining = remaining.replace(sellerMatch[0], ' ').trim();
     }
 
-    // 6. Category
+    // 6. Category (prioritize explicit hardware keywords over ambiguous sockets/chipsets)
     let category = 'Other';
     const lower = remaining.toLowerCase();
-    if (/\b(rtx|gtx|radeon|rx\s*\d|geforce|graphics card|gpu|arc\s*a)\b/i.test(lower)) category = 'GPU';
-    else if (/\b(ryzen|intel|core\s*i[3579]|cpu|processor|threadripper|7800x3d|7700|7600|5600|14900|13700|12600)\b/i.test(lower)) category = 'CPU';
-    else if (/\b(ddr[45]|ram|memory|vengeance|trident|fury|corsair\s*rgb)\b/i.test(lower)) category = 'RAM';
-    else if (/\b(ssd|nvme|m\.2|hard\s*drive|hdd|sata|evo|sn\d{3}|barracuda|kc3000|pm9a1)\b/i.test(lower)) category = 'Storage';
-    else if (/\b(motherboard|mobo|b650|b550|z790|z690|x670|b850|am4|am5|lga)\b/i.test(lower)) category = 'Motherboard';
-    else if (/\b(psu|power\s*supply|gold|bronze|platinum|watt|\b\d{3,4}w\b|corsair\s*rm)\b/i.test(lower)) category = 'PSU';
-    else if (/\b(cooler|aio|liquid|fan|heatsink|noctua|kraken|assassin|360mm|240mm|hydroshift)\b/i.test(lower)) category = 'Cooling';
-    else if (/\b(case|chassis|h9|h5|h7|o11|4000d|pop\s*air|ch160)\b/i.test(lower)) category = 'Case';
+    if (/\b(rtx|gtx|radeon|rx\s*\d|geforce|graphics card|gpu|arc\s*a)\b/i.test(lower)) {
+      category = 'GPU';
+    } else if (/\b(cooler|aio|liquid\s*cool\w*|fan|heatsink|noctua|kraken|assassin|thermalright|\b\d{3}mm\b|hydroshift|prism|wraith)\b/i.test(lower)) {
+      category = 'Cooling';
+    } else if (/\b(psu|power\s*supply|gold|bronze|platinum|watt|\b\d{3,4}w\b|corsair\s*rm\w*|seasonic|superflower|toughpower)\b/i.test(lower)) {
+      category = 'PSU';
+    } else if (/\b(case|chassis|h9|h5|h7|o11|4000d|5000d|pop\s*air|ch160|montech|lancool)\b/i.test(lower)) {
+      category = 'Case';
+    } else if (/\b(ssd|nvme|m\.2|hard\s*drive|hdd|sata|evo|sn\d{3}|barracuda|kc3000|pm9a1)\b/i.test(lower)) {
+      category = 'Storage';
+    } else if (/\b(ddr[45]|ram|memory|vengeance|trident|fury|corsair\s*rgb)\b/i.test(lower)) {
+      category = 'RAM';
+    } else if (/\b(ryzen|intel|core\s*i[3579]|cpu|processor|threadripper|7800x3d|7700x?|7600x?|5600x?|14900k?|13700k?|12600k?)\b/i.test(lower)) {
+      category = 'CPU';
+    } else if (/\b(motherboard|mobo|mainboard|b650|b550|z790|z690|x670|b850|x870|b760|z890|a620|am4|am5|lga\s*\d*)\b/i.test(lower)) {
+      category = 'Motherboard';
+    }
 
     let cleanName = remaining
       .replace(/^[,\-–—:\s]+|[,\-–—:\s]+$/g, '')
@@ -350,7 +359,7 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
   
-  app.use(express.json({ limit: '50mb' }));
+  app.use(express.json({ limit: '10mb' }));
 
   app.post('/api/parse-bulk-entry', async (req, res) => {
     const started = performance.now();

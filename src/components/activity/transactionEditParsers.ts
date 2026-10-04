@@ -1,5 +1,6 @@
 import { PaymentMethod, TransactionType } from '../../types';
 import { isValidCalendarDate, parseStrictNumber } from '../builds/sellBuildParsers';
+import { roundToCents } from '../../utils/helpers';
 
 export const TRANSACTION_PAYMENT_METHODS: readonly PaymentMethod[] = [
   'Cash',
@@ -90,8 +91,8 @@ export const prepareTransactionEdit = (
       title,
       customTitleOverride,
       itemNameOrSummary,
-      totalAmount: amountResult.value,
-      profitMargin,
+      totalAmount: roundToCents(amountResult.value),
+      profitMargin: profitMargin !== undefined ? roundToCents(profitMargin) : undefined,
       seller,
       platform: seller,
       paymentMethod: paymentMethodValue

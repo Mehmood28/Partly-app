@@ -401,6 +401,11 @@ export function calculateBuildPartsCost(build: PCBuild): number {
   return baseCost;
 }
 
+export function roundToCents(amount: number): number {
+  if (typeof amount !== 'number' || !Number.isFinite(amount)) return 0;
+  return Math.round((amount + Number.EPSILON) * 100) / 100;
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -805,7 +810,13 @@ export function calculateInventoryMetrics(state: AppState) {
 
   const totalStockValuation = looseValuation + activeBuildsCost;
 
-  return { looseValuation, activeBuilds, activeBuildsCost, totalStockValuation, activeRigsCount: activeBuilds.length };
+  return {
+    looseValuation: roundToCents(looseValuation),
+    activeBuilds,
+    activeBuildsCost: roundToCents(activeBuildsCost),
+    totalStockValuation: roundToCents(totalStockValuation),
+    activeRigsCount: activeBuilds.length,
+  };
 }
 
 export function calculateMonthlyMetrics(state: AppState, year: number, monthIndex: number) {
@@ -871,23 +882,23 @@ export function calculateMonthlyMetrics(state: AppState, year: number, monthInde
     }
   });
 
-  const pcProfit = pcRevenue - pcCost;
-  const partProfit = partRevenue - partCost;
+  const pcProfit = roundToCents(pcRevenue - pcCost);
+  const partProfit = roundToCents(partRevenue - partCost);
 
-  const monthlyRevenue = pcRevenue + partRevenue;
-  const monthlyCost = pcCost + partCost;
-  const monthlyProfit = monthlyRevenue - monthlyCost;
+  const monthlyRevenue = roundToCents(pcRevenue + partRevenue);
+  const monthlyCost = roundToCents(pcCost + partCost);
+  const monthlyProfit = roundToCents(monthlyRevenue - monthlyCost);
 
   return {
     revenue: monthlyRevenue,
     cost: monthlyCost,
     profit: monthlyProfit,
     pcsSold,
-    pcRevenue,
-    pcCost,
+    pcRevenue: roundToCents(pcRevenue),
+    pcCost: roundToCents(pcCost),
     pcProfit,
-    partRevenue,
-    partCost,
+    partRevenue: roundToCents(partRevenue),
+    partCost: roundToCents(partCost),
     partProfit,
   };
 }

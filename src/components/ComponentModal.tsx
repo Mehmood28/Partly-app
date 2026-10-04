@@ -14,7 +14,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { ConfirmModal } from './ConfirmModal';
-import { getUnassignedBatches, SUB_CATEGORIES, getConflictingTags, CATEGORY_TAG_GROUPS, normalizeTags } from '../utils/helpers';
+import { getUnassignedBatches, SUB_CATEGORIES, getConflictingTags, CATEGORY_TAG_GROUPS, normalizeTags, roundToCents } from '../utils/helpers';
 import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin, resolvePurchaseEntrySeller } from '../utils/tradeInOrigin';
 
 interface ComponentModalProps {
@@ -167,7 +167,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
   const handleEditPurchase = (ph: PurchaseEntry) => {
     setEditingPurchaseId(ph.id);
     setIncludePurchase(true);
-    setUnitPrice(ph.unitPrice.toString());
+    setUnitPrice(String(roundToCents(ph.unitPrice)));
     setQuantity(ph.quantity.toString());
     setPlatform(resolvePurchaseEntrySeller(ph, state.transactions, state.builds) || '');
     setPaymentMethod(ph.paymentMethod);

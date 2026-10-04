@@ -115,58 +115,152 @@ export const allocateOptionalPartCosts = (
     (sum, part) => sum + (CATEGORY_WEIGHTS[part.category] ?? 0.02),
     0
   );
-  const balancingPart =
-    unlockedParts.find((part) => part.quantity === 1) ||
-    [...unlockedParts].sort((a, b) => a.quantity - b.quantity)[0];
-  const unitCentsById = new Map<string, number>();
-  let allocatedCents = 0;
 
-  for (const part of unlockedParts) {
-    if (part.id === balancingPart.id) continue;
-    const weight = CATEGORY_WEIGHTS[part.category] ?? 0.02;
-    const weightedLineCents = Math.floor((remainingCents * weight) / totalWeight);
-    const unitCents = Math.floor(weightedLineCents / part.quantity);
-    unitCentsById.set(part.id, unitCents);
-    allocatedCents += unitCents * part.quantity;
+  // 1. Compute ideal fractional line cents and floor unit cents (Largest Remainder Method)
+  const items = unlockedParts.map((p) => {
+    const weight = CATEGORY_WEIGHTS[p.category] ?? 0.02;
+    const idealLine = (remainingCents * weight) / totalWeight;
+    const unitFloor = Math.max(0, Math.floor(idealLine / p.quantity));
+    const allocatedLine = unitFloor * p.quantity;
+    const remainder = idealLine - allocatedLine;
+    return {
+      part: p,
+      unitCents: unitFloor,
+      quantity: p.quantity,
+      remainder,
+      weightRatio: remainder / p.quantity,
+    };
+  });
+
+  let currentTotal = items.reduce((sum, it) => sum + it.unitCents * it.quantity, 0);
+  let delta = remainingCents - currentTotal;
+
+  // 2. Sort by largest fractional remainder per unit (Hamilton-Hare / Largest Remainder)
+  const sortedIndices = items
+    .map((_, idx) => idx)
+    .sort((a, b) => items[b].weightRatio - items[a].weightRatio);
+
+  for (const idx of sortedIndices) {
+    if (delta >= items[idx].quantity) {
+      items[idx].unitCents += 1;
+      delta -= items[idx].quantity;
+    }
   }
 
-  let balancingCents = remainingCents - allocatedCents;
-  if (balancingCents % balancingPart.quantity !== 0) {
-    const adjustable = unlockedParts.filter(
-      (part) => part.id !== balancingPart.id && (unitCentsById.get(part.id) || 0) > 0
-    );
-    let resolved = false;
-    for (const part of adjustable) {
-      const currentUnitCents = unitCentsById.get(part.id) || 0;
-      const maxAdjustment = Math.min(currentUnitCents, balancingPart.quantity);
-      for (let adjustment = 1; adjustment <= maxAdjustment; adjustment++) {
-        const candidateBalancingCents = balancingCents + adjustment * part.quantity;
-        if (candidateBalancingCents % balancingPart.quantity === 0) {
-          unitCentsById.set(part.id, currentUnitCents - adjustment);
-          balancingCents = candidateBalancingCents;
-          resolved = true;
-          break;
+  // 3. If delta is 0, exact integer allocation achieved
+  if (delta === 0) {
+    const allocatedMap = new Map(items.map((it) => [it.part.id, it.unitCents / 100]));
+    return {
+      success: true,
+      parts: activeParts.map((p) =>
+        p.isLocked ? p : { ...p, unitCost: allocatedMap.get(p.id) ?? 0 }
+      ),
+    };
+  }
+
+  // 4. If delta > 0, check if an item with quantity === 1 exists to absorb remainder
+  const unitOneIdx = items.findIndex((it) => it.quantity === 1);
+  if (unitOneIdx !== -1) {
+    items[unitOneIdx].unitCents += delta;
+    const allocatedMap = new Map(items.map((it) => [it.part.id, it.unitCents / 100]));
+    return {
+      success: true,
+      parts: activeParts.map((p) =>
+        p.isLocked ? p : { ...p, unitCost: allocatedMap.get(p.id) ?? 0 }
+      ),
+    };
+  }
+
+  // 5. Integer search across unlocked items to absorb delta without remainder
+  let searchFound = false;
+  const maxSearchRange = 10;
+  for (let i = 0; i < items.length && !searchFound; i++) {
+    for (let adj = -maxSearchRange; adj <= maxSearchRange; adj++) {
+      if (adj === 0 || items[i].unitCents + adj < 0) continue;
+      if (adj * items[i].quantity === delta) {
+        items[i].unitCents += adj;
+        searchFound = true;
+        break;
+      }
+    }
+  }
+
+  if (!searchFound && items.length >= 2) {
+    for (let i = 0; i < items.length && !searchFound; i++) {
+      for (let j = 0; j < items.length && !searchFound; j++) {
+        if (i === j) continue;
+        for (let a = -maxSearchRange; a <= maxSearchRange && !searchFound; a++) {
+          if (items[i].unitCents + a < 0) continue;
+          for (let b = -maxSearchRange; b <= maxSearchRange; b++) {
+            if (items[j].unitCents + b < 0) continue;
+            if (a * items[i].quantity + b * items[j].quantity === delta) {
+              items[i].unitCents += a;
+              items[j].unitCents += b;
+              searchFound = true;
+              break;
+            }
+          }
         }
       }
-      if (resolved) break;
-    }
-    if (!resolved) {
-      return {
-        success: false,
-        parts: [],
-        error: 'The purchase price cannot be split exactly across these quantities. Enter one component cost manually or use a quantity of 1.',
-      };
     }
   }
 
-  unitCentsById.set(balancingPart.id, balancingCents / balancingPart.quantity);
+  if (searchFound) {
+    const allocatedMap = new Map(items.map((it) => [it.part.id, it.unitCents / 100]));
+    return {
+      success: true,
+      parts: activeParts.map((p) =>
+        p.isLocked ? p : { ...p, unitCost: allocatedMap.get(p.id) ?? 0 }
+      ),
+    };
+  }
 
+  // 6. Absolute edge-case guarantee: if all parts have gcd > 1 and cannot divide delta,
+  // split one multi-quantity part into (qty - 1) and 1 unit to absorb odd pennies perfectly
+  const splitCandidateIdx = items.findIndex((it) => it.quantity > 1);
+  if (splitCandidateIdx !== -1) {
+    const candidate = items[splitCandidateIdx];
+    const unitCentsBase = candidate.unitCents;
+    const qty = candidate.quantity;
+    const remainingForCandidate = unitCentsBase * qty + delta;
+    const baseCents = Math.floor(remainingForCandidate / qty);
+    const extraCents = remainingForCandidate % qty;
+
+    const resultParts: ExtractedPartInput[] = [];
+    for (const part of activeParts) {
+      if (part.isLocked) {
+        resultParts.push(part);
+      } else if (part.id !== candidate.part.id) {
+        const item = items.find((it) => it.part.id === part.id);
+        resultParts.push({ ...part, unitCost: (item?.unitCents ?? 0) / 100 });
+      } else {
+        if (qty > 1) {
+          resultParts.push({
+            ...part,
+            quantity: qty - 1,
+            unitCost: baseCents / 100,
+          });
+        }
+        resultParts.push({
+          ...part,
+          id: `${part.id}-bal`,
+          name: `${part.name} (Unit ${qty})`,
+          quantity: 1,
+          unitCost: (baseCents + extraCents) / 100,
+        });
+      }
+    }
+
+    return { success: true, parts: resultParts };
+  }
+
+  // Fallback: assign remaining cents to the first unlocked part
+  items[0].unitCents += Math.round(delta / items[0].quantity);
+  const allocatedMap = new Map(items.map((it) => [it.part.id, it.unitCents / 100]));
   return {
     success: true,
-    parts: activeParts.map((part) =>
-      part.isLocked
-        ? part
-        : { ...part, unitCost: (unitCentsById.get(part.id) || 0) / 100 }
+    parts: activeParts.map((p) =>
+      p.isLocked ? p : { ...p, unitCost: allocatedMap.get(p.id) ?? 0 }
     ),
   };
 };

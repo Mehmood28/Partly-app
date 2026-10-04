@@ -777,7 +777,26 @@ export const handleRemovePartFromBuild = (
 
     const targetComp = prev.components.find((c) => c.id === componentId);
     if (!targetComp) {
-      return { nextState: prev, success: false, error: 'Component not found.' };
+      // Orphaned / unlinked part whose component was deleted from inventory:
+      // Remove it cleanly from the build so the user is never locked out
+      const updatedParts = targetBuild.parts.filter((_, idx) => idx !== partIndex);
+      const updatedBuilds = prev.builds.map((build) => {
+        if (build.id === buildId) {
+          return {
+            ...build,
+            parts: updatedParts,
+          };
+        }
+        return build;
+      });
+      return finalizeBuildPartMutation(
+        prev,
+        {
+          ...prev,
+          builds: updatedBuilds,
+        },
+        buildId
+      );
     }
 
     if (

@@ -7,6 +7,7 @@ import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useToast } from '../../context/ToastContext';
 import { prepareTransactionEdit } from './transactionEditParsers';
 import { getCleanTransactionTitle } from './activityHelpers';
+import { roundToCents } from '../../utils/helpers';
 
 interface EditTransactionModalProps {
   tx: TransactionLogItem | null;
@@ -38,7 +39,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     if (hasStoredUnitCost) {
       const parsed = parseFloat(val);
       if (!isNaN(parsed)) {
-        setEditProfit((parsed - totalUnitCost).toFixed(2));
+        setEditProfit(String(roundToCents(parsed - totalUnitCost)));
       } else {
         setEditProfit('');
       }
@@ -83,13 +84,14 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       setEditItemSummary(tx.itemNameOrSummary || '');
       setTitleEdited(false);
       setSummaryEdited(false);
-      setEditAmount(String(tx.totalAmount ?? 0));
+      const cleanAmount = roundToCents(tx.totalAmount ?? 0);
+      setEditAmount(cleanAmount ? String(cleanAmount) : '0');
       if (tx.type === 'SALE' && tx.soldUnitCost !== undefined) {
         const costBasis = (tx.soldUnitCost ?? 0) * (tx.quantity || 1);
         const derivedProfit = (tx.totalAmount ?? 0) - costBasis;
-        setEditProfit(derivedProfit.toFixed(2));
+        setEditProfit(String(roundToCents(derivedProfit)));
       } else {
-        setEditProfit(String(tx.profitMargin ?? 0));
+        setEditProfit(tx.profitMargin !== undefined ? String(roundToCents(tx.profitMargin)) : '');
       }
       setEditSeller(tx.seller || tx.platform || '');
       setEditPaymentMethod(tx.paymentMethod || '');

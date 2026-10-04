@@ -6,7 +6,7 @@ import {
   PurchaseEntry,
   TransactionLogItem,
 } from '../../types';
-import { computeUnresolvedLegacyReservation, formatCategoryPlural, formatCurrency, getAllBatchesWithRemaining, normalizeTags } from '../../utils/helpers';
+import { computeUnresolvedLegacyReservation, formatCategoryPlural, formatCurrency, getAllBatchesWithRemaining, normalizeTags, roundToCents } from '../../utils/helpers';
 import {
   SellComponentPartData,
   BulkSaleLine,
@@ -124,7 +124,7 @@ export const handleSaveComponent = (
     }
     const unitPrice = Number(entry.unitPrice);
     const rawTotalPrice = entry.totalPrice ?? null;
-    const totalPrice = rawTotalPrice !== null ? Number(rawTotalPrice) : (unitPrice * newQty);
+    const totalPrice = rawTotalPrice !== null ? roundToCents(Number(rawTotalPrice)) : roundToCents(unitPrice * newQty);
     const rawTaxPercent = entry.taxPercent ?? null;
     const taxPercent = rawTaxPercent !== null ? Number(rawTaxPercent) : 0;
 
@@ -143,7 +143,7 @@ export const handleSaveComponent = (
     }
     const unitPrice = Number(newPurchaseEntry.unitPrice);
     const rawTotalPrice = newPurchaseEntry.totalPrice ?? null;
-    const totalPrice = rawTotalPrice !== null ? Number(rawTotalPrice) : (unitPrice * newQty);
+    const totalPrice = rawTotalPrice !== null ? roundToCents(Number(rawTotalPrice)) : roundToCents(unitPrice * newQty);
     const rawTaxPercent = newPurchaseEntry.taxPercent ?? null;
     const taxPercent = rawTaxPercent !== null ? Number(rawTaxPercent) : 0;
 
@@ -555,7 +555,7 @@ export const handleAddComponent = (
 
     const unitPrice = Number(ph.unitPrice);
     const rawTotalPrice = ph.totalPrice ?? null;
-    const totalPrice = rawTotalPrice !== null ? Number(rawTotalPrice) : (unitPrice * quantity);
+    const totalPrice = rawTotalPrice !== null ? roundToCents(Number(rawTotalPrice)) : roundToCents(unitPrice * quantity);
     const rawTaxPercent = ph.taxPercent ?? null;
     const taxPercent = rawTaxPercent !== null ? Number(rawTaxPercent) : 0;
 
@@ -687,7 +687,7 @@ export const handleAddComponents = (
 
       const unitPrice = Number(ph.unitPrice);
       const rawTotalPrice = ph.totalPrice ?? null;
-      const totalPrice = rawTotalPrice !== null ? Number(rawTotalPrice) : (unitPrice * quantity);
+      const totalPrice = rawTotalPrice !== null ? roundToCents(Number(rawTotalPrice)) : roundToCents(unitPrice * quantity);
       const rawTaxPercent = ph.taxPercent ?? null;
       const taxPercent = rawTaxPercent !== null ? Number(rawTaxPercent) : 0;
 
@@ -711,7 +711,7 @@ export const handleAddComponents = (
         notes: ph.notes || '',
       });
       compTotalQuantity += quantity;
-      compTotalPrice += totalPrice;
+      compTotalPrice = roundToCents(compTotalPrice + totalPrice);
     }
     
     parsedComps.push({ compData, entries, compTotalQuantity, compTotalPrice });
@@ -917,7 +917,7 @@ export const handleAddPurchaseEntry = (
 
   const unitPrice = Number(entry.unitPrice);
   const rawTotalPrice = entry.totalPrice ?? null;
-  const totalPrice = rawTotalPrice !== null ? Number(rawTotalPrice) : (unitPrice * quantity);
+  const totalPrice = rawTotalPrice !== null ? roundToCents(Number(rawTotalPrice)) : roundToCents(unitPrice * quantity);
   const rawTaxPercent = entry.taxPercent ?? null;
   const taxPercent = rawTaxPercent !== null ? Number(rawTaxPercent) : 0;
 
@@ -1000,7 +1000,7 @@ export const handleUpdatePurchaseEntry = (
 
   const unitPrice = Number(entry.unitPrice);
   const rawTotalPrice = entry.totalPrice ?? null;
-  const totalPrice = rawTotalPrice !== null ? Number(rawTotalPrice) : (unitPrice * newQty);
+  const totalPrice = rawTotalPrice !== null ? roundToCents(Number(rawTotalPrice)) : roundToCents(unitPrice * newQty);
   const rawTaxPercent = entry.taxPercent ?? null;
   const taxPercent = rawTaxPercent !== null ? Number(rawTaxPercent) : 0;
 
@@ -1273,7 +1273,7 @@ export const handleSellComponentPart = (
             return {
               ...pe,
               quantity: newQty,
-              totalPrice: newQty * pe.unitPrice,
+              totalPrice: roundToCents(newQty * pe.unitPrice),
             };
           }
           return pe;
@@ -1525,7 +1525,7 @@ export const handleSellComponentPartsBulk = (
           return {
             ...pe,
             quantity: newQty,
-            totalPrice: newQty * pe.unitPrice,
+            totalPrice: roundToCents(newQty * pe.unitPrice),
           };
         }
         return pe;
@@ -1627,7 +1627,7 @@ export const handleExchangeComponentPart = (
             return {
               ...pe,
               quantity: newQty,
-              totalPrice: newQty * pe.unitPrice,
+              totalPrice: roundToCents(newQty * pe.unitPrice),
             };
           }
           return pe;
