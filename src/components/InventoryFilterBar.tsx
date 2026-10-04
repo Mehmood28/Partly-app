@@ -2,7 +2,7 @@ import React from 'react';
 import { CATEGORIES, ComponentCategory, InventoryComponent } from '../types';
 import { Search, ArrowDownWideNarrow, X } from 'lucide-react';
 import { CustomSelect } from './ui/CustomSelect';
-import { calculateUnassignedQuantityStrict, SortOption, SUB_CATEGORIES } from '../utils/helpers';
+import { calculateUnassignedQuantityStrict, SortOption, CATEGORY_TAG_GROUPS } from '../utils/helpers';
 import { PCBuild } from '../types';
 
 interface InventoryFilterBarProps {
@@ -17,6 +17,8 @@ interface InventoryFilterBarProps {
   onSortByChange?: (sort: SortOption) => void;
   activeSubCategory?: string;
   onSubCategoryChange?: (sub: string) => void;
+  activeSubTags?: string[];
+  onSubTagToggle?: (tag: string) => void;
   showSearch?: boolean;
   showSort?: boolean;
   compactControls?: boolean;
@@ -35,6 +37,8 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
   onSortByChange,
   activeSubCategory = '',
   onSubCategoryChange,
+  activeSubTags,
+  onSubTagToggle,
   showSearch = true,
   showSort = true,
   compactControls = false,
@@ -42,72 +46,101 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
 }) => {
   const isAvailable = (c: InventoryComponent) => !onlyAvailable || calculateUnassignedQuantityStrict(c, builds) > 0;
   
-  const currentSubCats = CATEGORIES.includes(activeCategory as ComponentCategory) 
-    ? SUB_CATEGORIES[activeCategory] || [] 
+  const currentTagGroups = (activeCategory !== 'ALL' && CATEGORIES.includes(activeCategory as ComponentCategory))
+    ? (CATEGORY_TAG_GROUPS[activeCategory] || [])
     : [];
 
   return (
     <div className={`inventory-filter-bar w-full space-y-2 ${compactControls ? 'is-compact' : ''}`}>
-      {showCategories && <div className="category-filters">
-        <button
-          type="button"
-          onClick={() => {
-            onCategoryChange('ALL');
-            onSubCategoryChange?.('');
-          }}
-          className={`app-chip app-category-chip px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
-            activeCategory === 'ALL'
-              ? 'app-chip-active'
-              : ''
-          }`}
-        >
-          All Categories ({components.filter(isAvailable).length})
-        </button>
-        
-        {CATEGORIES.map((cat) => {
-          const count = components.filter((c) => c.category === cat && isAvailable(c)).length;
-          if (count === 0 && activeCategory !== cat) return null;
-          const isActive = activeCategory === cat;
-          return (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => {
-                onCategoryChange(cat);
-                onSubCategoryChange?.('');
-              }}
-              className={`app-chip app-category-chip px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
-                isActive
-                  ? 'app-chip-active'
-                  : ''
-              }`}
-            >
-              {cat} ({count})
-            </button>
-          );
-        })}
-      </div>}
-      
-      {/* Sub-Category Pills (Fully Visible Wrapping Layout) */}
-      {currentSubCats.length > 0 && (
-        <div className="flex w-full flex-wrap items-center gap-1.5 -mt-0.5">
-          {currentSubCats.map(sub => {
-            const isActive = activeSubCategory === sub;
+      {showCategories && (
+        <div className="category-filters flex overflow-x-auto no-scrollbar gap-1.5 items-center w-full">
+          <button
+            type="button"
+            onClick={() => {
+              onCategoryChange('ALL');
+              onSubCategoryChange?.('');
+            }}
+            data-active={activeCategory === 'ALL'}
+            className={`app-chip app-category-chip flex items-center justify-center gap-1.5 flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
+              activeCategory === 'ALL'
+                ? 'app-chip-active text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                : 'text-[#b1bac4] border border-zinc-800 bg-transparent hover:border-zinc-700 hover:text-zinc-200'
+            }`}
+          >
+            <span className="whitespace-nowrap text-[11px] font-medium leading-none">All Categories</span>
+            <span className="shrink-0 font-mono text-[10px] opacity-75">
+              ({components.filter(isAvailable).length})
+            </span>
+          </button>
+          
+          {CATEGORIES.map((cat) => {
+            const count = components.filter((c) => c.category === cat && isAvailable(c)).length;
+            if (count === 0 && activeCategory !== cat) return null;
+            const isActive = activeCategory === cat;
             return (
               <button
-                key={sub}
+                key={cat}
                 type="button"
-                onClick={() => onSubCategoryChange?.(activeSubCategory === sub ? '' : sub)}
-                className={`app-chip app-subcategory-chip px-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68] ${
-                isActive
-                  ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.08] text-[#9FF8F4]'
-                    : ''
+                onClick={() => {
+                  onCategoryChange(cat);
+                  onSubCategoryChange?.('');
+                }}
+                data-active={isActive}
+                className={`app-chip app-category-chip flex items-center justify-center gap-1.5 flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
+                  isActive
+                    ? 'app-chip-active text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                    : 'text-[#b1bac4] border border-zinc-800 bg-transparent hover:border-zinc-700 hover:text-zinc-200'
                 }`}
               >
-                {sub}
+                <span className="whitespace-nowrap text-[11px] font-medium leading-none">{cat}</span>
+                <span className="shrink-0 font-mono text-[10px] opacity-75">
+                  ({count})
+                </span>
               </button>
             );
           })}
+        </div>
+      )}
+      
+      {/* Secondary Tag Group Filter Bar (Single Horizontal Scrolling Row with Dividers) */}
+      {currentTagGroups.length > 0 && (
+        <div className="subcategory-filters flex w-full overflow-x-auto no-scrollbar gap-1.5 items-center whitespace-nowrap">
+          {currentTagGroups.map((group, groupIdx) => (
+            <React.Fragment key={group.label}>
+              {groupIdx > 0 && (
+                <div
+                  className="h-3 w-px bg-white/20 shrink-0 mx-0.5"
+                  aria-hidden="true"
+                />
+              )}
+              {group.tags.map((sub) => {
+                const isActive = activeSubTags
+                  ? activeSubTags.some((t) => t.toLowerCase() === sub.toLowerCase())
+                  : activeSubCategory === sub;
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => {
+                      if (onSubTagToggle) {
+                        onSubTagToggle(sub);
+                      } else if (onSubCategoryChange) {
+                        onSubCategoryChange(activeSubCategory === sub ? '' : sub);
+                      }
+                    }}
+                    data-active={isActive}
+                    className={`app-chip app-subcategory-chip flex items-center justify-center flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
+                      isActive
+                        ? 'app-chip-active text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                        : 'text-[#b1bac4] border border-zinc-800 bg-transparent hover:border-zinc-700 hover:text-zinc-200'
+                    }`}
+                  >
+                    <span className="whitespace-nowrap text-[10.5px] font-medium leading-none">{sub}</span>
+                  </button>
+                );
+              })}
+            </React.Fragment>
+          ))}
         </div>
       )}
 

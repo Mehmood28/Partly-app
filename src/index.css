@@ -1108,18 +1108,20 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 .buy-pc-note { padding:7px 9px; font-size:10px; line-height:1.35; }
 .buy-pc-summary { min-height:38px; padding:5px 2px; }
 .buy-pc-summary button { min-height:34px !important; padding-block:3px; }
-.buy-pc-modal .manual-parts-editor { display:grid; gap:7px; }
+.buy-pc-modal .manual-parts-editor { display:grid; gap:4px; }
 .buy-pc-modal .manual-parts-heading { padding-inline:1px; }
-.buy-pc-modal .manual-parts-heading label { font-size:10px; }
-.buy-pc-modal .manual-parts-heading button { min-height:34px !important; padding:2px 4px; }
+.buy-pc-modal .manual-parts-heading label { font-size:10.5px; }
+.buy-pc-modal .manual-parts-heading button { min-height:28px !important; height:28px !important; padding:0 8px; font-size:11px; }
 .buy-pc-modal .manual-part-row { display:grid; gap:6px; padding:7px; border-radius:7px; box-shadow:none; }
-.buy-pc-modal .manual-part-identity { gap:6px; }
-.buy-pc-modal .manual-part-category { width:102px; }
-.buy-pc-modal .manual-part-identity input,.buy-pc-modal .manual-part-category button { min-height:34px !important; height:34px !important; border-radius:6px; font-size:10px; }
-.buy-pc-modal .manual-part-costs { gap:5px; padding-top:5px; }
-.buy-pc-modal .manual-part-costs > div { gap:3px; }
-.buy-pc-modal .manual-part-costs input { min-height:34px !important; height:34px !important; font-size:10px; }
-.buy-pc-modal .manual-part-costs span { font-size:10px; }
+.buy-pc-modal .manual-part-identity { display:flex !important; align-items:center !important; gap:6px !important; height:36px !important; min-height:36px !important; }
+.buy-pc-modal .manual-part-category { width:118px; height:36px; display:flex; align-items:center; }
+.buy-pc-modal .manual-part-identity input,.buy-pc-modal .manual-part-category button,.buy-pc-modal .manual-part-identity .manual-part-delete-btn,.buy-pc-modal .manual-part-identity button[aria-label="Remove row"] { min-height:36px !important; height:36px !important; max-height:36px !important; border-radius:7px !important; font-size:11px !important; box-sizing:border-box !important; margin:0 !important; align-self:center !important; }
+.buy-pc-modal .manual-part-identity .manual-part-delete-btn,.buy-pc-modal .manual-part-identity button[aria-label="Remove row"] { width:36px !important; min-width:36px !important; max-width:36px !important; padding:0 !important; display:flex !important; align-items:center !important; justify-content:center !important; }
+[data-bottom-sheet-modal] .buy-pc-modal .manual-part-costs,[data-bottom-sheet-modal] .stock-modal .manual-part-costs,.buy-pc-modal .manual-part-costs { display:flex !important; gap:6px !important; padding-top:5px !important; align-items:center !important; height:25px !important; min-height:25px !important; }
+[data-bottom-sheet-modal] .buy-pc-modal .manual-part-costs > div,[data-bottom-sheet-modal] .stock-modal .manual-part-costs > div,.buy-pc-modal .manual-part-costs > div { display:flex !important; gap:4px !important; align-items:center !important; height:25px !important; }
+[data-bottom-sheet-modal] .buy-pc-modal .manual-part-costs input,[data-bottom-sheet-modal] .stock-modal .manual-part-costs input,.buy-pc-modal .manual-part-costs input { min-height:25px !important; height:25px !important; max-height:25px !important; font-size:11px !important; padding-block:0 !important; box-sizing:border-box !important; margin:0 !important; line-height:23px !important; }
+[data-bottom-sheet-modal] .buy-pc-modal .manual-part-costs label,[data-bottom-sheet-modal] .stock-modal .manual-part-costs label,.buy-pc-modal .manual-part-costs label { font-size:11px !important; line-height:25px !important; height:25px !important; display:inline-flex !important; align-items:center !important; margin:0 !important; }
+[data-bottom-sheet-modal] .buy-pc-modal .manual-part-costs span.cost-currency-symbol,[data-bottom-sheet-modal] .stock-modal .manual-part-costs span.cost-currency-symbol,.buy-pc-modal .manual-part-costs span.cost-currency-symbol { font-size:11px !important; line-height:25px !important; height:25px !important; display:flex !important; align-items:center !important; }
 .buy-pc-modal .manual-part-tags { padding-top:5px; }
 .buy-pc-modal .manual-part-tags > div { gap:4px; }
 .buy-pc-modal .manual-part-tags button { min-height:22px !important; height:22px !important; padding:0 6px; font-size:10px; line-height:1; }
@@ -1483,7 +1485,9 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 .data-health-section > button > div:last-child span { font-size:10px; }
 
 .selected-part-quantity { grid-template-columns:28px 24px 28px; height:34px; font-size:10px; }
-.buy-pc-modal .manual-part-costs input { min-height:34px !important; height:34px !important; font-size:10px; }
+[data-bottom-sheet-modal] .buy-pc-modal .manual-part-costs input,
+[data-bottom-sheet-modal] .stock-modal .manual-part-costs input,
+.buy-pc-modal .manual-part-costs input { min-height:25px !important; height:25px !important; max-height:25px !important; font-size:11px; padding-block:0; box-sizing:border-box; }
 .buy-pc-modal .manual-part-costs span,
 .buy-pc-modal .manual-part-tags button { font-size:10px; }
 .buy-pc-modal .manual-part-tags button { min-height:22px !important; height:22px !important; }
@@ -1524,7 +1528,9 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .sold-parts-view .record-actions button { min-height:34px; font-size:10px; }
 
   .selected-part-quantity { grid-template-columns:28px 24px 28px; height:34px; font-size:10px; }
-  .buy-pc-modal .manual-part-costs input { min-height:34px !important; height:34px !important; font-size:10px; }
+  [data-bottom-sheet-modal] .buy-pc-modal .manual-part-costs input,
+  [data-bottom-sheet-modal] .stock-modal .manual-part-costs input,
+  .buy-pc-modal .manual-part-costs input { min-height:25px !important; height:25px !important; max-height:25px !important; font-size:11px; padding-block:0; box-sizing:border-box; }
   .buy-pc-modal .manual-part-costs span,
   .buy-pc-modal .manual-part-tags button { font-size:10px; }
   .buy-pc-modal .manual-part-tags button { min-height:22px !important; height:22px !important; }

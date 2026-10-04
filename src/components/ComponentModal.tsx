@@ -14,7 +14,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { ConfirmModal } from './ConfirmModal';
-import { getUnassignedBatches, SUB_CATEGORIES, getConflictingTags } from '../utils/helpers';
+import { getUnassignedBatches, SUB_CATEGORIES, getConflictingTags, CATEGORY_TAG_GROUPS } from '../utils/helpers';
 import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin, resolvePurchaseEntrySeller } from '../utils/tradeInOrigin';
 
 interface ComponentModalProps {
@@ -368,27 +368,39 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                   </span>
                 )}
               </div>
-              {SUB_CATEGORIES[category] && SUB_CATEGORIES[category].length > 0 ? (
-                <div className="flex flex-wrap gap-1.5 pt-0.5">
-                  {SUB_CATEGORIES[category].map((tag) => {
-                    const isSelected = selectedTags.includes(tag);
-                    const isDisabled = selectedCompId !== 'NEW' && !initialComponent;
-                    return (
-                      <button
-                        key={tag}
-                        type="button"
-                        disabled={isDisabled}
-                        onClick={() => handleTagToggle(tag)}
-                        className={`app-chip app-subcategory-chip px-2.5 transition-all text-xs font-mono ${
-                          isSelected
-                            ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.12] text-[#9FF8F4] font-semibold'
-                            : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:bg-white/[0.08] hover:text-zinc-200'
-                        } ${isDisabled ? 'opacity-60 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
-                      >
-                        {tag}
-                      </button>
-                    );
-                  })}
+              {CATEGORY_TAG_GROUPS[category] && CATEGORY_TAG_GROUPS[category].length > 0 ? (
+                <div className="space-y-3 rounded-xl border border-white/[0.07] bg-[#0c1214]/60 p-2.5 sm:p-3">
+                  {CATEGORY_TAG_GROUPS[category].map((group) => (
+                    <div key={group.label} className="space-y-1.5">
+                      <div className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-400 font-sans">
+                        {group.label}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.tags.map((tag) => {
+                          const isSelected = selectedTags.some(
+                            (t) => t.toLowerCase() === tag.toLowerCase()
+                          );
+                          const isDisabled = selectedCompId !== 'NEW' && !initialComponent;
+                          return (
+                            <button
+                              key={tag}
+                              type="button"
+                              disabled={isDisabled}
+                              onClick={() => handleTagToggle(tag)}
+                              data-active={isSelected}
+                              className={`app-chip app-subcategory-chip px-2.5 h-[26px] min-h-[26px] rounded-md transition-all text-xs font-sans font-semibold ${
+                                isSelected
+                                  ? 'app-chip-active text-white border-[#B9EF68]'
+                                  : 'text-[#b1bac4] hover:text-zinc-200'
+                              } ${isDisabled ? 'opacity-60 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
+                            >
+                              <span className={isSelected ? 'text-white' : 'text-[#b1bac4]'}>{tag}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="text-[11px] text-zinc-500 italic py-1 font-sans">

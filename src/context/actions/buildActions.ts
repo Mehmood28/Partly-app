@@ -8,7 +8,7 @@ import {
   PurchaseEntry,
   TransactionLogItem,
 } from '../../types';
-import { autoTagComponent, calculateBuildPartsCost, calculateUnassignedQuantityStrict, computeUnresolvedLegacyReservation, formatCurrency, getPurchaseEntryRemainingQuantity, getUnassignedBatches, parseDateLocal } from '../../utils/helpers';
+import { calculateBuildPartsCost, calculateUnassignedQuantityStrict, computeUnresolvedLegacyReservation, formatCurrency, getPurchaseEntryRemainingQuantity, getUnassignedBatches, parseDateLocal } from '../../utils/helpers';
 import { getBuildPresentation } from '../../utils/buildPresentation';
 import { AcquiredPCComponentInput, PurchasePCData, SellBuildData } from '../types';
 import {
@@ -724,7 +724,7 @@ const returnBaseComponentToInventory = (
   const newCompId = `comp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   const tags = baseItem.tags && baseItem.tags.length > 0
     ? [...baseItem.tags]
-    : autoTagComponent(trimmedName, '', baseItem.category);
+    : undefined;
   const newComponent: InventoryComponent = {
     id: newCompId,
     name: trimmedName,
@@ -2592,21 +2592,7 @@ export const handlePartOutAcquiredPC = (
       }
       currentComponents[existingCompIndex] = updatedComp;
     } else {
-      let tags: string[];
-      if (part.tags && part.tags.length > 0) {
-        tags = [...part.tags];
-      } else {
-        tags = autoTagComponent(trimmedName, '', part.category);
-        const catUpper = String(part.category || '').toUpperCase();
-        if (catUpper === 'CASE' || catUpper === 'PSU') {
-          if (/\bwhite\b/i.test(trimmedName) && !tags.some((t: string) => String(t).toUpperCase() === 'WHITE')) {
-            tags.push('WHITE');
-          }
-          if (/\bblack\b/i.test(trimmedName) && !tags.some((t: string) => String(t).toUpperCase() === 'BLACK')) {
-            tags.push('BLACK');
-          }
-        }
-      }
+      const tags = (part.tags && part.tags.length > 0) ? [...part.tags] : undefined;
       const newCompId = `comp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 9)}`;
       const newComp: InventoryComponent = {
         id: newCompId,

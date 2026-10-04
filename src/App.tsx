@@ -17,7 +17,7 @@ import { BuyPCModal } from './components/builds/BuyPCModal';
 import { SellPartModal } from './components/parts/sellPart/SellPartModal';
 import { BulkStockEntryModal, ParsedBulkStockItem } from './components/BulkStockEntryModal';
 import { InventoryComponent, PCBuild, PurchaseEntry } from './types';
-import { autoTagComponent, normalizeTags } from './utils/helpers';
+import { normalizeTags } from './utils/helpers';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -102,7 +102,7 @@ function AppContent() {
       
       const itemTags = (item.tags && item.tags.length > 0)
         ? normalizeTags(item.tags)
-        : autoTagComponent(item.name || '', '', item.category);
+        : [];
 
       return {
         name: item.name,

@@ -274,7 +274,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                       : 'text-zinc-300 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
-                <span className="min-w-0 flex-1 whitespace-normal break-words pr-2">{opt.label}</span>
+                <span className="min-w-0 flex-1 whitespace-nowrap pr-2">{opt.label}</span>
                 {isSelected && <Check className="w-3.5 h-3.5 text-[#B9EF68] shrink-0" />}
               </div>
             );

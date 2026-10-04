@@ -113,11 +113,12 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
             <div className="stock-summary">
               {(() => {
                 const items: React.ReactNode[] = [];
-                const validTags = (component.tags || []).filter(
-                  (tag): tag is string => typeof tag === 'string' && Boolean(tag)
-                );
-                validTags.forEach((tag) => {
-                  items.push(normalizeTag(tag));
+                const validTags = (component.tags || [])
+                  .filter((tag): tag is string => typeof tag === 'string' && Boolean(tag.trim()))
+                  .map((tag) => normalizeTag(tag));
+                const uniqueTags = Array.from(new Set(validTags));
+                uniqueTags.forEach((tag) => {
+                  items.push(tag);
                 });
                 items.push(`${unassignedQty} in stock`);
                 items.push(`${formatCurrency(avgCost)} each`);

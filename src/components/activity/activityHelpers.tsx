@@ -1,5 +1,5 @@
 import { InventoryComponent, TransactionLogItem, PurchaseEntry, PCBuild } from '../../types';
-import { autoTagComponent, formatCategoryPlural } from '../../utils/helpers';
+import { formatCategoryPlural } from '../../utils/helpers';
 import { classifyTransaction } from '../../utils/transactionClassification';
 import { generateBuildTitleFromParts } from '../../utils/buildTitle';
 
@@ -128,10 +128,7 @@ export const parseBatchItem = (
     category = inferCategory(itemName);
   }
 
-  let tags = comp?.tags || [];
-  if (!tags || tags.length === 0) {
-    tags = autoTagComponent(itemName, '', category);
-  }
+  const tags = comp?.tags || [];
   
   let condition = purchaseEntry?.condition || '';
   if (!condition && comp?.purchaseHistory && comp.purchaseHistory.length > 0) {

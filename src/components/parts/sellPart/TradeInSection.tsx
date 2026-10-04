@@ -174,9 +174,9 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                           key={tag}
                           type="button"
                           onClick={() => handleTradeTagToggle(tag)}
-                          className={`app-chip app-subcategory-chip px-2.5 font-mono ${
+                          className={`app-chip app-subcategory-chip px-2.5 font-sans font-normal ${
                             isSelected
-                              ? 'border-[#B9EF68]/50 bg-[#B9EF68]/[0.08] text-[#9FF8F4]'
+                              ? 'border-[#B9EF68]/50 bg-[#B9EF68]/[0.08] text-[#B9EF68]'
                               : 'text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
                           }`}
                         >
@@ -295,9 +295,9 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                           key={tag}
                           type="button"
                           onClick={() => handleTradeTagToggle(tag)}
-                          className={`app-chip app-subcategory-chip px-2.5 font-mono ${
+                          className={`app-chip app-subcategory-chip px-2.5 font-sans font-normal ${
                             isSelected
-                              ? 'border-cyan-500/50 bg-cyan-500/[0.08] text-cyan-300'
+                              ? 'border-[#B9EF68]/50 bg-[#B9EF68]/[0.08] text-[#B9EF68]'
                               : 'text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
                           }`}
                         >

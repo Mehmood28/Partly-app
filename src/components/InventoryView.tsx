@@ -11,7 +11,8 @@ import {
   formatCurrency,
   precomputeAssignedBatches,
   filterAndSortComponents,
-  SortOption
+  SortOption,
+  getConflictingTags
 } from '../utils/helpers';
 import { Plus, Filter, Zap, Layers, ArrowDownWideNarrow } from 'lucide-react';
 import { CustomSelect } from './ui/CustomSelect';
@@ -41,7 +42,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
   } = useInventory();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-  const [activeSubCategory, setActiveSubCategory] = useState<string>('');
+  const [activeSubTags, setActiveSubTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('newest-purchase');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
@@ -49,17 +50,31 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
   const handleCategoryChange = React.useCallback((category: string) => {
     setSelectedCategory(category);
+    setActiveSubTags([]);
     setSearchQuery('');
   }, []);
+
+  const handleSubTagToggle = React.useCallback((tag: string) => {
+    setActiveSubTags((prev) => {
+      const isAlreadyActive = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
+      if (isAlreadyActive) {
+        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+      }
+      const conflicting = getConflictingTags(tag, selectedCategory);
+      const conflictingNormalized = conflicting.map((c) => c.toLowerCase());
+      const filtered = prev.filter((t) => !conflictingNormalized.includes(t.toLowerCase()));
+      return [...filtered, tag];
+    });
+  }, [selectedCategory]);
 
   const filteredComponents = useMemo(() => filterAndSortComponents(state.components, {
     searchQuery: deferredSearchQuery,
     category: selectedCategory,
-    subCategory: activeSubCategory,
+    subTags: activeSubTags,
     sortBy,
     builds: state.builds,
     onlyAvailable: true,
-  }), [state.components, deferredSearchQuery, selectedCategory, activeSubCategory, sortBy, state.builds]);
+  }), [state.components, deferredSearchQuery, selectedCategory, activeSubTags, sortBy, state.builds]);
 
   const groupedComponents = useMemo(() => {
     const precomputedMap = precomputeAssignedBatches(state.builds);
@@ -123,7 +138,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
     parentRef,
     scrollOffsetRef,
     virtualizer: rowVirtualizer,
-    resetDependencies: [selectedCategory, activeSubCategory, sortBy, deferredSearchQuery],
+    resetDependencies: [selectedCategory, activeSubTags, sortBy, deferredSearchQuery],
   });
 
   const renderInventoryRow = (row: VirtualInventoryRow) => {
@@ -227,9 +242,9 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           activeCategory={selectedCategory}
-          onCategoryChange={(c) => { handleCategoryChange(c); setActiveSubCategory(''); }}
-          activeSubCategory={activeSubCategory}
-          onSubCategoryChange={setActiveSubCategory}
+          onCategoryChange={handleCategoryChange}
+          activeSubTags={activeSubTags}
+          onSubTagToggle={handleSubTagToggle}
           sortBy={sortBy}
           onSortByChange={setSortBy}
           showSort={false}

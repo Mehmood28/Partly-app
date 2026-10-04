@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ImagePlus, ShoppingCart, Trash2, Wand2, X } from 'lucide-react';
+import { ImagePlus, Plus, ShoppingCart, Trash2, Wand2, X } from 'lucide-react';
 import { PaymentMethod } from '../../types';
 import { PurchasePCData } from '../../context/types';
 import { useToast } from '../../context/ToastContext';
@@ -257,17 +257,27 @@ export const BuyPCModal: React.FC<BuyPCModalProps> = ({ isOpen, isVisible = true
             handleUpdatePart={handleUpdatePart}
             handleToggleLock={handleToggleLock}
             optionalRows
-            heading="Components to Keep"
+            hideHeading
+            highlightDelete
           />
         </div>
 
         <div className="buy-pc-footer shrink-0 space-y-2 border-t border-white/[0.08] bg-[#0B1113]/95 px-3 py-2 sm:px-4">
           {formError && <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">{formError}</p>}
-          <div className="flex items-center justify-end gap-2.5">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04]">Cancel</button>
-            <button type="submit" className="px-4 py-2 rounded-xl text-xs font-semibold text-[#07100B] bg-[#B9EF68] hover:bg-[#C4FF79] flex items-center gap-1.5 shadow-md shadow-[#B9EF68]/20">
-              <ShoppingCart className="w-3.5 h-3.5" /> Save PC Purchase
+          <div className="flex items-center justify-between gap-2.5">
+            <button
+              type="button"
+              onClick={handleAddPart}
+              className="app-button app-button-outline flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl text-[#B9EF68] border-[#B9EF68]/50 hover:border-[#83E5DF] hover:text-[#83E5DF] hover:bg-[#B9EF68]/10 transition-colors shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Component
             </button>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04]">Cancel</button>
+              <button type="submit" className="px-4 py-2 rounded-xl text-xs font-semibold text-[#07100B] bg-[#B9EF68] hover:bg-[#C4FF79] flex items-center gap-1.5 shadow-md shadow-[#B9EF68]/20">
+                <ShoppingCart className="w-3.5 h-3.5" /> Save PC Purchase
+              </button>
+            </div>
           </div>
         </div>
       </form>

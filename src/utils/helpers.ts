@@ -667,6 +667,7 @@ export interface FilterSortOptions {
   category?: string;
   onlyAvailable?: boolean;
   subCategory?: string;
+  subTags?: string[];
   sortBy?: SortOption;
 }
 
@@ -707,8 +708,22 @@ export function filterAndSortComponents(
       }
     }
 
-    // 4. Sub-Category Filter (Pills)
-    if (options.subCategory) {
+    // 4. Sub-Category / Sub-Tag Filter (Multi-select)
+    if (options.subTags && options.subTags.length > 0) {
+      const compTags = (comp.tags || []).map((t) => (typeof t === 'string' ? t.toLowerCase().trim() : ''));
+      const compNameLower = String(comp.name || '').toLowerCase();
+      const compSpecLower = String(comp.specifications || '').toLowerCase();
+      
+      const matchesAllSubTags = options.subTags.every((subTag) => {
+        const target = subTag.toLowerCase().trim();
+        return (
+          compTags.includes(target) ||
+          compNameLower.includes(target) ||
+          compSpecLower.includes(target)
+        );
+      });
+      if (!matchesAllSubTags) return false;
+    } else if (options.subCategory) {
       const compSub = determineSubCategory(comp);
       if (compSub !== options.subCategory) return false;
     }
@@ -765,49 +780,6 @@ export function filterAndSortComponents(
     // Default sorting (newest-purchase)
     return getLatestTimestamp(b) - getLatestTimestamp(a);
   });
-}
-
-export function autoTagComponent(name: string, specs: string, category: string): string[] {
-  const text = `${name || ''} ${specs || ''}`.toLowerCase();
-  const tags: string[] = [];
-
-  if (category === 'CPU') {
-    if (/ryzen.*(7\d\d\d|8\d\d\d|9\d\d\d)|b650|x670|x870|am5/i.test(text)) tags.push('AM5');
-    else if (/ryzen.*(1\d\d\d|2\d\d\d|3\d\d\d|4\d\d\d|5\d\d\d)|b450|x570|b550|am4/i.test(text)) tags.push('AM4');
-    else if (/core|intel|i3|i5|i7|i9|lga|ultra/i.test(text)) tags.push('Intel');
-  } 
-  else if (category === 'Motherboard') {
-    if (/b650|x670|b850|x870|a620|am5/i.test(text)) tags.push('AM5');
-    else if (/b450|x570|b550|a320|x470|am4/i.test(text)) tags.push('AM4');
-    else if (/b660|b760|z690|z790|z890|h610|intel|lga/i.test(text)) tags.push('Intel');
-  }
-  else if (category === 'GPU') {
-    if (/(?:rtx\s*|geforce\s*)?50\d\d|50-series|50\s*series/i.test(text)) tags.push('50 Series');
-    else if (/(?:rtx\s*|geforce\s*)?40\d\d|40-series|40\s*series/i.test(text)) tags.push('40 Series');
-    else if (/(?:rtx\s*|geforce\s*)?30\d\d|30-series|30\s*series/i.test(text)) tags.push('30 Series');
-    else if (/(?:rx\s*[56789]\d\d\d)|radeon|amd/i.test(text)) tags.push('AMD');
-  }
-  else if (category === 'RAM') {
-    if (/ddr5/i.test(text)) tags.push('DDR5');
-    else if (/ddr4/i.test(text)) tags.push('DDR4');
-  }
-  else if (category === 'Storage') {
-    if (/gen\s*5|pcie\s*5/i.test(text)) tags.push('GEN5');
-    else if (/gen\s*4|pcie\s*4/i.test(text)) tags.push('GEN4');
-    else if (/gen\s*3|pcie\s*3/i.test(text)) tags.push('GEN3');
-    if (/sata|2\.5["\s]|hdd|hard drive/i.test(text)) tags.push('SATA');
-  }
-  else if (category === 'Cooling') {
-    if (/360mm|360/i.test(text)) tags.push('360mm');
-    else if (/240mm|240/i.test(text)) tags.push('240mm');
-    else if (/air|tower|cooler|nh-|assassin/i.test(text)) tags.push('Air Coolers');
-  }
-  else if (category === 'PSU' || category === 'Case') {
-    if (/\bwhite\b/i.test(text)) tags.push('White');
-    if (/\bblack\b/i.test(text)) tags.push('Black');
-  }
-
-  return tags;
 }
 
 export function calculateInventoryMetrics(state: AppState) {
@@ -951,6 +923,26 @@ export function normalizeTag(tag: string): string {
   if (lower === 'sata') return 'SATA';
   if (lower === 'white') return 'White';
   if (lower === 'black') return 'Black';
+  if (lower === 'am5') return 'AM5';
+  if (lower === 'am4') return 'AM4';
+  if (lower === 'intel') return 'Intel';
+  if (lower === 'amd') return 'AMD';
+  if (lower === 'ddr5') return 'DDR5';
+  if (lower === 'ddr4') return 'DDR4';
+  if (lower === 'atx') return 'ATX';
+  if (lower === 'matx') return 'mATX';
+  if (lower === 'itx') return 'ITX';
+  if (lower === 'sfx') return 'SFX';
+  if (lower === 'rgb') return 'RGB';
+  if (lower === 'non-rgb' || lower === 'non rgb') return 'Non-RGB';
+  if (lower === 'air cooler' || lower === 'air coolers') return 'Air Cooler';
+  if (lower === '360mm') return '360mm';
+  if (lower === '240mm') return '240mm';
+  if (lower === '50 series') return '50 Series';
+  if (lower === '40 series') return '40 Series';
+  if (lower === '30 series') return '30 Series';
+  if (lower === 'atx 3.0 / 3.1' || lower === 'atx 3.0' || lower === 'atx 3.1') return 'ATX 3.0 / 3.1';
+  if (lower === 'standard') return 'Standard';
   return trimmed;
 }
 
@@ -961,43 +953,86 @@ export function normalizeTags(tags?: (string | null | undefined)[]): string[] {
     .map(normalizeTag);
 }
 
-export const SUB_CATEGORIES: Record<string, string[]> = {
-  CPU: ['AM5', 'AM4', 'Intel'],
-  RAM: ['DDR5', 'DDR4'],
-  GPU: ['50 Series', '40 Series', '30 Series', 'AMD'],
-  Storage: ['GEN5', 'GEN4', 'GEN3', 'SATA'],
-  Motherboard: ['AM5', 'AM4', 'Intel'],
-  PSU: ['Black', 'White'],
-  Case: ['Black', 'White'],
-  Cooling: ['360mm', '240mm', 'Air Coolers'],
+export interface MutuallyExclusiveTagGroup {
+  name: string;
+  tags: string[];
+}
+
+export const MUTUALLY_EXCLUSIVE_TAG_GROUPS: MutuallyExclusiveTagGroup[] = [
+  { name: 'CPU / Mobo Platform', tags: ['AM5', 'AM4', 'Intel'] },
+  { name: 'GPU Generation', tags: ['50 Series', '40 Series', '30 Series', 'AMD'] },
+  { name: 'Form Factor / Size', tags: ['ATX', 'mATX', 'ITX'] },
+  { name: 'PSU Form Factor', tags: ['ATX', 'SFX'] },
+  { name: 'RAM Generation', tags: ['DDR5', 'DDR4'] },
+  { name: 'Storage Interface', tags: ['GEN5', 'GEN4', 'GEN3', 'SATA'] },
+  { name: 'Cooler Type', tags: ['360mm', '240mm', 'Air Cooler'] },
+  { name: 'PSU Spec', tags: ['ATX 3.0 / 3.1', 'Standard'] },
+  { name: 'General Color', tags: ['Black', 'White'] },
+  { name: 'RAM Lighting', tags: ['RGB', 'Non-RGB'] },
+];
+
+export interface CategoryTagGroupDef {
+  label: string;
+  tags: string[];
+}
+
+export const CATEGORY_TAG_GROUPS: Record<string, CategoryTagGroupDef[]> = {
+  CPU: [
+    { label: 'Platform', tags: ['AM5', 'AM4', 'Intel'] },
+  ],
+  GPU: [
+    { label: 'Generation', tags: ['50 Series', '40 Series', '30 Series', 'AMD'] },
+    { label: 'Color', tags: ['Black', 'White'] },
+  ],
+  Motherboard: [
+    { label: 'Socket', tags: ['AM5', 'AM4', 'Intel'] },
+    { label: 'Form Factor', tags: ['ATX', 'mATX', 'ITX'] },
+    { label: 'Color', tags: ['Black', 'White'] },
+  ],
+  RAM: [
+    { label: 'Generation', tags: ['DDR5', 'DDR4'] },
+    { label: 'Color', tags: ['Black', 'White'] },
+    { label: 'Lighting', tags: ['RGB', 'Non-RGB'] },
+  ],
+  Storage: [
+    { label: 'Interface', tags: ['GEN5', 'GEN4', 'GEN3', 'SATA'] },
+  ],
+  Cooling: [
+    { label: 'Size / Type', tags: ['360mm', '240mm', 'Air Cooler'] },
+    { label: 'Color', tags: ['Black', 'White'] },
+  ],
+  PSU: [
+    { label: 'PSU Form Factor', tags: ['ATX', 'SFX'] },
+    { label: 'PSU Spec', tags: ['ATX 3.0 / 3.1', 'Standard'] },
+    { label: 'Color', tags: ['Black', 'White'] },
+  ],
+  Case: [
+    { label: 'Form Factor', tags: ['ATX', 'mATX', 'ITX'] },
+    { label: 'Color', tags: ['Black', 'White'] },
+  ],
 };
 
-export const MUTUALLY_EXCLUSIVE_TAG_GROUPS: string[][] = [
-  // GPU generations & platform
-  ['50 Series', '40 Series', '30 Series', 'AMD'],
-  // CPU / Motherboard platforms/sockets
-  ['AM5', 'AM4', 'Intel'],
-  // RAM generations
-  ['DDR5', 'DDR4'],
-  // Storage interfaces/generations
-  ['GEN5', 'GEN4', 'GEN3', 'SATA'],
-  // Colors (PSU / Case)
-  ['Black', 'White'],
-  // Cooler form factors
-  ['360mm', '240mm', 'Air Coolers'],
-];
+export const SUB_CATEGORIES: Record<string, string[]> = Object.fromEntries(
+  Object.entries(CATEGORY_TAG_GROUPS).map(([cat, groups]) => [
+    cat,
+    Array.from(new Set(groups.flatMap((g) => g.tags))),
+  ])
+);
 
 export const getConflictingTags = (tag: string, category?: string): string[] => {
   const tagLower = tag.toLowerCase().trim();
-  for (const group of MUTUALLY_EXCLUSIVE_TAG_GROUPS) {
-    if (group.some((t) => t.toLowerCase() === tagLower)) {
-      return group;
+  // Check category-specific tag groups first if category is supplied
+  if (category && CATEGORY_TAG_GROUPS[category]) {
+    for (const group of CATEGORY_TAG_GROUPS[category]) {
+      if (group.tags.some((t) => t.toLowerCase() === tagLower || (tagLower === 'air coolers' && t === 'Air Cooler'))) {
+        return group.tags;
+      }
     }
   }
-  if (category && SUB_CATEGORIES[category]) {
-    const presets = SUB_CATEGORIES[category];
-    if (presets.some((t) => t.toLowerCase() === tagLower)) {
-      return presets;
+  // Fallback to global mutually exclusive tag groups
+  for (const group of MUTUALLY_EXCLUSIVE_TAG_GROUPS) {
+    if (group.tags.some((t) => t.toLowerCase() === tagLower || (tagLower === 'air coolers' && t === 'Air Cooler'))) {
+      return group.tags;
     }
   }
   return [tag];
@@ -1008,15 +1043,18 @@ export const determineSubCategory = (comp: import('../types').InventoryComponent
   const nameLower = String(comp.name || '').toLowerCase();
   const specLower = typeof comp.specifications === 'string' ? comp.specifications.toLowerCase() : (comp.specifications ? String(comp.specifications).toLowerCase() : '');
   const compTags = Array.isArray(comp.tags) ? comp.tags.map(t => String(t || '').trim().toLowerCase()) : [];
-  const inferredTags = autoTagComponent(comp.name || '', comp.specifications || '', comp.category).map(t => t.toLowerCase());
   for (const sub of possible) {
     const subLower = sub.toLowerCase();
     if (nameLower.includes(subLower) || 
         compTags.includes(subLower) ||
-        inferredTags.includes(subLower) ||
         (specLower && specLower.includes(subLower))) {
       return sub;
     }
   }
   return null;
 };
+
+export {
+  enforceMutualExclusivity,
+  mergeComponentTagsNonDestructively,
+} from './autoTagUtils';

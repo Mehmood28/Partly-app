@@ -16,13 +16,13 @@ function getAI(): GoogleGenAI {
 
 const GEMINI_MODEL_CANDIDATES = [
   'gemini-3.8-flash',
-  'gemini-3.1-flash-lite',
+  'gemini-flash-latest',
 ] as const;
 
 // Inventory extraction is a short, structured task.
 const BULK_IMPORT_MODELS = [
   'gemini-3.8-flash',
-  'gemini-3.1-flash-lite',
+  'gemini-flash-latest',
 ] as const;
 
 function parseModelJsonResponse(
@@ -107,12 +107,13 @@ async function generateGeminiContent(params: {
   contents: any;
   responseSchema?: any;
   fastBulkImport?: boolean;
+  timeoutMs?: number;
 }) {
   const ai = getAI();
   let lastError: any = null;
 
   const models = params.fastBulkImport ? BULK_IMPORT_MODELS : GEMINI_MODEL_CANDIDATES;
-  const timeoutMs = 90000;
+  const timeoutMs = params.timeoutMs || (params.fastBulkImport ? 20000 : 30000);
 
   for (const model of models) {
     for (let attempt = 1; attempt <= 2; attempt++) {
@@ -136,23 +137,29 @@ async function generateGeminiContent(params: {
 
         if (response && response.text) {
           if (params.fastBulkImport) {
-            console.info(`[bulk import] ${model} completed in ${Math.round(performance.now() - started)}ms`);
+            console.info(`[AI generate] ${model} completed in ${Math.round(performance.now() - started)}ms`);
           }
           return response;
         }
       } catch (err: any) {
         lastError = err;
+        const isTimeout = err?.status === 'DEADLINE_EXCEEDED' || String(err?.message || '').includes('timed out');
         const isTransient =
           err?.status === 503 ||
           err?.code === 503 ||
           String(err?.message || '').includes('503') ||
           err?.status === 429 ||
-          err?.status === 'DEADLINE_EXCEEDED' ||
-          String(err?.message || '').includes('timed out');
+          isTimeout;
+
+        // If it timed out, do not waste time retrying the exact same frozen model; fail over to next candidate immediately
+        if (isTimeout) {
+          console.warn(`[AI generate] ${model} timed out after ${timeoutMs}ms, trying next candidate...`);
+          break;
+        }
 
         if (isTransient && attempt === 1) {
-          // Brief 1s backoff before retrying
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          // Brief 500ms backoff before retrying
+          await new Promise((resolve) => setTimeout(resolve, 500));
           continue;
         }
         break;
@@ -160,7 +167,12 @@ async function generateGeminiContent(params: {
     }
   }
 
-  console.error(`[AI generate failed across candidates]`, lastError?.message || lastError);
+  if (lastError?.status === 429 || lastError?.code === 429 || String(lastError?.message || '').includes('429') || String(lastError?.message || '').includes('quota')) {
+    console.warn(`[AI service quota reached]:`, lastError?.message || 'Daily free tier requests limit reached.');
+    throw new Error('AI service quota reached for the day. Please retry later or use standard manual/deterministic workflows.');
+  }
+
+  console.warn(`[AI generate notice]`, lastError?.message || lastError);
   throw lastError || new Error('All Gemini model endpoints are currently at peak capacity. Please retry in a moment.');
 }
 

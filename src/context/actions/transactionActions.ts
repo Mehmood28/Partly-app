@@ -1,5 +1,5 @@
 import { AppState, ComponentCategory, TransactionLogItem, InventoryComponent, PurchaseEntry, PCBuild, PaymentMethod, Platform } from '../../types';
-import { autoTagComponent, getAllBatchesWithRemaining, parseDateLocal } from '../../utils/helpers';
+import { getAllBatchesWithRemaining, parseDateLocal } from '../../utils/helpers';
 import { classifyTransaction } from '../../utils/transactionClassification';
 import { parseBatchItem } from '../../components/activity/activityHelpers';
 
@@ -519,7 +519,7 @@ export const restoreTransactionStock = (
       // Rule 2: Missing linked component (component was deleted from inventory)
       // Recreate exactly one component preserving relatedComponentId
       const category = inferCategory(relistPartName);
-      const tags = autoTagComponent(relistPartName, '', category);
+      const tags: string[] = [];
       const targetEntryId = tx.relatedPurchaseEntryId?.trim();
 
       const restoredBatch: PurchaseEntry = tx.originalPurchaseEntrySnapshot
@@ -568,7 +568,7 @@ export const restoreTransactionStock = (
   // Rule 3: Truly unlinked historical sales (relatedComponentId is absent)
   // Recreate exactly one new component with a new unique ID; NEVER mutate existing components by name
   const category = inferCategory(relistPartName);
-  const tags = autoTagComponent(relistPartName, '', category);
+  const tags: string[] = [];
   const newCompId = `comp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   const targetEntryId = tx.relatedPurchaseEntryId?.trim();
 

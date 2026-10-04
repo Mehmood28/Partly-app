@@ -6,7 +6,7 @@ import {
   PurchaseEntry,
   TransactionLogItem,
 } from '../../types';
-import { autoTagComponent, computeUnresolvedLegacyReservation, formatCategoryPlural, formatCurrency, getAllBatchesWithRemaining } from '../../utils/helpers';
+import { computeUnresolvedLegacyReservation, formatCategoryPlural, formatCurrency, getAllBatchesWithRemaining } from '../../utils/helpers';
 import {
   SellComponentPartData,
   BulkSaleLine,
@@ -408,8 +408,6 @@ export const handleSaveComponent = (
         const { purchaseHistory: updatesPh, tags: updatesTags, ...otherUpdates } = componentData;
         const tags = updatesTags
           ? [...updatesTags]
-          : componentData.name
-          ? autoTagComponent(componentData.name, componentData.specifications, componentData.category)
           : c.tags;
 
         let updatedHistory = (c.purchaseHistory || []).map((pe) => ({ ...pe }));
@@ -602,17 +600,7 @@ export const handleAddComponent = (
     });
   }
 
-  const tags = compData.tags ? [...compData.tags] : autoTagComponent(compData.name, compData.specifications, compData.category);
-  const catUpper = String(compData.category || '').toUpperCase();
-  if (catUpper === 'CASE' || catUpper === 'PSU') {
-    const title = String(compData.name || '');
-    if (/\bwhite\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'WHITE')) {
-      tags.push('WHITE');
-    }
-    if (/\bblack\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'BLACK')) {
-      tags.push('BLACK');
-    }
-  }
+  const tags = compData.tags ? [...compData.tags] : [];
 
   if (existingComp) {
     const existingIds = new Set((existingComp.purchaseHistory || []).map((e) => e.id));
@@ -785,17 +773,7 @@ export const handleAddComponents = (
     });
     const existingCompIndex = findUniqueCatalogMatchIndex(componentsToKeep, compData);
     
-    const tags = compData.tags ? [...compData.tags] : autoTagComponent(compData.name, compData.specifications, compData.category);
-    const catUpper = String(compData.category || '').toUpperCase();
-    if (catUpper === 'CASE' || catUpper === 'PSU') {
-      const title = String(compData.name || '');
-      if (/\bwhite\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'WHITE')) {
-        tags.push('WHITE');
-      }
-      if (/\bblack\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'BLACK')) {
-        tags.push('BLACK');
-      }
-    }
+    const tags = compData.tags ? [...compData.tags] : [];
 
     if (existingCompIndex !== -1) {
       const existingComp = componentsToKeep[existingCompIndex];
@@ -1356,22 +1334,7 @@ export const handleSellComponentPart = (
       newCompsList[existingCompIndex] = updatedComp;
       updatedComponents = newCompsList;
     } else {
-      let tags: string[];
-      if (tradePart.tags && tradePart.tags.length > 0) {
-        tags = [...tradePart.tags];
-      } else {
-        tags = autoTagComponent(tradePart.name, '', tradePart.category);
-        const catUpper = String(tradePart.category || '').toUpperCase();
-        if (catUpper === 'CASE' || catUpper === 'PSU') {
-          const title = String(tradePart.name || '');
-          if (/\bwhite\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'WHITE')) {
-            tags.push('WHITE');
-          }
-          if (/\bblack\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'BLACK')) {
-            tags.push('BLACK');
-          }
-        }
-      }
+      const tags = (tradePart.tags && tradePart.tags.length > 0) ? [...tradePart.tags] : [];
 
       const newCompId = `comp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const newComp: InventoryComponent = {
@@ -1705,22 +1668,7 @@ export const handleExchangeComponentPart = (
     newCompsList[existingCompIndex] = updatedComp;
     updatedComponents = newCompsList;
   } else {
-    let tags: string[];
-    if (incomingPart.tags && incomingPart.tags.length > 0) {
-      tags = [...incomingPart.tags];
-    } else {
-      tags = autoTagComponent(incomingPart.name, '', incomingPart.category);
-      const catUpper = String(incomingPart.category || '').toUpperCase();
-      if (catUpper === 'CASE' || catUpper === 'PSU') {
-        const title = String(incomingPart.name || '');
-        if (/\bwhite\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'WHITE')) {
-          tags.push('WHITE');
-        }
-        if (/\bblack\b/i.test(title) && !tags.some((t: string) => String(t).toUpperCase() === 'BLACK')) {
-          tags.push('BLACK');
-        }
-      }
-    }
+    const tags = (incomingPart.tags && incomingPart.tags.length > 0) ? [...incomingPart.tags] : [];
 
     targetIncomingCompId = `comp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const newComp: InventoryComponent = {

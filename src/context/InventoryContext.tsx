@@ -238,6 +238,32 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [saveStateToHistory, stateRef]
   );
 
+  const bulkUpdateComponentTags = useCallback(
+    (tagUpdates: { id: string; tags: string[] }[]) => {
+      const current = stateRef.current;
+      const updateMap = new Map(tagUpdates.map((u) => [u.id, u.tags]));
+      let hasChanges = false;
+      const nextComponents = current.components.map((comp) => {
+        if (!updateMap.has(comp.id)) return comp;
+        const newTags = updateMap.get(comp.id)!;
+        hasChanges = true;
+        return {
+          ...comp,
+          tags: newTags.length > 0 ? newTags : undefined,
+        };
+      });
+
+      if (hasChanges) {
+        saveStateToHistory(`AI Auto-tag: ${tagUpdates.length} components`);
+        setState({
+          ...current,
+          components: nextComponents,
+        });
+      }
+    },
+    [saveStateToHistory, stateRef]
+  );
+
   const deleteComponent = useCallback(
     (id: string) => {
       const existing = stateRef.current.components.find((c) => c.id === id);
@@ -878,6 +904,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       addComponent,
       addComponents,
       updateComponent,
+      bulkUpdateComponentTags,
       deleteComponent,
       addPurchaseEntry,
       updatePurchaseEntry,
@@ -926,6 +953,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       addComponent,
       addComponents,
       updateComponent,
+      bulkUpdateComponentTags,
       deleteComponent,
       addPurchaseEntry,
       updatePurchaseEntry,

@@ -274,7 +274,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Planned')} 
             data-active={statusFilter === 'Planned'}
-            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Planned</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({plannedCount})</span>
@@ -284,7 +284,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Available')} 
             data-active={statusFilter === 'Available'}
-            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Available</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({availableCount})</span>
@@ -294,7 +294,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Pending')} 
             data-active={statusFilter === 'Pending'}
-            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Pending</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({pendingCount})</span>
@@ -304,7 +304,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Trade-Ins')} 
             data-active={statusFilter === 'Trade-Ins'}
-            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Trade-Ins</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({tradeInCount})</span>
@@ -314,7 +314,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
             type="button"
             onClick={() => handleTabChange('Sold')} 
             data-active={statusFilter === 'Sold'}
-            className="flex items-baseline justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-1 px-2.5 sm:px-1 whitespace-nowrap flex-shrink-0 flex-1 sm:flex-initial"
           >
             <span className="truncate">Sold</span>
             <span className="shrink-0 font-mono text-[10px] leading-none opacity-75">({soldCount})</span>

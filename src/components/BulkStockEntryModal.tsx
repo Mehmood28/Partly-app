@@ -6,7 +6,7 @@ import { CATEGORIES, ComponentCategory, Condition, PaymentMethod, Platform } fro
 import { usePrivacy } from '../context/PrivacyContext';
 import { CustomSelect } from './ui/CustomSelect';
 import { useToast } from '../context/ToastContext';
-import { autoTagComponent, normalizeTag, normalizeTags, SUB_CATEGORIES, getConflictingTags } from '../utils/helpers';
+import { normalizeTag, normalizeTags, SUB_CATEGORIES, getConflictingTags } from '../utils/helpers';
 
 const CATEGORY_OPTIONS = CATEGORIES.map((value) => ({ value, label: value }));
 const CONDITION_OPTIONS = ['Sealed', 'New Open Box', 'New No Box', 'Used Open Box', 'Used No Box']
@@ -86,8 +86,6 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
       const data: ParsedBulkStockItem[] = await res.json();
       const hasHealthMention = /(?:\bhealth\b|\b\d{1,3}%\b)/i.test(textInput);
       const enrichedData: ParsedBulkStockItem[] = (Array.isArray(data) ? data : []).map((item) => {
-        const autoTags = autoTagComponent(item.name || '', '', item.category);
-        const combined = Array.from(new Set([...(item.tags || []), ...autoTags]));
         const rawSeller = item.seller || (item as any).vendor;
         let cleanSeller = rawSeller ? String(rawSeller).trim() : '';
         if (cleanSeller.includes('\n')) cleanSeller = cleanSeller.split('\n')[0].trim();
@@ -109,7 +107,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
           name: cleanName || item.name,
           seller: (cleanSeller || undefined) as Platform | undefined,
           healthPercent: (item.category === 'Storage' && hasHealthMention) ? item.healthPercent : undefined,
-          tags: normalizeTags(combined),
+          tags: normalizeTags(item.tags || []),
         };
       });
       setParsedItems(enrichedData);
@@ -133,12 +131,9 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
     setParsedItems((prev) => {
       const newItems = [...prev];
       const item = newItems[index];
-      const autoTags = autoTagComponent(newName || '', '', item.category);
-      const combined = Array.from(new Set([...(item.tags || []), ...autoTags]));
       newItems[index] = {
         ...item,
         name: newName,
-        tags: normalizeTags(combined),
       };
       return newItems;
     });
@@ -153,12 +148,10 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
       const validOldTags = oldTags.filter((t) =>
         allowed.some((a) => a.toLowerCase() === t.toLowerCase())
       );
-      const autoTags = autoTagComponent(item.name || '', '', newCat);
-      const newTags = normalizeTags(Array.from(new Set([...validOldTags, ...autoTags])));
       newItems[index] = {
         ...item,
         category: newCat,
-        tags: newTags,
+        tags: validOldTags,
         healthPercent: newCat === 'Storage' ? item.healthPercent : undefined,
       };
       return newItems;
@@ -435,9 +428,9 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                                     key={tag}
                                     type="button"
                                     onClick={() => toggleTag(idx, tag)}
-                                    className={`app-chip px-2.5 py-0.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
+                                    className={`app-chip px-2.5 py-0.5 text-xs font-sans font-normal transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
                                       isSelected
-                                        ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.12] text-[#9FF8F4] font-medium shadow-sm'
+                                        ? 'border-[#B9EF68]/50 bg-[#B9EF68]/[0.08] text-[#B9EF68]'
                                         : 'border-white/[0.08] bg-white/[0.02] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'
                                     }`}
                                   >
