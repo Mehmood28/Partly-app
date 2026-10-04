@@ -243,6 +243,18 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .app-chip-active { color:var(--app-lime); border-color:var(--app-lime); background:rgba(185,239,104,.045); box-shadow:none; }
 .app-category-chip, .category-filters .app-chip { height:24px !important; min-height:24px !important; padding:0 9px !important; font-size:11.5px !important; line-height:1 !important; }
 .app-subcategory-chip { height:22px !important; min-height:22px !important; padding:0 7.5px !important; font-size:10.5px !important; line-height:1 !important; }
+
+/* Segmented pill container for category and subcategory filter bars */
+.category-segmented { display:flex; flex-wrap:wrap; align-items:center; padding:2px; gap:2px; border-radius:7px; border:1px solid rgba(255,255,255,.08); background:#0d1416; width:100%; }
+.category-segmented > button { height:24px !important; min-height:24px !important; padding:0 9px !important; font-size:11px !important; line-height:1 !important; border:0 !important; border-radius:5px !important; background:transparent !important; color:#b1bac4 !important; display:flex !important; align-items:center !important; justify-content:center !important; gap:3.5px !important; flex-shrink:0 !important; transition:all 150ms ease !important; }
+.category-segmented > button:hover { color:#e4e4e7 !important; background:rgba(255,255,255,.04) !important; }
+.category-segmented > button[data-active='true'] { color:var(--app-lime) !important; background:rgba(185,239,104,.03) !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
+
+.subcategory-segmented { display:inline-flex; flex-wrap:wrap; align-items:center; padding:2px; gap:2px; border-radius:7px; border:1px solid rgba(255,255,255,.08); background:#0d1416; width:auto; max-width:100%; }
+.subcategory-segmented > button { height:20px !important; min-height:20px !important; padding:0 8px !important; font-size:10px !important; font-weight:600 !important; line-height:1 !important; border:0 !important; border-radius:5px !important; background:transparent !important; color:#b1bac4 !important; display:flex !important; align-items:center !important; justify-content:center !important; flex-shrink:0 !important; transition:all 150ms ease !important; }
+.subcategory-segmented > button:hover { color:#e4e4e7 !important; background:rgba(255,255,255,.04) !important; }
+.subcategory-segmented > button[data-active='true'] { color:var(--app-lime) !important; background:rgba(185,239,104,.03) !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
+
 .app-ledger { background:transparent; border:0; border-radius:0; }
 .app-segmented { background:transparent; border-color:var(--app-line); border-radius:9px; padding:3px; gap:3px; }
 .app-segmented > button { border:0; border-radius:6px; min-height:44px; color:#b1bac4; font-size:14px; }
@@ -320,7 +332,7 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .inventory-actions { display:flex; gap:10px; }
 .inventory-filters { padding:0; }
 .inventory-filter-bar .app-field { min-height:35px !important; height:35px !important; font-size:12.5px; border-radius:7px; }
-.category-filters { display:flex; flex-wrap:wrap; gap:8px; }
+.category-filters, .subcategory-filters { display:flex; width:100%; flex-wrap:wrap; overflow-x:visible; gap:0; }
 .inventory-group { padding:3px 0 4px; }
 .inventory-stock-row { padding-bottom:5px; }
 .inventory-stock-row[data-type='header'] { padding-top:0; padding-bottom:1px; }
@@ -1163,10 +1175,10 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 .bulk-stock-row.is-added { background:rgba(185,239,104,.035); }
 .bulk-stock-name { line-height:1.25; overflow-wrap:anywhere; }
 .bulk-stock-meta { display:flex; flex-wrap:wrap; gap:2px 6px; margin-top:3px; line-height:1.25; }
-.bulk-line-list { border-block:1px solid var(--app-line); }
-.bulk-selected-line { display:grid; gap:7px; padding:8px 2px; border-bottom:1px solid var(--app-line); }
-.bulk-selected-line:last-child { border-bottom:0; }
-.bulk-deal-details input,.bulk-deal-details button { min-height:36px !important; height:36px !important; }
+.bulk-line-list { border-block: 0 !important; }
+.bulk-selected-line { display: flex !important; flex-direction: column !important; border: 1px solid rgba(255,255,255,.08) !important; border-radius: 12px !important; padding: 12px !important; }
+.bulk-selected-line input { height: 34px !important; min-height: 34px !important; }
+.bulk-deal-details input, .bulk-deal-details button, .bulk-deal-details .custom-select-trigger { min-height:36px !important; height:36px !important; }
 .bulk-sale-overview > div:last-child > div { min-width:0; padding:7px; }
 .bulk-sale-overview > div:last-child span { overflow-wrap:anywhere; }
 

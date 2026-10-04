@@ -53,59 +53,61 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
   return (
     <div className={`inventory-filter-bar w-full space-y-2 ${compactControls ? 'is-compact' : ''}`}>
       {showCategories && (
-        <div className="category-filters flex overflow-x-auto no-scrollbar gap-1.5 items-center w-full">
-          <button
-            type="button"
-            onClick={() => {
-              onCategoryChange('ALL');
-              onSubCategoryChange?.('');
-            }}
-            data-active={activeCategory === 'ALL'}
-            className={`app-chip app-category-chip flex items-center justify-center gap-1.5 flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
-              activeCategory === 'ALL'
-                ? 'app-chip-active text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
-                : 'text-[#b1bac4] border border-zinc-800 bg-transparent hover:border-zinc-700 hover:text-zinc-200'
-            }`}
-          >
-            <span className="whitespace-nowrap text-[11px] font-medium leading-none">All Categories</span>
-            <span className="shrink-0 font-mono text-[10px] opacity-75">
-              ({components.filter(isAvailable).length})
-            </span>
-          </button>
-          
-          {CATEGORIES.map((cat) => {
-            const count = components.filter((c) => c.category === cat && isAvailable(c)).length;
-            if (count === 0 && activeCategory !== cat) return null;
-            const isActive = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => {
-                  onCategoryChange(cat);
-                  onSubCategoryChange?.('');
-                }}
-                data-active={isActive}
-                className={`app-chip app-category-chip flex items-center justify-center gap-1.5 flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
-                  isActive
-                    ? 'app-chip-active text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
-                    : 'text-[#b1bac4] border border-zinc-800 bg-transparent hover:border-zinc-700 hover:text-zinc-200'
-                }`}
-              >
-                <span className="whitespace-nowrap text-[11px] font-medium leading-none">{cat}</span>
-                <span className="shrink-0 font-mono text-[10px] opacity-75">
-                  ({count})
-                </span>
-              </button>
-            );
-          })}
+        <div className="category-filters w-full py-0.5">
+          <div className="category-segmented flex flex-wrap items-center p-[2px] gap-[2px] rounded-[7px] border border-white/[0.08] bg-[#0d1416] w-full">
+            <button
+              type="button"
+              onClick={() => {
+                onCategoryChange('ALL');
+                onSubCategoryChange?.('');
+              }}
+              data-active={activeCategory === 'ALL'}
+              className={`relative px-2.5 py-0.5 rounded-[5px] text-[11px] font-medium leading-none flex items-center justify-center gap-1 flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[24px] ${
+                activeCategory === 'ALL'
+                  ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                  : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+              }`}
+            >
+              <span className="whitespace-nowrap font-medium">All Categories</span>
+              <span className="shrink-0 font-mono text-[10px] opacity-75">
+                ({components.filter(isAvailable).length})
+              </span>
+            </button>
+            
+            {CATEGORIES.map((cat) => {
+              const count = components.filter((c) => c.category === cat && isAvailable(c)).length;
+              if (count === 0 && activeCategory !== cat) return null;
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    onCategoryChange(cat);
+                    onSubCategoryChange?.('');
+                  }}
+                  data-active={isActive}
+                  className={`relative px-2.5 py-0.5 rounded-[5px] text-[11px] font-medium leading-none flex items-center justify-center gap-1 flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[24px] ${
+                    isActive
+                      ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                      : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <span className="whitespace-nowrap font-medium">{cat}</span>
+                  <span className="shrink-0 font-mono text-[10px] opacity-75">
+                    ({count})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
       
-      {/* Secondary Tag Group Filter Bar (Single Horizontal Scrolling Row with Dividers) */}
+      {/* Secondary Tag Group Filter Bar (Wrapped Row with Dividers) */}
       {currentTagGroups.length > 0 && (
-        <div className="subcategory-filters flex w-full overflow-x-auto no-scrollbar py-0.5">
-          <div className={compactControls ? 'flex items-center gap-1.5' : 'app-segmented flex items-center p-[2px] gap-[2px] rounded-[7px] border border-white/[0.08] bg-[#0d1416] shrink-0'}>
+        <div className="subcategory-filters w-full py-0.5">
+          <div className="subcategory-segmented inline-flex flex-wrap items-center p-[2px] gap-[2px] rounded-[7px] border border-white/[0.08] bg-[#0d1416] w-auto max-w-full">
             {currentTagGroups.map((group, groupIdx) => (
               <React.Fragment key={group.label}>
                 {groupIdx > 0 && (
@@ -119,30 +121,6 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                     ? activeSubTags.some((t) => t.toLowerCase() === sub.toLowerCase())
                     : activeSubCategory === sub;
 
-                  if (!compactControls) {
-                    return (
-                      <button
-                        key={sub}
-                        type="button"
-                        onClick={() => {
-                          if (onSubTagToggle) {
-                            onSubTagToggle(sub);
-                          } else if (onSubCategoryChange) {
-                            onSubCategoryChange(activeSubCategory === sub ? '' : sub);
-                          }
-                        }}
-                        data-active={isActive}
-                        className={`relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[20px] ${
-                          isActive
-                            ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
-                            : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
-                        }`}
-                      >
-                        <span className="whitespace-nowrap">{sub}</span>
-                      </button>
-                    );
-                  }
-
                   return (
                     <button
                       key={sub}
@@ -155,13 +133,13 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                         }
                       }}
                       data-active={isActive}
-                      className={`app-chip app-subcategory-chip flex items-center justify-center flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
+                      className={`relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[20px] ${
                         isActive
-                          ? 'app-chip-active text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
-                          : 'text-[#b1bac4] border border-zinc-800 bg-transparent hover:border-zinc-700 hover:text-zinc-200'
+                          ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                          : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
                       }`}
                     >
-                      <span className="whitespace-nowrap text-[10.5px] font-medium leading-none">{sub}</span>
+                      <span className="whitespace-nowrap">{sub}</span>
                     </button>
                   );
                 })}

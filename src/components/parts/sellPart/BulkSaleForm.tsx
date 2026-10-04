@@ -171,10 +171,10 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
     if (selectedBatchKeys.has(key)) return;
 
     const defaultPrice = item.component.targetMarketValuePerUnit && item.component.targetMarketValuePerUnit > 0
-      ? item.component.targetMarketValuePerUnit.toString()
+      ? Number(item.component.targetMarketValuePerUnit).toFixed(2)
       : item.unitCost > 0
       ? (item.unitCost * 1.25).toFixed(2)
-      : '0';
+      : '0.00';
 
     setSelectedLines((prev) => [
       ...prev,
@@ -454,45 +454,53 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
             No items selected yet. Choose component batches from the list above to add them to this bulk sale.
           </div>
         ) : (
-          <div className="bulk-line-list pr-1">
+          <div className="bulk-line-list flex flex-col gap-2.5">
             {lineSummaries.map((item, idx) => (
               <div
                 key={`${item.line.componentId}::${item.line.purchaseEntryId}`}
-                className="bulk-selected-line"
+                className="bulk-selected-line bg-[#0d1417] border border-white/[0.08] rounded-xl p-3 flex flex-col gap-2.5 shadow-sm"
               >
                 {/* Header row */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold text-zinc-100 font-sans">{item.component?.name || 'Unknown Component'}</div>
-                    <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
-                      {item.component?.category} · {formatCurrency(item.unitCost)}{item.availableQty > 1 ? '/ea' : ''} · {item.availableQty} available
+                    <div className="text-xs font-semibold text-zinc-100 font-sans leading-snug">
+                      {item.component?.name || 'Unknown Component'}
+                    </div>
+                    <div className="text-[11px] text-zinc-400 font-mono mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span>{item.component?.category}</span>
+                      <span className="text-zinc-600">·</span>
+                      <span>{formatCurrency(item.unitCost)}{item.availableQty > 1 ? '/ea' : ''}</span>
+                      <span className="text-zinc-600">·</span>
+                      <span className="text-[#83E5DF] font-medium">{item.availableQty} available</span>
                     </div>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handleRemoveLine(idx)}
-                    className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-white/[0.04] transition-colors"
+                    className="p-1 -mr-0.5 -mt-0.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                     title="Remove item"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                {/* Line inputs & metrics */}
-                <div className="grid grid-cols-2 gap-2.5 pt-1 border-t border-white/[0.04]">
+                {/* Line inputs - perfectly balanced and aligned */}
+                <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-white/[0.06]">
                   {/* Quantity control */}
                   <div>
-                    <label className="block text-[11px] font-medium text-zinc-400 mb-1 flex items-center justify-between font-sans">
-                      <span>Quantity</span>
+                    <div className="flex items-center justify-between h-5 mb-1.5">
+                      <label className="text-[11px] font-medium text-zinc-300 font-sans leading-none">
+                        Quantity
+                      </label>
                       <button
                         type="button"
                         onClick={() => handleLineQtyChange(idx, item.availableQty, item.availableQty)}
-                        className="text-[11px] text-[#83E5DF] hover:text-[#9FF8F4] font-mono"
+                        className="text-[10.5px] text-[#83E5DF] hover:text-[#9FF8F4] font-mono font-medium leading-none hover:underline transition-colors"
                       >
                         Use All ({item.availableQty})
                       </button>
-                    </label>
+                    </div>
                     <input
                       type="number"
                       inputMode="numeric"
@@ -502,17 +510,22 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                       onChange={(e) =>
                         handleLineQtyChange(idx, parseInt(e.target.value) || 1, item.availableQty)
                       }
-                      className="app-field h-8 min-h-8 bg-[#0B1113] px-2.5 text-xs font-mono"
+                      className="app-field !h-[34px] !min-h-[34px] bg-[#070b0d] px-2.5 text-xs font-mono rounded-lg border border-white/[0.1] focus:border-[#B9EF68]"
                     />
                   </div>
 
                   {/* Unit Sale Price */}
                   <div>
-                    <label className="block text-[11px] font-medium text-zinc-400 mb-1 font-sans">
-                      Unit Sale Price
-                    </label>
+                    <div className="flex items-center justify-between h-5 mb-1.5">
+                      <label className="text-[11px] font-medium text-zinc-300 font-sans leading-none">
+                        Unit Sale Price
+                      </label>
+                      <span className="text-[10px] text-zinc-500 font-mono leading-none">
+                        each
+                      </span>
+                    </div>
                     <div className="relative">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono pointer-events-none select-none">
                         $
                       </span>
                       <input
@@ -522,22 +535,21 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                         min="0"
                         value={item.line.unitSalePrice}
                         onChange={(e) => handleLinePriceChange(idx, e.target.value)}
-                        className="app-field h-8 min-h-8 bg-[#0B1113] pl-6 pr-2.5 text-xs font-mono"
+                        className="app-field !h-[34px] !min-h-[34px] bg-[#070b0d] pl-6 pr-2.5 text-xs font-mono rounded-lg border border-white/[0.1] focus:border-[#B9EF68]"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Line financial row */}
-                <div className="flex items-center justify-between pt-1 text-[11px] font-mono border-t border-white/[0.04]">
-                  <div className="text-zinc-400 flex items-center gap-2">
+                <div className="flex items-center justify-between bg-[#070b0d] rounded-lg px-2.5 py-1.5 text-[11px] font-mono border border-white/[0.04]">
+                  <div className="text-zinc-400 flex items-center gap-1.5">
                     <span>Rev: <strong className="text-zinc-200">{formatCurrency(item.lineRevenue)}</strong></span>
-                    <span>•</span>
+                    <span className="text-zinc-600">·</span>
                     <span>Cost: {formatCurrency(item.lineCost)}</span>
                   </div>
                   <div className={`font-semibold ${item.lineProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {item.lineProfit >= 0 ? '+' : ''}
-                    {formatCurrency(item.lineProfit)}
+                    {item.lineProfit >= 0 ? '+' : ''}{formatCurrency(item.lineProfit)}
                   </div>
                 </div>
               </div>

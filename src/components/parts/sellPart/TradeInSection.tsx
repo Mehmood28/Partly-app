@@ -1,7 +1,7 @@
 import React from 'react';
 import { CustomSelect } from '../../ui/CustomSelect';
 import { ComponentCategory, CATEGORIES } from '../../../types';
-import { SUB_CATEGORIES, formatCurrency, getConflictingTags } from '../../../utils/helpers';
+import { SUB_CATEGORIES, formatCurrency, getConflictingTags, CATEGORY_TAG_GROUPS } from '../../../utils/helpers';
 import { ArrowRightLeft, TrendingUp, UserCheck } from 'lucide-react';
 
 export type TradeDirection = 'CUSTOMER_TRADE_IN' | 'TRADE_UP';
@@ -63,6 +63,84 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
       const filtered = prev.filter((t) => !conflicting.includes(t.toLowerCase()));
       return [...filtered, tag];
     });
+  };
+
+  const renderTagSelector = () => {
+    const groups = CATEGORY_TAG_GROUPS[tradeInPartCategory] || [];
+    if (groups.length > 0) {
+      return (
+        <div>
+          <label className="block text-zinc-300 font-medium mb-1.5 text-xs font-sans">
+            Component Tags / Specifics (Optional)
+          </label>
+          <div className="subcategory-segmented inline-flex flex-wrap items-center p-[2px] gap-[2px] rounded-[7px] border border-white/[0.08] bg-[#0d1416] w-auto max-w-full">
+            {groups.map((group, groupIdx) => (
+              <React.Fragment key={group.label}>
+                {groupIdx > 0 && (
+                  <div
+                    className="h-3 w-px bg-white/20 shrink-0 mx-1 self-center"
+                    aria-hidden="true"
+                  />
+                )}
+                {group.tags.map((tag) => {
+                  const isSelected = selectedTradeTags.some(
+                    (t) => t.toLowerCase() === tag.toLowerCase()
+                  );
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => handleTradeTagToggle(tag)}
+                      data-active={isSelected}
+                      className={`relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[20px] ${
+                        isSelected
+                          ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                          : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <span className="whitespace-nowrap">{tag}</span>
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    const fallbackTags = SUB_CATEGORIES[tradeInPartCategory] || [];
+    if (fallbackTags.length === 0) return null;
+
+    return (
+      <div>
+        <label className="block text-zinc-300 font-medium mb-1.5 text-xs font-sans">
+          Component Tags / Specifics (Optional)
+        </label>
+        <div className="subcategory-segmented inline-flex flex-wrap items-center p-[2px] gap-[2px] rounded-[7px] border border-white/[0.08] bg-[#0d1416] w-auto max-w-full">
+          {fallbackTags.map((tag) => {
+            const isSelected = selectedTradeTags.some(
+              (t) => t.toLowerCase() === tag.toLowerCase()
+            );
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => handleTradeTagToggle(tag)}
+                data-active={isSelected}
+                className={`relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[20px] ${
+                  isSelected
+                    ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
+                    : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                }`}
+              >
+                <span className="whitespace-nowrap">{tag}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -161,32 +239,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                 </div>
               </div>
 
-              {SUB_CATEGORIES[tradeInPartCategory] && SUB_CATEGORIES[tradeInPartCategory].length > 0 && (
-                <div>
-                  <label className="block text-zinc-300 font-medium mb-1.5 text-xs font-sans">
-                    Component Tags / Specifics (Optional)
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {SUB_CATEGORIES[tradeInPartCategory].map((tag) => {
-                      const isSelected = selectedTradeTags.includes(tag);
-                      return (
-                        <button
-                          key={tag}
-                          type="button"
-                          onClick={() => handleTradeTagToggle(tag)}
-                          className={`app-chip app-subcategory-chip px-2.5 font-sans font-normal ${
-                            isSelected
-                              ? 'border-[#B9EF68]/50 bg-[#B9EF68]/[0.08] text-[#B9EF68]'
-                              : 'text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
-                          }`}
-                        >
-                          {tag}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {renderTagSelector()}
 
               <div>
                 <label className="block text-zinc-300 font-medium mb-1 text-xs font-sans">
@@ -282,32 +335,7 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                 </div>
               </div>
 
-              {SUB_CATEGORIES[tradeInPartCategory] && SUB_CATEGORIES[tradeInPartCategory].length > 0 && (
-                <div>
-                  <label className="block text-zinc-300 font-medium mb-1.5 text-xs font-sans">
-                    Component Tags / Specifics (Optional)
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {SUB_CATEGORIES[tradeInPartCategory].map((tag) => {
-                      const isSelected = selectedTradeTags.includes(tag);
-                      return (
-                        <button
-                          key={tag}
-                          type="button"
-                          onClick={() => handleTradeTagToggle(tag)}
-                          className={`app-chip app-subcategory-chip px-2.5 font-sans font-normal ${
-                            isSelected
-                              ? 'border-[#B9EF68]/50 bg-[#B9EF68]/[0.08] text-[#B9EF68]'
-                              : 'text-zinc-400 border-white/[0.06] hover:bg-white/[0.04] hover:text-zinc-200'
-                          }`}
-                        >
-                          {tag}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {renderTagSelector()}
 
               {/* Trade Up Transfer Calculation Summary */}
               <div className="space-y-2 border-y border-cyan-500/25 bg-cyan-500/[0.04] px-1 py-2.5">
