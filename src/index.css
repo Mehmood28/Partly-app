@@ -38,14 +38,51 @@
 }
 
 @layer base {
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Modern rounded custom scrollbar throughout the app */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(185, 239, 104, 0.45);
+    border-radius: 9999px !important;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(185, 239, 104, 0.75);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  html, body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
 
   html {
     min-width: 320px;
     background: var(--app-canvas);
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    scrollbar-color: rgba(168, 255, 62, 0.28) transparent;
+    overflow-x: hidden;
   }
 
   body {
@@ -214,8 +251,17 @@
 }
 
 @layer utilities {
-  .hide-scrollbar::-webkit-scrollbar { display: none; }
-  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .hide-scrollbar::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  .hide-scrollbar,
+  .no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
 }
 
 @media (max-width: 639px) {
@@ -246,12 +292,12 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 
 /* Segmented pill container for category and subcategory filter bars */
 .category-segmented { display:flex; flex-wrap:wrap; align-items:center; padding:2px; gap:2px; border-radius:7px; border:1px solid rgba(255,255,255,.08); background:#0d1416; width:100%; }
-.category-segmented > button { height:24px !important; min-height:24px !important; padding:0 9px !important; font-size:11px !important; line-height:1 !important; border:0 !important; border-radius:5px !important; background:transparent !important; color:#b1bac4 !important; display:flex !important; align-items:center !important; justify-content:center !important; gap:3.5px !important; flex-shrink:0 !important; transition:all 150ms ease !important; }
+.category-segmented > button { height:25px !important; min-height:25px !important; padding:0 8px !important; font-size:11.5px !important; line-height:1 !important; border:0 !important; border-radius:5px !important; background:transparent !important; color:#b1bac4 !important; display:flex !important; align-items:center !important; justify-content:center !important; gap:3.5px !important; flex:1 0 auto !important; transition:all 150ms ease !important; }
 .category-segmented > button:hover { color:#e4e4e7 !important; background:rgba(255,255,255,.04) !important; }
 .category-segmented > button[data-active='true'] { color:var(--app-lime) !important; background:rgba(185,239,104,.03) !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
 
 .subcategory-segmented { display:inline-flex; flex-wrap:wrap; align-items:center; padding:2px; gap:2px; border-radius:7px; border:1px solid rgba(255,255,255,.08); background:#0d1416; width:auto; max-width:100%; }
-.subcategory-segmented > button { height:20px !important; min-height:20px !important; padding:0 8px !important; font-size:10px !important; font-weight:600 !important; line-height:1 !important; border:0 !important; border-radius:5px !important; background:transparent !important; color:#b1bac4 !important; display:flex !important; align-items:center !important; justify-content:center !important; flex-shrink:0 !important; transition:all 150ms ease !important; }
+.subcategory-segmented > button { height:21px !important; min-height:21px !important; padding:0 8px !important; font-size:10.5px !important; font-weight:600 !important; line-height:1 !important; border:0 !important; border-radius:5px !important; background:transparent !important; color:#b1bac4 !important; display:flex !important; align-items:center !important; justify-content:center !important; flex-shrink:0 !important; transition:all 150ms ease !important; }
 .subcategory-segmented > button:hover { color:#e4e4e7 !important; background:rgba(255,255,255,.04) !important; }
 .subcategory-segmented > button[data-active='true'] { color:var(--app-lime) !important; background:rgba(185,239,104,.03) !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
 
@@ -329,10 +375,13 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
 .ai-request .app-field { height:58px; background:#101719; }
 .inventory-capital { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); text-align:center; padding:6px 0; }
 .inventory-capital > div+div { border-left:1px solid var(--app-line); }
-.inventory-actions { display:flex; gap:10px; }
+.inventory-actions { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; width:100%; }
 .inventory-filters { padding:0; }
-.inventory-filter-bar .app-field { min-height:35px !important; height:35px !important; font-size:12.5px; border-radius:7px; }
+.inventory-filter-bar .app-field { min-height:36px !important; height:36px !important; font-size:12px; border-radius:7px; }
 .category-filters, .subcategory-filters { display:flex; width:100%; flex-wrap:wrap; overflow-x:visible; gap:0; }
+.inventory-filter-controls { display:flex !important; flex-direction:row !important; align-items:center !important; gap:8px !important; width:100% !important; }
+.inventory-sort-control { width:min(185px, 45vw) !important; min-width:140px !important; flex-shrink:0 !important; }
+.inventory-sort-control .custom-select-trigger { height:36px !important; min-height:36px !important; font-size:11px !important; padding-inline:8px !important; }
 .inventory-group { padding:3px 0 4px; }
 .inventory-stock-row { padding-bottom:5px; }
 .inventory-stock-row[data-type='header'] { padding-top:0; padding-bottom:1px; }
@@ -594,11 +643,9 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .stock-inventory-layout .inventory-capital > div { padding:4px 3px; }
   .stock-inventory-layout .app-metric-label { font-size:10px; }
   .stock-inventory-layout .app-metric-value { font-size:14px; letter-spacing:-.03em; }
-  .stock-inventory-layout .inventory-actions { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content; gap:6px; }
-  .stock-inventory-layout .inventory-actions > button { min-width:0; min-height:36px; padding-inline:9px; font-size:10px; white-space:nowrap; }
+  .stock-inventory-layout .inventory-actions { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:6px; }
+  .stock-inventory-layout .inventory-actions > button { min-width:0; min-height:38px; padding-inline:10px; font-size:11.5px; font-weight:600; white-space:nowrap; }
   .stock-actions-row { align-items:center; }
-  .stock-sort-control { margin-left:0; width:min(190px,45vw); min-width:0; }
-  .stock-sort-control > div > button { height:36px; min-height:36px; padding-inline:9px; font-size:10px; }
   .stock-inventory-layout .inventory-filters > div { gap:5px; }
   .stock-inventory-layout .category-filters { gap:4px; }
   .stock-inventory-layout .app-chip { height:22px; min-height:22px; padding-inline:7px; font-size:10.5px; line-height:1; }

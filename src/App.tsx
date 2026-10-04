@@ -18,6 +18,7 @@ import { SellPartModal } from './components/parts/sellPart/SellPartModal';
 import { BulkStockEntryModal, ParsedBulkStockItem } from './components/BulkStockEntryModal';
 import { InventoryComponent, PCBuild, PurchaseEntry } from './types';
 import { normalizeTags } from './utils/helpers';
+import { WindowScrollIndicator } from './components/ui/WindowScrollIndicator';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -347,6 +348,7 @@ function AppContent() {
         isBusy={isResetting}
         busyText="Clearing..."
       />
+      <WindowScrollIndicator />
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ import {
   SoldPartSortOption 
 } from '../../utils/bulkSaleGrouping';
 import { useVirtualListScroll } from '../../hooks/useVirtualListScroll';
+import { CustomScrollIndicator } from '../ui/CustomScrollIndicator';
 
 interface TransactionHistoryViewProps {
   isActive?: boolean;
@@ -163,44 +164,46 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
           ))}
         </div>
       ) : (
-        <div
-          ref={parentRef}
-          onScroll={handleScroll}
-          className="h-[calc(100dvh-330px)] overflow-y-auto pr-1 md:h-[calc(100dvh-210px)]"
-          style={{
-            overflowAnchor: 'none',
-            scrollbarWidth: 'thin',
-          }}
-        >
+        <div className="relative">
           <div
+            ref={parentRef}
+            onScroll={handleScroll}
+            className="h-[calc(100dvh-330px)] overflow-y-auto no-scrollbar pr-1 md:h-[calc(100dvh-210px)]"
             style={{
-              height: `${rowVirtualizer.getTotalSize() + 76}px`,
-              width: '100%',
-              position: 'relative',
+              overflowAnchor: 'none',
             }}
           >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const item = sortedDisplayItems[virtualRow.index];
-              if (!item) return null;
-              return (
-                <div
-                  key={virtualRow.key}
-                  data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualRow.start}px)`,
-                    paddingBottom: '5px',
-                  }}
-                >
-                  {renderTransactionRow(item)}
-                </div>
-              );
-            })}
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize() + 76}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const item = sortedDisplayItems[virtualRow.index];
+                if (!item) return null;
+                return (
+                  <div
+                    key={virtualRow.key}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                      paddingBottom: '5px',
+                    }}
+                  >
+                    {renderTransactionRow(item)}
+                  </div>
+                );
+              })}
+            </div>
           </div>
+          <CustomScrollIndicator containerRef={parentRef} />
         </div>
       )}
 

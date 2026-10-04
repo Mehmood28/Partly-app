@@ -14,9 +14,9 @@ import {
   SortOption,
   getConflictingTags
 } from '../utils/helpers';
-import { Plus, Filter, Zap, Layers, ArrowDownWideNarrow } from 'lucide-react';
-import { CustomSelect } from './ui/CustomSelect';
+import { Plus, Filter, Zap, Layers } from 'lucide-react';
 import { useVirtualListScroll } from '../hooks/useVirtualListScroll';
+import { CustomScrollIndicator } from './ui/CustomScrollIndicator';
 
 interface InventoryViewProps {
   isActive?: boolean;
@@ -195,44 +195,29 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         </div>
       </div>
 
-      <div className="inventory-actions stock-actions-row">
+      <div className="inventory-actions stock-actions-row grid grid-cols-2 gap-2 w-full">
         <button
           type="button"
           onClick={() => onOpenAddComponent()}
-          className="app-button app-button-outline flex shrink-0 items-center justify-center gap-1.5 px-4"
+          className="app-button flex w-full items-center justify-center gap-1.5 px-4 h-[38px] text-xs font-bold text-[#0d1612] bg-gradient-to-r from-[#b9ef68] to-[#83e5df] border-none whitespace-nowrap shadow-sm hover:brightness-105 transition-all"
+          style={{ background: 'linear-gradient(90deg, #b9ef68 0%, #83e5df 100%)', color: '#0d1612', border: 'none' }}
           title="Add a new component"
         >
-          <Plus className="w-3.5 h-3.5 shrink-0" />
+          <Plus className="w-3.5 h-3.5 stroke-[2.5] text-current shrink-0" />
           <span>Add Part</span>
         </button>
         {onOpenBulkEntry && (
           <button
             type="button"
             onClick={onOpenBulkEntry}
-            className="app-button app-button-primary flex items-center justify-center gap-1.5 px-4"
+            className="app-button flex w-full items-center justify-center gap-1.5 px-4 h-[38px] text-xs font-bold text-[#0d1612] bg-gradient-to-r from-[#83e5df] to-[#b9ef68] border-none whitespace-nowrap shadow-sm hover:brightness-105 transition-all"
+            style={{ background: 'linear-gradient(90deg, #83e5df 0%, #b9ef68 100%)', color: '#0d1612', border: 'none' }}
             title="Fast Bulk Stock Entry via AI Text or Image Scan"
           >
-            <Zap className="h-3.5 w-3.5 shrink-0" />
+            <Zap className="h-3.5 w-3.5 text-current shrink-0" />
             <span>AI Import</span>
           </button>
         )}
-        <div className="stock-sort-control">
-          <CustomSelect
-            value={sortBy}
-            onChange={(val) => setSortBy(val as SortOption)}
-            options={[
-              { value: 'newest-purchase', label: 'Recently Bought' },
-              { value: 'highest-price', label: 'Highest Price Per Unit' },
-              { value: 'lowest-price', label: 'Lowest Price Per Unit' },
-              { value: 'highest-stock', label: 'Highest Units in Stock' },
-              { value: 'lowest-stock', label: 'Lowest Units in Stock' },
-            ]}
-            icon={<ArrowDownWideNarrow className="h-3.5 w-3.5 text-[#B9EF68]" />}
-            className="w-full"
-            dropdownClassName="py-1.5"
-            fitLongestOption={false}
-          />
-        </div>
       </div>
 
       <div className="inventory-filters">
@@ -247,7 +232,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           onSubTagToggle={handleSubTagToggle}
           sortBy={sortBy}
           onSortByChange={setSortBy}
-          showSort={false}
+          showSort={true}
           onlyAvailable={true}
         />
       </div>
@@ -287,46 +272,48 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           ))}
         </div>
       ) : (
-        <div 
-          ref={parentRef}
-          onScroll={handleScroll}
-          className="max-h-[75dvh] min-h-[360px] overflow-y-auto pr-1"
-          style={{
-            overflowAnchor: 'none',
-            scrollbarWidth: 'thin',
-          }}
-        >
-          <div
+        <div className="relative">
+          <div 
+            ref={parentRef}
+            onScroll={handleScroll}
+            className="max-h-[75dvh] min-h-[360px] overflow-y-auto no-scrollbar pr-1"
             style={{
-              height: `${rowVirtualizer.getTotalSize() + 76}px`,
-              width: '100%',
-              position: 'relative',
+              overflowAnchor: 'none',
             }}
           >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const row = virtualRows[virtualRow.index];
-              if (!row) return null;
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize() + 76}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const row = virtualRows[virtualRow.index];
+                if (!row) return null;
 
-              return (
-                <div
-                  key={row.key}
-                  className="inventory-stock-row"
-                  data-type={row.type}
-                  data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                >
-                  {renderInventoryRow(row)}
-                </div>
-              );
-            })}
+                return (
+                  <div
+                    key={row.key}
+                    className="inventory-stock-row"
+                    data-type={row.type}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    {renderInventoryRow(row)}
+                  </div>
+                );
+              })}
+            </div>
           </div>
+          <CustomScrollIndicator containerRef={parentRef} />
         </div>
       )}
     </div>

@@ -16,6 +16,7 @@ import { BuildCard } from './builds/BuildCard';
 import { QuickQuoteModal } from './builds/QuickQuoteModal';
 import { CustomSelect } from './ui/CustomSelect';
 import { useVirtualListScroll } from '../hooks/useVirtualListScroll';
+import { CustomScrollIndicator } from './ui/CustomScrollIndicator';
 import {
   Hammer,
   Plus,
@@ -387,45 +388,47 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           ))}
         </div>
       ) : (
-        <div 
-          ref={parentRef}
-          onScroll={handleScroll}
-          className="h-[calc(100dvh-330px)] overflow-y-auto pr-1 md:h-[calc(100dvh-210px)]"
-          style={{
-            overflowAnchor: 'none',
-            scrollbarWidth: 'thin',
-          }}
-        >
-          <div
+        <div className="relative">
+          <div 
+            ref={parentRef}
+            onScroll={handleScroll}
+            className="h-[calc(100dvh-330px)] overflow-y-auto no-scrollbar pr-1 md:h-[calc(100dvh-210px)]"
             style={{
-              height: `${rowVirtualizer.getTotalSize() + 76}px`,
-              width: '100%',
-              position: 'relative',
+              overflowAnchor: 'none',
             }}
           >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const build = filteredBuilds[virtualRow.index];
-              if (!build) return null;
-              return (
-                <div
-                  key={virtualRow.key}
-                  data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
-                  className="build-virtual-row"
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualRow.start}px)`,
-                    paddingBottom: '5px',
-                  }}
-                >
-                  {renderBuildRow(build)}
-                </div>
-              );
-            })}
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize() + 76}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const build = filteredBuilds[virtualRow.index];
+                if (!build) return null;
+                return (
+                  <div
+                    key={virtualRow.key}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    className="build-virtual-row"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                      paddingBottom: '5px',
+                    }}
+                  >
+                    {renderBuildRow(build)}
+                  </div>
+                );
+              })}
+            </div>
           </div>
+          <CustomScrollIndicator containerRef={parentRef} />
         </div>
       )}
 

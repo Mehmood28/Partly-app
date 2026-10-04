@@ -51,9 +51,9 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
     : [];
 
   return (
-    <div className={`inventory-filter-bar w-full space-y-2 ${compactControls ? 'is-compact' : ''}`}>
+    <div className={`inventory-filter-bar w-full flex flex-col gap-1.5 ${compactControls ? 'is-compact' : ''}`}>
       {showCategories && (
-        <div className="category-filters w-full py-0.5">
+        <div className="category-filters w-full">
           <div className="category-segmented flex flex-wrap items-center p-[2px] gap-[2px] rounded-[7px] border border-white/[0.08] bg-[#0d1416] w-full">
             <button
               type="button"
@@ -62,14 +62,14 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 onSubCategoryChange?.('');
               }}
               data-active={activeCategory === 'ALL'}
-              className={`relative px-2.5 py-0.5 rounded-[5px] text-[11px] font-medium leading-none flex items-center justify-center gap-1 flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[24px] ${
+              className={`relative flex-1 min-w-max px-2.5 py-0.5 rounded-[5px] text-[11.5px] font-medium leading-none flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[25px] ${
                 activeCategory === 'ALL'
                   ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
                   : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
               }`}
             >
               <span className="whitespace-nowrap font-medium">All Categories</span>
-              <span className="shrink-0 font-mono text-[10px] opacity-75">
+              <span className="shrink-0 font-mono text-[10.5px] opacity-75">
                 ({components.filter(isAvailable).length})
               </span>
             </button>
@@ -87,14 +87,14 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                     onSubCategoryChange?.('');
                   }}
                   data-active={isActive}
-                  className={`relative px-2.5 py-0.5 rounded-[5px] text-[11px] font-medium leading-none flex items-center justify-center gap-1 flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[24px] ${
+                  className={`relative flex-1 min-w-max px-2.5 py-0.5 rounded-[5px] text-[11.5px] font-medium leading-none flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[25px] ${
                     isActive
                       ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
                       : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
                   }`}
                 >
                   <span className="whitespace-nowrap font-medium">{cat}</span>
-                  <span className="shrink-0 font-mono text-[10px] opacity-75">
+                  <span className="shrink-0 font-mono text-[10.5px] opacity-75">
                     ({count})
                   </span>
                 </button>
@@ -106,7 +106,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       
       {/* Secondary Tag Group Filter Bar (Wrapped Row with Dividers) */}
       {currentTagGroups.length > 0 && (
-        <div className="subcategory-filters w-full py-0.5">
+        <div className="subcategory-filters w-full">
           <div className="subcategory-segmented inline-flex flex-wrap items-center p-[2px] gap-[2px] rounded-[7px] border border-white/[0.08] bg-[#0d1416] w-auto max-w-full">
             {currentTagGroups.map((group, groupIdx) => (
               <React.Fragment key={group.label}>
@@ -133,7 +133,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                         }
                       }}
                       data-active={isActive}
-                      className={`relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[20px] ${
+                      className={`relative px-2 py-0.5 rounded-[5px] text-[10.5px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[21px] ${
                         isActive
                           ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
                           : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
@@ -149,51 +149,54 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
         </div>
       )}
 
-      {/* Controls Row: Search & Sort */}
-      {(showSearch || (showSort && onSortByChange)) && <div className="inventory-filter-controls flex w-full min-w-0 max-w-full flex-col gap-2 sm:flex-row">
-        {showSearch && (
-        <div className="relative flex-1 min-w-0 w-full max-w-full group">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search parts by name or model..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="app-field max-w-full box-border pl-8 pr-8 text-sm placeholder:text-zinc-500"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => onSearchChange('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-white/[0.06] transition-colors"
-              title="Clear search"
-              aria-label="Clear search"
-            >
-              <X className="w-4 h-4" />
-            </button>
+      {/* Controls Row: Search & Sort side-by-side */}
+      {(showSearch || (showSort && onSortByChange)) && (
+        <div className="inventory-filter-controls flex flex-row items-center gap-2 w-full min-w-0 max-w-full">
+          {showSearch && (
+            <div className="relative flex-1 min-w-0 group">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search parts by name or model..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="app-field max-w-full box-border pl-8 pr-8 text-xs placeholder:text-zinc-500 !h-[36px] !min-h-[36px]"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => onSearchChange('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-white/[0.06] transition-colors"
+                  title="Clear search"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
+          
+          {showSort && onSortByChange && (
+            <div className="inventory-sort-control shrink-0 z-30 relative min-w-0 w-[155px] sm:w-[185px]">
+              <CustomSelect
+                value={sortBy}
+                onChange={(val) => onSortByChange(val as SortOption)}
+                options={[
+                  { value: 'newest-purchase', label: 'Recently Bought' },
+                  { value: 'highest-price', label: 'Highest Price Per Unit' },
+                  { value: 'lowest-price', label: 'Lowest Price Per Unit' },
+                  { value: 'highest-stock', label: 'Highest Units in Stock' },
+                  { value: 'lowest-stock', label: 'Lowest Units in Stock' }
+                ]}
+                icon={<ArrowDownWideNarrow className="h-3.5 w-3.5 text-[#B9EF68]" />}
+                className="w-full"
+                dropdownClassName="shadow-2xl min-w-[210px] py-1.5"
+                fitLongestOption={false}
+              />
+            </div>
           )}
         </div>
-        )}
-        
-        {showSort && onSortByChange && (
-          <div className="inventory-sort-control w-full sm:w-auto shrink-0 z-30 relative min-w-0 max-w-full">
-            <CustomSelect
-              value={sortBy}
-              onChange={(val) => onSortByChange(val as SortOption)}
-              options={[
-                { value: 'newest-purchase', label: 'Recently Bought' },
-                { value: 'highest-price', label: 'Highest Price Per Unit' },
-                { value: 'lowest-price', label: 'Lowest Price Per Unit' },
-                { value: 'highest-stock', label: 'Highest Units in Stock' },
-                { value: 'lowest-stock', label: 'Lowest Units in Stock' }
-              ]}
-              icon={<ArrowDownWideNarrow className="h-4 w-4 text-[#B9EF68]" />}
-              className="w-full sm:min-w-[210px]"
-              dropdownClassName="shadow-2xl min-w-[230px] py-1.5"
-            />
-          </div>
-        )}
-      </div>}
+      )}
     </div>
   );
 };
