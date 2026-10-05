@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { InventoryComponent } from '../../types';
-import { getUnassignedBatches } from '../../utils/helpers';
+import { InventoryComponent, PurchaseEntry } from '../../types';
+import { getUnassignedBatches, formatReadableDate, formatCurrency } from '../../utils/helpers';
+import { normalizePlatform } from '../../utils/platformDisplay';
+import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin } from '../../utils/tradeInOrigin';
 import { useInventory } from '../../context/InventoryContext';
+import { usePrivacy } from '../../context/PrivacyContext';
 import { useToast } from '../../context/ToastContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { HardDrive, Check, Sparkles, X } from 'lucide-react';
@@ -12,12 +15,26 @@ interface SetStorageHealthModalProps {
   onClose: () => void;
 }
 
+interface DriveItem {
+  globalIndex: number;
+  batchIndex: number;
+  unitIndexInBatch: number;
+  totalInBatch: number;
+  entry: PurchaseEntry;
+  dateText: string;
+  condition: string;
+  sellerText: string;
+  paymentText: string;
+  unitPrice: number;
+}
+
 export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
   component,
   isOpen,
   onClose,
 }) => {
   const { state, distributeDriveHealths } = useInventory();
+  const { hideSupplierNames } = usePrivacy();
   const { showToast } = useToast();
 
   const [healthValues, setHealthValues] = useState<string[]>([]);
@@ -29,9 +46,55 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
     return getUnassignedBatches(component, state.builds);
   }, [component, state.builds]);
 
-  const totalDrives = React.useMemo(() => {
-    return unassignedBatches.reduce((sum, b) => sum + b.availableQuantity, 0);
-  }, [unassignedBatches]);
+  // Expand each unassigned batch into individual drive units with their exact purchase details
+  const driveItems = React.useMemo<DriveItem[]>(() => {
+    if (!component) return [];
+    const items: DriveItem[] = [];
+    let gIdx = 0;
+
+    unassignedBatches.forEach((batch, bIdx) => {
+      const entry = batch.entry;
+      const isTradeUpBatch = state.transactions.some(
+        (tx) =>
+          tx.type === 'EXCHANGE' &&
+          (tx.incomingComponentId === component.id || tx.incomingComponentId === (entry as any)._originalComponentId) &&
+          tx.incomingPurchaseEntryId === entry.id
+      );
+      const isPartedOutTradeInBatch = isPartedOutTradeInEntry(entry);
+      const tradeInOrigin = isPartedOutTradeInBatch
+        ? resolvePartedOutEntryOrigin(entry, state.transactions, state.builds)
+        : null;
+
+      const sellerText = isPartedOutTradeInBatch
+        ? (tradeInOrigin?.buyerName ? `Traded in by ${tradeInOrigin.buyerName}` : 'Trade-in')
+        : (!hideSupplierNames && entry.platform ? normalizePlatform(String(entry.platform)) : '—');
+
+      const paymentText = isPartedOutTradeInBatch
+        ? 'Trade-in'
+        : (entry.paymentMethod || '—') + (isTradeUpBatch ? ' · Trade-up' : '');
+
+      const dateText = formatReadableDate(entry.date) || entry.date;
+
+      for (let u = 0; u < batch.availableQuantity; u++) {
+        items.push({
+          globalIndex: gIdx++,
+          batchIndex: bIdx,
+          unitIndexInBatch: u + 1,
+          totalInBatch: batch.availableQuantity,
+          entry,
+          dateText,
+          condition: entry.condition,
+          sellerText,
+          paymentText,
+          unitPrice: batch.unitCost,
+        });
+      }
+    });
+
+    return items;
+  }, [component, unassignedBatches, state.transactions, state.builds, hideSupplierNames]);
+
+  const totalDrives = driveItems.length;
 
   // Pre-fill existing health values when modal opens
   useEffect(() => {
@@ -51,7 +114,11 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
 
   if (!component) return null;
 
-  const handleHealthChange = (index: number, val: string) => {
+  const handleHealthChange = (
+    index: number,
+    val: string,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     // Only allow digits up to 3 chars
     const cleaned = val.replace(/\D/g, '').slice(0, 3);
     const num = parseInt(cleaned, 10);
@@ -63,13 +130,24 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
       return copy;
     });
 
+    // Check if this was a deletion/backspace
+    const native = e.nativeEvent as InputEvent;
+    const isDelete = native?.inputType?.startsWith('delete');
+    if (isDelete) {
+      // NEVER auto-advance when user is deleting or backspacing!
+      return;
+    }
+
     // Auto-advance if 100 is typed, or 2 digits typed (e.g. 75, 96, 99)
     if (cleaned === '100' || (cleaned.length === 2 && num >= 10 && num < 100)) {
       if (index < totalDrives - 1) {
         setTimeout(() => {
-          inputRefs.current[index + 1]?.focus();
-          inputRefs.current[index + 1]?.select();
-        }, 50);
+          const nextEl = inputRefs.current[index + 1];
+          if (nextEl) {
+            nextEl.focus();
+            nextEl.select();
+          }
+        }, 30);
       }
     }
   };
@@ -78,19 +156,22 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
     if (e.key === 'Enter') {
       e.preventDefault();
       if (index < totalDrives - 1) {
-        inputRefs.current[index + 1]?.focus();
-        inputRefs.current[index + 1]?.select();
+        const nextEl = inputRefs.current[index + 1];
+        nextEl?.focus();
+        nextEl?.select();
       } else {
         handleSave();
       }
     } else if (e.key === 'ArrowDown' && index < totalDrives - 1) {
       e.preventDefault();
-      inputRefs.current[index + 1]?.focus();
-      inputRefs.current[index + 1]?.select();
+      const nextEl = inputRefs.current[index + 1];
+      nextEl?.focus();
+      nextEl?.select();
     } else if (e.key === 'ArrowUp' && index > 0) {
       e.preventDefault();
-      inputRefs.current[index - 1]?.focus();
-      inputRefs.current[index - 1]?.select();
+      const prevEl = inputRefs.current[index - 1];
+      prevEl?.focus();
+      prevEl?.select();
     }
   };
 
@@ -104,8 +185,9 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
       const val = healthValues[i];
       const parsed = parseInt(val, 10);
       if (isNaN(parsed) || parsed < 0 || parsed > 100) {
-        showToast(`Please enter a valid health percentage (0-100) for Drive #${i + 1}`, 'error');
+        showToast(`Please enter a valid health percentage (0-100) for drive #${i + 1}`, 'error');
         inputRefs.current[i]?.focus();
+        inputRefs.current[i]?.select();
         return;
       }
       parsedHealths.push(parsed);
@@ -125,7 +207,7 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
     <BottomSheetModal
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-md w-full"
+      className="max-w-lg w-full"
     >
       <div className="flex flex-col gap-4 p-4 text-zinc-200">
         {/* Modal Top Header */}
@@ -150,7 +232,7 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
           <div className="min-w-0 flex-1">
             <h4 className="text-xs font-bold text-zinc-100 truncate">{component.name}</h4>
             <div className="flex items-center gap-2 mt-1 text-[11px] text-zinc-400">
-              <span className="font-semibold text-[#B9EF68]">{totalDrives} in stock</span>
+              <span className="font-semibold text-[#B9EF68]">{totalDrives} available in stock</span>
               <span>·</span>
               <span>Individual SMART Health</span>
             </div>
@@ -160,7 +242,7 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
         {/* Quick Toolbar */}
         <div className="flex items-center justify-between text-xs">
           <span className="text-[11px] text-zinc-400">
-            Type % from test stickers (auto-advances):
+            Type health % (auto-advances):
           </span>
           <button
             type="button"
@@ -171,40 +253,71 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
           </button>
         </div>
 
-        {/* Numbered Drive Inputs List */}
-        <div className="max-h-[50dvh] overflow-y-auto space-y-2 pr-1 no-scrollbar">
-          {Array.from({ length: totalDrives }).map((_, idx) => (
-            <div
-              key={idx}
-              className="flex items-center justify-between gap-3 bg-[#101719] px-3.5 py-2 rounded-xl border border-white/[0.06] hover:border-white/[0.12] transition-colors"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-6 h-6 rounded-full bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[10px] font-mono text-zinc-400 shrink-0">
-                  {idx + 1}
-                </span>
-                <span className="text-xs font-medium text-zinc-300 truncate">
-                  Drive #{idx + 1}
-                </span>
-              </div>
+        {/* Drive Cards List with purchase details */}
+        <div className="max-h-[52dvh] overflow-y-auto space-y-2 pr-1 no-scrollbar">
+          {driveItems.map((item, idx) => {
+            const hNum = parseInt(healthValues[idx] || '', 10);
+            return (
+              <div
+                key={idx}
+                className="flex items-center justify-between gap-3 bg-[#101719] px-3.5 py-2.5 rounded-xl border border-white/[0.06] hover:border-white/[0.12] transition-colors"
+              >
+                {/* Same details shown in the component card */}
+                <div className="flex flex-col gap-1 min-w-0 flex-1">
+                  <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-xs">
+                    <strong className="text-zinc-200 font-bold">{item.dateText}</strong>
+                    <span className="text-zinc-400 text-[11px] flex items-center gap-1">
+                      <span className="text-zinc-500 italic">Seller</span>
+                      <span className="text-zinc-300 font-medium">{item.sellerText}</span>
+                    </span>
+                    {item.totalInBatch > 1 && (
+                      <span className="px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-zinc-300 text-[10px] font-mono leading-none">
+                        Unit {item.unitIndexInBatch} of {item.totalInBatch}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-zinc-400">
+                    <span className="text-zinc-300">{item.condition}</span>
+                    <span className="text-zinc-600">·</span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-zinc-500 italic">Payment</span>
+                      <span className="text-zinc-300 font-medium">{item.paymentText}</span>
+                    </span>
+                    <span className="text-zinc-600">·</span>
+                    <span className="font-mono text-zinc-300">{formatCurrency(item.unitPrice)}</span>
+                  </div>
+                </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
-                <input
-                  ref={(el) => {
-                    inputRefs.current[idx] = el;
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={healthValues[idx] ?? ''}
-                  onChange={(e) => handleHealthChange(idx, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(idx, e)}
-                  placeholder="100"
-                  className="w-16 h-8 text-center text-xs font-mono font-bold bg-[#090D0F] border border-white/[0.12] rounded-lg text-zinc-100 focus:outline-none focus:border-[#83E5DF] focus:ring-1 focus:ring-[#83E5DF]"
-                />
-                <span className="text-xs font-mono text-zinc-500 font-bold select-none">%</span>
+                {/* Health input */}
+                <div className="flex items-center gap-1.5 shrink-0 self-center">
+                  <input
+                    ref={(el) => {
+                      inputRefs.current[idx] = el;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={healthValues[idx] ?? ''}
+                    onFocus={(e) => e.target.select()}
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                    onChange={(e) => handleHealthChange(idx, e.target.value, e)}
+                    onKeyDown={(e) => handleKeyDown(idx, e)}
+                    placeholder="100"
+                    className={`w-16 h-8 text-center text-xs font-mono font-bold bg-[#090D0F] border rounded-lg text-zinc-100 focus:outline-none focus:ring-1 transition-all ${
+                      hNum === 100
+                        ? 'border-emerald-500/40 focus:border-emerald-400 focus:ring-emerald-400/40 text-emerald-300'
+                        : hNum >= 90
+                        ? 'border-[#83E5DF]/40 focus:border-[#83E5DF] focus:ring-[#83E5DF]/40 text-[#83E5DF]'
+                        : hNum >= 80
+                        ? 'border-amber-500/40 focus:border-amber-400 focus:ring-amber-400/40 text-amber-300'
+                        : 'border-rose-500/40 focus:border-rose-400 focus:ring-rose-400/40 text-rose-300'
+                    }`}
+                  />
+                  <span className="text-xs font-mono text-zinc-500 font-bold select-none">%</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Footer Actions */}

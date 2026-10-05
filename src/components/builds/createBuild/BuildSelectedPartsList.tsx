@@ -62,6 +62,7 @@ export const BuildSelectedPartsList: React.FC<BuildSelectedPartsListProps> = ({
             const metadata = [
               purchaseEntry?.condition,
               storageHealth !== undefined ? `${storageHealth}%` : undefined,
+              purchaseEntry?.notes ? purchaseEntry.notes : undefined,
               !hideSupplierNames && purchaseEntry?.platform ? normalizePlatform(String(purchaseEntry.platform)) : undefined,
               purchaseEntry?.paymentMethod ? String(purchaseEntry.paymentMethod) : undefined,
               purchaseEntry?.date ? formatReadableDate(purchaseEntry.date) || purchaseEntry.date : undefined,

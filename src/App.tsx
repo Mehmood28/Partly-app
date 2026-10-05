@@ -17,7 +17,7 @@ import { BuyPCModal } from './components/builds/BuyPCModal';
 import { SellPartModal } from './components/parts/sellPart/SellPartModal';
 import { BulkStockEntryModal, ParsedBulkStockItem } from './components/BulkStockEntryModal';
 import { InventoryComponent, PCBuild, PurchaseEntry } from './types';
-import { normalizeTags } from './utils/helpers';
+import { normalizeTags, roundToCents } from './utils/helpers';
 import { WindowScrollIndicator } from './components/ui/WindowScrollIndicator';
 
 function AppContent() {
@@ -88,19 +88,27 @@ function AppContent() {
   const handleSaveBulkItems = (parsedItems: ParsedBulkStockItem[]) => {
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
     const newComps: Omit<InventoryComponent, 'id' | 'assignedCount'>[] = parsedItems.map(item => {
-      const ph: PurchaseEntry = {
+      const qty = Math.max(1, Number(item.quantity) || 1);
+      const unitCost = Number(item.unitCost) || 0;
+      const isStorage = item.category === 'Storage';
+
+      const health = isStorage && item.healthPercent !== undefined
+        ? Math.min(100, Math.max(0, Math.round(Number(item.healthPercent) || 100)))
+        : undefined;
+
+      const purchaseEntries: PurchaseEntry[] = [{
         id: `ph-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         date: item.date || today,
         condition: item.condition || 'New Open Box',
-        quantity: item.quantity || 1,
-        unitPrice: item.unitCost || 0,
-        totalPrice: (item.quantity || 1) * (item.unitCost || 0),
+        quantity: qty,
+        unitPrice: unitCost,
+        totalPrice: roundToCents(qty * unitCost),
         paymentMethod: item.paymentMethod || 'Cash',
         platform: item.seller || 'Other',
-        healthPercent: item.category === 'Storage' ? item.healthPercent : undefined,
-        notes: 'Bulk imported'
-      };
-      
+        healthPercent: health,
+        notes: 'Bulk imported',
+      }];
+
       const itemTags = (item.tags && item.tags.length > 0)
         ? normalizeTags(item.tags, item.category)
         : [];
@@ -110,8 +118,8 @@ function AppContent() {
         category: item.category,
         specifications: '',
         tags: itemTags.length > 0 ? itemTags : undefined,
-        purchaseHistory: [ph],
-        healthPercent: item.category === 'Storage' ? item.healthPercent : undefined,
+        purchaseHistory: purchaseEntries,
+        healthPercent: isStorage ? (purchaseEntries[0]?.healthPercent ?? item.healthPercent) : undefined,
         targetMarketValuePerUnit: (item.unitCost || 0) * 1.5, // Default market-value estimate.
       };
     });

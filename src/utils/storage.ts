@@ -376,8 +376,23 @@ export const parseBackupObject = (json: unknown): ParseBackupResult => {
 };
 
 export const parseBackupJSON = (jsonString: string): ParseBackupResult => {
+  if (typeof jsonString !== 'string' || !jsonString.trim()) {
+    return {
+      success: false,
+      error: 'Failed to import JSON: File is empty',
+    };
+  }
+
+  const trimmed = jsonString.trim();
+  if (trimmed.startsWith('<') || trimmed.toLowerCase().startsWith('<!doctype')) {
+    return {
+      success: false,
+      error: 'Failed to import JSON: The selected file is an HTML web page or error document, not a valid Partly JSON backup.',
+    };
+  }
+
   try {
-    const json = JSON.parse(jsonString);
+    const json = JSON.parse(trimmed);
     return parseBackupObject(json);
   } catch (err: unknown) {
     return {
@@ -596,13 +611,16 @@ export const getSyncInitialAppState = (): AppState => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      if (isStorageEnvelope(parsed)) {
-        setHighestKnownRevision(parsed.revision);
-        return sanitizeAppState(parsed.state);
-      }
-      if (isValidLegacyAppState(parsed)) {
-        return sanitizeAppState(parsed);
+      const trimmed = saved.trim();
+      if (!trimmed.startsWith('<')) {
+        const parsed = JSON.parse(trimmed);
+        if (isStorageEnvelope(parsed)) {
+          setHighestKnownRevision(parsed.revision);
+          return sanitizeAppState(parsed.state);
+        }
+        if (isValidLegacyAppState(parsed)) {
+          return sanitizeAppState(parsed);
+        }
       }
     }
   } catch (err) {
@@ -694,8 +712,11 @@ export const resolveInitialAppState = (): Promise<ResolutionResult> => {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved !== null) {
-          const raw = JSON.parse(saved);
-          localCandidate = parseCandidate(raw, 'localstorage');
+          const trimmed = saved.trim();
+          if (!trimmed.startsWith('<')) {
+            const raw = JSON.parse(trimmed);
+            localCandidate = parseCandidate(raw, 'localstorage');
+          }
         }
       } catch (err) {
         console.warn('Error reading from localStorage during resolution:', err);

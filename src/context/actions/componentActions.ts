@@ -111,6 +111,30 @@ export const findDeduplicationTargetIndex = (
   return findUniqueCatalogMatchIndex(components, compData);
 };
 
+export const createGroupedPurchaseBatches = (
+  entry: Omit<PurchaseEntry, 'id'>,
+  validated: { quantity: number; unitPrice: number; totalPrice: number; taxPercent: number },
+  isStorage: boolean
+): PurchaseEntry[] => {
+  const singleHealth = entry.healthPercent !== undefined
+    ? (Number.isFinite(Number(entry.healthPercent)) ? Number(entry.healthPercent) : undefined)
+    : undefined;
+
+  return [{
+    id: `pe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    date: entry.date,
+    condition: entry.condition,
+    quantity: validated.quantity,
+    unitPrice: validated.unitPrice,
+    totalPrice: validated.totalPrice,
+    paymentMethod: entry.paymentMethod,
+    platform: entry.platform,
+    taxPercent: validated.taxPercent,
+    healthPercent: isStorage ? singleHealth : undefined,
+    notes: entry.notes || '',
+  }];
+};
+
 export const handleSaveComponent = (
   prev: AppState,
   options: SaveComponentOptions
@@ -239,20 +263,8 @@ export const handleSaveComponent = (
           )
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       } else if (newPurchaseEntry) {
-        const newEntryId = `pe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-        const createdEntry: PurchaseEntry = {
-          id: newEntryId,
-          date: newPurchaseEntry.date,
-          condition: newPurchaseEntry.condition,
-          quantity: validatedNewEntry!.quantity,
-          unitPrice: validatedNewEntry!.unitPrice,
-          totalPrice: validatedNewEntry!.totalPrice,
-          paymentMethod: newPurchaseEntry.paymentMethod,
-          platform: newPurchaseEntry.platform,
-          taxPercent: validatedNewEntry!.taxPercent,
-          healthPercent: newPurchaseEntry.healthPercent !== undefined ? (Number.isFinite(Number(newPurchaseEntry.healthPercent)) ? Number(newPurchaseEntry.healthPercent) : undefined) : undefined,
-          notes: newPurchaseEntry.notes || '',
-        };
+        const isStorage = targetComp.category === 'Storage';
+        const createdEntries = createGroupedPurchaseBatches(newPurchaseEntry, validatedNewEntry!, isStorage);
 
         newTx = {
           id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -268,12 +280,12 @@ export const handleSaveComponent = (
           itemNameOrSummary: targetComp.name,
           relatedComponentId: targetComp.id, // Surviving target component ID
           relatedComponentQty: validatedNewEntry!.quantity,
-          relatedPurchaseEntryId: createdEntry.id,
-          originalPurchaseEntrySnapshot: { ...createdEntry },
+          relatedPurchaseEntryId: createdEntries[0]?.id,
+          originalPurchaseEntrySnapshot: { ...createdEntries[0] },
           detailsList: [`${validatedNewEntry!.quantity}x ${targetComp.name} (${formatCurrency(validatedNewEntry!.unitPrice)}/ea)`],
         };
 
-        sourceHistory = [{ ...createdEntry }, ...sourceHistory].sort(
+        sourceHistory = [...createdEntries, ...sourceHistory].sort(
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
       }
@@ -435,20 +447,8 @@ export const handleSaveComponent = (
             )
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         } else if (newPurchaseEntry) {
-          const newEntryId = `pe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-          const createdEntry: PurchaseEntry = {
-            id: newEntryId,
-            date: newPurchaseEntry.date,
-            condition: newPurchaseEntry.condition,
-            quantity: validatedNewEntry!.quantity,
-            unitPrice: validatedNewEntry!.unitPrice,
-            totalPrice: validatedNewEntry!.totalPrice,
-            paymentMethod: newPurchaseEntry.paymentMethod,
-            platform: newPurchaseEntry.platform,
-            taxPercent: validatedNewEntry!.taxPercent,
-            healthPercent: newPurchaseEntry.healthPercent !== undefined ? (Number.isFinite(Number(newPurchaseEntry.healthPercent)) ? Number(newPurchaseEntry.healthPercent) : undefined) : undefined,
-            notes: newPurchaseEntry.notes || '',
-          };
+          const isStorage = (componentData.category !== undefined ? componentData.category : c.category) === 'Storage';
+          const createdEntries = createGroupedPurchaseBatches(newPurchaseEntry, validatedNewEntry!, isStorage);
 
           newTx = {
             id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -464,12 +464,12 @@ export const handleSaveComponent = (
             itemNameOrSummary: componentData.name || c.name,
             relatedComponentId: existingComponentId,
             relatedComponentQty: validatedNewEntry!.quantity,
-            relatedPurchaseEntryId: createdEntry.id,
-            originalPurchaseEntrySnapshot: { ...createdEntry },
+            relatedPurchaseEntryId: createdEntries[0]?.id,
+            originalPurchaseEntrySnapshot: { ...createdEntries[0] },
             detailsList: [`${validatedNewEntry!.quantity}x ${componentData.name || c.name} (${formatCurrency(validatedNewEntry!.unitPrice)}/ea)`],
           };
 
-          updatedHistory = [{ ...createdEntry }, ...updatedHistory].sort(
+          updatedHistory = [...createdEntries, ...updatedHistory].sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           );
         }
@@ -519,16 +519,20 @@ export const handleSaveComponent = (
     };
   } else {
     // Brand new component creation
+    const isStorage = componentData.category === 'Storage';
+    let initialEntries: PurchaseEntry[] = [];
+    if (newPurchaseEntry && validatedNewEntry) {
+      initialEntries = createGroupedPurchaseBatches(newPurchaseEntry, validatedNewEntry, isStorage);
+    } else if (componentData.purchaseHistory) {
+      initialEntries = [...componentData.purchaseHistory];
+    }
+
     const fullCompData: Omit<InventoryComponent, 'id' | 'assignedCount'> = {
       ...componentData,
-      purchaseHistory: newPurchaseEntry
-        ? [
-            {
-              ...newPurchaseEntry,
-              id: `pe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-            } as PurchaseEntry,
-          ]
-        : componentData.purchaseHistory || [],
+      healthPercent: isStorage
+        ? (initialEntries[0]?.healthPercent ?? componentData.healthPercent)
+        : undefined,
+      purchaseHistory: initialEntries,
     };
     return {
       nextState: handleAddComponent(prev, fullCompData),
@@ -549,6 +553,17 @@ export const handleAddComponent = (
   const newPurchaseEntries: PurchaseEntry[] = [];
   const newTxs: TransactionLogItem[] = [];
   const existingComp = existingCompIndex !== -1 ? prev.components[existingCompIndex] : null;
+
+  const isMultiEntrySingleBatch = (compData.purchaseHistory || []).length > 1 &&
+    compData.purchaseHistory!.every((p) =>
+      p.date === compData.purchaseHistory![0].date &&
+      p.platform === compData.purchaseHistory![0].platform &&
+      p.unitPrice === compData.purchaseHistory![0].unitPrice &&
+      p.condition === compData.purchaseHistory![0].condition
+    );
+
+  let totalBatchQty = 0;
+  let totalBatchPrice = 0;
 
   for (let idx = 0; idx < (compData.purchaseHistory || []).length; idx++) {
     const ph = compData.purchaseHistory![idx];
@@ -581,24 +596,50 @@ export const handleAddComponent = (
       notes: ph.notes || '',
     };
     newPurchaseEntries.push(entry);
+    totalBatchQty += quantity;
+    totalBatchPrice = roundToCents(totalBatchPrice + totalPrice);
 
+    if (!isMultiEntrySingleBatch) {
+      newTxs.push({
+        id: `tx-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 9)}`,
+        type: 'PURCHASE',
+        title: `Purchased: ${ph.platform || 'Stock'}`,
+        timestamp: ph.date,
+        dateSortable: ph.date,
+        itemCount: 1,
+        quantity,
+        totalAmount: totalPrice,
+        platform: ph.platform,
+        paymentMethod: ph.paymentMethod,
+        itemNameOrSummary: compData.name,
+        relatedComponentId: existingComp ? existingComp.id : undefined,
+        relatedComponentQty: quantity,
+        relatedPurchaseEntryId: entry.id,
+        originalPurchaseEntrySnapshot: { ...entry },
+        detailsList: [`${quantity}x ${compData.name} (${formatCurrency(unitPrice)}/ea)`],
+      });
+    }
+  }
+
+  if (isMultiEntrySingleBatch && newPurchaseEntries.length > 0) {
+    const firstPh = newPurchaseEntries[0];
     newTxs.push({
-      id: `tx-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 9)}`,
+      id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       type: 'PURCHASE',
-      title: `Purchased: ${ph.platform || 'Stock'}`,
-      timestamp: ph.date,
-      dateSortable: ph.date,
+      title: `Purchased: ${firstPh.platform || 'Stock'}`,
+      timestamp: firstPh.date,
+      dateSortable: firstPh.date,
       itemCount: 1,
-      quantity,
-      totalAmount: totalPrice,
-      platform: ph.platform,
-      paymentMethod: ph.paymentMethod,
+      quantity: totalBatchQty,
+      totalAmount: totalBatchPrice,
+      platform: firstPh.platform,
+      paymentMethod: firstPh.paymentMethod,
       itemNameOrSummary: compData.name,
       relatedComponentId: existingComp ? existingComp.id : undefined,
-      relatedComponentQty: quantity,
-      relatedPurchaseEntryId: entry.id,
-      originalPurchaseEntrySnapshot: { ...entry },
-      detailsList: [`${quantity}x ${compData.name} (${formatCurrency(unitPrice)}/ea)`],
+      relatedComponentQty: totalBatchQty,
+      relatedPurchaseEntryId: firstPh.id,
+      originalPurchaseEntrySnapshot: { ...firstPh },
+      detailsList: [`${totalBatchQty}x ${compData.name} (${formatCurrency(firstPh.unitPrice)}/ea)`],
     });
   }
 
@@ -929,20 +970,9 @@ export const handleAddPurchaseEntry = (
     !Number.isFinite(taxPercent) || taxPercent < 0
   ) return prev;
 
-  const newEntryId = `pe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-  const newPurchaseEntry: PurchaseEntry = {
-    id: newEntryId,
-    date: entry.date,
-    condition: entry.condition,
-    quantity,
-    unitPrice,
-    totalPrice,
-    paymentMethod: entry.paymentMethod,
-    platform: entry.platform,
-    taxPercent,
-    healthPercent: entry.healthPercent !== undefined ? (Number.isFinite(Number(entry.healthPercent)) ? Number(entry.healthPercent) : undefined) : undefined,
-    notes: entry.notes || '',
-  };
+  const isStorage = targetComp.category === 'Storage';
+  const validated = { quantity, unitPrice, totalPrice, taxPercent };
+  const newPurchaseEntries = createGroupedPurchaseBatches(entry, validated, isStorage);
 
   const newTx: TransactionLogItem = {
     id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -958,6 +988,9 @@ export const handleAddPurchaseEntry = (
     itemNameOrSummary: compName,
     relatedComponentId: componentId,
     relatedComponentQty: quantity,
+    relatedPurchaseEntryId: newPurchaseEntries[0]?.id,
+    originalPurchaseEntrySnapshot: { ...newPurchaseEntries[0] },
+    detailsList: [`${quantity}x ${compName} (${formatCurrency(unitPrice)}/ea)`],
   };
 
   return {
@@ -968,11 +1001,11 @@ export const handleAddPurchaseEntry = (
         const res = computeUnresolvedLegacyReservation(c, prev.builds);
         return {
           ...c,
-          healthPercent: c.category === 'Storage'
-            ? (newPurchaseEntry.healthPercent !== undefined ? newPurchaseEntry.healthPercent : c.healthPercent)
+          healthPercent: isStorage
+            ? (newPurchaseEntries[0]?.healthPercent !== undefined ? newPurchaseEntries[0].healthPercent : c.healthPercent)
             : c.healthPercent,
           purchaseHistory: [
-            { ...newPurchaseEntry },
+            ...newPurchaseEntries,
             ...(c.purchaseHistory || []).map((pe) => ({ ...pe })),
           ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
           unresolvedLegacyReservationByPurchaseEntryId:

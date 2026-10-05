@@ -78,10 +78,19 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        let errData;
-        try { errData = await res.json(); } catch(e){}
-        throw new Error((errData && errData.error) || 'Failed to parse');
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        let errMessage = `Server error (${res.status})`;
+        try {
+          const errData = await res.json();
+          if (errData && errData.error) errMessage = errData.error;
+        } catch {
+          const rawText = await res.text().catch(() => '');
+          if (rawText.toLowerCase().includes('<!doctype') || rawText.toLowerCase().includes('<html')) {
+            errMessage = 'Server is currently starting up or unavailable. Please try again in a moment.';
+          }
+        }
+        throw new Error(errMessage);
       }
       const data: ParsedBulkStockItem[] = await res.json();
       const hasHealthMention = /(?:\bhealth\b|\b\d{1,3}%\b)/i.test(textInput);

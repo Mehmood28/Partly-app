@@ -82,7 +82,11 @@ export async function shareBuildImageToDiscord(buildName: string, imageBase64: s
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json().catch(() => ({}));
+  const contentType = response.headers.get('content-type') || '';
+  let data: any = {};
+  if (contentType.includes('application/json')) {
+    data = await response.json().catch(() => ({}));
+  }
 
   if (!response.ok) {
     throw new Error(data.error || `Server responded with status ${response.status}`);

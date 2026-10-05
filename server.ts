@@ -761,6 +761,11 @@ RULES FOR EACH TIER:
     }
   });
 
+  // Fallback for unmatched API routes to ensure they return JSON 404 instead of falling through to Vite's HTML SPA
+  app.all('/api/*', (req, res) => {
+    res.status(404).json({ error: `API endpoint ${req.method} ${req.path} not found` });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

@@ -16,6 +16,7 @@ import {
   SaveComponentOptions,
   AcquiredPCComponentInput,
   PurchasePCData,
+  DriveHealthInput,
 } from './types';
 import { useUndoRedo } from './useUndoRedo';
 import {
@@ -337,7 +338,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 
   const distributeDriveHealths = useCallback(
-    (componentId: string, unitHealths: number[]) => {
+    (componentId: string, unitHealths: DriveHealthInput[]) => {
       const comp = stateRef.current.components.find((c) => c.id === componentId);
       const compName = comp ? comp.name : 'Storage Component';
 

@@ -17,6 +17,26 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      warmup: {
+        clientFiles: [
+          './src/main.tsx',
+          './src/App.tsx',
+          './src/components/HomeView.tsx',
+          './src/components/InventoryView.tsx',
+          './src/components/BuildsView.tsx',
+          './src/components/StockView.tsx',
+        ],
+      },
+    },
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'lucide-react',
+        'localforage',
+        '@tanstack/react-virtual',
+        'motion/react',
+      ],
     },
   };
 });
