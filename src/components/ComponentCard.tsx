@@ -22,6 +22,7 @@ import {
   Pencil,
   Trash2,
   Tag,
+  Activity,
 } from 'lucide-react';
 
 interface ComponentCardProps {
@@ -44,6 +45,7 @@ interface ComponentCardProps {
   onEditComponent?: (component: InventoryComponent) => void;
   onDeleteComponent?: (componentId: string) => { success: boolean; error?: string } | void;
   onSellPart?: (component: InventoryComponent, purchaseEntryId: string) => void;
+  onSetHealth?: (component: InventoryComponent) => void;
 }
 
 export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
@@ -60,6 +62,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   onEditComponent,
   onDeleteComponent,
   onSellPart,
+  onSetHealth,
 }) => {
   const { state } = useInventory();
   const { hideSupplierNames } = usePrivacy();
@@ -107,14 +110,21 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
   const storageHealth = React.useMemo(() => {
     if (component.category !== 'Storage') return undefined;
-    if (typeof component.healthPercent === 'number') return component.healthPercent;
     const batches = getUnassignedBatches(component, state.builds);
-    const batchWithHealth = batches.find(b => typeof b.entry.healthPercent === 'number');
-    if (batchWithHealth && typeof batchWithHealth.entry.healthPercent === 'number') {
-      return batchWithHealth.entry.healthPercent;
+    const healths = batches
+      .filter((b) => typeof b.entry.healthPercent === 'number' && b.availableQuantity > 0)
+      .map((b) => b.entry.healthPercent as number);
+
+    if (healths.length === 0) {
+      return typeof component.healthPercent === 'number' ? `${component.healthPercent}%` : undefined;
     }
-    const entryWithHealth = (component.purchaseHistory || []).find(e => typeof e.healthPercent === 'number');
-    return entryWithHealth?.healthPercent;
+
+    const minH = Math.min(...healths);
+    const maxH = Math.max(...healths);
+    if (minH === maxH) {
+      return `${minH}%`;
+    }
+    return `${minH}%-${maxH}%`;
   }, [component, state.builds]);
 
   return (
@@ -148,7 +158,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                 items.push(`${unassignedQty} in stock`);
                 items.push(`${formatCurrency(avgCost)} each`);
                 if (component.category === 'Storage' && storageHealth !== undefined) {
-                  items.push(`${storageHealth}%`);
+                  items.push(storageHealth);
                 }
                 return items.map((item, idx) => (
                   <React.Fragment key={idx}>
@@ -167,7 +177,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
         <div className="stock-expanded">
 
           {/* Expanded Action Toolbar */}
-          {showAdminActions && (onAddPurchaseEntry || onEditComponent || onDeleteComponent) && (
+          {showAdminActions && (onAddPurchaseEntry || onEditComponent || onDeleteComponent || onSetHealth) && (
             <div className="stock-admin-toolbar">
               {onAddPurchaseEntry && (
                 <button
@@ -178,6 +188,18 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                   className="app-button app-button-outline flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-2 text-[11px] font-semibold"
                 >
                   <Plus className="w-3 h-3" /> Add Stock
+                </button>
+              )}
+              {onSetHealth && component.category === 'Storage' && unassignedQty > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSetHealth(component);
+                  }}
+                  className="app-button app-button-outline flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-2 text-[11px] font-semibold text-[#83E5DF] border-[#83E5DF]/30 hover:border-[#83E5DF] hover:bg-[#83E5DF]/10"
+                  title="Set individual SMART health % for in-stock drives"
+                >
+                  <Activity className="w-3 h-3 text-[#83E5DF]" /> Set Health
                 </button>
               )}
               {onEditComponent && (

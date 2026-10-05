@@ -27,6 +27,7 @@ import {
   handleAddPurchaseEntry,
   handleUpdatePurchaseEntry,
   handleDeletePurchaseEntry,
+  handleDistributeDriveHealths,
   handleUpdateMarketValue,
   handleSellComponentPart,
   handleSellComponentPartsBulk,
@@ -328,6 +329,25 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       if (result.nextState !== stateRef.current) {
         saveStateToHistory(`Delete purchase batch: ${compName}`);
+        setState(result.nextState);
+      }
+      return { success: true };
+    },
+    [saveStateToHistory, stateRef]
+  );
+
+  const distributeDriveHealths = useCallback(
+    (componentId: string, unitHealths: number[]) => {
+      const comp = stateRef.current.components.find((c) => c.id === componentId);
+      const compName = comp ? comp.name : 'Storage Component';
+
+      const result = handleDistributeDriveHealths(stateRef.current, componentId, unitHealths);
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
+
+      if (result.nextState !== stateRef.current) {
+        saveStateToHistory(`Set drive healths: ${compName}`);
         setState(result.nextState);
       }
       return { success: true };
@@ -909,6 +929,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       addPurchaseEntry,
       updatePurchaseEntry,
       deletePurchaseEntry,
+      distributeDriveHealths,
       updateMarketValue,
       sellComponentPart,
       sellComponentPartsBulk,
@@ -958,6 +979,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       addPurchaseEntry,
       updatePurchaseEntry,
       deletePurchaseEntry,
+      distributeDriveHealths,
       updateMarketValue,
       sellComponentPart,
       sellComponentPartsBulk,

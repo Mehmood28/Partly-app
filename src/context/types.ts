@@ -132,6 +132,7 @@ export interface InventoryContextType {
   addPurchaseEntry: (componentId: string, entry: Omit<PurchaseEntry, 'id'>) => void;
   updatePurchaseEntry: (componentId: string, entryId: string, entry: Omit<PurchaseEntry, 'id'>) => { success: boolean; error?: string };
   deletePurchaseEntry: (componentId: string, entryId: string) => { success: boolean; error?: string };
+  distributeDriveHealths: (componentId: string, unitHealths: number[]) => { success: boolean; error?: string };
   updateMarketValue: (componentId: string, value: number) => void;
   sellComponentPart: (
     componentId: string,

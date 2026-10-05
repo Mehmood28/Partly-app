@@ -6,7 +6,7 @@ import {
   PurchaseEntry,
   TransactionLogItem,
 } from '../../types';
-import { computeUnresolvedLegacyReservation, formatCategoryPlural, formatCurrency, getAllBatchesWithRemaining, normalizeTags, roundToCents } from '../../utils/helpers';
+import { computeUnresolvedLegacyReservation, formatCategoryPlural, formatCurrency, getAllBatchesWithRemaining, getUnassignedBatches, normalizeTags, roundToCents } from '../../utils/helpers';
 import {
   SellComponentPartData,
   BulkSaleLine,
@@ -1728,6 +1728,116 @@ export const handleExchangeComponentPart = (
     nextState: {
       ...prev,
       transactions: [exchangeTx, ...prev.transactions],
+      components: updatedComponents,
+    },
+    success: true,
+  };
+};
+
+/**
+ * Distributes unit-level health percentages across unassigned stock for a Storage component.
+ * Splits batches by distinct health values while keeping total quantity, costs, dates, and sellers intact.
+ */
+export const handleDistributeDriveHealths = (
+  prev: AppState,
+  componentId: string,
+  unitHealths: number[]
+): { nextState: AppState; success: boolean; error?: string } => {
+  const comp = prev.components.find((c) => c.id === componentId);
+  if (!comp) {
+    return { nextState: prev, success: false, error: 'Component not found' };
+  }
+
+  if (comp.category !== 'Storage') {
+    return { nextState: prev, success: false, error: 'Only Storage components support drive health distribution' };
+  }
+
+  const unassignedBatches = getUnassignedBatches(comp, prev.builds);
+  const totalUnassigned = unassignedBatches.reduce((sum, b) => sum + b.availableQuantity, 0);
+
+  if (unitHealths.length !== totalUnassigned) {
+    return {
+      nextState: prev,
+      success: false,
+      error: `Expected ${totalUnassigned} health values, but received ${unitHealths.length}`,
+    };
+  }
+
+  for (const h of unitHealths) {
+    if (!Number.isFinite(h) || h < 0 || h > 100) {
+      return { nextState: prev, success: false, error: 'Health percentages must be between 0 and 100' };
+    }
+  }
+
+  let healthIndex = 0;
+  const newPurchaseHistory: PurchaseEntry[] = [];
+
+  for (const entry of comp.purchaseHistory || []) {
+    const matchBatch = unassignedBatches.find((b) => b.entry.id === entry.id);
+    const unassignedCount = matchBatch ? matchBatch.availableQuantity : 0;
+    const assignedCount = entry.quantity - unassignedCount;
+
+    if (unassignedCount <= 0) {
+      newPurchaseHistory.push(entry);
+      continue;
+    }
+
+    const batchHealths = unitHealths.slice(healthIndex, healthIndex + unassignedCount);
+    healthIndex += unassignedCount;
+
+    if (assignedCount > 0) {
+      newPurchaseHistory.push({
+        ...entry,
+        quantity: assignedCount,
+        totalPrice: roundToCents(assignedCount * entry.unitPrice),
+      });
+    }
+
+    const healthCounts = new Map<number, number>();
+    for (const h of batchHealths) {
+      const roundedH = Math.round(h);
+      healthCounts.set(roundedH, (healthCounts.get(roundedH) || 0) + 1);
+    }
+
+    let isFirstGroup = assignedCount === 0;
+    let groupIdx = 0;
+
+    for (const [healthVal, count] of healthCounts.entries()) {
+      const entryId = isFirstGroup
+        ? entry.id
+        : `pe-${Date.now()}-${groupIdx}-${Math.random().toString(36).substring(2, 7)}`;
+      isFirstGroup = false;
+      groupIdx++;
+
+      newPurchaseHistory.push({
+        id: entryId,
+        date: entry.date,
+        condition: entry.condition,
+        quantity: count,
+        unitPrice: entry.unitPrice,
+        totalPrice: roundToCents(count * entry.unitPrice),
+        paymentMethod: entry.paymentMethod,
+        platform: entry.platform,
+        taxPercent: entry.taxPercent,
+        healthPercent: healthVal,
+        notes: entry.notes,
+      });
+    }
+  }
+
+  const updatedComponents = prev.components.map((c) =>
+    c.id === componentId
+      ? {
+          ...c,
+          purchaseHistory: newPurchaseHistory,
+          healthPercent: undefined,
+        }
+      : c
+  );
+
+  return {
+    nextState: {
+      ...prev,
       components: updatedComponents,
     },
     success: true,

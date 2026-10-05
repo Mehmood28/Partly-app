@@ -17,6 +17,7 @@ import {
 import { Plus, Filter, Zap, Layers } from 'lucide-react';
 import { useVirtualListScroll } from '../hooks/useVirtualListScroll';
 import { CustomScrollIndicator } from './ui/CustomScrollIndicator';
+import { SetStorageHealthModal } from './stock/SetStorageHealthModal';
 
 interface InventoryViewProps {
   isActive?: boolean;
@@ -46,6 +47,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
   const [sortBy, setSortBy] = useState<SortOption>('newest-purchase');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const [healthModalComponent, setHealthModalComponent] = useState<InventoryComponent | null>(null);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const handleCategoryChange = React.useCallback((category: string) => {
@@ -172,6 +174,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           onEditComponent={onEditComponent}
           onDeleteComponent={deleteComponent}
           onSellPart={onOpenSellPart}
+          onSetHealth={setHealthModalComponent}
         />
       </div>
     );
@@ -316,6 +319,12 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           <CustomScrollIndicator containerRef={parentRef} />
         </div>
       )}
+
+      <SetStorageHealthModal
+        component={healthModalComponent}
+        isOpen={!!healthModalComponent}
+        onClose={() => setHealthModalComponent(null)}
+      />
     </div>
   );
 });
