@@ -1,7 +1,9 @@
 import {
   AppState,
   COMPONENT_CATEGORIES,
+  Condition,
   InventoryComponent,
+  PaymentMethod,
   PCBuild,
   PurchaseEntry,
   TransactionLogItem,
@@ -1770,60 +1772,130 @@ export const handleDistributeDriveHealths = (
   }
 
   let healthIndex = 0;
-  const newPurchaseHistory: PurchaseEntry[] = [];
+  const assignedEntries: PurchaseEntry[] = [];
+
+  interface UnassignedUnit {
+    date: string;
+    condition: Condition;
+    unitPrice: number;
+    paymentMethod: PaymentMethod;
+    platform?: string;
+    taxPercent?: number;
+    notes?: string;
+    healthPercent: number;
+    originalEntryId?: string;
+  }
+
+  const unassignedUnits: UnassignedUnit[] = [];
 
   for (const entry of comp.purchaseHistory || []) {
     const matchBatch = unassignedBatches.find((b) => b.entry.id === entry.id);
     const unassignedCount = matchBatch ? matchBatch.availableQuantity : 0;
     const assignedCount = entry.quantity - unassignedCount;
 
-    if (unassignedCount <= 0) {
-      newPurchaseHistory.push(entry);
-      continue;
-    }
-
-    const batchHealths = unitHealths.slice(healthIndex, healthIndex + unassignedCount);
-    healthIndex += unassignedCount;
-
     if (assignedCount > 0) {
-      newPurchaseHistory.push({
+      assignedEntries.push({
         ...entry,
         quantity: assignedCount,
         totalPrice: roundToCents(assignedCount * entry.unitPrice),
       });
     }
 
-    const healthCounts = new Map<number, number>();
-    for (const h of batchHealths) {
-      const roundedH = Math.round(h);
-      healthCounts.set(roundedH, (healthCounts.get(roundedH) || 0) + 1);
+    if (unassignedCount <= 0) {
+      continue;
     }
 
-    let isFirstGroup = assignedCount === 0;
-    let groupIdx = 0;
+    const batchHealths = unitHealths.slice(healthIndex, healthIndex + unassignedCount);
+    healthIndex += unassignedCount;
 
-    for (const [healthVal, count] of healthCounts.entries()) {
-      const entryId = isFirstGroup
-        ? entry.id
-        : `pe-${Date.now()}-${groupIdx}-${Math.random().toString(36).substring(2, 7)}`;
-      isFirstGroup = false;
-      groupIdx++;
-
-      newPurchaseHistory.push({
-        id: entryId,
+    for (let i = 0; i < unassignedCount; i++) {
+      unassignedUnits.push({
         date: entry.date,
         condition: entry.condition,
-        quantity: count,
         unitPrice: entry.unitPrice,
-        totalPrice: roundToCents(count * entry.unitPrice),
         paymentMethod: entry.paymentMethod,
         platform: entry.platform,
         taxPercent: entry.taxPercent,
-        healthPercent: healthVal,
         notes: entry.notes,
+        healthPercent: Math.round(batchHealths[i]),
+        originalEntryId: assignedCount === 0 && i === 0 ? entry.id : undefined,
       });
     }
   }
+
+  // Group unassigned units across the entire component by identical purchase details + health
+  interface GroupedUnassigned {
+    date: string;
+    condition: Condition;
+    unitPrice: number;
+    paymentMethod: PaymentMethod;
+    platform?: string;
+    taxPercent?: number;
+    notes?: string;
+    healthPercent: number;
+    count: number;
+    reusableEntryId?: string;
+  }
+
+  const groups = new Map<string, GroupedUnassigned>();
+
+  for (const unit of unassignedUnits) {
+    const key = [
+      unit.date,
+      unit.condition,
+      unit.unitPrice,
+      unit.paymentMethod,
+      unit.platform || '',
+      unit.taxPercent || 0,
+      unit.healthPercent,
+      unit.notes || '',
+    ].join('|');
+
+    const existing = groups.get(key);
+    if (existing) {
+      existing.count += 1;
+      if (!existing.reusableEntryId && unit.originalEntryId) {
+        existing.reusableEntryId = unit.originalEntryId;
+      }
+    } else {
+      groups.set(key, {
+        date: unit.date,
+        condition: unit.condition,
+        unitPrice: unit.unitPrice,
+        paymentMethod: unit.paymentMethod,
+        platform: unit.platform,
+        taxPercent: unit.taxPercent,
+        notes: unit.notes,
+        healthPercent: unit.healthPercent,
+        count: 1,
+        reusableEntryId: unit.originalEntryId,
+      });
+    }
+  }
+
+  const newUnassignedEntries: PurchaseEntry[] = [];
+  let groupIdx = 0;
+
+  for (const group of groups.values()) {
+    const entryId = group.reusableEntryId || `pe-${Date.now()}-${groupIdx}-${Math.random().toString(36).substring(2, 7)}`;
+    groupIdx++;
+
+    newUnassignedEntries.push({
+      id: entryId,
+      date: group.date,
+      condition: group.condition,
+      quantity: group.count,
+      unitPrice: group.unitPrice,
+      totalPrice: roundToCents(group.count * group.unitPrice),
+      paymentMethod: group.paymentMethod,
+      platform: group.platform,
+      taxPercent: group.taxPercent,
+      healthPercent: group.healthPercent,
+      notes: group.notes,
+    });
+  }
+
+  const newPurchaseHistory = [...assignedEntries, ...newUnassignedEntries];
 
   const updatedComponents = prev.components.map((c) =>
     c.id === componentId

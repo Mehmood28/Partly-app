@@ -1,5 +1,5 @@
 import localforage from 'localforage';
-import { AppState, InventoryComponent, PCBuild, TransactionLogItem } from '../types';
+import { AppState, InventoryComponent, PCBuild, PurchaseEntry, TransactionLogItem } from '../types';
 import { normalizeTags, roundToCents } from './helpers';
 
 export const STORAGE_KEY = 'pc_inventory_tracker_v2';
@@ -41,19 +41,38 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
 
   const parsedObj = parsed as Record<string, unknown>;
   const { sheetStats: _obsoleteSheetStats, ...parsedWithoutSheetStats } = parsedObj;
+  const idRemappings: Record<string, string> = {};
   const components = Array.isArray(parsedObj.components)
     ? (cloneStoredValue(parsedObj.components) as InventoryComponent[]).map((comp) => {
         if (!comp) return comp;
-        const normalizedHistory = Array.isArray(comp.purchaseHistory)
-          ? comp.purchaseHistory.map((ph) => {
-              if (!ph) return ph;
-              return {
-                ...ph,
-                unitPrice: typeof ph.unitPrice === 'number' ? roundToCents(ph.unitPrice) : ph.unitPrice,
-                totalPrice: typeof ph.totalPrice === 'number' ? roundToCents(ph.totalPrice) : ph.totalPrice,
-              };
-            })
-          : comp.purchaseHistory;
+        const normalizedHistory: PurchaseEntry[] = [];
+        const rawHistory = Array.isArray(comp.purchaseHistory) ? comp.purchaseHistory : [];
+        for (const ph of rawHistory) {
+          if (!ph) continue;
+          const cleanPh: PurchaseEntry = {
+            ...ph,
+            unitPrice: typeof ph.unitPrice === 'number' ? roundToCents(ph.unitPrice) : ph.unitPrice,
+            totalPrice: typeof ph.totalPrice === 'number' ? roundToCents(ph.totalPrice) : ph.totalPrice,
+          };
+          const match = normalizedHistory.find(
+            (c) =>
+              c.date === cleanPh.date &&
+              c.condition === cleanPh.condition &&
+              c.unitPrice === cleanPh.unitPrice &&
+              c.paymentMethod === cleanPh.paymentMethod &&
+              (c.platform || '') === (cleanPh.platform || '') &&
+              (c.taxPercent || 0) === (cleanPh.taxPercent || 0) &&
+              c.healthPercent === cleanPh.healthPercent &&
+              (c.notes || '') === (cleanPh.notes || '')
+          );
+          if (match) {
+            idRemappings[cleanPh.id] = match.id;
+            match.quantity += cleanPh.quantity;
+            match.totalPrice = roundToCents(match.quantity * match.unitPrice);
+          } else {
+            normalizedHistory.push(cleanPh);
+          }
+        }
         return {
           ...comp,
           tags: Array.isArray(comp.tags) ? normalizeTags(comp.tags, comp.category) : [],
@@ -84,8 +103,10 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         const normalizedParts = Array.isArray(build.parts)
           ? build.parts.map((p) => {
               if (!p) return p;
+              const mappedEntryId = p.purchaseEntryId ? idRemappings[p.purchaseEntryId] || p.purchaseEntryId : p.purchaseEntryId;
               return {
                 ...p,
+                purchaseEntryId: mappedEntryId,
                 unitCostAtAssignment:
                   typeof p.unitCostAtAssignment === 'number'
                     ? roundToCents(p.unitCostAtAssignment)
@@ -107,8 +128,14 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
   const transactions = Array.isArray(parsedObj.transactions)
     ? (cloneStoredValue(parsedObj.transactions) as TransactionLogItem[]).map((tx) => {
         if (!tx) return tx;
+        const mappedRelatedEntryId = tx.relatedPurchaseEntryId ? idRemappings[tx.relatedPurchaseEntryId] || tx.relatedPurchaseEntryId : tx.relatedPurchaseEntryId;
+        const mappedIncomingEntryId = tx.incomingPurchaseEntryId ? idRemappings[tx.incomingPurchaseEntryId] || tx.incomingPurchaseEntryId : tx.incomingPurchaseEntryId;
+        const mappedOutgoingEntryId = tx.outgoingPurchaseEntryId ? idRemappings[tx.outgoingPurchaseEntryId] || tx.outgoingPurchaseEntryId : tx.outgoingPurchaseEntryId;
         return {
           ...tx,
+          relatedPurchaseEntryId: mappedRelatedEntryId,
+          incomingPurchaseEntryId: mappedIncomingEntryId,
+          outgoingPurchaseEntryId: mappedOutgoingEntryId,
           totalAmount: typeof tx.totalAmount === 'number' ? roundToCents(tx.totalAmount) : tx.totalAmount,
           profitMargin: typeof tx.profitMargin === 'number' ? roundToCents(tx.profitMargin) : tx.profitMargin,
           soldUnitCost: typeof tx.soldUnitCost === 'number' ? roundToCents(tx.soldUnitCost) : tx.soldUnitCost,
