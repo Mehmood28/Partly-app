@@ -277,7 +277,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                             <span>{batch.availableQuantity > 1 ? `${batch.availableQuantity} × ${formatCurrency(entryUnitPrice)}` : ''}</span>
                           </div>
                           <div className="stock-batch-line stock-batch-line-secondary">
-                            <span>{entry.condition}{component.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''}{entry.notes ? ` · ${entry.notes}` : ''}</span>
+                            <span>{entry.condition}{component.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''}{entry.notes && entry.notes !== 'Bulk imported' ? ` · ${entry.notes}` : ''}</span>
                             <span><em>Payment</em><span className="stock-batch-value">{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span></span>
                             <strong>{formatCurrency(entryTotal)}</strong>
                           </div>

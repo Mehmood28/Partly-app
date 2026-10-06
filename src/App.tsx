@@ -106,7 +106,6 @@ function AppContent() {
         paymentMethod: item.paymentMethod || 'Cash',
         platform: item.seller || 'Other',
         healthPercent: health,
-        notes: 'Bulk imported',
       }];
 
       const itemTags = (item.tags && item.tags.length > 0)

@@ -49,10 +49,12 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         const rawHistory = Array.isArray(comp.purchaseHistory) ? comp.purchaseHistory : [];
         for (const ph of rawHistory) {
           if (!ph) continue;
+          const cleanNotes = ph.notes === 'Bulk imported' ? undefined : ph.notes;
           const cleanPh: PurchaseEntry = {
             ...ph,
             unitPrice: typeof ph.unitPrice === 'number' ? roundToCents(ph.unitPrice) : ph.unitPrice,
             totalPrice: typeof ph.totalPrice === 'number' ? roundToCents(ph.totalPrice) : ph.totalPrice,
+            notes: cleanNotes,
           };
           const match = normalizedHistory.find(
             (c) =>
