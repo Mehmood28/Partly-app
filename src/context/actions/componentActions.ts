@@ -509,11 +509,38 @@ export const handleSaveComponent = (
       updatedTransactions = [newTx, ...prev.transactions];
     } else if (updatedPurchaseEntry && validatedUpdatedEntry) {
       const entryId = updatedPurchaseEntry.entryId;
+      const targetEntry = (sourceComp.purchaseHistory || []).find((e) => e.id === entryId);
+
+      const hasDirectLinkedTx = prev.transactions.some((tx) =>
+        tx.relatedPurchaseEntryId === entryId ||
+        tx.originalPurchaseEntrySnapshot?.id === entryId ||
+        (!!targetEntry?.sourcePurchaseTransactionId && tx.id === targetEntry.sourcePurchaseTransactionId)
+      );
+
       updatedTransactions = prev.transactions.map((tx) => {
-        const isMatchedTx =
-          tx.relatedPurchaseEntryId === entryId ||
-          tx.originalPurchaseEntrySnapshot?.id === entryId ||
-          (tx.relatedComponentId === existingComponentId && tx.detailsList?.length === 1 && tx.type === 'PURCHASE');
+        let isMatchedTx = false;
+        if (hasDirectLinkedTx) {
+          isMatchedTx =
+            tx.relatedPurchaseEntryId === entryId ||
+            tx.originalPurchaseEntrySnapshot?.id === entryId ||
+            (!!targetEntry?.sourcePurchaseTransactionId && tx.id === targetEntry.sourcePurchaseTransactionId);
+        } else if (tx.relatedComponentId === existingComponentId && tx.type === 'PURCHASE') {
+          const compPurchaseTxs = prev.transactions.filter(
+            (t) => t.relatedComponentId === existingComponentId && t.type === 'PURCHASE'
+          );
+          if ((sourceComp.purchaseHistory || []).length === 1 && compPurchaseTxs.length === 1) {
+            isMatchedTx = true;
+          } else if (targetEntry) {
+            const candidateTxs = compPurchaseTxs.filter(
+              (t) => (t.dateSortable === targetEntry.date || t.timestamp === targetEntry.date) &&
+                     (t.quantity === targetEntry.quantity || t.relatedComponentQty === targetEntry.quantity)
+            );
+            if (candidateTxs.length === 1 && candidateTxs[0].id === tx.id) {
+              isMatchedTx = true;
+            }
+          }
+        }
+
         if (!isMatchedTx) return tx;
 
         const qty = validatedUpdatedEntry.quantity;
@@ -534,19 +561,20 @@ export const handleSaveComponent = (
           platform,
           seller: platform,
           itemNameOrSummary: compName,
+          relatedPurchaseEntryId: entryId,
           detailsList: [`${qty}x ${compName} (${formatCurrency(unitP)}/ea)`],
-          originalPurchaseEntrySnapshot: tx.originalPurchaseEntrySnapshot
-            ? {
-                ...tx.originalPurchaseEntrySnapshot,
-                date,
-                quantity: qty,
-                unitPrice: unitP,
-                totalPrice: totalP,
-                paymentMethod: payment,
-                platform,
-                seller: platform,
-              }
-            : undefined,
+          originalPurchaseEntrySnapshot: {
+            ...(tx.originalPurchaseEntrySnapshot || {}),
+            id: entryId,
+            date,
+            quantity: qty,
+            unitPrice: unitP,
+            totalPrice: totalP,
+            paymentMethod: payment,
+            platform,
+            seller: platform,
+            condition: updatedPurchaseEntry.entry.condition,
+          },
         };
       });
     }
@@ -1137,9 +1165,71 @@ export const handleUpdatePurchaseEntry = (
     return { nextState: prev, success: true };
   }
 
+  const targetEntry = existing.purchaseHistory?.find((e) => e.id === entryId);
+  const hasDirectLinkedTx = prev.transactions.some((tx) =>
+    tx.relatedPurchaseEntryId === entryId ||
+    tx.originalPurchaseEntrySnapshot?.id === entryId ||
+    (!!targetEntry?.sourcePurchaseTransactionId && tx.id === targetEntry.sourcePurchaseTransactionId)
+  );
+
+  const updatedTransactions = prev.transactions.map((tx) => {
+    let isMatchedTx = false;
+    if (hasDirectLinkedTx) {
+      isMatchedTx =
+        tx.relatedPurchaseEntryId === entryId ||
+        tx.originalPurchaseEntrySnapshot?.id === entryId ||
+        (!!targetEntry?.sourcePurchaseTransactionId && tx.id === targetEntry.sourcePurchaseTransactionId);
+    } else if (tx.relatedComponentId === componentId && tx.type === 'PURCHASE') {
+      const compPurchaseTxs = prev.transactions.filter(
+        (t) => t.relatedComponentId === componentId && t.type === 'PURCHASE'
+      );
+      if ((existing.purchaseHistory || []).length === 1 && compPurchaseTxs.length === 1) {
+        isMatchedTx = true;
+      } else if (targetEntry) {
+        const candidateTxs = compPurchaseTxs.filter(
+          (t) => (t.dateSortable === targetEntry.date || t.timestamp === targetEntry.date) &&
+                 (t.quantity === targetEntry.quantity || t.relatedComponentQty === targetEntry.quantity)
+        );
+        if (candidateTxs.length === 1 && candidateTxs[0].id === tx.id) {
+          isMatchedTx = true;
+        }
+      }
+    }
+
+    if (!isMatchedTx) return tx;
+
+    const compName = existing.name || tx.itemNameOrSummary;
+    return {
+      ...tx,
+      quantity: newQty,
+      totalAmount: totalPrice,
+      dateSortable: entry.date,
+      timestamp: entry.date,
+      paymentMethod: entry.paymentMethod,
+      platform: entry.platform,
+      seller: entry.platform,
+      itemNameOrSummary: compName,
+      relatedPurchaseEntryId: entryId,
+      detailsList: [`${newQty}x ${compName} (${formatCurrency(unitPrice)}/ea)`],
+      originalPurchaseEntrySnapshot: {
+        ...(tx.originalPurchaseEntrySnapshot || {}),
+        id: entryId,
+        date: entry.date,
+        quantity: newQty,
+        unitPrice,
+        totalPrice,
+        paymentMethod: entry.paymentMethod,
+        platform: entry.platform,
+        seller: entry.platform,
+        condition: entry.condition,
+      },
+    };
+  });
+
   return {
     nextState: {
       ...prev,
+      transactions: updatedTransactions,
       components: prev.components.map((c) => {
         if (c.id === componentId) {
           return {
