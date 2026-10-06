@@ -139,7 +139,7 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
     <section>
       <h4>{title} <span>· {items.length} {items.length === 1 ? 'part' : 'parts'}</span></h4>
       <div className="purchase-items">
-        <div className="purchase-item-head"><span>Part / details</span><span>Qty</span><span>Unit price</span><span>Payment</span></div>
+        <div className="purchase-item-head"><span>Part / details</span><span className="text-right">Qty</span><span className="text-right">Unit price</span></div>
         {items.map((item, index) => (
           <div key={index} className="purchase-item">
             <div className="purchase-item-name">
@@ -150,9 +150,8 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
                 !hideSupplierNames && item.platform ? normalizePlatform(item.platform) : undefined,
               ].filter(Boolean).join(' · ')}</span>
             </div>
-            <div data-label="Qty">{item.quantity}</div>
-            <div data-label="Unit price">{formatCurrency(item.unitPrice)}</div>
-            <div data-label="Payment">{item.paymentMethod || tx.paymentMethod || '—'}</div>
+            <div data-label="Qty" className="text-right font-mono">{item.quantity}</div>
+            <div data-label="Unit price" className="text-right font-mono">{formatCurrency(item.unitPrice)}</div>
           </div>
         ))}
       </div>

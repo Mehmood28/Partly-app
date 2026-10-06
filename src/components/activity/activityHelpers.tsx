@@ -171,9 +171,13 @@ export function getCleanTransactionTitle(
   components: InventoryComponent[],
   builds: PCBuild[]
 ): string {
-  // If user explicitly provided a custom title override, always respect it first
+  // If user explicitly provided a custom title override, always respect it first unless it is a template title with an old quantity
   if (tx.customTitleOverride && tx.customTitleOverride.trim()) {
-    return tx.customTitleOverride.trim();
+    const override = tx.customTitleOverride.trim();
+    const isTemplateOverride = /^(Purchased|Bulk Purchase)(\s*:\s*|\s+\d+x\s+|\s+)/i.test(override);
+    if (!isTemplateOverride) {
+      return override;
+    }
   }
 
   const classification = classifyTransaction(tx, builds);
@@ -199,10 +203,10 @@ export function getCleanTransactionTitle(
   }
 
   if (isPurchase) {
-    // If tx.title was edited by the user to a custom name (not default template like 'Bulk Purchase: Amazon' or 'Purchased: Newegg' or 'Purchased')
+    // If tx.title was edited by the user to a custom name (not default template like 'Bulk Purchase: Amazon', 'Purchased: Newegg', 'Purchased 9x...', or 'Purchased')
     if (
       tx.title &&
-      !/^(Bulk Purchase|Purchased|Purchase):\s*/i.test(tx.title.trim()) &&
+      !/^(Bulk Purchase|Purchased|Purchase)(\s*:\s*|\s+\d+x\s+|\s+)/i.test(tx.title.trim()) &&
       !/^(Purchased|Purchase)$/i.test(tx.title.trim())
     ) {
       return tx.title.trim();

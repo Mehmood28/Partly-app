@@ -17,6 +17,7 @@ import {
   SaveComponentOptions,
   DriveHealthInput,
 } from '../types';
+import { parseBatchItem } from '../../components/activity/activityHelpers';
 
 /**
  * Normalizes a string for deterministic component matching:
@@ -1199,18 +1200,82 @@ export const handleUpdatePurchaseEntry = (
     if (!isMatchedTx) return tx;
 
     const compName = existing.name || tx.itemNameOrSummary;
+    const cleanCompName = compName.replace(/^\d+x\s+/i, '');
+
+    let updatedDetailsList = [`${newQty}x ${cleanCompName} (${formatCurrency(unitPrice)}/ea)`];
+    if (tx.detailsList && tx.detailsList.length > 1) {
+      updatedDetailsList = tx.detailsList.map((detail) => {
+        const parsed = parseBatchItem(detail, prev.components, tx);
+        if (
+          parsed.entry?.id === entryId ||
+          parsed.comp?.id === componentId ||
+          parsed.itemName.toLowerCase().trim() === cleanCompName.toLowerCase().trim()
+        ) {
+          return `${newQty}x ${parsed.itemName} (${formatCurrency(unitPrice)}/ea)`;
+        }
+        return detail;
+      });
+    }
+
+    const newTxTotalQuantity = (tx.detailsList && tx.detailsList.length > 1)
+      ? updatedDetailsList.reduce((acc, d) => {
+          const m = d.match(/^(\d+)x\s+/i);
+          return acc + (m ? parseInt(m[1], 10) : 1);
+        }, 0)
+      : newQty;
+
+    const newTxTotalAmount = (tx.detailsList && tx.detailsList.length > 1)
+      ? updatedDetailsList.reduce((acc, d) => {
+          const m = d.match(/^(?:(\d+)x\s+)?(.*?)(?:\s+\(\$([\d\.,]+)(?:\/ea)?\))?$/i);
+          const q = m && m[1] ? parseInt(m[1], 10) : 1;
+          const u = m && m[3] ? parseFloat(m[3].replace(/,/g, '')) : 0;
+          return roundToCents(acc + (q * u));
+        }, 0)
+      : totalPrice;
+
+    const newTitle = newTxTotalQuantity > 1
+      ? `Purchased ${newTxTotalQuantity}x ${cleanCompName}`
+      : `Purchased ${cleanCompName}`;
+
+    let updatedTitle = tx.title;
+    if (updatedTitle) {
+      if (/^(Purchased|Bulk Purchase)\s+\d+x\s+/i.test(updatedTitle)) {
+        updatedTitle = updatedTitle.replace(
+          /^(Purchased|Bulk Purchase)\s+\d+x\s+/i,
+          newTxTotalQuantity > 1 ? `$1 ${newTxTotalQuantity}x ` : '$1 '
+        );
+      } else if (/^\d+x\s+/i.test(updatedTitle)) {
+        updatedTitle = newTxTotalQuantity > 1 ? `${newTxTotalQuantity}x ${cleanCompName}` : cleanCompName;
+      } else if (/^(Purchased|Bulk Purchase):/i.test(updatedTitle)) {
+        // Keep standard prefix or template
+      }
+    } else {
+      updatedTitle = newTitle;
+    }
+
+    let updatedCustomTitle = tx.customTitleOverride;
+    if (updatedCustomTitle && /^(Purchased|Bulk Purchase)\s+\d+x\s+/i.test(updatedCustomTitle)) {
+      updatedCustomTitle = updatedCustomTitle.replace(
+        /^(Purchased|Bulk Purchase)\s+\d+x\s+/i,
+        newTxTotalQuantity > 1 ? `$1 ${newTxTotalQuantity}x ` : '$1 '
+      );
+    }
+
     return {
       ...tx,
-      quantity: newQty,
-      totalAmount: totalPrice,
+      title: updatedTitle,
+      customTitleOverride: updatedCustomTitle,
+      quantity: newTxTotalQuantity,
+      relatedComponentQty: newTxTotalQuantity,
+      totalAmount: newTxTotalAmount,
       dateSortable: entry.date,
       timestamp: entry.date,
       paymentMethod: entry.paymentMethod,
       platform: entry.platform,
       seller: entry.platform,
-      itemNameOrSummary: compName,
+      itemNameOrSummary: cleanCompName,
       relatedPurchaseEntryId: entryId,
-      detailsList: [`${newQty}x ${compName} (${formatCurrency(unitPrice)}/ea)`],
+      detailsList: updatedDetailsList,
       originalPurchaseEntrySnapshot: {
         ...(tx.originalPurchaseEntrySnapshot || {}),
         id: entryId,

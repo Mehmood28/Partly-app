@@ -476,15 +476,20 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                 Add new purchase record
               </label>
             )}
+            {editingPurchaseId && (
+              <button
+                type="button"
+                onClick={handleCancelEditPurchase}
+                title="Cancel editing purchase record"
+                className="p-1 rounded-lg border border-white/[0.14] bg-white/[0.04] hover:bg-[#B9EF68]/10 text-zinc-400 hover:text-[#B9EF68] hover:border-[#B9EF68] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           {includePurchase && (
-            <div className="space-y-3 text-xs bg-[#101719] p-3 rounded-xl border border-white/[0.08] relative">
-              {editingPurchaseId && (
-                <button type="button" onClick={handleCancelEditPurchase} className="absolute top-2.5 right-2.5 text-zinc-400 hover:text-white">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+            <div className="space-y-3 text-xs bg-[#101719] p-3 rounded-xl border border-white/[0.08]">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-zinc-300 font-medium mb-1 text-xs flex items-center gap-1">

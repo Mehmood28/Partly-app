@@ -24,6 +24,7 @@ export interface TransactionEditInputs {
   paymentMethod: string;
   dateSortable: string;
   detailsList?: string[];
+  quantity?: number;
 }
 
 export type PreparedTransactionEdit =
@@ -34,6 +35,7 @@ export type PreparedTransactionEdit =
         customTitleOverride?: string;
         itemNameOrSummary: string;
         totalAmount: number;
+        quantity?: number;
         profitMargin?: number;
         seller?: string;
         platform?: string;
@@ -71,6 +73,16 @@ export const prepareTransactionEdit = (
     profitMargin = profitResult.value;
   }
 
+  let quantity: number | undefined;
+  if (inputs.quantity !== undefined && Number.isFinite(inputs.quantity) && inputs.quantity > 0) {
+    quantity = Math.max(1, Math.round(inputs.quantity));
+  } else if (inputs.detailsList && inputs.detailsList.length > 0) {
+    quantity = inputs.detailsList.reduce((sum, d) => {
+      const m = d.match(/^(\d+)x\s+/i);
+      return sum + (m ? parseInt(m[1], 10) : 1);
+    }, 0);
+  }
+
   const dateSortable = inputs.dateSortable.trim();
   if (!isValidCalendarDate(dateSortable)) {
     return { success: false, error: 'Date must be a valid calendar date.' };
@@ -94,6 +106,7 @@ export const prepareTransactionEdit = (
       customTitleOverride,
       itemNameOrSummary,
       totalAmount: roundToCents(amountResult.value),
+      quantity,
       profitMargin: profitMargin !== undefined ? roundToCents(profitMargin) : undefined,
       seller,
       platform: seller,

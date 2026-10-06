@@ -174,17 +174,29 @@ export const handleUpdateTransaction = (
   const isPaymentMethodChanged = hasPaymentMethodUpdate && paymentMethod !== targetTx.paymentMethod;
   const isDateChanged = updates.dateSortable !== undefined && dateSortable !== targetTx.dateSortable;
   const isItemNameChanged = updates.itemNameOrSummary !== undefined && itemNameOrSummary !== targetTx.itemNameOrSummary;
-  const isSingleItemPurchase = isPurchase && (!targetTx.detailsList || targetTx.detailsList.length <= 1);
-  const hasPurchaseEntryFieldChange = isPurchase && (isAmountChanged || isSellerChanged || isPaymentMethodChanged || isDateChanged);
 
-  const purchaseQty = targetTx.quantity || targetTx.relatedComponentQty || targetTx.originalPurchaseEntrySnapshot?.quantity || 1;
-  const newUnitPrice = roundToCents(totalAmount / purchaseQty);
+  const purchaseQty = (updates.quantity !== undefined && Number.isFinite(updates.quantity) && updates.quantity > 0)
+    ? updates.quantity
+    : (updates.detailsList && Array.isArray(updates.detailsList) && updates.detailsList.length > 0
+        ? updates.detailsList.reduce((acc, d) => {
+            const m = d.match(/^(\d+)x\s+/i);
+            return acc + (m ? parseInt(m[1], 10) : 1);
+          }, 0)
+        : (targetTx.quantity || targetTx.relatedComponentQty || targetTx.originalPurchaseEntrySnapshot?.quantity || 1));
+
+  const isQtyChanged = isPurchase && purchaseQty !== targetTx.quantity;
+  const isSingleItemPurchase = isPurchase && (
+    updates.detailsList ? updates.detailsList.length <= 1 : (!targetTx.detailsList || targetTx.detailsList.length <= 1)
+  );
+  const hasPurchaseEntryFieldChange = isPurchase && (isAmountChanged || isSellerChanged || isPaymentMethodChanged || isDateChanged || isQtyChanged);
+
+  const newUnitPrice = roundToCents(totalAmount / (purchaseQty || 1));
 
   let updatedDetailsList = targetTx.detailsList;
-  if (isSingleItemPurchase && (isAmountChanged || isItemNameChanged || !targetTx.detailsList || targetTx.detailsList.length <= 1)) {
-    updatedDetailsList = [`${purchaseQty}x ${itemNameOrSummary} (${formatCurrency(newUnitPrice)}/ea)`];
-  } else if (updates.detailsList && Array.isArray(updates.detailsList) && updates.detailsList.length > 0) {
+  if (updates.detailsList && Array.isArray(updates.detailsList) && updates.detailsList.length > 0) {
     updatedDetailsList = updates.detailsList;
+  } else if (isSingleItemPurchase && (isAmountChanged || isItemNameChanged || isQtyChanged || !targetTx.detailsList || targetTx.detailsList.length <= 1)) {
+    updatedDetailsList = [`${purchaseQty}x ${itemNameOrSummary} (${formatCurrency(newUnitPrice)}/ea)`];
   } else if (isPurchase && targetTx.detailsList && targetTx.detailsList.length > 1 && isAmountChanged) {
     const rawParsed = targetTx.detailsList.map((d) => parseBatchItem(d, prev.components, targetTx));
     const oldSum = rawParsed.reduce((s, it) => s + ((it.quantity || 1) * it.unitPrice), 0);
@@ -200,9 +212,10 @@ export const handleUpdateTransaction = (
 
   let updatedSnapshot = targetTx.originalPurchaseEntrySnapshot;
   if (updatedSnapshot) {
-    const snapQty = updatedSnapshot.quantity || purchaseQty;
+    const snapQty = purchaseQty || updatedSnapshot.quantity || 1;
     updatedSnapshot = {
       ...updatedSnapshot,
+      quantity: snapQty,
       unitPrice: isSingleItemPurchase ? roundToCents(totalAmount / snapQty) : updatedSnapshot.unitPrice,
       totalPrice: isSingleItemPurchase ? roundToCents(totalAmount) : updatedSnapshot.totalPrice,
       date: dateSortable,
@@ -221,6 +234,8 @@ export const handleUpdateTransaction = (
     title,
     itemNameOrSummary,
     customTitleOverride,
+    quantity: isPurchase ? purchaseQty : targetTx.quantity,
+    relatedComponentQty: isPurchase ? purchaseQty : targetTx.relatedComponentQty,
     totalAmount,
     profitMargin,
     platform: seller,
@@ -335,17 +350,25 @@ export const handleUpdateTransaction = (
       }
     }
 
-    const itemPriceMapByEntryId = new Map<string, { unitPrice: number; totalPrice: number }>();
-    const itemPriceMapByCompId = new Map<string, { unitPrice: number; totalPrice: number }>();
+    const itemMapByEntryId = new Map<string, { quantity?: number; unitPrice: number; totalPrice: number }>();
+    const itemMapByCompId = new Map<string, { quantity?: number; unitPrice: number; totalPrice: number }>();
 
     if (isPurchase && updatedDetailsList && updatedDetailsList.length > 0) {
       updatedDetailsList.forEach((detail) => {
         const parsed = parseBatchItem(detail, prev.components, updatedTarget);
         if (parsed.entry) {
-          itemPriceMapByEntryId.set(parsed.entry.id, { unitPrice: parsed.unitPrice, totalPrice: parsed.totalPrice });
+          itemMapByEntryId.set(parsed.entry.id, {
+            quantity: parsed.quantity,
+            unitPrice: parsed.unitPrice,
+            totalPrice: parsed.totalPrice,
+          });
         }
         if (parsed.comp) {
-          itemPriceMapByCompId.set(parsed.comp.id, { unitPrice: parsed.unitPrice, totalPrice: parsed.totalPrice });
+          itemMapByCompId.set(parsed.comp.id, {
+            quantity: parsed.quantity,
+            unitPrice: parsed.unitPrice,
+            totalPrice: parsed.totalPrice,
+          });
         }
       });
     }
@@ -362,27 +385,35 @@ export const handleUpdateTransaction = (
 
       const updatedHistory = (comp.purchaseHistory || []).map((pe) => {
         if (targetEntryIds.has(pe.id) || pe.sourcePurchaseTransactionId === targetTx.id) {
-          const peQty = pe.quantity || 1;
+          let updatedQty = pe.quantity || 1;
           let updatedUnitPrice = pe.unitPrice;
           let updatedTotalPrice = pe.totalPrice;
 
           if (isPurchase) {
-            if (isSingleItemPurchase && isAmountChanged) {
-              updatedUnitPrice = roundToCents(totalAmount / peQty);
-              updatedTotalPrice = roundToCents(totalAmount);
-            } else {
-              const byEntry = itemPriceMapByEntryId.get(pe.id);
-              const byComp = itemPriceMapByCompId.get(comp.id);
-              const priceMatch = byEntry || byComp;
-              if (priceMatch) {
-                updatedUnitPrice = priceMatch.unitPrice;
-                updatedTotalPrice = priceMatch.totalPrice;
+            const byEntry = itemMapByEntryId.get(pe.id);
+            const byComp = itemMapByCompId.get(comp.id);
+            const matchData = byEntry || byComp;
+
+            if (matchData) {
+              if (matchData.quantity !== undefined && matchData.quantity > 0) {
+                updatedQty = matchData.quantity;
+              }
+              updatedUnitPrice = matchData.unitPrice;
+              updatedTotalPrice = matchData.totalPrice;
+            } else if (isSingleItemPurchase) {
+              if (purchaseQty !== undefined && purchaseQty > 0) {
+                updatedQty = purchaseQty;
+              }
+              if (isAmountChanged || isQtyChanged) {
+                updatedUnitPrice = roundToCents(totalAmount / (updatedQty || 1));
+                updatedTotalPrice = roundToCents(totalAmount);
               }
             }
           }
 
           return {
             ...pe,
+            quantity: updatedQty,
             unitPrice: updatedUnitPrice,
             totalPrice: updatedTotalPrice,
             date: isDateChanged ? dateSortable : pe.date,

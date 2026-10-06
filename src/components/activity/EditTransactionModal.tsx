@@ -6,7 +6,7 @@ import { usePrivacy } from '../../context/PrivacyContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useToast } from '../../context/ToastContext';
 import { prepareTransactionEdit } from './transactionEditParsers';
-import { getCleanTransactionTitle, parseBatchItem } from './activityHelpers';
+import { getCleanTransactionTitle, parseBatchItem, inferCategory, ParsedBatchItem } from './activityHelpers';
 import { roundToCents, formatCurrency } from '../../utils/helpers';
 
 interface EditTransactionModalProps {
@@ -55,7 +55,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       }
     }
     const parsedAmount = parseFloat(val);
-    if (editItems.length > 1 && !isNaN(parsedAmount) && parsedAmount >= 0) {
+    if (editItems.length > 0 && !isNaN(parsedAmount) && parsedAmount >= 0) {
       // Use the initial uncorrupted baseline items so typing/backspacing doesn't degrade or zero-out prices
       const baseline = initialItemsRef.current.length === editItems.length
         ? initialItemsRef.current
@@ -79,6 +79,31 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
         );
       }
     }
+  };
+
+  const handleItemQuantityChange = (index: number, newQtyStr: string) => {
+    const parsedQty = parseInt(newQtyStr, 10);
+    const validQty = Number.isFinite(parsedQty) && parsedQty > 0 ? parsedQty : 1;
+
+    setEditItems((prev) => {
+      const updated = prev.map((item, i) => {
+        if (i !== index) return item;
+        const sub = roundToCents(validQty * item.unitPrice);
+        return {
+          ...item,
+          quantity: validQty,
+          subtotal: sub,
+        };
+      });
+
+      if (initialItemsRef.current[index]) {
+        initialItemsRef.current[index].quantity = validQty;
+      }
+
+      const newTotal = updated.reduce((sum, it) => sum + it.subtotal, 0);
+      setEditAmount(String(roundToCents(newTotal)));
+      return updated;
+    });
   };
 
   const handleItemPriceChange = (index: number, val: string) => {
@@ -155,8 +180,29 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       setEditPaymentMethod(tx.paymentMethod || '');
       setEditDate(tx.dateSortable || '');
 
-      if (tx.type === 'PURCHASE' && tx.detailsList && tx.detailsList.length > 1) {
-        const rawParsed = tx.detailsList.map((detail) => parseBatchItem(detail, state.components, tx));
+      if (tx.type === 'PURCHASE') {
+        let rawParsed: ParsedBatchItem[] = [];
+        if (tx.detailsList && tx.detailsList.length > 0) {
+          rawParsed = tx.detailsList.map((detail) => parseBatchItem(detail, state.components, tx));
+        } else {
+          const q = tx.quantity || tx.relatedComponentQty || tx.originalPurchaseEntrySnapshot?.quantity || 1;
+          const u = roundToCents((tx.totalAmount || 0) / q);
+          const name = tx.itemNameOrSummary || 'Purchased Part';
+          rawParsed = [{
+            itemName: name,
+            quantity: q,
+            unitPrice: u,
+            totalPrice: roundToCents(tx.totalAmount || 0),
+            category: inferCategory(name),
+            tags: [],
+            condition: tx.originalPurchaseEntrySnapshot?.condition || '',
+            platform: tx.platform || '',
+            paymentMethod: tx.paymentMethod || '',
+            comp: tx.relatedComponentId ? state.components.find((c) => c.id === tx.relatedComponentId) : undefined,
+            entry: tx.originalPurchaseEntrySnapshot,
+          }];
+        }
+
         const rawSum = rawParsed.reduce((s, it) => s + ((it.quantity || 1) * it.unitPrice), 0);
         const currentTotal = typeof tx.totalAmount === 'number' && tx.totalAmount > 0 ? tx.totalAmount : rawSum;
         const ratio = rawSum > 0 ? currentTotal / rawSum : 1;
@@ -190,13 +236,44 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanInitialTitle = getCleanTransactionTitle(tx, state.components, state.builds);
-    const finalTitle = isMasked && !titleEdited ? (cleanInitialTitle || tx.title) : editTitle.trim();
+
+    const updatedDetailsList = editItems.length > 0
+      ? editItems.map((it) => `${it.quantity}x ${it.name} (${formatCurrency(it.unitPrice)}/ea)`)
+      : undefined;
+
+    const totalCalculatedQty = editItems.length > 0
+      ? editItems.reduce((sum, it) => sum + (it.quantity || 1), 0)
+      : undefined;
+
+    let dynamicPurchaseTitle: string | undefined;
+    if (tx.type === 'PURCHASE' && editItems.length > 0) {
+      if (editItems.length === 1) {
+        const singleName = editItems[0].name.replace(/^\d+x\s+/i, '');
+        dynamicPurchaseTitle = (totalCalculatedQty || 1) > 1
+          ? `Purchased ${totalCalculatedQty}x ${singleName}`
+          : `Purchased ${singleName}`;
+      } else {
+        const itemNames = Array.from(new Set(editItems.map((it) => it.name.replace(/^\d+x\s+/i, ''))));
+        if (itemNames.length === 1) {
+          dynamicPurchaseTitle = (totalCalculatedQty || 1) > 1
+            ? `Purchased ${totalCalculatedQty}x ${itemNames[0]}`
+            : `Purchased ${itemNames[0]}`;
+        }
+      }
+    }
+
+    const finalTitle = isMasked && !titleEdited
+      ? (dynamicPurchaseTitle || cleanInitialTitle || tx.title)
+      : !titleEdited && dynamicPurchaseTitle
+      ? dynamicPurchaseTitle
+      : editTitle.trim();
+
     const finalSummary = isMasked && !summaryEdited ? tx.itemNameOrSummary : editItemSummary.trim();
     const overrideTitle = titleEdited
       ? finalTitle
       : summaryEdited
       ? finalSummary
-      : tx.customTitleOverride;
+      : undefined;
     let finalProfit = editProfit;
     if (hasStoredUnitCost) {
       const parsedAmount = parseFloat(editAmount);
@@ -205,16 +282,13 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       }
     }
 
-    const updatedDetailsList = editItems.length > 1
-      ? editItems.map((it) => `${it.quantity}x ${it.name} (${formatCurrency(it.unitPrice)}/ea)`)
-      : undefined;
-
     const prepared = prepareTransactionEdit({
       type: tx.type,
       title: finalTitle,
       customTitleOverride: overrideTitle,
       itemNameOrSummary: finalSummary,
       totalAmount: editAmount,
+      quantity: totalCalculatedQty,
       profitMargin: finalProfit,
       seller: editSeller,
       platform: editSeller,
@@ -237,10 +311,21 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     onClose();
   };
 
+  const hasMultipleParts = editItems.length > 1;
+
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="content" className="stock-modal max-w-lg">
-      <div className="transaction-edit-modal space-y-4 w-full">
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+    <BottomSheetModal
+      isOpen={isOpen}
+      onClose={onClose}
+      layout="content"
+      className={`stock-modal max-w-lg ${
+        hasMultipleParts
+          ? '!h-[calc(100dvh-5.5rem)] sm:!h-[85vh] !max-h-[calc(100dvh-5.5rem)] sm:!max-h-[85vh] flex flex-col'
+          : ''
+      }`}
+    >
+      <div className={`transaction-edit-modal w-full ${hasMultipleParts ? 'flex flex-col h-full min-h-0' : 'space-y-4'}`}>
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-2.5 shrink-0">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
             <Pencil className="w-4 h-4 text-[#B9EF68]" /> Edit Transaction Record
           </h3>
@@ -254,157 +339,177 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
           </button>
         </div>
 
-        <form onSubmit={handleSaveEdit} className="space-y-3 text-xs">
-          <div>
-            <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Record Title / Type</label>
-            <input
-              type="text"
-              required
-              value={isMasked && !titleEdited ? getMaskedTitle(editTitle, editSeller) : editTitle}
-              onChange={(e) => {
-                setTitleEdited(true);
-                setEditTitle(e.target.value);
-              }}
-              className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
-              placeholder={isMasked ? "e.g. Purchased" : "e.g. Purchased: Facebook Marketplace"}
-            />
-          </div>
-
-          <div>
-            <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Item / Summary</label>
-            <input
-              type="text"
-              required
-              value={isMasked && !summaryEdited ? getMaskedSummary(editItemSummary, editSeller) : editItemSummary}
-              onChange={(e) => {
-                setSummaryEdited(true);
-                setEditItemSummary(e.target.value);
-              }}
-              className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
-              placeholder="e.g. RTX 4070 Super 12GB"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSaveEdit} className={`text-xs ${hasMultipleParts ? 'flex flex-col flex-1 min-h-0 overflow-hidden' : 'space-y-3'}`}>
+          <div className={`shrink-0 ${hasMultipleParts ? 'space-y-2' : 'space-y-3'}`}>
             <div>
-              <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Total Amount ($)</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none font-mono">$</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="0"
-                  required
-                  value={editAmount}
-                  onChange={(e) => handleAmountChange(e.target.value)}
-                  className="app-field h-9 min-h-9 pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono"
-                />
-              </div>
+              <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Record Title / Type</label>
+              <input
+                type="text"
+                required
+                value={isMasked && !titleEdited ? getMaskedTitle(editTitle, editSeller) : editTitle}
+                onChange={(e) => {
+                  setTitleEdited(true);
+                  setEditTitle(e.target.value);
+                }}
+                className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
+                placeholder={isMasked ? "e.g. Purchased" : "e.g. Purchased: Facebook Marketplace"}
+              />
             </div>
 
-            {tx.type === 'SALE' && (
+            <div>
+              <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Item / Summary</label>
+              <input
+                type="text"
+                required
+                value={isMasked && !summaryEdited ? getMaskedSummary(editItemSummary, editSeller) : editItemSummary}
+                onChange={(e) => {
+                  setSummaryEdited(true);
+                  setEditItemSummary(e.target.value);
+                }}
+                className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
+                placeholder="e.g. RTX 4070 Super 12GB"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">
-                  Net Profit ($)
-                  {hasStoredUnitCost && (
-                    <span className="ml-1 text-[10px] text-zinc-400 font-normal">
-                      (Cost: ${totalUnitCost.toFixed(2)})
-                    </span>
-                  )}
-                </label>
+                <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Total Amount ($)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none font-mono">$</span>
                   <input
                     type="number"
                     inputMode="decimal"
                     step="0.01"
+                    min="0"
                     required
-                    readOnly={hasStoredUnitCost}
-                    value={editProfit}
-                    onChange={(e) => setEditProfit(e.target.value)}
-                    className={`app-field h-9 min-h-9 pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono ${
-                      hasStoredUnitCost ? 'opacity-80 bg-white/[0.03] cursor-not-allowed' : ''
-                    }`}
-                    placeholder="e.g. 150.00"
+                    value={editAmount}
+                    onChange={(e) => handleAmountChange(e.target.value)}
+                    className="app-field h-9 min-h-9 pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono"
                   />
                 </div>
               </div>
-            )}
 
-            <div>
-              <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Date (YYYY-MM-DD)</label>
-              <input
-                type="date"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-                className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-mono"
-              />
+              {tx.type === 'SALE' && (
+                <div>
+                  <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">
+                    Net Profit ($)
+                    {hasStoredUnitCost && (
+                      <span className="ml-1 text-[10px] text-zinc-400 font-normal">
+                        (Cost: ${totalUnitCost.toFixed(2)})
+                      </span>
+                    )}
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none font-mono">$</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      required
+                      readOnly={hasStoredUnitCost}
+                      value={editProfit}
+                      onChange={(e) => setEditProfit(e.target.value)}
+                      className={`app-field h-9 min-h-9 pl-7 pr-3 text-xs placeholder:text-zinc-500 font-mono ${
+                        hasStoredUnitCost ? 'opacity-80 bg-white/[0.03] cursor-not-allowed' : ''
+                      }`}
+                      placeholder="e.g. 150.00"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Date (YYYY-MM-DD)</label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Seller</label>
+                <input
+                  type={isMasked ? "password" : "text"}
+                  autoComplete="off"
+                  value={editSeller}
+                  onChange={(e) => setEditSeller(e.target.value)}
+                  className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
+                  placeholder={isMasked ? "••••••••" : "e.g. Memory Express / Amazon / Roop"}
+                />
+              </div>
+
+              <div>
+                <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Payment Method</label>
+                <input
+                  type="text"
+                  value={editPaymentMethod}
+                  onChange={(e) => setEditPaymentMethod(e.target.value)}
+                  className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
+                  placeholder="e.g. Cash / E-Transfer"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Seller</label>
-              <input
-                type={isMasked ? "password" : "text"}
-                autoComplete="off"
-                value={editSeller}
-                onChange={(e) => setEditSeller(e.target.value)}
-                className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
-                placeholder={isMasked ? "••••••••" : "e.g. Memory Express / Amazon / Roop"}
-              />
-            </div>
-
-            <div>
-              <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Payment Method</label>
-              <input
-                type="text"
-                value={editPaymentMethod}
-                onChange={(e) => setEditPaymentMethod(e.target.value)}
-                className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
-                placeholder="e.g. Cash / E-Transfer"
-              />
-            </div>
-          </div>
-
-          {editItems.length > 1 && (
-            <div className="space-y-2 pt-2 border-t border-white/[0.08]">
-              <div className="flex items-center justify-between">
+          {editItems.length > 0 && (
+            <div className={`pt-2 border-t border-white/[0.08] ${hasMultipleParts ? 'flex flex-col flex-1 min-h-0 space-y-1.5' : 'space-y-2'}`}>
+              <div className="flex items-center justify-between shrink-0">
                 <label className="text-zinc-300 font-medium text-xs font-sans">
-                  Purchased Parts ({editItems.length})
+                  {editItems.length === 1 ? 'Purchased Part' : `Purchased Parts (${editItems.length})`}
                 </label>
                 <span className="text-[10.5px] text-zinc-400 font-mono">
-                  Edit unit price or Total Amount
+                  Edit quantity, unit price, or Total Amount
                 </span>
               </div>
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1 no-scrollbar">
+              <div className={`overflow-y-auto pr-1 no-scrollbar space-y-[5px] ${hasMultipleParts ? 'flex-1 min-h-0' : 'max-h-56'}`}>
                 {editItems.map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between gap-3 bg-[#101719] px-3 py-2 rounded-xl border border-white/[0.06]"
+                    className="bg-[#101719] px-2.5 py-1.5 rounded-lg border border-white/[0.06] space-y-1 hover:border-white/[0.1] transition-colors"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-zinc-200 truncate">{item.name}</p>
-                      <p className="text-[11px] text-zinc-400 font-mono">
-                        Qty: <span className="text-[#B9EF68] font-bold">{item.quantity}</span>
-                      </p>
+                    <div className="text-xs font-semibold text-zinc-100 break-words leading-tight">
+                      {item.name}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="flex items-center gap-1">
-                        <span className="text-zinc-500 text-xs font-mono">$</span>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[11px] font-medium text-zinc-400 font-sans">Qty:</span>
                         <input
                           type="number"
-                          step="0.01"
-                          min="0"
-                          value={item.unitPriceStr}
-                          onChange={(e) => handleItemPriceChange(idx, e.target.value)}
-                          className="w-20 h-8 px-2 text-xs font-mono font-bold bg-[#090D0F] border border-white/[0.12] rounded-lg text-zinc-100 text-right focus:outline-none focus:border-[#83E5DF]"
+                          min="1"
+                          step="1"
+                          value={item.quantity}
+                          onChange={(e) => handleItemQuantityChange(idx, e.target.value)}
+                          style={{ height: '20px', minHeight: '20px', maxHeight: '20px', lineHeight: '18px', paddingTop: 0, paddingBottom: 0 }}
+                          className="transaction-edit-item-input w-11 px-1 text-[11px] font-mono font-bold bg-[#090D0F] border border-white/[0.12] rounded-md text-[#B9EF68] text-center focus:outline-none focus:border-[#83E5DF] transition-colors"
                         />
-                        <span className="text-zinc-500 text-[10px] font-mono">/ea</span>
                       </div>
-                      <div className="w-16 text-right text-xs font-mono font-bold text-zinc-300">
-                        ${item.subtotal.toFixed(2)}
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-medium text-zinc-400 font-sans">Cost:</span>
+                          <div className="relative flex items-center">
+                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px] pointer-events-none font-mono select-none leading-none z-10">$</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={item.unitPriceStr}
+                              onChange={(e) => handleItemPriceChange(idx, e.target.value)}
+                              style={{ height: '20px', minHeight: '20px', maxHeight: '20px', lineHeight: '18px', paddingTop: 0, paddingBottom: 0 }}
+                              className="transaction-edit-item-input w-16 pl-3.5 pr-1.5 text-[11px] font-mono font-bold bg-[#090D0F] border border-white/[0.12] rounded-md text-zinc-100 text-right focus:outline-none focus:border-[#83E5DF] transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 text-xs whitespace-nowrap">
+                          <span className="text-[11px] font-medium text-zinc-400 font-sans">Total Price:</span>
+                          <span className="font-bold text-zinc-100 font-mono text-xs">${item.subtotal.toFixed(2)}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -413,7 +518,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/[0.08]">
+          <div className={`flex items-center justify-end gap-2.5 border-t border-white/[0.08] shrink-0 ${hasMultipleParts ? 'pt-2 mt-auto' : 'pt-3'}`}>
             <button
               type="button"
               onClick={onClose}
