@@ -106,6 +106,11 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
         }
 
         let cleanName = String(item.name || '').trim();
+        // Strip leading bullets, dots, dashes, and quantity indicators (e.g. "• 1 x " or "1 x ")
+        cleanName = cleanName.replace(/^[•\-\*\s]+/, '');
+        cleanName = cleanName.replace(/^\d+\s*x\s+/i, '');
+        cleanName = cleanName.replace(/^[•\-\*\s]+/, '').trim();
+
         if (cleanSeller && cleanName) {
           const escapedSeller = cleanSeller.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           cleanName = cleanName.replace(new RegExp(`^${escapedSeller}\\s+`, 'i'), '').trim();
@@ -118,6 +123,10 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
           healthPercent: (item.category === 'Storage' && hasHealthMention) ? item.healthPercent : undefined,
           tags: normalizeTags(item.tags || [], item.category),
         };
+      }).filter((item) => {
+        if (!item.name || item.name.trim().length < 2) return false;
+        if (/^[•\-\*\s]+$/.test(item.name)) return false;
+        return true;
       });
       setParsedItems(enrichedData);
     } catch (err: unknown) {

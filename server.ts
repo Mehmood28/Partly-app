@@ -90,19 +90,71 @@ function parseModelJsonResponse(
 }
 
 function deterministicParseBulkText(text: string): any[] {
-  const lines = (text || '')
+  const rawLines = (text || '')
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter((l) => l.length > 0 && !/^(item|part|name|qty|price|cost|seller|notes)\b/i.test(l));
 
-  if (lines.length === 0) return [];
+  if (rawLines.length === 0) return [];
 
-  return lines.map((line) => {
+  let batchSeller = '';
+  let batchDate = '';
+  let batchPaymentMethod = '';
+
+  let startIndex = 0;
+  // Check if first line is a header like "Outlut Electronics • Oct 6, 2026 • E-Transfer" or "Seller: Roop | Date: 2024-05-22"
+  const firstLine = rawLines[0];
+  const isHeader =
+    /^(?:seller\s*:|store\s*:)/i.test(firstLine) ||
+    (!/\b(?:rtx|gtx|rx|ryzen|intel|core|ddr[45]|nvme|ssd|motherboard|b650|b850|x870|z790|am5|am4|360mm|240mm)\b/i.test(firstLine) &&
+     /(?:e-transfer|cash|paypal|credit card|debit|crypto|\b20\d{2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2})/i.test(firstLine));
+
+  if (isHeader) {
+    startIndex = 1;
+    const parts = firstLine.split(/[•|·,\-\/]/).map((p) => p.trim()).filter(Boolean);
+    for (const part of parts) {
+      if (/\b(e-transfer|cash|paypal|credit card|debit|crypto)\b/i.test(part)) {
+        const pmMatch = part.match(/\b(e-transfer|cash|paypal|credit card|debit|crypto)\b/i);
+        if (pmMatch) {
+          const lower = pmMatch[1].toLowerCase();
+          batchPaymentMethod = lower === 'e-transfer' ? 'E-Transfer' : lower === 'credit card' ? 'Credit Card' : lower.charAt(0).toUpperCase() + lower.slice(1);
+        }
+      } else if (/\b(?:20\d{2}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4}|[a-zA-Z]+\s+\d{1,2},?\s+\d{4})\b/.test(part)) {
+        const parsed = new Date(part);
+        if (!isNaN(parsed.getTime())) {
+          batchDate = parsed.toISOString().split('T')[0];
+        }
+      } else if (!batchSeller && part.length >= 2 && !/^(date|payment|seller):/i.test(part)) {
+        batchSeller = part.replace(/^(?:seller|store)\s*:\s*/i, '').trim();
+      }
+    }
+  }
+
+  // Group paired lines if formatted as (Category/Specs/Condition) followed by (Price/Qty/Product)
+  const groupedEntries: string[] = [];
+  for (let i = startIndex; i < rawLines.length; i++) {
+    const curr = rawLines[i];
+    const next = i + 1 < rawLines.length ? rawLines[i + 1] : null;
+
+    if (
+      next &&
+      /^(?:Motherboard|CPU|GPU|RAM|Storage|PSU|Case|Cooling|Fans|Accessories|Other)\b/i.test(curr) &&
+      /^\s*[\$•\d]/i.test(next) &&
+      /\$\s*\d+/i.test(next)
+    ) {
+      groupedEntries.push(`${curr} • ${next}`);
+      i++; // Skip paired line
+    } else {
+      groupedEntries.push(curr);
+    }
+  }
+
+  return groupedEntries.map((line) => {
     let remaining = line;
 
-    // 1. Quantity (e.g. 10x, 2x, 5 pcs)
+    // 1. Quantity (e.g. 10x, 2x, 5 pcs, 1 x)
     let quantity = 1;
-    const qtyMatch = remaining.match(/^(\d+)\s*(?:x|pcs|units|ct)?\s+/i) || remaining.match(/\b(\d+)\s*(?:x|pcs|units|ct)\b/i);
+    const qtyMatch = remaining.match(/(\d+)\s*(?:x|pcs|units|ct)\s+/i) || remaining.match(/\b(\d+)\s*(?:x|pcs|units|ct)\b/i);
     if (qtyMatch) {
       quantity = Math.max(1, parseInt(qtyMatch[1], 10) || 1);
       remaining = remaining.replace(qtyMatch[0], ' ').trim();
@@ -146,37 +198,50 @@ function deterministicParseBulkText(text: string): any[] {
       remaining = remaining.replace(/\b(used open box|used)\b/gi, ' ').trim();
     }
 
-    // 5. Seller (Amazon, Newegg, Best Buy, Facebook, Memory Express, etc.)
-    let seller: string | undefined = undefined;
-    const sellerMatch = remaining.match(/\b(amazon|newegg|best buy|memory express|canada computers|facebook|kijiji|ebay|marketplace|fb marketplace|cc|me)\b/i);
-    if (sellerMatch) {
-      seller = sellerMatch[1];
-      remaining = remaining.replace(sellerMatch[0], ' ').trim();
-    }
-
-    // 6. Category (prioritize explicit hardware keywords over ambiguous sockets/chipsets)
+    // 5. Category (prioritize explicit hardware keywords over ambiguous sockets/chipsets)
     let category = 'Other';
     const lower = remaining.toLowerCase();
-    if (/\b(rtx|gtx|radeon|rx\s*\d|geforce|graphics card|gpu|arc\s*a)\b/i.test(lower)) {
-      category = 'GPU';
-    } else if (/\b(cooler|aio|liquid\s*cool\w*|fan|heatsink|noctua|kraken|assassin|thermalright|\b\d{3}mm\b|hydroshift|prism|wraith)\b/i.test(lower)) {
-      category = 'Cooling';
-    } else if (/\b(psu|power\s*supply|gold|bronze|platinum|watt|\b\d{3,4}w\b|corsair\s*rm\w*|seasonic|superflower|toughpower)\b/i.test(lower)) {
-      category = 'PSU';
-    } else if (/\b(case|chassis|h9|h5|h7|o11|4000d|5000d|pop\s*air|ch160|montech|lancool)\b/i.test(lower)) {
-      category = 'Case';
-    } else if (/\b(ssd|nvme|m\.2|hard\s*drive|hdd|sata|evo|sn\d{3}|barracuda|kc3000|pm9a1)\b/i.test(lower)) {
-      category = 'Storage';
-    } else if (/\b(ddr[45]|ram|memory|vengeance|trident|fury|corsair\s*rgb)\b/i.test(lower)) {
-      category = 'RAM';
-    } else if (/\b(ryzen|intel|core\s*i[3579]|cpu|processor|threadripper|7800x3d|7700x?|7600x?|5600x?|14900k?|13700k?|12600k?)\b/i.test(lower)) {
-      category = 'CPU';
-    } else if (/\b(motherboard|mobo|mainboard|b650|b550|z790|z690|x670|b850|x870|b760|z890|a620|am4|am5|lga\s*\d*)\b/i.test(lower)) {
+    if (/^(motherboard|mobo|mainboard)\b/i.test(remaining) || /\b(motherboard|mobo|mainboard|b650|b550|z790|z690|x670|b850|x870|b760|z890|a620)\b/i.test(lower)) {
       category = 'Motherboard';
+    } else if (/^(gpu|graphics card)\b/i.test(remaining) || /\b(rtx|gtx|radeon|rx\s*\d|geforce|graphics card|gpu|arc\s*a)\b/i.test(lower)) {
+      category = 'GPU';
+    } else if (/^(cpu|processor)\b/i.test(remaining) || /\b(ryzen|intel|core\s*i[3579]|cpu|processor|threadripper|7800x3d|7700x?|7600x?|5600x?|14900k?|13700k?|12600k?)\b/i.test(lower)) {
+      category = 'CPU';
+    } else if (/^(ram|memory)\b/i.test(remaining) || /\b(ddr[45]|ram|memory|vengeance|trident|fury|corsair\s*rgb)\b/i.test(lower)) {
+      category = 'RAM';
+    } else if (/^(storage|ssd|nvme)\b/i.test(remaining) || /\b(ssd|nvme|m\.2|hard\s*drive|hdd|sata|evo|sn\d{3}|barracuda|kc3000|pm9a1)\b/i.test(lower)) {
+      category = 'Storage';
+    } else if (/^(cooling|cooler)\b/i.test(remaining) || /\b(cooler|aio|liquid\s*cool\w*|fan|heatsink|noctua|kraken|assassin|thermalright|\b\d{3}mm\b|hydroshift|prism|wraith)\b/i.test(lower)) {
+      category = 'Cooling';
+    } else if (/^(psu|power supply)\b/i.test(remaining) || /\b(psu|power\s*supply|gold|bronze|platinum|watt|\b\d{3,4}w\b|corsair\s*rm\w*|seasonic|superflower|toughpower)\b/i.test(lower)) {
+      category = 'PSU';
+    } else if (/^(case|chassis)\b/i.test(remaining) || /\b(case|chassis|h9|h5|h7|o11|4000d|5000d|pop\s*air|ch160|montech|lancool)\b/i.test(lower)) {
+      category = 'Case';
     }
 
+    // 6. Extract Tags
+    const tags: string[] = [];
+    if (/\bAM5\b/i.test(remaining)) tags.push('AM5');
+    if (/\bAM4\b/i.test(remaining)) tags.push('AM4');
+    if (/\bIntel\b/i.test(remaining)) tags.push('Intel');
+    if (/\bATX\b/i.test(remaining)) tags.push('ATX');
+    if (/\bmATX\b/i.test(remaining) || /\bMicro-ATX\b/i.test(remaining)) tags.push('mATX');
+    if (/\bITX\b/i.test(remaining) || /\bMini-ITX\b/i.test(remaining)) tags.push('ITX');
+    if (/\bWhite\b/i.test(remaining)) tags.push('White');
+    if (/\bBlack\b/i.test(remaining)) tags.push('Black');
+    if (/\bDDR5\b/i.test(remaining)) tags.push('DDR5');
+    if (/\bDDR4\b/i.test(remaining)) tags.push('DDR4');
+    if (/\bGEN5\b/i.test(remaining)) tags.push('GEN5');
+    if (/\bGEN4\b/i.test(remaining)) tags.push('GEN4');
+    if (/\bGEN3\b/i.test(remaining)) tags.push('GEN3');
+    if (/\bSATA\b/i.test(remaining)) tags.push('SATA');
+
+    // Remove category names and bullet segments from name
     let cleanName = remaining
-      .replace(/^[,\-–—:\s]+|[,\-–—:\s]+$/g, '')
+      .replace(/^(?:Motherboard|CPU|GPU|RAM|Storage|PSU|Case|Cooling|Fans|Accessories|Other)\s*[•|·,\-\/]?\s*/i, '')
+      .replace(/\b(?:AM5|AM4|Intel|ATX|mATX|ITX|White|Black|DDR5|DDR4|GEN5|GEN4|GEN3|SATA)\b/gi, ' ')
+      .replace(/[•|·,\-\/]+/g, ' ')
+      .replace(/^[,\-–—:\s•]+|[,\-–—:\s•]+$/g, '')
       .replace(/\s{2,}/g, ' ')
       .trim();
 
@@ -190,9 +255,11 @@ function deterministicParseBulkText(text: string): any[] {
       quantity,
       unitCost,
       condition,
-      seller,
+      seller: batchSeller || undefined,
+      date: batchDate || undefined,
+      paymentMethod: batchPaymentMethod || undefined,
       healthPercent: category === 'Storage' ? healthPercent : undefined,
-      tags: [],
+      tags,
     };
   });
 }
@@ -384,29 +451,53 @@ async function startServer() {
       
       const systemInstruction = `You are a high-precision PC hardware inventory parser.
 Extract individual PC components, quantities, costs, and purchase metadata from the user's input text or images.
-Accept ANY text format: formatted headers (e.g. 'Seller: Roop | Date: 2024-05-22'), multi-line notes, unstructured free-form lists, chat logs, single-line entries, or receipts.
+Accept ANY text format: multi-line item blocks, bullet-separated notes, formatted headers (e.g. 'Seller: Roop | Date: 2024-05-22'), unstructured free-form lists, chat logs, single-line entries, or receipts.
 
-CRITICAL FIELD RULES:
-1. 'name': Clean product title ONLY (e.g. '1TB NVMe GEN4 SSD', 'Ryzen 7 7800X3D', 'RTX 4070 Super'). DO NOT include seller names, dates, or prices in the name.
-2. 'seller': Concise seller or store name ONLY (e.g. 'Roop', 'Best Buy', 'Memory Express', 'Amazon', 'Facebook'). Maximum 1-3 words. NEVER concatenate item names, specs, conditions, prices, reasoning, commentary, or markdown into 'seller'. If no seller is mentioned or identifiable, leave it empty ("").
-3. 'date': Purchase date formatted as YYYY-MM-DD (e.g. '2024-05-22'). If no date is found, leave it empty ("").
-4. 'paymentMethod': One of 'Cash', 'E-Transfer', 'PayPal', 'Credit Card', 'Debit', 'Crypto', or 'Other'. If not mentioned, default to 'Cash'.
-5. 'condition': Exactly one of 'Sealed', 'New Open Box', 'New No Box', 'Used Open Box', or 'Used No Box'. Default to 'Used Open Box' if used/unspecified.
-6. 'quantity': Integer quantity (e.g. '5x' -> 5). Default to 1.
-7. 'unitCost': Exact numeric per-unit cost without currency symbols (e.g. 100.00). If cost is not mentioned, omit or set to 0.
-8. 'healthPercent': ONLY for Storage items when an explicit health percentage is stated (e.g. '98% health' -> 98). NEVER guess or default to 100—leave absent if not stated.
-9. 'tags': Preset sub-category tags:
-   - CPU: AM5, AM4, Intel
-   - RAM: DDR5, DDR4
-   - GPU: 50 Series, 40 Series, 30 Series, AMD
-   - Storage: GEN5, GEN4, GEN3, SATA
-   - Motherboard: AM5, AM4, Intel
-   - PSU: Black, White
-   - Case: Black, White
-   - Cooling: 360mm, 240mm, Air Coolers
+CRITICAL PARSING PRINCIPLES:
+1. BATCH / RECEIPT HEADERS:
+   - Header lines at the top (e.g. "Outlut Electronics • Oct 6, 2026 • E-Transfer", "Roop | 2024-05-22 | Cash") specify shared batch metadata: seller/store ('Outlut Electronics'), purchase date ('2026-10-06'), and payment method ('E-Transfer').
+   - Apply these shared attributes to all extracted items in that batch.
+   - NEVER create a component item out of a header line!
+
+2. MULTI-LINE & DELIMITED ITEM BLOCKS:
+   - Items are frequently formatted in 2-line blocks separated by bullets ('•'), pipes ('|'), commas, or dashes:
+     Example:
+       Motherboard • AM5 • ATX • White • New Open Box
+       $274.52 • 1 x Gigabyte X870E Aorus Elite WiFi7 ICE
+     -> This represents ONE SINGLE item:
+       - name: "Gigabyte X870E Aorus Elite WiFi7 ICE"
+       - category: "Motherboard"
+       - tags: ["AM5", "ATX", "White"]
+       - condition: "New Open Box"
+       - unitCost: 274.52
+       - quantity: 1
+   - NEVER split a multi-line product entry into two separate items! Combine the category/specs line and the price/quantity/model line into one complete component item.
+
+3. CLEAN PRODUCT NAME RULES:
+   - 'name': Pure hardware brand and model name ONLY (e.g. 'Gigabyte X870E Aorus Elite WiFi7 ICE', 'ASUS ROG Strix X870-A Gaming WiFi', 'Ryzen 7 7800X3D', 'RTX 4070 Super', '1TB NVMe GEN4 SSD').
+   - NEVER include category names (e.g. 'Motherboard •'), bullet symbols ('•', '-', '*'), prices ('$274.52'), or quantity markers ('1 x', '2x') in the 'name' field.
+
+4. FIELD RULES:
+   - 'category': One of 'GPU', 'CPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooling', 'Fans', 'Accessories', or 'Other'.
+   - 'seller': Concise seller or store name ONLY (e.g. 'Outlut Electronics', 'Roop', 'Best Buy', 'Amazon', 'Memory Express'). Maximum 1-3 words. If no seller is mentioned or identifiable, leave empty ("").
+   - 'date': Purchase date formatted as YYYY-MM-DD (e.g. '2026-10-06'). If no date is found, leave empty ("").
+   - 'paymentMethod': One of 'Cash', 'E-Transfer', 'PayPal', 'Credit Card', 'Debit', 'Crypto', or 'Other'. Default to 'Cash' if not stated.
+   - 'condition': Exactly one of 'Sealed', 'New Open Box', 'New No Box', 'Used Open Box', or 'Used No Box'. Default to 'Used Open Box' if used/unspecified.
+   - 'quantity': Integer quantity (e.g. '1 x' -> 1, '2 x' -> 2, '3x' -> 3). Default to 1.
+   - 'unitCost': Exact numeric per-unit cost without currency symbols (e.g. 274.52). If cost is not mentioned, set to 0.
+   - 'healthPercent': ONLY for Storage items when an explicit health percentage is stated (e.g. '98% health' -> 98). Leave absent if not stated.
+   - 'tags': Preset sub-category tags matching allowed values:
+     * CPU: AM5, AM4, Intel
+     * Motherboard: AM5, AM4, Intel, ATX, mATX, ITX, Black, White
+     * RAM: DDR5, DDR4, Black, White, RGB, Non-RGB
+     * GPU: 50 Series, 40 Series, 30 Series, AMD
+     * Storage: GEN5, GEN4, GEN3, SATA
+     * PSU: ATX, SFX, ATX 3.0 / 3.1, Standard, Black, White
+     * Case: ATX, mATX, ITX, Black, White
+     * Cooling: 360mm, 240mm, Air Cooler, Black, White
 
 ABSOLUTE NEGATIVE CONSTRAINT:
-NEVER output internal reasoning, thought process, explanations, or phrases like "(inferred...)" or "per instructions" into ANY field value. Every field must contain ONLY its clean extracted value.`;
+NEVER output internal reasoning, commentary, or headers as items. Every item in the output array must represent a real hardware component.`;
 
       const responseSchema = {
         type: Type.ARRAY,
@@ -457,6 +548,11 @@ NEVER output internal reasoning, thought process, explanations, or phrases like 
         }
 
         let cleanName = String(item.name || '').trim();
+        // Strip leading bullets, dots, dashes, and quantity indicators (e.g. "• 1 x " or "1 x ")
+        cleanName = cleanName.replace(/^[•\-\*\s]+/, '');
+        cleanName = cleanName.replace(/^\d+\s*x\s+/i, '');
+        cleanName = cleanName.replace(/^[•\-\*\s]+/, '').trim();
+
         if (cleanSeller && cleanName) {
           const escapedSeller = cleanSeller.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           cleanName = cleanName.replace(new RegExp(`^${escapedSeller}\\s+`, 'i'), '').trim();
@@ -477,6 +573,11 @@ NEVER output internal reasoning, thought process, explanations, or phrases like 
             return trimmed;
           }).filter(Boolean),
         };
+      }).filter((item: any) => {
+        // Filter out accidental non-product rows (e.g. pure headers, empty rows)
+        if (!item.name || item.name.trim().length < 2) return false;
+        if (/^[•\-\*\s]+$/.test(item.name)) return false;
+        return true;
       });
       res.setHeader('Server-Timing', `bulk-import;dur=${Math.round(performance.now() - started)}`);
       res.json(data);
