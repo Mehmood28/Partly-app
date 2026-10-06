@@ -1,6 +1,6 @@
 import localforage from 'localforage';
 import { AppState, InventoryComponent, PCBuild, PurchaseEntry, TransactionLogItem } from '../types';
-import { normalizeTags, roundToCents } from './helpers';
+import { normalizeTags, roundToCents, formatCurrency } from './helpers';
 
 export const STORAGE_KEY = 'pc_inventory_tracker_v2';
 export const DB_NAME = 'PartlyPCInventoryDB';
@@ -131,17 +131,52 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         const mappedRelatedEntryId = tx.relatedPurchaseEntryId ? idRemappings[tx.relatedPurchaseEntryId] || tx.relatedPurchaseEntryId : tx.relatedPurchaseEntryId;
         const mappedIncomingEntryId = tx.incomingPurchaseEntryId ? idRemappings[tx.incomingPurchaseEntryId] || tx.incomingPurchaseEntryId : tx.incomingPurchaseEntryId;
         const mappedOutgoingEntryId = tx.outgoingPurchaseEntryId ? idRemappings[tx.outgoingPurchaseEntryId] || tx.outgoingPurchaseEntryId : tx.outgoingPurchaseEntryId;
+        const cleanTotal = typeof tx.totalAmount === 'number' ? roundToCents(tx.totalAmount) : tx.totalAmount;
+        let detailsList = tx.detailsList;
+        if (tx.type === 'PURCHASE' && detailsList && detailsList.length === 1 && typeof cleanTotal === 'number') {
+          const qty = tx.quantity || tx.relatedComponentQty || 1;
+          const cleanUnit = roundToCents(cleanTotal / qty);
+          const detail = detailsList[0];
+          if (/\(\$[\d\.,]+(?:\/ea)?\)/.test(detail)) {
+            detailsList = [detail.replace(/\(\$[\d\.,]+(?:\/ea)?\)/, `(${formatCurrency(cleanUnit)}/ea)`)];
+          }
+        }
         return {
           ...tx,
           relatedPurchaseEntryId: mappedRelatedEntryId,
           incomingPurchaseEntryId: mappedIncomingEntryId,
           outgoingPurchaseEntryId: mappedOutgoingEntryId,
-          totalAmount: typeof tx.totalAmount === 'number' ? roundToCents(tx.totalAmount) : tx.totalAmount,
+          totalAmount: cleanTotal,
           profitMargin: typeof tx.profitMargin === 'number' ? roundToCents(tx.profitMargin) : tx.profitMargin,
           soldUnitCost: typeof tx.soldUnitCost === 'number' ? roundToCents(tx.soldUnitCost) : tx.soldUnitCost,
+          detailsList,
         };
       })
     : [];
+
+  // Synchronize single-purchase transaction prices to their linked component purchase entries
+  transactions.forEach((tx) => {
+    if (tx.type === 'PURCHASE' && typeof tx.totalAmount === 'number' && (!tx.detailsList || tx.detailsList.length <= 1)) {
+      const targetCompId = tx.relatedComponentId;
+      const targetEntryId = tx.relatedPurchaseEntryId;
+      const qty = tx.quantity || tx.relatedComponentQty || 1;
+      const cleanTotal = tx.totalAmount;
+      const cleanUnit = roundToCents(cleanTotal / qty);
+
+      if (targetCompId) {
+        const comp = components.find((c) => c && c.id === targetCompId);
+        if (comp && comp.purchaseHistory) {
+          const entry = comp.purchaseHistory.find(
+            (e) => (targetEntryId && e.id === targetEntryId) || e.sourcePurchaseTransactionId === tx.id
+          );
+          if (entry) {
+            entry.unitPrice = cleanUnit;
+            entry.totalPrice = cleanTotal;
+          }
+        }
+      }
+    }
+  });
 
   let resolvedGoal = 10000;
   if (isValidMonthlyGoal(parsedObj.monthlyGoal)) {

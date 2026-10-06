@@ -23,6 +23,7 @@ export interface TransactionEditInputs {
   platform?: string;
   paymentMethod: string;
   dateSortable: string;
+  detailsList?: string[];
 }
 
 export type PreparedTransactionEdit =
@@ -38,6 +39,7 @@ export type PreparedTransactionEdit =
         platform?: string;
         paymentMethod?: PaymentMethod;
         dateSortable: string;
+        detailsList?: string[];
       };
     }
   | { success: false; error: string };
@@ -99,6 +101,7 @@ export const prepareTransactionEdit = (
         ? (paymentMethodValue as PaymentMethod)
         : undefined,
       dateSortable,
+      detailsList: inputs.detailsList,
     },
   };
 };

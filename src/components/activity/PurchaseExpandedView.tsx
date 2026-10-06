@@ -1,7 +1,7 @@
 import React from 'react';
 import { InventoryComponent, PCBuild, TransactionLogItem } from '../../types';
 import { usePrivacy } from '../../context/PrivacyContext';
-import { formatCurrency } from '../../utils/helpers';
+import { formatCurrency, roundToCents } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { sortByCategory } from '../../utils/sorting';
 import { parseBatchItem } from './activityHelpers';
@@ -80,7 +80,29 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
     platform: tx.platform,
     paymentMethod: tx.paymentMethod,
   })) || [];
-  const detailItems = (tx.detailsList || []).map((detail) => parseBatchItem(detail, components, tx));
+  const rawDetailItems = (tx.detailsList || []).map((detail) => parseBatchItem(detail, components, tx));
+  let detailItems = rawDetailItems;
+  if (
+    tx.type === 'PURCHASE' &&
+    rawDetailItems.length > 1 &&
+    typeof tx.totalAmount === 'number' &&
+    tx.totalAmount >= 0
+  ) {
+    const rawSum = rawDetailItems.reduce((sum, d) => sum + ((d.quantity || 1) * d.unitPrice), 0);
+    if (rawSum > 0 && Math.abs(rawSum - tx.totalAmount) >= 0.02) {
+      const ratio = tx.totalAmount / rawSum;
+      detailItems = rawDetailItems.map((d) => {
+        const qty = d.quantity || 1;
+        const unit = roundToCents(d.unitPrice * ratio);
+        const sub = roundToCents(qty * unit);
+        return {
+          ...d,
+          unitPrice: unit,
+          totalPrice: sub,
+        };
+      });
+    }
+  }
   const fallbackSingleItems: PurchaseDisplayItem[] = (partedOutItems.length === 0 && acquisitionItems.length === 0 && detailItems.length === 0 && matchedComp)
     ? [{
         category: matchedComp.category,

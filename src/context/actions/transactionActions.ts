@@ -1,5 +1,5 @@
 import { AppState, ComponentCategory, TransactionLogItem, InventoryComponent, PurchaseEntry, PCBuild, PaymentMethod, Platform } from '../../types';
-import { getAllBatchesWithRemaining, parseDateLocal } from '../../utils/helpers';
+import { getAllBatchesWithRemaining, parseDateLocal, formatCurrency, roundToCents } from '../../utils/helpers';
 import { classifyTransaction } from '../../utils/transactionClassification';
 import { parseBatchItem } from '../../components/activity/activityHelpers';
 
@@ -168,10 +168,45 @@ export const handleUpdateTransaction = (
     return { nextState: prev, success: false, error: 'Invalid payment method.' };
   }
 
+  const isPurchase = targetTx.type === 'PURCHASE';
+  const hasAmountUpdate = updates.totalAmount !== undefined;
+  const isAmountChanged = hasAmountUpdate && !Object.is(totalAmount, targetTx.totalAmount);
+  const isPaymentMethodChanged = hasPaymentMethodUpdate && paymentMethod !== targetTx.paymentMethod;
+  const isDateChanged = updates.dateSortable !== undefined && dateSortable !== targetTx.dateSortable;
+  const isItemNameChanged = updates.itemNameOrSummary !== undefined && itemNameOrSummary !== targetTx.itemNameOrSummary;
+  const isSingleItemPurchase = isPurchase && (!targetTx.detailsList || targetTx.detailsList.length <= 1);
+  const hasPurchaseEntryFieldChange = isPurchase && (isAmountChanged || isSellerChanged || isPaymentMethodChanged || isDateChanged);
+
+  const purchaseQty = targetTx.quantity || targetTx.relatedComponentQty || targetTx.originalPurchaseEntrySnapshot?.quantity || 1;
+  const newUnitPrice = roundToCents(totalAmount / purchaseQty);
+
+  let updatedDetailsList = targetTx.detailsList;
+  if (isSingleItemPurchase && (isAmountChanged || isItemNameChanged || !targetTx.detailsList || targetTx.detailsList.length <= 1)) {
+    updatedDetailsList = [`${purchaseQty}x ${itemNameOrSummary} (${formatCurrency(newUnitPrice)}/ea)`];
+  } else if (updates.detailsList && Array.isArray(updates.detailsList) && updates.detailsList.length > 0) {
+    updatedDetailsList = updates.detailsList;
+  } else if (isPurchase && targetTx.detailsList && targetTx.detailsList.length > 1 && isAmountChanged) {
+    const rawParsed = targetTx.detailsList.map((d) => parseBatchItem(d, prev.components, targetTx));
+    const oldSum = rawParsed.reduce((s, it) => s + ((it.quantity || 1) * it.unitPrice), 0);
+    if (oldSum > 0) {
+      const ratio = totalAmount / oldSum;
+      updatedDetailsList = rawParsed.map((it) => {
+        const q = it.quantity || 1;
+        const u = roundToCents(it.unitPrice * ratio);
+        return `${q}x ${it.itemName} (${formatCurrency(u)}/ea)`;
+      });
+    }
+  }
+
   let updatedSnapshot = targetTx.originalPurchaseEntrySnapshot;
-  if (isSellerChanged && updatedSnapshot) {
+  if (updatedSnapshot) {
+    const snapQty = updatedSnapshot.quantity || purchaseQty;
     updatedSnapshot = {
       ...updatedSnapshot,
+      unitPrice: isSingleItemPurchase ? roundToCents(totalAmount / snapQty) : updatedSnapshot.unitPrice,
+      totalPrice: isSingleItemPurchase ? roundToCents(totalAmount) : updatedSnapshot.totalPrice,
+      date: dateSortable,
+      paymentMethod: paymentMethod ? (paymentMethod as PaymentMethod) : updatedSnapshot.paymentMethod,
       platform: (seller || '') as Platform,
       seller: (seller || '') as Platform,
     };
@@ -192,12 +227,14 @@ export const handleUpdateTransaction = (
     seller,
     paymentMethod,
     dateSortable,
+    timestamp: isDateChanged ? dateSortable : targetTx.timestamp,
+    detailsList: updatedDetailsList,
     originalPurchaseEntrySnapshot: updatedSnapshot,
   };
 
   let updatedComponents = prev.components;
 
-  if (isSellerChanged) {
+  if (isSellerChanged || hasPurchaseEntryFieldChange) {
     const targetEntryIds = new Set<string>();
     const targetCompIds = new Set<string>();
 
@@ -251,6 +288,7 @@ export const handleUpdateTransaction = (
         const match = (comp.purchaseHistory || []).find(
           (e) =>
             e.sourcePurchaseTransactionId === targetTx.id ||
+            (targetTx.relatedPurchaseEntryId && e.id === targetTx.relatedPurchaseEntryId) ||
             (oldSeller && (e.seller === oldSeller || e.platform === oldSeller)) ||
             e.date === targetTx.dateSortable ||
             e.date === targetTx.timestamp
@@ -275,6 +313,43 @@ export const handleUpdateTransaction = (
       });
     });
 
+    // 6. Name match fallback for single purchase if not yet matched
+    if (targetTx.type === 'PURCHASE' && targetEntryIds.size === 0 && targetTx.itemNameOrSummary) {
+      const compByName = prev.components.find(
+        (c) => c.name.toLowerCase().trim() === targetTx.itemNameOrSummary.toLowerCase().trim()
+      );
+      if (compByName) {
+        targetCompIds.add(compByName.id);
+        const match = (compByName.purchaseHistory || []).find(
+          (e) =>
+            e.sourcePurchaseTransactionId === targetTx.id ||
+            (oldSeller && (e.seller === oldSeller || e.platform === oldSeller)) ||
+            e.date === targetTx.dateSortable ||
+            e.date === targetTx.timestamp
+        );
+        if (match) {
+          targetEntryIds.add(match.id);
+        } else if (compByName.purchaseHistory && compByName.purchaseHistory.length === 1) {
+          targetEntryIds.add(compByName.purchaseHistory[0].id);
+        }
+      }
+    }
+
+    const itemPriceMapByEntryId = new Map<string, { unitPrice: number; totalPrice: number }>();
+    const itemPriceMapByCompId = new Map<string, { unitPrice: number; totalPrice: number }>();
+
+    if (isPurchase && updatedDetailsList && updatedDetailsList.length > 0) {
+      updatedDetailsList.forEach((detail) => {
+        const parsed = parseBatchItem(detail, prev.components, updatedTarget);
+        if (parsed.entry) {
+          itemPriceMapByEntryId.set(parsed.entry.id, { unitPrice: parsed.unitPrice, totalPrice: parsed.totalPrice });
+        }
+        if (parsed.comp) {
+          itemPriceMapByCompId.set(parsed.comp.id, { unitPrice: parsed.unitPrice, totalPrice: parsed.totalPrice });
+        }
+      });
+    }
+
     updatedComponents = prev.components.map((comp) => {
       const hasMatchingEntries = (comp.purchaseHistory || []).some(
         (pe) => targetEntryIds.has(pe.id) || pe.sourcePurchaseTransactionId === targetTx.id
@@ -287,20 +362,43 @@ export const handleUpdateTransaction = (
 
       const updatedHistory = (comp.purchaseHistory || []).map((pe) => {
         if (targetEntryIds.has(pe.id) || pe.sourcePurchaseTransactionId === targetTx.id) {
+          const peQty = pe.quantity || 1;
+          let updatedUnitPrice = pe.unitPrice;
+          let updatedTotalPrice = pe.totalPrice;
+
+          if (isPurchase) {
+            if (isSingleItemPurchase && isAmountChanged) {
+              updatedUnitPrice = roundToCents(totalAmount / peQty);
+              updatedTotalPrice = roundToCents(totalAmount);
+            } else {
+              const byEntry = itemPriceMapByEntryId.get(pe.id);
+              const byComp = itemPriceMapByCompId.get(comp.id);
+              const priceMatch = byEntry || byComp;
+              if (priceMatch) {
+                updatedUnitPrice = priceMatch.unitPrice;
+                updatedTotalPrice = priceMatch.totalPrice;
+              }
+            }
+          }
+
           return {
             ...pe,
-            platform: (seller || '') as Platform,
-            seller: (seller || '') as Platform,
+            unitPrice: updatedUnitPrice,
+            totalPrice: updatedTotalPrice,
+            date: isDateChanged ? dateSortable : pe.date,
+            paymentMethod: paymentMethod ? (paymentMethod as PaymentMethod) : pe.paymentMethod,
+            platform: isSellerChanged ? ((seller || pe.platform || '') as Platform) : pe.platform,
+            seller: isSellerChanged ? ((seller || pe.seller || '') as Platform) : pe.seller,
             sourcePurchaseTransactionId: targetTx.id,
           };
         }
         return pe;
-      });
+      }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       return {
         ...comp,
-        seller: (seller || comp.seller || '') as Platform,
-        platform: (seller || comp.platform || '') as Platform,
+        seller: isSellerChanged ? ((seller || comp.seller || '') as Platform) : comp.seller,
+        platform: isSellerChanged ? ((seller || comp.platform || '') as Platform) : comp.platform,
         purchaseHistory: updatedHistory,
       };
     });
@@ -322,6 +420,7 @@ export const handleUpdateTransaction = (
 
   const isNoOp =
     !isSellerChanged &&
+    !hasPurchaseEntryFieldChange &&
     updatedTarget.title === targetTx.title &&
     updatedTarget.itemNameOrSummary === targetTx.itemNameOrSummary &&
     Object.is(updatedTarget.totalAmount, targetTx.totalAmount) &&

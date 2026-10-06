@@ -15,6 +15,7 @@ import {
   BulkSaleSharedData,
   ExchangeComponentPartData,
   SaveComponentOptions,
+  DriveHealthInput,
 } from '../types';
 
 /**
@@ -503,9 +504,56 @@ export const handleSaveComponent = (
       return c;
     });
 
+    let updatedTransactions = prev.transactions;
+    if (newTx) {
+      updatedTransactions = [newTx, ...prev.transactions];
+    } else if (updatedPurchaseEntry && validatedUpdatedEntry) {
+      const entryId = updatedPurchaseEntry.entryId;
+      updatedTransactions = prev.transactions.map((tx) => {
+        const isMatchedTx =
+          tx.relatedPurchaseEntryId === entryId ||
+          tx.originalPurchaseEntrySnapshot?.id === entryId ||
+          (tx.relatedComponentId === existingComponentId && tx.detailsList?.length === 1 && tx.type === 'PURCHASE');
+        if (!isMatchedTx) return tx;
+
+        const qty = validatedUpdatedEntry.quantity;
+        const unitP = validatedUpdatedEntry.unitPrice;
+        const totalP = validatedUpdatedEntry.totalPrice;
+        const date = updatedPurchaseEntry.entry.date;
+        const payment = updatedPurchaseEntry.entry.paymentMethod;
+        const platform = updatedPurchaseEntry.entry.platform;
+        const compName = componentData.name || (prev.components.find((comp) => comp.id === existingComponentId)?.name) || tx.itemNameOrSummary;
+
+        return {
+          ...tx,
+          quantity: qty,
+          totalAmount: totalP,
+          dateSortable: date,
+          timestamp: date,
+          paymentMethod: payment,
+          platform,
+          seller: platform,
+          itemNameOrSummary: compName,
+          detailsList: [`${qty}x ${compName} (${formatCurrency(unitP)}/ea)`],
+          originalPurchaseEntrySnapshot: tx.originalPurchaseEntrySnapshot
+            ? {
+                ...tx.originalPurchaseEntrySnapshot,
+                date,
+                quantity: qty,
+                unitPrice: unitP,
+                totalPrice: totalP,
+                paymentMethod: payment,
+                platform,
+                seller: platform,
+              }
+            : undefined,
+        };
+      });
+    }
+
     const nextStateObj = {
       ...prev,
-      transactions: newTx ? [newTx, ...prev.transactions] : prev.transactions,
+      transactions: updatedTransactions,
       components: updatedComponents,
     };
     
@@ -1776,7 +1824,7 @@ export const handleExchangeComponentPart = (
 export const handleDistributeDriveHealths = (
   prev: AppState,
   componentId: string,
-  unitHealths: number[]
+  unitHealths: DriveHealthInput[]
 ): { nextState: AppState; success: boolean; error?: string } => {
   const comp = prev.components.find((c) => c.id === componentId);
   if (!comp) {
@@ -1798,10 +1846,13 @@ export const handleDistributeDriveHealths = (
     };
   }
 
-  for (const h of unitHealths) {
-    if (!Number.isFinite(h) || h < 0 || h > 100) {
+  const numericHealths: number[] = [];
+  for (const item of unitHealths) {
+    const h = typeof item === 'number' ? item : item?.health;
+    if (typeof h !== 'number' || !Number.isFinite(h) || h < 0 || h > 100) {
       return { nextState: prev, success: false, error: 'Health percentages must be between 0 and 100' };
     }
+    numericHealths.push(h);
   }
 
   let healthIndex = 0;
@@ -1838,7 +1889,7 @@ export const handleDistributeDriveHealths = (
       continue;
     }
 
-    const batchHealths = unitHealths.slice(healthIndex, healthIndex + unassignedCount);
+    const batchHealths = numericHealths.slice(healthIndex, healthIndex + unassignedCount);
     healthIndex += unassignedCount;
 
     for (let i = 0; i < unassignedCount; i++) {

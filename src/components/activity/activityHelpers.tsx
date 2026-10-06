@@ -1,5 +1,5 @@
 import { InventoryComponent, TransactionLogItem, PurchaseEntry, PCBuild } from '../../types';
-import { formatCategoryPlural } from '../../utils/helpers';
+import { formatCategoryPlural, roundToCents } from '../../utils/helpers';
 import { classifyTransaction } from '../../utils/transactionClassification';
 import { generateBuildTitleFromParts } from '../../utils/buildTitle';
 
@@ -45,6 +45,9 @@ export const parseBatchItem = (
     quantity = match[1] ? parseInt(match[1], 10) : 1;
     itemName = match[2] ? match[2].trim() : detailStr;
     unitPrice = match[3] ? parseFloat(match[3].replace(/,/g, '')) : 0;
+  }
+  if ((!match || !match[1]) && tx.quantity && tx.quantity > 0 && (!tx.detailsList || tx.detailsList.length <= 1)) {
+    quantity = tx.quantity;
   }
 
   // Explicit transaction links are authoritative for single-item records.
@@ -117,9 +120,13 @@ export const parseBatchItem = (
 
   const purchaseEntry = fallbackBatch;
 
-  // Recorded detail text wins. Otherwise use only an exact batch or its stored
-  // historical snapshot; never infer a batch from date, price, or position.
-  if (unitPrice === 0 && purchaseEntry) {
+  // Single-item purchase transaction amount is authoritative for its unit price.
+  // Recorded detail text wins for multi-item transactions. Otherwise use only
+  // an exact batch or its stored historical snapshot.
+  const isSingleItemPurchase = tx.type === 'PURCHASE' && (!tx.detailsList || tx.detailsList.length <= 1);
+  if (isSingleItemPurchase && typeof tx.totalAmount === 'number' && Number.isFinite(tx.totalAmount)) {
+    unitPrice = roundToCents(tx.totalAmount / (quantity || 1));
+  } else if (unitPrice === 0 && purchaseEntry) {
     unitPrice = purchaseEntry.unitPrice || (purchaseEntry.totalPrice / (purchaseEntry.quantity || 1));
   }
 
@@ -140,7 +147,9 @@ export const parseBatchItem = (
 
   const itemPlatform = purchaseEntry?.platform || tx.platform || '';
   const itemPaymentMethod = purchaseEntry?.paymentMethod || tx.paymentMethod || '';
-  const totalPrice = unitPrice > 0 ? unitPrice * quantity : 0;
+  const totalPrice = isSingleItemPurchase && typeof tx.totalAmount === 'number' && Number.isFinite(tx.totalAmount)
+    ? roundToCents(tx.totalAmount)
+    : (unitPrice > 0 ? roundToCents(unitPrice * quantity) : 0);
 
   return {
     itemName,

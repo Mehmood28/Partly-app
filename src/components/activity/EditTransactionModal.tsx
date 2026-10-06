@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TransactionLogItem } from '../../types';
 import { X, Pencil } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
@@ -6,13 +6,21 @@ import { usePrivacy } from '../../context/PrivacyContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useToast } from '../../context/ToastContext';
 import { prepareTransactionEdit } from './transactionEditParsers';
-import { getCleanTransactionTitle } from './activityHelpers';
-import { roundToCents } from '../../utils/helpers';
+import { getCleanTransactionTitle, parseBatchItem } from './activityHelpers';
+import { roundToCents, formatCurrency } from '../../utils/helpers';
 
 interface EditTransactionModalProps {
   tx: TransactionLogItem | null;
   isOpen?: boolean;
   onClose: () => void;
+}
+
+interface EditablePurchaseItem {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  unitPriceStr: string;
+  subtotal: number;
 }
 
 export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, isOpen = true, onClose }) => {
@@ -33,6 +41,8 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
   const [editSeller, setEditSeller] = useState<string>('');
   const [editPaymentMethod, setEditPaymentMethod] = useState<string>('');
   const [editDate, setEditDate] = useState<string>('');
+  const [editItems, setEditItems] = useState<EditablePurchaseItem[]>([]);
+  const initialItemsRef = useRef<Array<{ name: string; quantity: number; unitPrice: number }>>([]);
 
   const handleAmountChange = (val: string) => {
     setEditAmount(val);
@@ -44,6 +54,54 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
         setEditProfit('');
       }
     }
+    const parsedAmount = parseFloat(val);
+    if (editItems.length > 1 && !isNaN(parsedAmount) && parsedAmount >= 0) {
+      // Use the initial uncorrupted baseline items so typing/backspacing doesn't degrade or zero-out prices
+      const baseline = initialItemsRef.current.length === editItems.length
+        ? initialItemsRef.current
+        : editItems;
+      const baseSum = baseline.reduce((sum, it) => sum + (it.quantity * it.unitPrice), 0);
+
+      if (baseSum > 0) {
+        const ratio = parsedAmount / baseSum;
+        setEditItems((prev) =>
+          prev.map((it, idx) => {
+            const baseItem = baseline[idx] || it;
+            const newUnitPrice = roundToCents(baseItem.unitPrice * ratio);
+            const newSubtotal = roundToCents(it.quantity * newUnitPrice);
+            return {
+              ...it,
+              unitPrice: newUnitPrice,
+              unitPriceStr: String(newUnitPrice),
+              subtotal: newSubtotal,
+            };
+          })
+        );
+      }
+    }
+  };
+
+  const handleItemPriceChange = (index: number, val: string) => {
+    setEditItems((prev) => {
+      const updated = [...prev];
+      const item = { ...updated[index] };
+      item.unitPriceStr = val;
+      const num = parseFloat(val);
+      item.unitPrice = !isNaN(num) && num >= 0 ? num : 0;
+      item.subtotal = roundToCents(item.quantity * item.unitPrice);
+      updated[index] = item;
+
+      // When the user explicitly edits an individual item price, update baseline weights
+      initialItemsRef.current = updated.map((it) => ({
+        name: it.name,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice,
+      }));
+
+      const newTotal = updated.reduce((sum, it) => sum + it.subtotal, 0);
+      setEditAmount(String(roundToCents(newTotal)));
+      return updated;
+    });
   };
 
   const getMaskedTitle = (rawTitle: string, seller?: string) => {
@@ -96,6 +154,34 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       setEditSeller(tx.seller || tx.platform || '');
       setEditPaymentMethod(tx.paymentMethod || '');
       setEditDate(tx.dateSortable || '');
+
+      if (tx.type === 'PURCHASE' && tx.detailsList && tx.detailsList.length > 1) {
+        const rawParsed = tx.detailsList.map((detail) => parseBatchItem(detail, state.components, tx));
+        const rawSum = rawParsed.reduce((s, it) => s + ((it.quantity || 1) * it.unitPrice), 0);
+        const currentTotal = typeof tx.totalAmount === 'number' && tx.totalAmount > 0 ? tx.totalAmount : rawSum;
+        const ratio = rawSum > 0 ? currentTotal / rawSum : 1;
+        const items: EditablePurchaseItem[] = rawParsed.map((it) => {
+          const q = it.quantity || 1;
+          const u = (rawSum > 0 && Math.abs(rawSum - currentTotal) >= 0.02) ? roundToCents(it.unitPrice * ratio) : it.unitPrice;
+          const sub = roundToCents(q * u);
+          return {
+            name: it.itemName,
+            quantity: q,
+            unitPrice: u,
+            unitPriceStr: String(u),
+            subtotal: sub,
+          };
+        });
+        setEditItems(items);
+        initialItemsRef.current = items.map((it) => ({
+          name: it.name,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice,
+        }));
+      } else {
+        setEditItems([]);
+        initialItemsRef.current = [];
+      }
     }
   }, [tx, state.components, state.builds]);
 
@@ -119,6 +205,10 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       }
     }
 
+    const updatedDetailsList = editItems.length > 1
+      ? editItems.map((it) => `${it.quantity}x ${it.name} (${formatCurrency(it.unitPrice)}/ea)`)
+      : undefined;
+
     const prepared = prepareTransactionEdit({
       type: tx.type,
       title: finalTitle,
@@ -130,6 +220,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       platform: editSeller,
       paymentMethod: editPaymentMethod,
       dateSortable: editDate,
+      detailsList: updatedDetailsList,
     });
 
     if (!prepared.success) {
@@ -276,6 +367,51 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
               />
             </div>
           </div>
+
+          {editItems.length > 1 && (
+            <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+              <div className="flex items-center justify-between">
+                <label className="text-zinc-300 font-medium text-xs font-sans">
+                  Purchased Parts ({editItems.length})
+                </label>
+                <span className="text-[10.5px] text-zinc-400 font-mono">
+                  Edit unit price or Total Amount
+                </span>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1 no-scrollbar">
+                {editItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-3 bg-[#101719] px-3 py-2 rounded-xl border border-white/[0.06]"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-zinc-200 truncate">{item.name}</p>
+                      <p className="text-[11px] text-zinc-400 font-mono">
+                        Qty: <span className="text-[#B9EF68] font-bold">{item.quantity}</span>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1">
+                        <span className="text-zinc-500 text-xs font-mono">$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={item.unitPriceStr}
+                          onChange={(e) => handleItemPriceChange(idx, e.target.value)}
+                          className="w-20 h-8 px-2 text-xs font-mono font-bold bg-[#090D0F] border border-white/[0.12] rounded-lg text-zinc-100 text-right focus:outline-none focus:border-[#83E5DF]"
+                        />
+                        <span className="text-zinc-500 text-[10px] font-mono">/ea</span>
+                      </div>
+                      <div className="w-16 text-right text-xs font-mono font-bold text-zinc-300">
+                        ${item.subtotal.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/[0.08]">
             <button
