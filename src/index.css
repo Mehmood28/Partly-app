@@ -1608,6 +1608,30 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
     font-size: 11px !important;
     box-sizing: border-box !important;
   }
+
+  [data-bottom-sheet-modal] .stock-modal .transaction-edit-modal .transaction-edit-cost-box,
+  [data-bottom-sheet-modal] .transaction-edit-cost-box,
+  .transaction-edit-cost-box {
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+    box-sizing: border-box !important;
+  }
+
+  [data-bottom-sheet-modal] .stock-modal .transaction-edit-modal input.transaction-edit-cost-input,
+  [data-bottom-sheet-modal] input.transaction-edit-cost-input,
+  .transaction-edit-cost-input {
+    height: 18px !important;
+    min-height: 18px !important;
+    max-height: 18px !important;
+    line-height: 18px !important;
+    padding: 0 !important;
+    padding-block: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    font-size: 11px !important;
+    box-sizing: border-box !important;
+  }
 }
 
 [data-bottom-sheet-modal] .transaction-edit-modal .transaction-edit-item-input,
@@ -1623,6 +1647,30 @@ input.transaction-edit-item-input {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   padding-block: 0 !important;
+  font-size: 11px !important;
+  box-sizing: border-box !important;
+}
+
+[data-bottom-sheet-modal] .stock-modal .transaction-edit-modal .transaction-edit-cost-box,
+[data-bottom-sheet-modal] .transaction-edit-cost-box,
+.transaction-edit-cost-box {
+  height: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  box-sizing: border-box !important;
+}
+
+[data-bottom-sheet-modal] .stock-modal .transaction-edit-modal input.transaction-edit-cost-input,
+[data-bottom-sheet-modal] input.transaction-edit-cost-input,
+.transaction-edit-cost-input {
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+  line-height: 18px !important;
+  padding: 0 !important;
+  padding-block: 0 !important;
+  border: none !important;
+  background: transparent !important;
   font-size: 11px !important;
   box-sizing: border-box !important;
 }

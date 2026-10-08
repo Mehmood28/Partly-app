@@ -132,7 +132,6 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     : undefined;
 
   const executeShareImageDiscord = async () => {
-    if (!hasBuildImage) return;
     if (imageShareStatus === 'loading' || imageShareStatus === 'success') return;
     if (!imageCardRef.current) return;
     setImageShareStatus('loading');
@@ -158,7 +157,6 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
 
   const handleShareImageDiscord = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!hasBuildImage) return;
     if (imageShareStatus === 'loading' || imageShareStatus === 'success') return;
     setConfirmModalConfig({
       isOpen: true,
@@ -349,21 +347,15 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     <button
                       type="button"
                       onClick={handleShareImageDiscord}
-                      disabled={!hasBuildImage || imageShareStatus === 'loading' || imageShareStatus === 'success'}
+                      disabled={imageShareStatus === 'loading' || imageShareStatus === 'success'}
                       className={`app-button ${
-                        !hasBuildImage
-                          ? 'border-white/[0.05] text-zinc-600 bg-[#0B1113]/60 cursor-not-allowed opacity-60'
-                          : imageShareStatus === 'success'
+                        imageShareStatus === 'success'
                           ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10 cursor-default'
                           : imageShareStatus === 'error'
                           ? 'border-rose-500/40 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20'
                           : 'border-white/[0.08] text-zinc-200 bg-[#0B1113] hover:border-[#B9EF68]/40'
                       }`}
-                      title={
-                        !hasBuildImage
-                          ? 'Add a build image to enable sharing'
-                          : imageShareError || 'Share build as rendered image to Discord'
-                      }
+                      title={imageShareError || 'Share build hardware specs as image to Discord'}
                     >
                       {imageShareStatus === 'loading' ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin text-[#B9EF68]" />
@@ -436,21 +428,15 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                     <button
                       type="button"
                       onClick={handleShareImageDiscord}
-                      disabled={!hasBuildImage || imageShareStatus === 'loading' || imageShareStatus === 'success'}
+                      disabled={imageShareStatus === 'loading' || imageShareStatus === 'success'}
                       className={`app-button ${
-                        !hasBuildImage
-                          ? 'border-white/[0.05] text-zinc-600 bg-[#0B1113]/60 cursor-not-allowed opacity-60'
-                          : imageShareStatus === 'success'
+                        imageShareStatus === 'success'
                           ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10 cursor-default'
                           : imageShareStatus === 'error'
                           ? 'border-rose-500/40 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20'
                           : 'border-white/[0.08] text-zinc-200 bg-[#0B1113] hover:border-[#B9EF68]/40'
                       }`}
-                      title={
-                        !hasBuildImage
-                          ? 'Add a build image to enable sharing'
-                          : imageShareError || 'Share build as rendered image to Discord'
-                      }
+                      title={imageShareError || 'Share build hardware specs as image to Discord'}
                     >
                       {imageShareStatus === 'loading' ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin text-[#B9EF68]" />
@@ -911,20 +897,18 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
       )}
 
       {/* Off-screen card used for HTML-to-Image rendering */}
-      {hasBuildImage && (
-        <div
-          style={{
-            position: 'fixed',
-            left: -9999,
-            top: 0,
-            zIndex: -9999,
-            pointerEvents: 'none',
-          }}
-          aria-hidden="true"
-        >
-          <BuildShareImageCard ref={imageCardRef} build={build} components={state.components} />
-        </div>
-      )}
+      <div
+        style={{
+          position: 'fixed',
+          left: -9999,
+          top: 0,
+          zIndex: -9999,
+          pointerEvents: 'none',
+        }}
+        aria-hidden="true"
+      >
+        <BuildShareImageCard ref={imageCardRef} build={build} components={state.components} />
+      </div>
     </div>
   );
 });

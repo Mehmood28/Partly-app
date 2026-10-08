@@ -107,11 +107,15 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
   };
 
   const handleItemPriceChange = (index: number, val: string) => {
+    const sanitized = val.replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    const cleanVal = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitized;
+
     setEditItems((prev) => {
       const updated = [...prev];
       const item = { ...updated[index] };
-      item.unitPriceStr = val;
-      const num = parseFloat(val);
+      item.unitPriceStr = cleanVal;
+      const num = parseFloat(cleanVal);
       item.unitPrice = !isNaN(num) && num >= 0 ? num : 0;
       item.subtotal = roundToCents(item.quantity * item.unitPrice);
       updated[index] = item;
@@ -465,7 +469,10 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                   Edit quantity, unit price, or Total Amount
                 </span>
               </div>
-              <div className={`overflow-y-auto pr-1 no-scrollbar space-y-[5px] ${hasMultipleParts ? 'flex-1 min-h-0' : 'max-h-56'}`}>
+              <div
+                className={`overflow-y-auto pr-1 no-scrollbar flex flex-col ${hasMultipleParts ? 'flex-1 min-h-0' : 'max-h-56'}`}
+                style={{ gap: '5px' }}
+              >
                 {editItems.map((item, idx) => (
                   <div
                     key={idx}
@@ -492,16 +499,18 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[11px] font-medium text-zinc-400 font-sans">Cost:</span>
-                          <div className="relative flex items-center">
-                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px] pointer-events-none font-mono select-none leading-none z-10">$</span>
+                          <div
+                            onClick={(e) => e.currentTarget.querySelector('input')?.focus()}
+                            className="transaction-edit-cost-box flex items-center bg-[#090D0F] border border-white/[0.12] rounded-md px-1.5 h-5 focus-within:border-[#83E5DF] cursor-text transition-colors"
+                          >
+                            <span className="text-zinc-500 text-[10px] font-mono select-none leading-none shrink-0 mr-0.5">$</span>
                             <input
-                              type="number"
-                              step="0.01"
-                              min="0"
+                              type="text"
+                              inputMode="decimal"
                               value={item.unitPriceStr}
                               onChange={(e) => handleItemPriceChange(idx, e.target.value)}
-                              style={{ height: '20px', minHeight: '20px', maxHeight: '20px', lineHeight: '18px', paddingTop: 0, paddingBottom: 0 }}
-                              className="transaction-edit-item-input w-16 pl-3.5 pr-1.5 text-[11px] font-mono font-bold bg-[#090D0F] border border-white/[0.12] rounded-md text-zinc-100 text-right focus:outline-none focus:border-[#83E5DF] transition-colors"
+                              className="transaction-edit-cost-input w-11 bg-transparent border-0 outline-none p-0 text-[11px] font-mono font-bold text-zinc-100 text-left focus:ring-0 focus:outline-none"
+                              style={{ height: '18px', minHeight: '18px', maxHeight: '18px', lineHeight: '18px', paddingTop: 0, paddingBottom: 0 }}
                             />
                           </div>
                         </div>

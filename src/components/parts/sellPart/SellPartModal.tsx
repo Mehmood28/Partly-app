@@ -575,7 +575,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                       onChange={handleBatchChange}
                       options={availableBatches.map(b => ({
                         value: b.entry.id,
-                        label: `${b.entry.date} · ${b.entry.condition}${currentComponent.category === 'Storage' && typeof b.entry.healthPercent === 'number' ? ` · ${b.entry.healthPercent}%` : ''}${b.entry.notes && b.entry.notes !== 'Bulk imported' ? ` · ${b.entry.notes}` : ''} · ${formatCurrency(b.unitCost)} each (${b.availableQuantity} available)${!hideSupplierNames && b.entry.platform ? ` · ${b.entry.platform}` : ''}`,
+                        label: `${b.entry.date} · ${b.entry.condition}${currentComponent.category === 'Storage' && typeof b.entry.healthPercent === 'number' ? ` · ${b.entry.healthPercent}%` : ''} · ${formatCurrency(b.unitCost)} each (${b.availableQuantity} available)${!hideSupplierNames && b.entry.platform ? ` · ${b.entry.platform}` : ''}`,
                       }))}
                       placeholder="Select batch..."
                       fitLongestOption={false}
