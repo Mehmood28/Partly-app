@@ -70,20 +70,28 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
   const getBackupStatus = () => {
     if (!lastBackupTimestamp) return { status: 'Backup recommended (Never)', color: 'bg-rose-500/10 text-rose-300 border border-rose-500/25' };
     
-    const now = Date.now();
-    const diffMs = now - lastBackupTimestamp;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const now = new Date();
+    const backupDate = new Date(lastBackupTimestamp);
+    const diffMs = now.getTime() - lastBackupTimestamp;
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
+    const backupMidnight = new Date(backupDate.getFullYear(), backupDate.getMonth(), backupDate.getDate(), 0, 0, 0, 0).getTime();
+    const calendarDiffDays = Math.round((todayMidnight - backupMidnight) / (1000 * 60 * 60 * 24));
     
-    if (diffDays >= 7) {
-      return { status: `Backup recommended (${diffDays} days ago)`, color: 'bg-rose-500/10 text-rose-300 border border-rose-500/25' };
+    if (calendarDiffDays >= 7) {
+      return { status: `Backup recommended (${calendarDiffDays} days ago)`, color: 'bg-rose-500/10 text-rose-300 border border-rose-500/25' };
     }
     
     if (diffHours < 24) {
       return { status: diffHours === 0 ? 'Backed up: Just now' : `Backed up: ${diffHours}h ago`, color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' };
     }
+
+    if (calendarDiffDays === 1) {
+      return { status: 'Backed up: Yesterday', color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' };
+    }
     
-    return { status: `Backed up: ${diffDays} days ago`, color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' };
+    return { status: `Backed up: ${calendarDiffDays} days ago`, color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' };
   };
 
   const backupPill = getBackupStatus();

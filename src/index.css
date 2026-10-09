@@ -1462,8 +1462,8 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   height: 12px !important;
 }
 
-.bulk-review-row > label { min-width:0; color:var(--app-muted); font-size:10px; font-weight:600; }
-.bulk-review-row > label > span { display:block; margin-bottom:2px; padding-left:3px; }
+.bulk-review-row label { min-width:0; color:var(--app-muted); font-size:10px; font-weight:600; }
+.bulk-review-row label > span { display:block; margin-bottom:3px; padding-left:0; }
 .bulk-review-row input,
 .bulk-review-row select,
 .bulk-review-row .app-field,

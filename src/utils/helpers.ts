@@ -664,6 +664,80 @@ export function formatReadableDate(dateStr?: string): string | null {
   return `${MONTHS[parsed.monthIndex]} ${parsed.day}, ${parsed.year}`;
 }
 
+export interface RelativeDateOptions {
+  referenceDate?: Date;
+  fallbackText?: string;
+  maxRelativeDays?: number;
+}
+
+export function getLocalCalendarTimestamp(dateInput?: string | number | Date | null): number {
+  if (!dateInput && dateInput !== 0) return 0;
+  if (typeof dateInput === 'number') {
+    const d = new Date(dateInput);
+    return isNaN(d.getTime()) ? 0 : new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).getTime();
+  }
+  if (dateInput instanceof Date) {
+    return isNaN(dateInput.getTime()) ? 0 : new Date(dateInput.getFullYear(), dateInput.getMonth(), dateInput.getDate(), 0, 0, 0, 0).getTime();
+  }
+  if (typeof dateInput === 'string') {
+    const trimmed = dateInput.trim();
+    if (!trimmed) return 0;
+    const parsed = parseDateLocal(trimmed);
+    if (parsed) {
+      return new Date(parsed.year, parsed.monthIndex, parsed.day, 0, 0, 0, 0).getTime();
+    }
+    const d = new Date(trimmed);
+    return isNaN(d.getTime()) ? 0 : new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).getTime();
+  }
+  return 0;
+}
+
+export function formatRelativeCalendarDate(
+  dateInput?: string | number | Date | null,
+  options?: RelativeDateOptions
+): string {
+  const fallback = options?.fallbackText ?? 'Recently';
+  if (!dateInput && dateInput !== 0) return fallback;
+
+  const targetMidnight = getLocalCalendarTimestamp(dateInput);
+  if (!targetMidnight) return fallback;
+
+  const ref = options?.referenceDate ?? new Date();
+  if (isNaN(ref.getTime())) return fallback;
+
+  const referenceMidnight = new Date(
+    ref.getFullYear(),
+    ref.getMonth(),
+    ref.getDate(),
+    0,
+    0,
+    0,
+    0
+  ).getTime();
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const diffDays = Math.round((referenceMidnight - targetMidnight) / msPerDay);
+
+  if (diffDays <= 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+
+  const maxRelative = options?.maxRelativeDays ?? 6;
+  if (diffDays <= maxRelative) {
+    return `${diffDays} days ago`;
+  }
+
+  const targetDate = new Date(targetMidnight);
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthName = MONTHS[targetDate.getMonth()];
+  const day = targetDate.getDate();
+
+  if (targetDate.getFullYear() === ref.getFullYear()) {
+    return `${monthName} ${day}`;
+  }
+
+  return `${monthName} ${day}, ${targetDate.getFullYear()}`;
+}
+
 export type SortOption = 
   | 'highest-price' 
   | 'lowest-price' 

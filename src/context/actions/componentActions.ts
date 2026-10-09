@@ -861,10 +861,16 @@ export const handleAddComponent = (
     return handleAddComponents(prev, [compData], targetPurchaseTransactionId);
   }
 
-  const existingCompIndex = findUniqueCatalogMatchIndex(
-    prev.components,
-    compData
-  );
+  const explicitTargetId = (compData as any).targetComponentId;
+  let existingCompIndex = explicitTargetId
+    ? prev.components.findIndex((c) => c.id === explicitTargetId)
+    : -1;
+  if (existingCompIndex === -1) {
+    existingCompIndex = findUniqueCatalogMatchIndex(
+      prev.components,
+      compData
+    );
+  }
 
   const newPurchaseEntries: PurchaseEntry[] = [];
   const newTxs: TransactionLogItem[] = [];
@@ -1124,7 +1130,13 @@ export const handleAddComponents = (
       if (!e.platform) e.platform = defaultSeller;
       if (!e.paymentMethod) e.paymentMethod = defaultPaymentMethod;
     });
-    const existingCompIndex = findUniqueCatalogMatchIndex(componentsToKeep, compData);
+    const explicitTargetId = (compData as any).targetComponentId;
+    let existingCompIndex = explicitTargetId
+      ? componentsToKeep.findIndex((c) => c.id === explicitTargetId)
+      : -1;
+    if (existingCompIndex === -1) {
+      existingCompIndex = findUniqueCatalogMatchIndex(componentsToKeep, compData);
+    }
     
     const tags = compData.tags ? normalizeTags(compData.tags, compData.category) : [];
 

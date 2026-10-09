@@ -4,8 +4,10 @@ import {
   calculateBuildPartsCost,
   calculateMonthlyMetrics,
   formatCurrency,
-  parseDateLocal,
+  formatRelativeCalendarDate,
+  getLocalCalendarTimestamp,
 } from '../../utils/helpers';
+import { findLinkedSaleTransaction } from '../../utils/buildEligibility';
 import { Monitor, Hammer, TrendingUp, Clock, ArrowUpRight } from 'lucide-react';
 
 interface DashboardQuickStatsProps {
@@ -55,53 +57,34 @@ export const DashboardQuickStats: React.FC<DashboardQuickStatsProps> = ({
     if (sold.length === 0) return null;
 
     return [...sold].sort((a, b) => {
-      const dateA = a.saleDate || a.completionDate || a.createdDate || '';
-      const dateB = b.saleDate || b.completionDate || b.createdDate || '';
-      const timeA = dateA ? (parseDateLocal(dateA) ? new Date(dateA).getTime() : 0) : 0;
-      const timeB = dateB ? (parseDateLocal(dateB) ? new Date(dateB).getTime() : 0) : 0;
-      return timeB - timeA;
+      const txA = findLinkedSaleTransaction(a, state.transactions).transaction;
+      const txB = findLinkedSaleTransaction(b, state.transactions).transaction;
+      const dateA = txA?.dateSortable || a.saleDate || txA?.timestamp || a.completionDate || a.createdDate || '';
+      const dateB = txB?.dateSortable || b.saleDate || txB?.timestamp || b.completionDate || b.createdDate || '';
+      const timeA = getLocalCalendarTimestamp(dateA);
+      const timeB = getLocalCalendarTimestamp(dateB);
+      if (timeB !== timeA) return timeB - timeA;
+      return b.id.localeCompare(a.id);
     })[0];
-  }, [state.builds]);
+  }, [state.builds, state.transactions]);
 
   const lastSaleElapsed = useMemo(() => {
     if (!lastSoldBuild) return 'No sales yet';
+    const tx = findLinkedSaleTransaction(lastSoldBuild, state.transactions).transaction;
     const dateStr =
+      tx?.dateSortable ||
       lastSoldBuild.saleDate ||
+      tx?.timestamp ||
       lastSoldBuild.completionDate ||
       lastSoldBuild.createdDate;
     if (!dateStr) return 'Recently';
 
-    const parsed = parseDateLocal(dateStr);
-    let saleMidnight: number;
-    if (parsed) {
-      saleMidnight = new Date(parsed.year, parsed.monthIndex, parsed.day).getTime();
-    } else {
-      const d = new Date(dateStr);
-      saleMidnight = isNaN(d.getTime())
-        ? 0
-        : new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    }
-    if (!saleMidnight) return 'Recently';
-
-    const todayMidnight = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    ).getTime();
-    const diffDays = Math.round(
-      (todayMidnight - saleMidnight) / (1000 * 60 * 60 * 24)
-    );
-
-    if (diffDays <= 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) {
-      const weeks = Math.floor(diffDays / 7);
-      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
-    }
-    const months = Math.floor(diffDays / 30);
-    return `${months} ${months === 1 ? 'month' : 'months'} ago`;
-  }, [lastSoldBuild, now]);
+    return formatRelativeCalendarDate(dateStr, {
+      referenceDate: now,
+      fallbackText: 'Recently',
+      maxRelativeDays: 6,
+    });
+  }, [lastSoldBuild, state.transactions, now]);
 
   const lastSoldTitle = lastSoldBuild?.name || 'No completed sales';
 

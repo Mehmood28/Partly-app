@@ -158,13 +158,55 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
         throw new Error(errMessage);
       }
       const data: ParsedBulkStockItem[] = await res.json();
+      const rawList = Array.isArray(data) ? data : [];
+
+      // Defensive client-side header absorption guard
+      let clientBatchSeller = '';
+      let clientBatchDate = '';
+      let clientBatchCondition: Condition | undefined = undefined;
+      let clientBatchPayment: PaymentMethod | undefined = undefined;
+
+      const nonHeaderList = rawList.filter((item: any) => {
+        const name = String(item.name || '').trim();
+        const isHeaderRow =
+          /^(?:supplier|seller|vendor|store|date|condition(?:\s+for\s+all)?|payment|notes?)\s*:/i.test(name) ||
+          /^(?:batch\s+date|batch\s+condition|batch\s+seller)/i.test(name);
+
+        if (isHeaderRow) {
+          if (/^(?:supplier|seller|vendor|store)\s*:\s*(.*)/i.test(name)) {
+            clientBatchSeller = name.replace(/^(?:supplier|seller|vendor|store)\s*:\s*/i, '').trim();
+          } else if (/^(?:date)\s*:\s*(.*)/i.test(name)) {
+            const rawD = name.replace(/^(?:date)\s*:\s*/i, '').trim();
+            const parsedD = new Date(rawD);
+            if (!isNaN(parsedD.getTime())) {
+              clientBatchDate = parsedD.toISOString().split('T')[0];
+            } else {
+              clientBatchDate = rawD;
+            }
+          } else if (/^(?:condition(?:\s+for\s+all)?)\s*:\s*(.*)/i.test(name)) {
+            const rawC = name.replace(/^(?:condition(?:\s+for\s+all)?)\s*:\s*/i, '').trim().toLowerCase();
+            if (/sealed/i.test(rawC)) clientBatchCondition = 'Sealed';
+            else if (/new\s+open\s+box/i.test(rawC)) clientBatchCondition = 'New Open Box';
+            else if (/new\s+no\s+box/i.test(rawC)) clientBatchCondition = 'New No Box';
+            else if (/used\s+no\s+box/i.test(rawC)) clientBatchCondition = 'Used No Box';
+            else if (/used/i.test(rawC)) clientBatchCondition = 'Used Open Box';
+            else clientBatchCondition = 'New No Box';
+          } else if (/^(?:payment)\s*:\s*(.*)/i.test(name)) {
+            const rawP = name.replace(/^(?:payment)\s*:\s*/i, '').trim();
+            clientBatchPayment = rawP as PaymentMethod;
+          }
+          return false; // Silently absorb header data and discard item
+        }
+        return true;
+      });
+
       const hasHealthMention = /(?:\bhealth\b|\b\d{1,3}%\b)/i.test(textInput);
-      const enrichedData: ParsedBulkStockItem[] = (Array.isArray(data) ? data : []).map((item) => {
-        const rawSeller = item.seller || (item as any).vendor;
+      const enrichedData: ParsedBulkStockItem[] = nonHeaderList.map((item) => {
+        const rawSeller = item.seller || (item as any).vendor || clientBatchSeller;
         let cleanSeller = rawSeller ? String(rawSeller).trim() : '';
         if (cleanSeller.includes('\n')) cleanSeller = cleanSeller.split('\n')[0].trim();
         cleanSeller = cleanSeller.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim();
-        cleanSeller = cleanSeller.replace(/^(?:Seller|Vendor)\s*:\s*/i, '').trim();
+        cleanSeller = cleanSeller.replace(/^(?:Seller|Vendor|Supplier|Store)\s*:\s*/i, '').trim();
         if (cleanSeller.length > 30) {
           const firstWord = cleanSeller.split(/[\s,;|]/)[0];
           cleanSeller = firstWord.length > 1 ? firstWord : cleanSeller.slice(0, 30);
@@ -181,18 +223,29 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
           cleanName = cleanName.replace(new RegExp(`^${escapedSeller}\\s+`, 'i'), '').trim();
         }
 
+        // Apply cascaded condition if item's condition was absent or default 'Used Open Box' and clientBatchCondition exists
+        let condition = item.condition || 'Used Open Box';
+        if ((!item.condition || item.condition === 'Used Open Box') && clientBatchCondition) {
+          condition = clientBatchCondition;
+        }
+
         return {
           ...item,
           name: cleanName || item.name,
           seller: (cleanSeller || undefined) as Platform | undefined,
+          date: item.date || clientBatchDate || undefined,
+          paymentMethod: item.paymentMethod || clientBatchPayment || undefined,
+          condition: condition as Condition,
           healthPercent: (item.category === 'Storage' && hasHealthMention) ? item.healthPercent : undefined,
           tags: normalizeTags(item.tags || [], item.category),
         };
       }).filter((item) => {
         if (!item.name || item.name.trim().length < 2) return false;
         if (/^[•\-\*\s]+$/.test(item.name)) return false;
+        if (/^(?:supplier|seller|vendor|store|date|condition(?:\s+for\s+all)?|payment|notes?)\s*:/i.test(item.name)) return false;
         return true;
       });
+
       setParsedItems(enrichedData);
     } catch (err: unknown) {
       console.error(err);
@@ -211,15 +264,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
   };
 
   const handleNameChange = (index: number, newName: string) => {
-    setParsedItems((prev) => {
-      const newItems = [...prev];
-      const item = newItems[index];
-      newItems[index] = {
-        ...item,
-        name: newName,
-      };
-      return newItems;
-    });
+    updateParsedItem(index, 'name', newName);
   };
 
   const handleCategoryChange = (index: number, newCat: ComponentCategory) => {
@@ -545,16 +590,19 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
               </div>
               
               <div className="divide-y divide-white/[0.07] border-y border-white/[0.08]">
-                    {parsedItems.map((item, idx) => (
-                      <div key={idx} className="bulk-review-row grid grid-cols-2 gap-x-2 gap-y-1.5 py-2 md:grid-cols-12">
-                        <label className="col-span-2 md:col-span-4"><span>Name</span>
-                          <input
-                            type="text"
-                            value={item.name || ''}
-                            onChange={(e) => handleNameChange(idx, e.target.value)}
-                            className="app-field w-full"
-                          />
-                        </label>
+                    {parsedItems.map((item, idx) => {
+                      return (
+                        <div key={idx} className="bulk-review-row flex flex-col gap-2 py-3 px-1">
+                          {/* Editable Details Fields */}
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 md:grid-cols-12">
+                            <label className="col-span-2 md:col-span-4"><span>Name</span>
+                              <input
+                                type="text"
+                                value={item.name || ''}
+                                onChange={(e) => handleNameChange(idx, e.target.value)}
+                                className="app-field w-full"
+                              />
+                            </label>
                         <label className="md:col-span-2"><span>Category</span>
                           <CustomSelect
                             value={item.category || 'Other'}
@@ -679,7 +727,9 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                           </button>
                         </div>
                       </div>
-                    ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

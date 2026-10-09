@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan to revert the AI Bulk Import pipeline to its stable extraction and staging table state, remove catalogMatcher.ts, eliminate auto-linking badges/dropdowns from the staging UI, simplify the server extraction prompt while preserving global metadata cascading and line-item overrides, and protect the calendar-day calculation for Last PC Sale.",
+  "updatedAt":  "2026-10-09T21:47:37.544970032Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

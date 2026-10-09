@@ -99,42 +99,71 @@ function deterministicParseBulkText(text: string): any[] {
 
   let batchSeller = '';
   let batchDate = '';
+  let batchCondition = '';
   let batchPaymentMethod = '';
 
-  let startIndex = 0;
-  // Check if first line is a header like "Outlut Electronics • Oct 6, 2026 • E-Transfer" or "Seller: Roop | Date: 2024-05-22"
-  const firstLine = rawLines[0];
-  const isHeader =
-    /^(?:seller\s*:|store\s*:)/i.test(firstLine) ||
-    (!/\b(?:rtx|gtx|rx|ryzen|intel|core|ddr[45]|nvme|ssd|motherboard|b650|b850|x870|z790|am5|am4|360mm|240mm)\b/i.test(firstLine) &&
-     /(?:e-transfer|cash|paypal|credit card|debit|crypto|\b20\d{2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2})/i.test(firstLine));
+  const nonHeaderLines: string[] = [];
 
-  if (isHeader) {
-    startIndex = 1;
-    const parts = firstLine.split(/[•|·,\-\/]/).map((p) => p.trim()).filter(Boolean);
-    for (const part of parts) {
-      if (/\b(e-transfer|cash|paypal|credit card|debit|crypto)\b/i.test(part)) {
-        const pmMatch = part.match(/\b(e-transfer|cash|paypal|credit card|debit|crypto)\b/i);
-        if (pmMatch) {
-          const lower = pmMatch[1].toLowerCase();
-          batchPaymentMethod = lower === 'e-transfer' ? 'E-Transfer' : lower === 'credit card' ? 'Credit Card' : lower.charAt(0).toUpperCase() + lower.slice(1);
-        }
-      } else if (/\b(?:20\d{2}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4}|[a-zA-Z]+\s+\d{1,2},?\s+\d{4})\b/.test(part)) {
-        const parsed = new Date(part);
+  for (const line of rawLines) {
+    const isExplicitHeader =
+      /^(?:supplier|seller|vendor|store|date|condition(?:\s+for\s+all)?|payment|notes?)\s*:/i.test(line) ||
+      /^(?:batch\s+date|batch\s+condition|batch\s+seller)/i.test(line);
+
+    const isDelimitedHeader =
+      !isExplicitHeader &&
+      !/\b(?:rtx|gtx|rx|ryzen|intel|core|ddr[45]|nvme|ssd|motherboard|b650|b850|x870|z790|am5|am4|360mm|240mm)\b/i.test(line) &&
+      /(?:e-transfer|cash|paypal|credit card|debit|crypto|\b20\d{2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2})/i.test(line);
+
+    if (isExplicitHeader || isDelimitedHeader) {
+      if (/^(?:supplier|seller|vendor|store)\s*:\s*(.*)/i.test(line)) {
+        batchSeller = line.replace(/^(?:supplier|seller|vendor|store)\s*:\s*/i, '').trim();
+      } else if (/^(?:date)\s*:\s*(.*)/i.test(line)) {
+        const rawDate = line.replace(/^(?:date)\s*:\s*/i, '').trim();
+        const parsed = new Date(rawDate);
         if (!isNaN(parsed.getTime())) {
           batchDate = parsed.toISOString().split('T')[0];
+        } else {
+          batchDate = rawDate;
         }
-      } else if (!batchSeller && part.length >= 2 && !/^(date|payment|seller):/i.test(part)) {
-        batchSeller = part.replace(/^(?:seller|store)\s*:\s*/i, '').trim();
+      } else if (/^(?:condition(?:\s+for\s+all)?)\s*:\s*(.*)/i.test(line)) {
+        const rawC = line.replace(/^(?:condition(?:\s+for\s+all)?)\s*:\s*/i, '').trim().toLowerCase();
+        if (/sealed/i.test(rawC)) batchCondition = 'Sealed';
+        else if (/new\s+open\s+box/i.test(rawC)) batchCondition = 'New Open Box';
+        else if (/new\s+no\s+box/i.test(rawC)) batchCondition = 'New No Box';
+        else if (/used\s+no\s+box/i.test(rawC)) batchCondition = 'Used No Box';
+        else if (/used/i.test(rawC)) batchCondition = 'Used Open Box';
+        else batchCondition = 'New No Box';
+      } else if (/^(?:payment)\s*:\s*(.*)/i.test(line)) {
+        batchPaymentMethod = line.replace(/^(?:payment)\s*:\s*/i, '').trim();
+      } else if (isDelimitedHeader) {
+        const parts = line.split(/[•|·,\-\/]/).map((p) => p.trim()).filter(Boolean);
+        for (const part of parts) {
+          if (/\b(e-transfer|cash|paypal|credit card|debit|crypto)\b/i.test(part)) {
+            const pmMatch = part.match(/\b(e-transfer|cash|paypal|credit card|debit|crypto)\b/i);
+            if (pmMatch) {
+              const lower = pmMatch[1].toLowerCase();
+              batchPaymentMethod = lower === 'e-transfer' ? 'E-Transfer' : lower === 'credit card' ? 'Credit Card' : lower.charAt(0).toUpperCase() + lower.slice(1);
+            }
+          } else if (/\b(?:20\d{2}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4}|[a-zA-Z]+\s+\d{1,2},?\s+\d{4})\b/.test(part)) {
+            const parsed = new Date(part);
+            if (!isNaN(parsed.getTime())) {
+              batchDate = parsed.toISOString().split('T')[0];
+            }
+          } else if (!batchSeller && part.length >= 2 && !/^(date|payment|seller):/i.test(part)) {
+            batchSeller = part.replace(/^(?:seller|store)\s*:\s*/i, '').trim();
+          }
+        }
       }
+    } else {
+      nonHeaderLines.push(line);
     }
   }
 
   // Group paired lines if formatted as (Category/Specs/Condition) followed by (Price/Qty/Product)
   const groupedEntries: string[] = [];
-  for (let i = startIndex; i < rawLines.length; i++) {
-    const curr = rawLines[i];
-    const next = i + 1 < rawLines.length ? rawLines[i + 1] : null;
+  for (let i = 0; i < nonHeaderLines.length; i++) {
+    const curr = nonHeaderLines[i];
+    const next = i + 1 < nonHeaderLines.length ? nonHeaderLines[i + 1] : null;
 
     if (
       next &&
@@ -179,8 +208,8 @@ function deterministicParseBulkText(text: string): any[] {
       remaining = remaining.replace(healthMatch[0], ' ').trim();
     }
 
-    // 4. Condition
-    let condition = 'Used Open Box';
+    // 4. Condition (Item-level condition overrides global batch condition)
+    let condition = batchCondition || 'Used Open Box';
     if (/\b(sealed|brand new in box|bnib|nib)\b/i.test(remaining)) {
       condition = 'Sealed';
       remaining = remaining.replace(/\b(sealed|brand new in box|bnib|nib)\b/gi, ' ').trim();
@@ -236,10 +265,9 @@ function deterministicParseBulkText(text: string): any[] {
     if (/\bGEN3\b/i.test(remaining)) tags.push('GEN3');
     if (/\bSATA\b/i.test(remaining)) tags.push('SATA');
 
-    // Remove category names and bullet segments from name
+    // Clean leading/trailing category prefixes and bullet separators
     let cleanName = remaining
       .replace(/^(?:Motherboard|CPU|GPU|RAM|Storage|PSU|Case|Cooling|Fans|Accessories|Other)\s*[•|·,\-\/]?\s*/i, '')
-      .replace(/\b(?:AM5|AM4|Intel|ATX|mATX|ITX|White|Black|DDR5|DDR4|GEN5|GEN4|GEN3|SATA)\b/gi, ' ')
       .replace(/[•|·,\-\/]+/g, ' ')
       .replace(/^[,\-–—:\s•]+|[,\-–—:\s•]+$/g, '')
       .replace(/\s{2,}/g, ' ')
@@ -247,6 +275,49 @@ function deterministicParseBulkText(text: string): any[] {
 
     if (!cleanName) {
       cleanName = line;
+    } else {
+      // Deterministic canonical expansion for common hardware shorthand
+      if (category === 'GPU') {
+        const gpuShorthand = cleanName.match(/^(?:rtx\s*)?(50\d{2}|40\d{2}|30\d{2})(?:\s*(ti\s*super|ti|super))?$/i);
+        if (gpuShorthand) {
+          const mod = gpuShorthand[1];
+          const suf = gpuShorthand[2] ? (gpuShorthand[2].toLowerCase().includes('ti super') ? 'Ti Super' : gpuShorthand[2].toLowerCase().includes('ti') ? 'Ti' : 'Super') : '';
+          let canonicalVram = '';
+          if (mod === '5090') canonicalVram = ' 32GB';
+          else if (mod === '5080') canonicalVram = ' 16GB';
+          else if (mod === '5070' && suf.includes('Ti')) canonicalVram = ' 16GB';
+          else if (mod === '5070') canonicalVram = ' 12GB';
+          else if (mod === '4090') canonicalVram = ' 24GB';
+          else if (mod === '4080') canonicalVram = ' 16GB';
+          else if (mod === '4070' && suf.includes('Ti Super')) canonicalVram = ' 16GB';
+          else if (mod === '4070' && suf.includes('Ti')) canonicalVram = ' 12GB';
+          else if (mod === '4070') canonicalVram = ' 12GB';
+          else if (mod === '4060' && !suf.includes('Ti')) canonicalVram = ' 8GB';
+          cleanName = `RTX ${mod}${suf ? ' ' + suf : ''}${canonicalVram}`;
+        }
+      } else if (category === 'CPU') {
+        const ryzenShorthand = cleanName.match(/^(?:ryzen\s*[3579]\s*)?(9\d{3}x3d|7\d{3}x3d|5\d{3}x3d|\d{4}x?)$/i);
+        if (ryzenShorthand) {
+          const modelNum = ryzenShorthand[1].toUpperCase();
+          const tier = modelNum.startsWith('9') || modelNum.startsWith('7') ? 'Ryzen 7' : 'Ryzen 5';
+          const cores = modelNum.includes('9800X3D') || modelNum.includes('7800X3D') ? ' (8C/16T)' : '';
+          cleanName = `AMD ${tier} ${modelNum}${cores}`;
+        }
+      } else if (category === 'Storage') {
+        if (/^sn\d{3}\b/i.test(cleanName)) {
+          cleanName = cleanName.replace(/^(sn\d{3})\b/i, 'WD_BLACK $1').trim();
+          if (!/nvme|ssd/i.test(cleanName)) cleanName += ' Gen4 NVMe SSD';
+          cleanName = cleanName.replace(/\s{2,}/g, ' ');
+        } else if (/^990\s*pro\b/i.test(cleanName)) {
+          cleanName = cleanName.replace(/^990\s*pro\b/i, 'Samsung 990 PRO').trim();
+          if (!/nvme|ssd/i.test(cleanName)) cleanName += ' Gen4 NVMe SSD';
+          cleanName = cleanName.replace(/\s{2,}/g, ' ');
+        } else if (/^980\s*pro\b/i.test(cleanName)) {
+          cleanName = cleanName.replace(/^980\s*pro\b/i, 'Samsung 980 PRO').trim();
+          if (!/nvme|ssd/i.test(cleanName)) cleanName += ' Gen4 NVMe SSD';
+          cleanName = cleanName.replace(/\s{2,}/g, ' ');
+        }
+      }
     }
 
     return {
@@ -453,11 +524,16 @@ async function startServer() {
 Extract individual PC components, quantities, costs, and purchase metadata from the user's input text or images.
 Accept ANY text format: multi-line item blocks, bullet-separated notes, formatted headers (e.g. 'Seller: Roop | Date: 2024-05-22'), unstructured free-form lists, chat logs, single-line entries, or receipts.
 
-CRITICAL PARSING PRINCIPLES:
-1. BATCH / RECEIPT HEADERS:
-   - Header lines at the top (e.g. "Outlut Electronics • Oct 6, 2026 • E-Transfer", "Roop | 2024-05-22 | Cash") specify shared batch metadata: seller/store ('Outlut Electronics'), purchase date ('2026-10-06'), and payment method ('E-Transfer').
-   - Apply these shared attributes to all extracted items in that batch.
-   - NEVER create a component item out of a header line!
+CRITICAL RULE: BATCH METADATA HEADERS vs HARDWARE LINE ITEMS:
+1. Lines indicating metadata for the batch (e.g., "Supplier: Roop", "Store: Best Buy", "Date: Oct 9th 2026", "Condition for all: new no box", "Payment: Cash") are NOT hardware items.
+2. ABSOLUTE PROHIBITION: NEVER output a JSON item representing a header!
+   - ❌ WRONG: { "name": "Supplier: Roop", "category": "Other", "unitCost": 0 }
+   - ❌ WRONG: { "name": "Condition for all: new no box", "category": "Other" }
+   - ❌ WRONG: { "name": "Date: Oct 9th 2026", "category": "Other" }
+3. CASCADING RULE:
+   - Extract the batch seller ("Roop"), batch date ("2026-10-09"), batch condition ("New No Box"), and batch payment ("Cash").
+   - INJECT these values into every extracted hardware component item in that batch.
+   - If an individual item states its own override (e.g. "5070ti used"), the item's individual condition takes precedence over the batch condition.
 
 2. MULTI-LINE & DELIMITED ITEM BLOCKS:
    - Items are frequently formatted in 2-line blocks separated by bullets ('•'), pipes ('|'), commas, or dashes:
@@ -496,6 +572,19 @@ CRITICAL PARSING PRINCIPLES:
      * Case: ATX, mATX, ITX, Black, White
      * Cooling: 360mm, 240mm, Air Cooler, Black, White
 
+5. CANONICAL HARDWARE SHORTHAND EXPANSION RULES:
+   - When the user inputs shorthand, slang, or truncated model names, standardize the 'name' field into clean canonical PC industry conventions while strictly preserving ALL stated brand and specification details:
+     * CPU: Standardize brand and tier (e.g., "9800x3d" -> "AMD Ryzen 7 9800X3D", "7800x3d" -> "AMD Ryzen 7 7800X3D", "14700k" -> "Intel Core i7-14700K").
+     * GPU: Preserve specific AIB brand, tier, and model name cleanly (e.g., "msi 5080 trio" -> "MSI GeForce RTX 5080 Gaming Trio", "7900xtx" -> "Radeon RX 7900 XTX").
+     * RAM: Preserve exact sub-brands and specs (e.g., "T-Force RGB 32gb 6000 cl30" -> "T-Force Delta RGB 32GB (2x16GB) DDR5 6000MHz CL30"). Do not prepend parent companies unless explicitly typed.
+     * Motherboard: "b650 eagle" -> "Gigabyte B650 Eagle AX", "b650 tomahawk" -> "MSI MAG B650 Tomahawk WiFi".
+     * Storage: "990 pro 1tb" -> "Samsung 990 PRO 1TB Gen4 NVMe SSD", "sn850x 2tb" -> "WD_BLACK SN850X 2TB Gen4 NVMe SSD".
+     * PSU: "rm850x" -> "Corsair RM850x 850W Gold PSU".
+
+   - STRICT COLOR RULE: DO NOT guess, assume, or infer color tags (Black/White) unless explicitly stated in the input text! Never add "Black" or "White" into the name or tags unless the raw text explicitly specified it.
+   - VERBATIM NAMES: DO NOT attempt to clean, standardize, or alter the component names. If the user provides a name with specific suffixes like '(8C/16T)' or color descriptors like 'White', you MUST extract the Name EXACTLY as it is written in the raw text.
+   - TAG MAPPING: You must explicitly extract and map all subcategory tags provided in the text block headers (e.g., 'Black', 'White', 'RGB', '50 Series') directly into the JSON 'tags' array. Never ignore explicit color tags.
+
 ABSOLUTE NEGATIVE CONSTRAINT:
 NEVER output internal reasoning, commentary, or headers as items. Every item in the output array must represent a real hardware component.`;
 
@@ -531,15 +620,72 @@ NEVER output internal reasoning, commentary, or headers as items. Every item in 
       });
       
       const rawData = parseModelJsonResponse(response.text, 'array');
-      const data = (Array.isArray(rawData) ? rawData : []).map((item: any) => {
+      const rawArray = Array.isArray(rawData) ? rawData : [];
+
+      // 1. Identify and extract batch metadata from any accidental header rows
+      let batchSellerOverride = '';
+      let batchDateOverride = '';
+      let batchConditionOverride = '';
+      let batchPaymentOverride = '';
+
+      const nonHeaderItems = rawArray.filter((item: any) => {
+        const name = String(item.name || '').trim();
+        const isHeaderRow =
+          /^(?:supplier|seller|vendor|store|date|condition(?:\s+for\s+all)?|payment|notes?)\s*:/i.test(name) ||
+          /^(?:batch\s+date|batch\s+condition|batch\s+seller)/i.test(name);
+
+        if (isHeaderRow) {
+          if (/^(?:supplier|seller|vendor|store)\s*:\s*(.*)/i.test(name)) {
+            batchSellerOverride = name.replace(/^(?:supplier|seller|vendor|store)\s*:\s*/i, '').trim();
+          } else if (/^(?:date)\s*:\s*(.*)/i.test(name)) {
+            const rawD = name.replace(/^(?:date)\s*:\s*/i, '').trim();
+            const parsedD = new Date(rawD);
+            if (!isNaN(parsedD.getTime())) {
+              batchDateOverride = parsedD.toISOString().split('T')[0];
+            } else {
+              batchDateOverride = rawD;
+            }
+          } else if (/^(?:condition(?:\s+for\s+all)?)\s*:\s*(.*)/i.test(name)) {
+            const rawC = name.replace(/^(?:condition(?:\s+for\s+all)?)\s*:\s*/i, '').trim().toLowerCase();
+            if (/sealed/i.test(rawC)) batchConditionOverride = 'Sealed';
+            else if (/new\s+open\s+box/i.test(rawC)) batchConditionOverride = 'New Open Box';
+            else if (/new\s+no\s+box/i.test(rawC)) batchConditionOverride = 'New No Box';
+            else if (/used\s+no\s+box/i.test(rawC)) batchConditionOverride = 'Used No Box';
+            else if (/used/i.test(rawC)) batchConditionOverride = 'Used Open Box';
+            else batchConditionOverride = 'New No Box';
+          } else if (/^(?:payment)\s*:\s*(.*)/i.test(name)) {
+            batchPaymentOverride = name.replace(/^(?:payment)\s*:\s*/i, '').trim();
+          }
+          return false; // Drop header row from line items
+        }
+        return true;
+      });
+
+      // Also harvest batch values from items if some items had them and others missed them
+      for (const item of nonHeaderItems) {
+        if (!batchSellerOverride && item.seller && String(item.seller).trim().length > 0) {
+          batchSellerOverride = String(item.seller).trim();
+        }
+        if (!batchDateOverride && item.date && String(item.date).trim().length > 0) {
+          batchDateOverride = String(item.date).trim();
+        }
+        if (!batchConditionOverride && item.condition && item.condition !== 'Used Open Box') {
+          batchConditionOverride = item.condition;
+        }
+        if (!batchPaymentOverride && item.paymentMethod) {
+          batchPaymentOverride = item.paymentMethod;
+        }
+      }
+
+      const data = nonHeaderItems.map((item: any) => {
         const itemTags = Array.isArray(item.tags) ? item.tags : [];
         let cleanSeller = '';
-        const rawSeller = item.seller || item.vendor;
+        const rawSeller = item.seller || item.vendor || batchSellerOverride;
         if (rawSeller && typeof rawSeller === 'string') {
           let str = rawSeller.trim();
           if (str.includes('\n')) str = str.split('\n')[0].trim();
           str = str.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim();
-          str = str.replace(/^(?:Seller|Vendor)\s*:\s*/i, '').trim();
+          str = str.replace(/^(?:Seller|Vendor|Supplier|Store)\s*:\s*/i, '').trim();
           if (str.length > 30) {
             const firstWord = str.split(/[\s,;|]/)[0];
             str = firstWord.length > 1 ? firstWord : str.slice(0, 30);
@@ -558,11 +704,31 @@ NEVER output internal reasoning, commentary, or headers as items. Every item in 
           cleanName = cleanName.replace(new RegExp(`^${escapedSeller}\\s+`, 'i'), '').trim();
         }
 
+        // Apply cascaded condition if item's condition was absent or fallback 'Used Open Box' and batchConditionOverride exists
+        let condition = item.condition || 'Used Open Box';
+        if ((!item.condition || item.condition === 'Used Open Box') && batchConditionOverride) {
+          condition = batchConditionOverride;
+        }
+
+        // Normalize condition
+        const condLower = String(condition).toLowerCase();
+        if (/sealed/i.test(condLower)) condition = 'Sealed';
+        else if (/new\s+open\s+box/i.test(condLower)) condition = 'New Open Box';
+        else if (/new\s+no\s+box/i.test(condLower)) condition = 'New No Box';
+        else if (/used\s+no\s+box/i.test(condLower)) condition = 'Used No Box';
+        else if (/used\s+open\s+box|used/i.test(condLower)) condition = 'Used Open Box';
+
+        const date = item.date || batchDateOverride || undefined;
+        const paymentMethod = item.paymentMethod || batchPaymentOverride || undefined;
+
         const { vendor: _v, ...restItem } = item;
         return {
           ...restItem,
           name: cleanName || item.name,
-          seller: cleanSeller,
+          seller: cleanSeller || undefined,
+          date,
+          paymentMethod,
+          condition,
           tags: itemTags.map((t: string) => {
             const trimmed = String(t || '').trim();
             const lower = trimmed.toLowerCase();
@@ -577,6 +743,7 @@ NEVER output internal reasoning, commentary, or headers as items. Every item in 
         // Filter out accidental non-product rows (e.g. pure headers, empty rows)
         if (!item.name || item.name.trim().length < 2) return false;
         if (/^[•\-\*\s]+$/.test(item.name)) return false;
+        if (/^(?:supplier|seller|vendor|store|date|condition(?:\s+for\s+all)?|payment|notes?)\s*:/i.test(item.name)) return false;
         return true;
       });
       res.setHeader('Server-Timing', `bulk-import;dur=${Math.round(performance.now() - started)}`);
