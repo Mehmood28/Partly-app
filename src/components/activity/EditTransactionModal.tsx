@@ -315,20 +315,14 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     onClose();
   };
 
-  const hasMultipleParts = editItems.length > 1;
-
   return (
     <BottomSheetModal
       isOpen={isOpen}
       onClose={onClose}
       layout="content"
-      className={`stock-modal max-w-lg ${
-        hasMultipleParts
-          ? '!h-[calc(100dvh-5.5rem)] sm:!h-[85vh] !max-h-[calc(100dvh-5.5rem)] sm:!max-h-[85vh] flex flex-col'
-          : ''
-      }`}
+      className="stock-modal max-w-lg"
     >
-      <div className={`transaction-edit-modal w-full ${hasMultipleParts ? 'flex flex-col h-full min-h-0' : 'space-y-4'}`}>
+      <div className="transaction-edit-modal w-full space-y-3.5">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-2.5 shrink-0">
           <h3 className="text-sm sm:text-base font-bold text-zinc-100 font-display flex items-center gap-2">
             <Pencil className="w-4 h-4 text-[#B9EF68]" /> Edit Transaction Record
@@ -343,8 +337,8 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
           </button>
         </div>
 
-        <form onSubmit={handleSaveEdit} className={`text-xs ${hasMultipleParts ? 'flex flex-col flex-1 min-h-0 overflow-hidden' : 'space-y-3'}`}>
-          <div className={`shrink-0 ${hasMultipleParts ? 'space-y-2' : 'space-y-3'}`}>
+        <form onSubmit={handleSaveEdit} className="space-y-3 text-xs">
+          <div className="space-y-2.5">
             <div>
               <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Record Title / Type</label>
               <input
@@ -460,7 +454,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
           </div>
 
           {editItems.length > 0 && (
-            <div className={`pt-2 border-t border-white/[0.08] ${hasMultipleParts ? 'flex flex-col flex-1 min-h-0 space-y-1.5' : 'space-y-2'}`}>
+            <div className="pt-2 border-t border-white/[0.08] space-y-1.5">
               <div className="flex items-center justify-between shrink-0">
                 <label className="text-zinc-300 font-medium text-xs font-sans">
                   {editItems.length === 1 ? 'Purchased Part' : `Purchased Parts (${editItems.length})`}
@@ -470,7 +464,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                 </span>
               </div>
               <div
-                className={`overflow-y-auto pr-1 no-scrollbar flex flex-col ${hasMultipleParts ? 'flex-1 min-h-0' : 'max-h-56'}`}
+                className="overflow-y-auto pr-1 no-scrollbar flex flex-col max-h-56 sm:max-h-60"
                 style={{ gap: '5px' }}
               >
                 {editItems.map((item, idx) => (
@@ -482,9 +476,9 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                       {item.name}
                     </div>
 
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[11px] font-medium text-zinc-400 font-sans">Qty:</span>
+                    <div className="flex items-center justify-between gap-2 h-5">
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-[11px] font-medium text-zinc-400 font-sans leading-none flex items-center">Qty:</span>
                         <input
                           type="number"
                           min="1"
@@ -492,32 +486,29 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                           value={item.quantity}
                           onChange={(e) => handleItemQuantityChange(idx, e.target.value)}
                           style={{ height: '20px', minHeight: '20px', maxHeight: '20px', lineHeight: '18px', paddingTop: 0, paddingBottom: 0 }}
-                          className="transaction-edit-item-input w-11 px-1 text-[11px] font-mono font-bold bg-[#090D0F] border border-white/[0.12] rounded-md text-[#B9EF68] text-center focus:outline-none focus:border-[#83E5DF] transition-colors"
+                          className="transaction-edit-item-input w-11 px-1 text-[11px] font-mono font-bold bg-[#101719] border border-white/[0.12] rounded-md text-zinc-100 text-center focus:outline-none focus:border-[#83E5DF] transition-colors"
                         />
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-medium text-zinc-400 font-sans">Cost:</span>
-                          <div
-                            onClick={(e) => e.currentTarget.querySelector('input')?.focus()}
-                            className="transaction-edit-cost-box flex items-center bg-[#090D0F] border border-white/[0.12] rounded-md px-1.5 h-5 focus-within:border-[#83E5DF] cursor-text transition-colors"
-                          >
-                            <span className="text-zinc-500 text-[10px] font-mono select-none leading-none shrink-0 mr-0.5">$</span>
+                      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-[11px] font-medium text-zinc-400 font-sans leading-none flex items-center">Cost:</span>
+                          <div className="transaction-edit-cost-box relative flex items-center">
+                            <span className="cost-currency-symbol absolute left-1.5 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px] font-mono pointer-events-none select-none flex items-center leading-none z-10">$</span>
                             <input
                               type="text"
                               inputMode="decimal"
                               value={item.unitPriceStr}
                               onChange={(e) => handleItemPriceChange(idx, e.target.value)}
-                              className="transaction-edit-cost-input w-11 bg-transparent border-0 outline-none p-0 text-[11px] font-mono font-bold text-zinc-100 text-left focus:ring-0 focus:outline-none"
-                              style={{ height: '18px', minHeight: '18px', maxHeight: '18px', lineHeight: '18px', paddingTop: 0, paddingBottom: 0 }}
+                              style={{ height: '20px', minHeight: '20px', maxHeight: '20px', lineHeight: '18px', paddingTop: 0, paddingBottom: 0 }}
+                              className="transaction-edit-cost-input transaction-edit-item-input w-16 pl-3.5 pr-1.5 text-[11px] font-mono font-bold bg-[#101719] border border-white/[0.12] rounded-md text-zinc-100 text-left focus:outline-none focus:border-[#83E5DF] transition-colors"
                             />
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 text-xs whitespace-nowrap">
-                          <span className="text-[11px] font-medium text-zinc-400 font-sans">Total Price:</span>
-                          <span className="font-bold text-zinc-100 font-mono text-xs">${item.subtotal.toFixed(2)}</span>
+                        <div className="flex items-center gap-1 text-xs whitespace-nowrap shrink-0">
+                          <span className="text-[11px] font-medium text-zinc-400 font-sans leading-none flex items-center">Total Price:</span>
+                          <span className="font-bold text-zinc-100 font-mono text-xs leading-none flex items-center">${item.subtotal.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -527,7 +518,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
             </div>
           )}
 
-          <div className={`flex items-center justify-end gap-2.5 border-t border-white/[0.08] shrink-0 ${hasMultipleParts ? 'pt-2 mt-auto' : 'pt-3'}`}>
+          <div className="flex items-center justify-end gap-2.5 border-t border-white/[0.08] pt-2.5 shrink-0">
             <button
               type="button"
               onClick={onClose}

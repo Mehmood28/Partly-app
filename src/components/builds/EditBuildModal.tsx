@@ -169,30 +169,30 @@ export const EditBuildModal: React.FC<EditBuildModalProps> = ({ build, isOpen = 
 
           <div>
             <label className="block text-zinc-300 font-medium mb-1 text-xs">PC Image (Optional)</label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
               {editImageUrl ? (
-                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-white/[0.1] shrink-0">
+                <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-white/[0.1] shrink-0">
                   <img src={editImageUrl} alt="Preview" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setEditImageUrl('')}
                     className="absolute top-0.5 right-0.5 bg-black/80 rounded-md p-1 text-zinc-300 hover:text-rose-400 transition-colors"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
-                <div className="w-12 h-12 rounded-xl border border-dashed border-white/[0.1] bg-[#101719] flex items-center justify-center text-zinc-500 shrink-0">
+                <div className="w-14 h-14 rounded-xl border border-dashed border-white/[0.1] bg-[#101719] flex items-center justify-center text-zinc-500 shrink-0">
                   <ImagePlus className="w-5 h-5" />
                 </div>
               )}
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 h-14 flex flex-col justify-between items-start">
                 <label className="build-image-file-control">
                   <ImagePlus />
                   <span>{editImageUrl ? 'Replace Image' : 'Choose Image'}</span>
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
-                <p className="text-[11px] text-zinc-500 mt-1">Upload a photo of the completed build.</p>
+                <p className="text-[11px] text-zinc-500 leading-tight">Upload a photo of the completed build.</p>
               </div>
             </div>
           </div>

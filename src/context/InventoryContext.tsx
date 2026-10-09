@@ -179,24 +179,34 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Component Actions
   const saveComponent = useCallback(
     (options: SaveComponentOptions) => {
-      const targetId = options.existingComponentId;
-      const existing = targetId ? stateRef.current.components.find((c) => c.id === targetId) : undefined;
-      
-      const compName = options.componentData.name || (existing ? existing.name : 'Component');
-      const label = existing ? `Edit component: ${compName}` : `Add component: ${compName}`;
-      
-      const result = handleSaveComponent(stateRef.current, options);
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
-      
-      if (result.nextState !== stateRef.current) {
-        saveStateToHistory(label);
-        setState(result.nextState);
+      let resultError: string | undefined;
+      let hasError = false;
+
+      setState((prevState) => {
+        const result = handleSaveComponent(prevState, options);
+        if (!result.success) {
+          hasError = true;
+          resultError = result.error;
+          return prevState;
+        }
+
+        if (result.nextState !== prevState) {
+          const targetId = options.existingComponentId;
+          const existing = targetId ? prevState.components.find((c) => c.id === targetId) : undefined;
+          const compName = options.componentData.name || (existing ? existing.name : 'Component');
+          const label = existing ? `Edit component: ${compName}` : `Add component: ${compName}`;
+          saveStateToHistory(label);
+          return result.nextState;
+        }
+        return prevState;
+      });
+
+      if (hasError) {
+        return { success: false, error: resultError };
       }
       return { success: true };
     },
-    [saveStateToHistory, stateRef]
+    [saveStateToHistory]
   );
 
   const addComponent = useCallback(
@@ -213,12 +223,19 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 
   const addComponents = useCallback(
-    (compsData: Omit<InventoryComponent, 'id' | 'assignedCount'>[]) => {
+    (compsData: Omit<InventoryComponent, 'id' | 'assignedCount'>[], targetPurchaseTransactionId?: string) => {
       const current = stateRef.current;
-      const nextState = handleAddComponents(current, compsData);
+      const nextState = handleAddComponents(current, compsData, targetPurchaseTransactionId);
       if (nextState !== current) {
         const count = compsData.length;
-        const label = count === 1 ? `Add component: ${compsData[0].name || 'Component'}` : `Add ${count} components`;
+        const targetTx = targetPurchaseTransactionId
+          ? current.transactions.find((t) => t.id === targetPurchaseTransactionId)
+          : undefined;
+        const label = targetTx
+          ? `Add ${count} part${count === 1 ? '' : 's'} to purchase: ${targetTx.title}`
+          : count === 1
+          ? `Add component: ${compsData[0].name || 'Component'}`
+          : `Add ${count} components`;
         saveStateToHistory(label);
         setState(nextState);
       }
@@ -301,21 +318,32 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updatePurchaseEntry = useCallback(
     (componentId: string, entryId: string, entry: Omit<PurchaseEntry, 'id'>) => {
-      const comp = stateRef.current.components.find((c) => c.id === componentId);
-      const compName = comp ? comp.name : 'Component';
-      
-      const result = handleUpdatePurchaseEntry(stateRef.current, componentId, entryId, entry);
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
-      
-      if (result.nextState !== stateRef.current) {
-        saveStateToHistory(`Edit purchase batch: ${compName}`);
-        setState(result.nextState);
+      let resultError: string | undefined;
+      let hasError = false;
+
+      setState((prevState) => {
+        const result = handleUpdatePurchaseEntry(prevState, componentId, entryId, entry);
+        if (!result.success) {
+          hasError = true;
+          resultError = result.error;
+          return prevState;
+        }
+
+        if (result.nextState !== prevState) {
+          const comp = prevState.components.find((c) => c.id === componentId);
+          const compName = comp ? comp.name : 'Component';
+          saveStateToHistory(`Edit purchase batch: ${compName}`);
+          return result.nextState;
+        }
+        return prevState;
+      });
+
+      if (hasError) {
+        return { success: false, error: resultError };
       }
       return { success: true };
     },
-    [saveStateToHistory, stateRef]
+    [saveStateToHistory]
   );
 
   const deletePurchaseEntry = useCallback(

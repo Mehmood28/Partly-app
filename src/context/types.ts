@@ -132,7 +132,7 @@ export interface InventoryContextType {
   // Component Actions
   saveComponent: (options: SaveComponentOptions) => { success: boolean; error?: string };
   addComponent: (comp: Omit<InventoryComponent, 'id' | 'assignedCount'>) => void;
-  addComponents: (comps: Omit<InventoryComponent, 'id' | 'assignedCount'>[]) => void;
+  addComponents: (comps: Omit<InventoryComponent, 'id' | 'assignedCount'>[], targetPurchaseTransactionId?: string) => void;
   updateComponent: (id: string, updates: Partial<InventoryComponent>) => void;
   bulkUpdateComponentTags: (updates: { id: string; tags: string[] }[]) => void;
   deleteComponent: (id: string) => { success: boolean; error?: string };

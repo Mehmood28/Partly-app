@@ -102,18 +102,24 @@ export const parseBatchItem = (
   // Intelligent batch matching if explicit link is missing
   let fallbackBatch = exactPurchaseEntry || matchingSnapshot;
   if (!fallbackBatch && comp?.purchaseHistory && comp.purchaseHistory.length > 0) {
-    // Try matching by date or platform or unit price
-    const txDate = tx.dateSortable || tx.timestamp;
-    const dateMatch = comp.purchaseHistory.find((entry) => entry.date === txDate || entry.platform === tx.platform);
-    if (dateMatch) {
-      fallbackBatch = dateMatch;
+    // 1. Direct provenance match to this purchase transaction
+    const directTxMatch = comp.purchaseHistory.find((entry) => entry.sourcePurchaseTransactionId === tx.id);
+    if (directTxMatch) {
+      fallbackBatch = directTxMatch;
     } else {
-      // If all batches share the same condition, use it
-      const uniqueConditions = [...new Set(comp.purchaseHistory.map((e) => e.condition).filter(Boolean))];
-      if (uniqueConditions.length === 1) {
-        fallbackBatch = comp.purchaseHistory[0];
-      } else if (comp.purchaseHistory.length === 1) {
-        fallbackBatch = comp.purchaseHistory[0];
+      // 2. Try matching by date or platform or unit price
+      const txDate = tx.dateSortable || tx.timestamp;
+      const dateMatch = comp.purchaseHistory.find((entry) => entry.date === txDate || entry.platform === tx.platform);
+      if (dateMatch) {
+        fallbackBatch = dateMatch;
+      } else {
+        // If all batches share the same condition, use it
+        const uniqueConditions = [...new Set(comp.purchaseHistory.map((e) => e.condition).filter(Boolean))];
+        if (uniqueConditions.length === 1) {
+          fallbackBatch = comp.purchaseHistory[0];
+        } else if (comp.purchaseHistory.length === 1) {
+          fallbackBatch = comp.purchaseHistory[0];
+        }
       }
     }
   }
@@ -139,9 +145,14 @@ export const parseBatchItem = (
   
   let condition = purchaseEntry?.condition || '';
   if (!condition && comp?.purchaseHistory && comp.purchaseHistory.length > 0) {
-    const uniqueConditions = [...new Set(comp.purchaseHistory.map((e) => e.condition).filter(Boolean))];
-    if (uniqueConditions.length === 1) {
-      condition = uniqueConditions[0];
+    const directTxMatch = comp.purchaseHistory.find((entry) => entry.sourcePurchaseTransactionId === tx.id);
+    if (directTxMatch?.condition) {
+      condition = directTxMatch.condition;
+    } else {
+      const uniqueConditions = [...new Set(comp.purchaseHistory.map((e) => e.condition).filter(Boolean))];
+      if (uniqueConditions.length === 1) {
+        condition = uniqueConditions[0];
+      }
     }
   }
 

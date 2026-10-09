@@ -664,7 +664,14 @@ export function formatReadableDate(dateStr?: string): string | null {
   return `${MONTHS[parsed.monthIndex]} ${parsed.day}, ${parsed.year}`;
 }
 
-export type SortOption = 'highest-price' | 'lowest-price' | 'highest-stock' | 'lowest-stock' | 'newest-purchase';
+export type SortOption = 
+  | 'highest-price' 
+  | 'lowest-price' 
+  | 'highest-stock' 
+  | 'lowest-stock' 
+  | 'newest-purchase'
+  | 'highest-health'
+  | 'lowest-health';
 
 export interface FilterSortOptions {
   builds?: PCBuild[];
@@ -674,6 +681,70 @@ export interface FilterSortOptions {
   subCategory?: string;
   subTags?: string[];
   sortBy?: SortOption;
+}
+
+export function getComponentStorageHealthStats(
+  comp: InventoryComponent,
+  builds?: PCBuild[],
+  precomputedMap?: Record<string, { explicitSum: number; unlinkedSum?: number; batches: Record<string, number> }>
+): { max: number; min: number; avg: number; hasHealth: boolean } {
+  if (comp.category !== 'Storage') {
+    return { max: -1, min: 101, avg: -1, hasHealth: false };
+  }
+
+  const batches = getUnassignedBatches(comp, builds || [], precomputedMap);
+  const healthItems: { health: number; qty: number }[] = [];
+
+  for (const b of batches) {
+    if (typeof b.entry.healthPercent === 'number' && Number.isFinite(b.entry.healthPercent) && b.availableQuantity > 0) {
+      healthItems.push({ health: b.entry.healthPercent, qty: b.availableQuantity });
+    }
+  }
+
+  if (healthItems.length === 0) {
+    if (typeof comp.healthPercent === 'number' && Number.isFinite(comp.healthPercent)) {
+      return {
+        max: comp.healthPercent,
+        min: comp.healthPercent,
+        avg: comp.healthPercent,
+        hasHealth: true,
+      };
+    }
+    if (comp.purchaseHistory && comp.purchaseHistory.length > 0) {
+      for (const ph of comp.purchaseHistory) {
+        if (typeof ph.healthPercent === 'number' && Number.isFinite(ph.healthPercent)) {
+          return {
+            max: ph.healthPercent,
+            min: ph.healthPercent,
+            avg: ph.healthPercent,
+            hasHealth: true,
+          };
+        }
+      }
+    }
+    return { max: -1, min: 101, avg: -1, hasHealth: false };
+  }
+
+  let totalQty = 0;
+  let totalWeighted = 0;
+  let max = -Infinity;
+  let min = Infinity;
+
+  for (const item of healthItems) {
+    totalQty += item.qty;
+    totalWeighted += item.health * item.qty;
+    if (item.health > max) max = item.health;
+    if (item.health < min) min = item.health;
+  }
+
+  const avg = totalQty > 0 ? totalWeighted / totalQty : (healthItems[0]?.health ?? 0);
+
+  return {
+    max,
+    min,
+    avg,
+    hasHealth: true,
+  };
 }
 
 export function filterAndSortComponents(
@@ -776,6 +847,16 @@ export function filterAndSortComponents(
     return stock;
   };
 
+  const healthMap = new Map<string, { max: number; min: number; avg: number; hasHealth: boolean }>();
+  const getCompHealth = (comp: InventoryComponent) => {
+    let stats = healthMap.get(comp.id);
+    if (!stats) {
+      stats = getComponentStorageHealthStats(comp, options.builds, precomputedMap);
+      healthMap.set(comp.id, stats);
+    }
+    return stats;
+  };
+
   return filtered.sort((a, b) => {
     if (options.sortBy === 'highest-price') {
       return getCompCost(b) - getCompCost(a);
@@ -788,6 +869,30 @@ export function filterAndSortComponents(
     }
     if (options.sortBy === 'lowest-stock') {
       return getCompStock(a) - getCompStock(b);
+    }
+    if (options.sortBy === 'highest-health') {
+      const healthA = getCompHealth(a);
+      const healthB = getCompHealth(b);
+      if (healthA.hasHealth && !healthB.hasHealth) return -1;
+      if (!healthA.hasHealth && healthB.hasHealth) return 1;
+      if (healthA.hasHealth && healthB.hasHealth) {
+        if (healthB.max !== healthA.max) return healthB.max - healthA.max;
+        if (healthB.avg !== healthA.avg) return healthB.avg - healthA.avg;
+        if (healthB.min !== healthA.min) return healthB.min - healthA.min;
+      }
+      return getLatestTimestamp(b) - getLatestTimestamp(a);
+    }
+    if (options.sortBy === 'lowest-health') {
+      const healthA = getCompHealth(a);
+      const healthB = getCompHealth(b);
+      if (healthA.hasHealth && !healthB.hasHealth) return -1;
+      if (!healthA.hasHealth && healthB.hasHealth) return 1;
+      if (healthA.hasHealth && healthB.hasHealth) {
+        if (healthA.min !== healthB.min) return healthA.min - healthB.min;
+        if (healthA.avg !== healthB.avg) return healthA.avg - healthB.avg;
+        if (healthA.max !== healthB.max) return healthA.max - healthB.max;
+      }
+      return getLatestTimestamp(b) - getLatestTimestamp(a);
     }
     
     // Default sorting (newest-purchase)

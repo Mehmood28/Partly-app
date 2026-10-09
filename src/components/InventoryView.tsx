@@ -54,7 +54,10 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
     setSelectedCategory(category);
     setActiveSubTags([]);
     setSearchQuery('');
-  }, []);
+    if (category !== 'Storage' && (sortBy === 'highest-health' || sortBy === 'lowest-health')) {
+      setSortBy('newest-purchase');
+    }
+  }, [sortBy]);
 
   const handleSubTagToggle = React.useCallback((tag: string) => {
     setActiveSubTags((prev) => {

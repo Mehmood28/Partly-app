@@ -137,6 +137,233 @@ export const createGroupedPurchaseBatches = (
   }];
 };
 
+/**
+ * Safely updates an item in a purchase transaction's detailsList non-destructively,
+ * preserving all other items in that purchase record.
+ */
+export const updateTransactionDetailsList = (
+  tx: TransactionLogItem,
+  componentId: string,
+  entryId: string,
+  newQty: number,
+  unitPrice: number,
+  compName: string,
+  components: InventoryComponent[],
+  targetEntry?: PurchaseEntry
+): {
+  updatedDetailsList: string[];
+  isMultiItem: boolean;
+  totalQuantity: number;
+  totalAmount: number;
+} => {
+  const hasDetailsList = Array.isArray(tx.detailsList) && tx.detailsList.length > 0;
+  const cleanCompName = compName.replace(/^\d+x\s+/i, '').trim();
+
+  if (!hasDetailsList) {
+    return {
+      updatedDetailsList: [`${newQty}x ${cleanCompName} (${formatCurrency(unitPrice)}/ea)`],
+      isMultiItem: false,
+      totalQuantity: newQty,
+      totalAmount: roundToCents(newQty * unitPrice),
+    };
+  }
+
+  const isMultiItem = tx.detailsList!.length > 1;
+
+  // Find the exact matching line index in detailsList
+  let targetDetailIdx = -1;
+  let bestScore = -1;
+
+  const targetComp = components.find((c) => c.id === componentId);
+  const targetCompNameLower = cleanCompName.toLowerCase();
+  const originalCompNameLower = (targetComp?.name || '').replace(/^\d+x\s+/i, '').trim().toLowerCase();
+
+  tx.detailsList!.forEach((detail, idx) => {
+    const parsed = parseBatchItem(detail, components, tx);
+    let score = 0;
+
+    // Highest priority: exact purchase entry ID match
+    if (parsed.entry?.id === entryId) {
+      score = 100;
+    } 
+    // Component ID match
+    else if (parsed.comp?.id === componentId) {
+      if (
+        targetEntry &&
+        parsed.quantity === targetEntry.quantity &&
+        Math.abs(parsed.unitPrice - targetEntry.unitPrice) < 0.01
+      ) {
+        score = 90; // Exact quantity + price match for same component
+      } else {
+        score = 70; // Same component
+      }
+    } 
+    // Purchase history entry ID link
+    else if (parsed.comp?.purchaseHistory?.some((e) => e.id === entryId)) {
+      score = 60;
+    } 
+    // Name match fallback (in case parsed.comp failed to match)
+    else {
+      const detailNameLower = (parsed.itemName || '').toLowerCase().trim();
+      if (detailNameLower === targetCompNameLower || (originalCompNameLower && detailNameLower === originalCompNameLower)) {
+        if (
+          targetEntry &&
+          parsed.quantity === targetEntry.quantity &&
+          Math.abs(parsed.unitPrice - targetEntry.unitPrice) < 0.01
+        ) {
+          score = 50;
+        } else {
+          score = 30;
+        }
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      targetDetailIdx = idx;
+    }
+  });
+
+  // If single item in detailsList and no match was found, default to index 0
+  if (targetDetailIdx === -1 && tx.detailsList!.length === 1) {
+    targetDetailIdx = 0;
+  }
+
+  // Non-destructively map over detailsList, updating ONLY targetDetailIdx
+  const updatedDetailsList = tx.detailsList!.map((detail, idx) => {
+    if (idx === targetDetailIdx) {
+      const parsed = parseBatchItem(detail, components, tx);
+      const displayName = cleanCompName || parsed.itemName;
+      return `${newQty}x ${displayName} (${formatCurrency(unitPrice)}/ea)`;
+    }
+    return detail; // Safely return all other items untouched
+  });
+
+  // Calculate new total quantity across all items
+  const totalQuantity = isMultiItem
+    ? updatedDetailsList.reduce((acc, d) => {
+        const m = d.match(/^(\d+)x\s+/i);
+        return acc + (m ? parseInt(m[1], 10) : 1);
+      }, 0)
+    : newQty;
+
+  // Calculate new total amount across all items
+  const totalAmount = isMultiItem
+    ? updatedDetailsList.reduce((acc, d) => {
+        const m = d.match(/^(?:(\d+)x\s+)?(.*?)(?:\s+\(\$([\d\.,]+)(?:\/ea)?\))?$/i);
+        const q = m && m[1] ? parseInt(m[1], 10) : 1;
+        const u = m && m[3] ? parseFloat(m[3].replace(/,/g, '')) : 0;
+        return roundToCents(acc + (q * u));
+      }, 0)
+    : roundToCents(newQty * unitPrice);
+
+  return {
+    updatedDetailsList,
+    isMultiItem,
+    totalQuantity,
+    totalAmount,
+  };
+};
+
+/**
+ * Patches a matching purchase transaction non-destructively when an item in it is edited.
+ */
+export const patchMatchingPurchaseTransaction = (
+  tx: TransactionLogItem,
+  componentId: string,
+  entryId: string,
+  entry: {
+    date: string;
+    condition: Condition;
+    paymentMethod: PaymentMethod;
+    platform?: string;
+  },
+  newQty: number,
+  unitPrice: number,
+  totalPrice: number,
+  compName: string,
+  components: InventoryComponent[],
+  targetEntry?: PurchaseEntry
+): TransactionLogItem => {
+  const { updatedDetailsList, isMultiItem, totalQuantity, totalAmount } = updateTransactionDetailsList(
+    tx,
+    componentId,
+    entryId,
+    newQty,
+    unitPrice,
+    compName,
+    components,
+    targetEntry
+  );
+
+  const cleanCompName = compName.replace(/^\d+x\s+/i, '').trim();
+
+  // Handle title updates non-destructively
+  let updatedTitle = tx.title;
+  if (updatedTitle) {
+    if (/^(Purchased|Bulk Purchase)\s+\d+x\s+/i.test(updatedTitle)) {
+      updatedTitle = updatedTitle.replace(
+        /^(Purchased|Bulk Purchase)\s+\d+x\s+/i,
+        totalQuantity > 1 ? `$1 ${totalQuantity}x ` : '$1 '
+      );
+    } else if (!isMultiItem && /^\d+x\s+/i.test(updatedTitle)) {
+      updatedTitle = totalQuantity > 1 ? `${totalQuantity}x ${cleanCompName}` : cleanCompName;
+    }
+  } else {
+    updatedTitle = totalQuantity > 1 ? `Purchased ${totalQuantity}x ${cleanCompName}` : `Purchased ${cleanCompName}`;
+  }
+
+  let updatedCustomTitle = tx.customTitleOverride;
+  if (updatedCustomTitle && /^(Purchased|Bulk Purchase)\s+\d+x\s+/i.test(updatedCustomTitle)) {
+    updatedCustomTitle = updatedCustomTitle.replace(
+      /^(Purchased|Bulk Purchase)\s+\d+x\s+/i,
+      totalQuantity > 1 ? `$1 ${totalQuantity}x ` : '$1 '
+    );
+  }
+
+  let updatedSummary = tx.itemNameOrSummary;
+  if (isMultiItem) {
+    if (updatedSummary && /^Purchased Mixed Parts \(\d+ Parts?\)/i.test(updatedSummary)) {
+      updatedSummary = `Purchased Mixed Parts (${totalQuantity} ${totalQuantity === 1 ? 'Part' : 'Parts'})`;
+    } else if (updatedSummary && /^Purchased \d+x /i.test(updatedSummary)) {
+      updatedSummary = updatedSummary.replace(/^Purchased \d+x /i, `Purchased ${totalQuantity}x `);
+    }
+  } else {
+    updatedSummary = cleanCompName;
+  }
+
+  return {
+    ...tx,
+    title: updatedTitle,
+    customTitleOverride: updatedCustomTitle,
+    quantity: totalQuantity,
+    relatedComponentQty: isMultiItem ? tx.relatedComponentQty : totalQuantity,
+    totalAmount,
+    dateSortable: isMultiItem ? tx.dateSortable : entry.date,
+    timestamp: isMultiItem ? tx.timestamp : entry.date,
+    paymentMethod: isMultiItem ? (tx.paymentMethod || entry.paymentMethod) : entry.paymentMethod,
+    platform: isMultiItem ? (tx.platform || entry.platform) : entry.platform,
+    seller: isMultiItem ? (tx.seller || entry.platform) : entry.platform,
+    itemNameOrSummary: updatedSummary,
+    relatedPurchaseEntryId: isMultiItem ? tx.relatedPurchaseEntryId : entryId,
+    detailsList: updatedDetailsList,
+    originalPurchaseEntrySnapshot: isMultiItem
+      ? tx.originalPurchaseEntrySnapshot
+      : {
+          ...(tx.originalPurchaseEntrySnapshot || {}),
+          id: entryId,
+          date: entry.date,
+          quantity: newQty,
+          unitPrice,
+          totalPrice,
+          paymentMethod: entry.paymentMethod,
+          platform: entry.platform,
+          seller: entry.platform,
+          condition: entry.condition,
+        },
+  };
+};
+
 export const handleSaveComponent = (
   prev: AppState,
   options: SaveComponentOptions
@@ -396,7 +623,33 @@ export const handleSaveComponent = (
         return txChanged ? updatedTx : tx;
       });
 
-      const finalTransactions = newTx ? [newTx, ...rewiredTransactions] : rewiredTransactions;
+      let patchedTransactions = rewiredTransactions;
+      if (updatedPurchaseEntry && validatedUpdatedEntry) {
+        const entryId = updatedPurchaseEntry.entryId;
+        const targetEntry = (sourceComp.purchaseHistory || []).find((e) => e.id === entryId);
+        patchedTransactions = rewiredTransactions.map((tx) => {
+          const isMatchedTx =
+            tx.relatedPurchaseEntryId === entryId ||
+            tx.originalPurchaseEntrySnapshot?.id === entryId ||
+            (!!targetEntry?.sourcePurchaseTransactionId && tx.id === targetEntry.sourcePurchaseTransactionId) ||
+            (tx.relatedComponentId === targetComp.id && tx.type === 'PURCHASE' && (targetComp.purchaseHistory || []).length === 1);
+          if (!isMatchedTx) return tx;
+          return patchMatchingPurchaseTransaction(
+            tx,
+            targetComp.id,
+            entryId,
+            updatedPurchaseEntry.entry,
+            validatedUpdatedEntry!.quantity,
+            validatedUpdatedEntry!.unitPrice,
+            validatedUpdatedEntry!.totalPrice,
+            targetComp.name,
+            updatedComponents,
+            targetEntry
+          );
+        });
+      }
+
+      const finalTransactions = newTx ? [newTx, ...patchedTransactions] : patchedTransactions;
 
       const nextStateObj = {
         ...prev,
@@ -544,39 +797,20 @@ export const handleSaveComponent = (
 
         if (!isMatchedTx) return tx;
 
-        const qty = validatedUpdatedEntry.quantity;
-        const unitP = validatedUpdatedEntry.unitPrice;
-        const totalP = validatedUpdatedEntry.totalPrice;
-        const date = updatedPurchaseEntry.entry.date;
-        const payment = updatedPurchaseEntry.entry.paymentMethod;
-        const platform = updatedPurchaseEntry.entry.platform;
         const compName = componentData.name || (prev.components.find((comp) => comp.id === existingComponentId)?.name) || tx.itemNameOrSummary;
 
-        return {
-          ...tx,
-          quantity: qty,
-          totalAmount: totalP,
-          dateSortable: date,
-          timestamp: date,
-          paymentMethod: payment,
-          platform,
-          seller: platform,
-          itemNameOrSummary: compName,
-          relatedPurchaseEntryId: entryId,
-          detailsList: [`${qty}x ${compName} (${formatCurrency(unitP)}/ea)`],
-          originalPurchaseEntrySnapshot: {
-            ...(tx.originalPurchaseEntrySnapshot || {}),
-            id: entryId,
-            date,
-            quantity: qty,
-            unitPrice: unitP,
-            totalPrice: totalP,
-            paymentMethod: payment,
-            platform,
-            seller: platform,
-            condition: updatedPurchaseEntry.entry.condition,
-          },
-        };
+        return patchMatchingPurchaseTransaction(
+          tx,
+          existingComponentId,
+          entryId,
+          updatedPurchaseEntry.entry,
+          validatedUpdatedEntry.quantity,
+          validatedUpdatedEntry.unitPrice,
+          validatedUpdatedEntry.totalPrice,
+          compName,
+          prev.components,
+          targetEntry
+        );
       });
     }
 
@@ -620,8 +854,13 @@ export const handleSaveComponent = (
 
 export const handleAddComponent = (
   prev: AppState,
-  compData: Omit<InventoryComponent, 'id' | 'assignedCount'>
+  compData: Omit<InventoryComponent, 'id' | 'assignedCount'>,
+  targetPurchaseTransactionId?: string
 ): AppState => {
+  if (targetPurchaseTransactionId) {
+    return handleAddComponents(prev, [compData], targetPurchaseTransactionId);
+  }
+
   const existingCompIndex = findUniqueCatalogMatchIndex(
     prev.components,
     compData
@@ -779,10 +1018,11 @@ export const handleAddComponent = (
 
 export const handleAddComponents = (
   prev: AppState,
-  compsData: Omit<InventoryComponent, 'id' | 'assignedCount'>[]
+  compsData: Omit<InventoryComponent, 'id' | 'assignedCount'>[],
+  targetPurchaseTransactionId?: string
 ): AppState => {
   if (compsData.length === 0) return prev;
-  if (compsData.length === 1) return handleAddComponent(prev, compsData[0]);
+  if (compsData.length === 1 && !targetPurchaseTransactionId) return handleAddComponent(prev, compsData[0]);
   
   // 1. Validate all and map entries
   const parsedComps: {
@@ -839,13 +1079,22 @@ export const handleAddComponents = (
     overallTotalAmount += compTotalPrice;
   }
 
+  const existingTxIndex = targetPurchaseTransactionId
+    ? prev.transactions.findIndex((t) => t.id === targetPurchaseTransactionId)
+    : -1;
+  const targetExistingTx = existingTxIndex !== -1 ? prev.transactions[existingTxIndex] : null;
+
   const componentsToKeep = [...prev.components];
   const newTxs: TransactionLogItem[] = [];
   
   const firstPh = parsedComps[0]?.entries[0];
-  const seller = firstPh?.platform || 'Other';
+  const defaultSeller = targetExistingTx
+    ? (targetExistingTx.seller || targetExistingTx.platform || 'Other')
+    : (firstPh?.platform || 'Other');
   const fallbackDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
-  const paymentMethod = firstPh?.paymentMethod || 'Cash';
+  const defaultPaymentMethod = targetExistingTx
+    ? (targetExistingTx.paymentMethod || 'Cash')
+    : (firstPh?.paymentMethod || 'Cash');
   
   const allDates = parsedComps.map((c) => c.entries[0]?.date || fallbackDate).sort();
   const oldestDate = allDates[0];
@@ -864,32 +1113,16 @@ export const handleAddComponents = (
     bulkSummaryTitle = `Purchased Mixed Parts (${overallTotalQuantity} ${overallTotalQuantity === 1 ? 'Part' : 'Parts'})`;
   }
 
-  const newTx: TransactionLogItem = {
-    id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-    type: 'PURCHASE',
-    title: `Bulk Purchase: ${seller}`,
-    timestamp: displayTimestamp,
-    dateSortable: newestDate,
-    itemCount: compsData.length,
-    quantity: overallTotalQuantity,
-    totalAmount: overallTotalAmount,
-    platform: seller,
-    seller,
-    paymentMethod,
-    itemNameOrSummary: bulkSummaryTitle,
-    detailsList: parsedComps.map((c) => {
-      const qty = c.compTotalQuantity || 1;
-      const cost = c.entries.length > 0 ? (c.compTotalPrice / qty) : 0;
-      return `${qty}x ${c.compData.name} (${formatCurrency(cost)}/ea)`;
-    }),
-  };
-  newTxs.push(newTx);
+  const effectiveTxId = targetExistingTx
+    ? targetExistingTx.id
+    : `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
   parsedComps.forEach(({ compData, entries }) => {
     entries.forEach((e) => {
-      e.sourcePurchaseTransactionId = newTx.id;
-      e.seller = seller;
-      if (!e.platform) e.platform = seller;
+      e.sourcePurchaseTransactionId = effectiveTxId;
+      e.seller = defaultSeller;
+      if (!e.platform) e.platform = defaultSeller;
+      if (!e.paymentMethod) e.paymentMethod = defaultPaymentMethod;
     });
     const existingCompIndex = findUniqueCatalogMatchIndex(componentsToKeep, compData);
     
@@ -939,6 +1172,74 @@ export const handleAddComponents = (
       componentsToKeep.push(newComp);
     }
   });
+
+  if (targetExistingTx) {
+    let existingDetails: string[] = [];
+    if (targetExistingTx.detailsList && targetExistingTx.detailsList.length > 0) {
+      existingDetails = [...targetExistingTx.detailsList];
+    } else {
+      const baseQty = targetExistingTx.quantity || targetExistingTx.relatedComponentQty || 1;
+      const baseCost = baseQty > 0 ? roundToCents((targetExistingTx.totalAmount || 0) / baseQty) : 0;
+      const baseName = targetExistingTx.itemNameOrSummary || 'Purchased Part';
+      existingDetails = [`${baseQty}x ${baseName} (${formatCurrency(baseCost)}/ea)`];
+    }
+
+    const newDetailLines = parsedComps.map((c) => {
+      const qty = c.compTotalQuantity || 1;
+      const cost = c.entries.length > 0 ? (c.compTotalPrice / qty) : 0;
+      return `${qty}x ${c.compData.name} (${formatCurrency(cost)}/ea)`;
+    });
+
+    const combinedDetails = [...existingDetails, ...newDetailLines];
+    const updatedTotalAmount = roundToCents((targetExistingTx.totalAmount || 0) + overallTotalAmount);
+    const updatedTotalQuantity = (targetExistingTx.quantity || 0) + overallTotalQuantity;
+    const updatedItemCount = (targetExistingTx.itemCount || existingDetails.length) + compsData.length;
+    const updatedSummaryTitle = `Purchased Mixed Parts (${updatedTotalQuantity} Parts)`;
+
+    const updatedTx: TransactionLogItem = {
+      ...targetExistingTx,
+      title: targetExistingTx.customTitleOverride ? targetExistingTx.title : `Bulk Purchase: ${defaultSeller}`,
+      quantity: updatedTotalQuantity,
+      totalAmount: updatedTotalAmount,
+      itemCount: updatedItemCount,
+      itemNameOrSummary: updatedSummaryTitle,
+      detailsList: combinedDetails,
+      relatedComponentId: undefined,
+      relatedComponentQty: undefined,
+      relatedPurchaseEntryId: undefined,
+      originalPurchaseEntrySnapshot: undefined,
+    };
+
+    const updatedTransactions = [...prev.transactions];
+    updatedTransactions[existingTxIndex] = updatedTx;
+
+    return {
+      ...prev,
+      transactions: updatedTransactions,
+      components: componentsToKeep,
+    };
+  }
+
+  const newTx: TransactionLogItem = {
+    id: effectiveTxId,
+    type: 'PURCHASE',
+    title: `Bulk Purchase: ${defaultSeller}`,
+    timestamp: displayTimestamp,
+    dateSortable: newestDate,
+    itemCount: compsData.length,
+    quantity: overallTotalQuantity,
+    totalAmount: overallTotalAmount,
+    platform: defaultSeller,
+    seller: defaultSeller,
+    paymentMethod: defaultPaymentMethod,
+    itemNameOrSummary: bulkSummaryTitle,
+    detailsList: parsedComps.map((c) => {
+      const qty = c.compTotalQuantity || 1;
+      const cost = c.entries.length > 0 ? (c.compTotalPrice / qty) : 0;
+      return `${qty}x ${c.compData.name} (${formatCurrency(cost)}/ea)`;
+    }),
+  };
+  newTxs.push(newTx);
 
   return {
     ...prev,
@@ -1200,95 +1501,19 @@ export const handleUpdatePurchaseEntry = (
     if (!isMatchedTx) return tx;
 
     const compName = existing.name || tx.itemNameOrSummary;
-    const cleanCompName = compName.replace(/^\d+x\s+/i, '');
 
-    let updatedDetailsList = [`${newQty}x ${cleanCompName} (${formatCurrency(unitPrice)}/ea)`];
-    if (tx.detailsList && tx.detailsList.length > 1) {
-      updatedDetailsList = tx.detailsList.map((detail) => {
-        const parsed = parseBatchItem(detail, prev.components, tx);
-        if (
-          parsed.entry?.id === entryId ||
-          parsed.comp?.id === componentId ||
-          parsed.itemName.toLowerCase().trim() === cleanCompName.toLowerCase().trim()
-        ) {
-          return `${newQty}x ${parsed.itemName} (${formatCurrency(unitPrice)}/ea)`;
-        }
-        return detail;
-      });
-    }
-
-    const newTxTotalQuantity = (tx.detailsList && tx.detailsList.length > 1)
-      ? updatedDetailsList.reduce((acc, d) => {
-          const m = d.match(/^(\d+)x\s+/i);
-          return acc + (m ? parseInt(m[1], 10) : 1);
-        }, 0)
-      : newQty;
-
-    const newTxTotalAmount = (tx.detailsList && tx.detailsList.length > 1)
-      ? updatedDetailsList.reduce((acc, d) => {
-          const m = d.match(/^(?:(\d+)x\s+)?(.*?)(?:\s+\(\$([\d\.,]+)(?:\/ea)?\))?$/i);
-          const q = m && m[1] ? parseInt(m[1], 10) : 1;
-          const u = m && m[3] ? parseFloat(m[3].replace(/,/g, '')) : 0;
-          return roundToCents(acc + (q * u));
-        }, 0)
-      : totalPrice;
-
-    const newTitle = newTxTotalQuantity > 1
-      ? `Purchased ${newTxTotalQuantity}x ${cleanCompName}`
-      : `Purchased ${cleanCompName}`;
-
-    let updatedTitle = tx.title;
-    if (updatedTitle) {
-      if (/^(Purchased|Bulk Purchase)\s+\d+x\s+/i.test(updatedTitle)) {
-        updatedTitle = updatedTitle.replace(
-          /^(Purchased|Bulk Purchase)\s+\d+x\s+/i,
-          newTxTotalQuantity > 1 ? `$1 ${newTxTotalQuantity}x ` : '$1 '
-        );
-      } else if (/^\d+x\s+/i.test(updatedTitle)) {
-        updatedTitle = newTxTotalQuantity > 1 ? `${newTxTotalQuantity}x ${cleanCompName}` : cleanCompName;
-      } else if (/^(Purchased|Bulk Purchase):/i.test(updatedTitle)) {
-        // Keep standard prefix or template
-      }
-    } else {
-      updatedTitle = newTitle;
-    }
-
-    let updatedCustomTitle = tx.customTitleOverride;
-    if (updatedCustomTitle && /^(Purchased|Bulk Purchase)\s+\d+x\s+/i.test(updatedCustomTitle)) {
-      updatedCustomTitle = updatedCustomTitle.replace(
-        /^(Purchased|Bulk Purchase)\s+\d+x\s+/i,
-        newTxTotalQuantity > 1 ? `$1 ${newTxTotalQuantity}x ` : '$1 '
-      );
-    }
-
-    return {
-      ...tx,
-      title: updatedTitle,
-      customTitleOverride: updatedCustomTitle,
-      quantity: newTxTotalQuantity,
-      relatedComponentQty: newTxTotalQuantity,
-      totalAmount: newTxTotalAmount,
-      dateSortable: entry.date,
-      timestamp: entry.date,
-      paymentMethod: entry.paymentMethod,
-      platform: entry.platform,
-      seller: entry.platform,
-      itemNameOrSummary: cleanCompName,
-      relatedPurchaseEntryId: entryId,
-      detailsList: updatedDetailsList,
-      originalPurchaseEntrySnapshot: {
-        ...(tx.originalPurchaseEntrySnapshot || {}),
-        id: entryId,
-        date: entry.date,
-        quantity: newQty,
-        unitPrice,
-        totalPrice,
-        paymentMethod: entry.paymentMethod,
-        platform: entry.platform,
-        seller: entry.platform,
-        condition: entry.condition,
-      },
-    };
+    return patchMatchingPurchaseTransaction(
+      tx,
+      componentId,
+      entryId,
+      entry,
+      newQty,
+      unitPrice,
+      totalPrice,
+      compName,
+      prev.components,
+      targetEntry
+    );
   });
 
   return {

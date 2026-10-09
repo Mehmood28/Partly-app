@@ -1,12 +1,15 @@
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import React, { useState } from 'react';
 import { resizeImage } from '../utils/imageResizer';
-import { X, Upload, FileText, Trash2, Zap, Save, RotateCcw } from 'lucide-react';
+import { X, Upload, FileText, Trash2, Zap, Save, RotateCcw, Link2 } from 'lucide-react';
 import { CATEGORIES, ComponentCategory, Condition, PaymentMethod, Platform } from '../types';
 import { usePrivacy } from '../context/PrivacyContext';
+import { useInventory } from '../context/InventoryContext';
 import { CustomSelect } from './ui/CustomSelect';
 import { useToast } from '../context/ToastContext';
-import { normalizeTag, normalizeTags, SUB_CATEGORIES, getConflictingTags } from '../utils/helpers';
+import { normalizeTag, normalizeTags, SUB_CATEGORIES, getConflictingTags, formatCurrency, roundToCents } from '../utils/helpers';
+import { classifyTransaction } from '../utils/transactionClassification';
+import { getCleanTransactionTitle } from './activity/activityHelpers';
 
 const CATEGORY_OPTIONS = CATEGORIES.map((value) => ({ value, label: value }));
 const CONDITION_OPTIONS = ['Sealed', 'New Open Box', 'New No Box', 'Used Open Box', 'Used No Box']
@@ -30,17 +33,79 @@ export interface ParsedBulkStockItem {
 interface BulkStockEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSaveAll: (items: ParsedBulkStockItem[]) => void;
+  onSaveAll: (items: ParsedBulkStockItem[], targetPurchaseTxId?: string) => void;
 }
 
 export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen, onClose, onSaveAll }) => {
   const { hideSupplierNames } = usePrivacy();
   const { showToast } = useToast();
+  const { state } = useInventory();
   const [activeTab, setActiveTab] = useState<'text' | 'image'>('text');
   const [textInput, setTextInput] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [isParsing, setIsParsing] = useState(false);
   const [parsedItems, setParsedItems] = useState<ParsedBulkStockItem[]>([]);
+  const [isAddToExisting, setIsAddToExisting] = useState(false);
+  const [selectedPurchaseTxId, setSelectedPurchaseTxId] = useState('');
+
+  const purchaseTransactions = React.useMemo(() => {
+    return state.transactions
+      .filter((tx) => tx.type === 'PURCHASE' || classifyTransaction(tx, state.builds).isPurchase)
+      .sort((a, b) => {
+        const dateA = a.dateSortable || a.timestamp || '';
+        const dateB = b.dateSortable || b.timestamp || '';
+        return dateB.localeCompare(dateA);
+      });
+  }, [state.transactions, state.builds]);
+
+  const purchaseOptions = React.useMemo(() => {
+    return purchaseTransactions.map((tx) => {
+      const cleanTitle = getCleanTransactionTitle(tx, state.components, state.builds);
+      const sellerStr = (!hideSupplierNames && (tx.seller || tx.platform)) ? ` • ${tx.seller || tx.platform}` : '';
+      const dateStr = (tx.dateSortable || tx.timestamp || '').split('T')[0];
+      const amountStr = formatCurrency(tx.totalAmount || 0);
+      return {
+        value: tx.id,
+        label: `${dateStr} - ${cleanTitle} (${amountStr}${sellerStr})`,
+      };
+    });
+  }, [purchaseTransactions, state.components, state.builds, hideSupplierNames]);
+
+  const selectedPurchaseTx = React.useMemo(() => {
+    return purchaseTransactions.find((tx) => tx.id === selectedPurchaseTxId);
+  }, [purchaseTransactions, selectedPurchaseTxId]);
+
+  const newIncomingQty = React.useMemo(() => {
+    return parsedItems.reduce((sum, item) => sum + (Math.max(1, Number(item.quantity) || 1)), 0);
+  }, [parsedItems]);
+
+  const newIncomingTotal = React.useMemo(() => {
+    return roundToCents(
+      parsedItems.reduce((sum, item) => {
+        const qty = Math.max(1, Number(item.quantity) || 1);
+        const cost = Number(item.unitCost) || 0;
+        return sum + (qty * cost);
+      }, 0)
+    );
+  }, [parsedItems]);
+
+  React.useEffect(() => {
+    if (isAddToExisting && (!selectedPurchaseTxId || !purchaseTransactions.some((t) => t.id === selectedPurchaseTxId))) {
+      const detectedSeller = parsedItems.find((p) => p.seller)?.seller;
+      if (detectedSeller) {
+        const match = purchaseTransactions.find(
+          (t) => (t.seller || t.platform)?.toLowerCase() === detectedSeller.toLowerCase()
+        );
+        if (match) {
+          setSelectedPurchaseTxId(match.id);
+          return;
+        }
+      }
+      if (purchaseOptions.length > 0) {
+        setSelectedPurchaseTxId(purchaseOptions[0].value);
+      }
+    }
+  }, [isAddToExisting, parsedItems, purchaseOptions, purchaseTransactions, selectedPurchaseTxId]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -204,7 +269,21 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
   };
 
   const handleConfirm = () => {
-    onSaveAll(parsedItems);
+    if (isAddToExisting && !selectedPurchaseTxId) {
+      showToast('Please select an existing purchase record to append to.', 'error');
+      return;
+    }
+    const finalItems = parsedItems.map((item) => {
+      if (isAddToExisting && selectedPurchaseTx) {
+        return {
+          ...item,
+          seller: item.seller || (selectedPurchaseTx.seller as Platform) || (selectedPurchaseTx.platform as Platform),
+          paymentMethod: item.paymentMethod || selectedPurchaseTx.paymentMethod,
+        };
+      }
+      return item;
+    });
+    onSaveAll(finalItems, isAddToExisting ? selectedPurchaseTxId : undefined);
     handleClose();
   };
 
@@ -212,6 +291,8 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
     setTextInput('');
     setImages([]);
     setParsedItems([]);
+    setIsAddToExisting(false);
+    setSelectedPurchaseTxId('');
     onClose();
   };
 
@@ -260,6 +341,56 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                 >
                   <Upload className="w-3.5 h-3.5" /> Scan Images
                 </button>
+              </div>
+
+              {/* Existing Purchase Option */}
+              <div className="mx-auto w-full max-w-sm rounded-xl border border-white/[0.08] bg-[#101719] p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[#B9EF68]/20 bg-[#B9EF68]/10 text-[#B9EF68]">
+                      <Link2 className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-xs font-semibold text-zinc-200">Add to Existing Purchase</span>
+                      <p className="text-[10px] text-zinc-400 leading-tight">Append to an existing purchase record</p>
+                    </div>
+                  </div>
+                  <label className={`relative inline-flex items-center shrink-0 ${purchaseOptions.length === 0 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <input
+                      type="checkbox"
+                      disabled={purchaseOptions.length === 0}
+                      checked={isAddToExisting}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setIsAddToExisting(checked);
+                        if (checked && !selectedPurchaseTxId && purchaseOptions.length > 0) {
+                          setSelectedPurchaseTxId(purchaseOptions[0].value);
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-white/[0.08] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#B9EF68]"></div>
+                  </label>
+                </div>
+                {isAddToExisting && (
+                  <div className="pt-2 border-t border-white/[0.06] space-y-1.5">
+                    <label className="block text-[11px] font-medium text-zinc-400">Target Purchase Record</label>
+                    <CustomSelect
+                      value={selectedPurchaseTxId}
+                      onChange={(val) => setSelectedPurchaseTxId(val)}
+                      options={purchaseOptions}
+                      placeholder="Select a purchase record..."
+                    />
+                    {selectedPurchaseTx && (
+                      <div className="text-[11px] text-zinc-400 pt-0.5 flex items-center justify-between">
+                        <span>{selectedPurchaseTx.seller || selectedPurchaseTx.platform || 'Purchase'}</span>
+                        <span className="text-[#83E5DF] font-medium">
+                          {selectedPurchaseTx.quantity || 1} parts • {formatCurrency(selectedPurchaseTx.totalAmount || 0)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Input Area */}
@@ -340,6 +471,77 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                 >
                   <RotateCcw className="w-3.5 h-3.5 text-zinc-400" /> Start Over
                 </button>
+              </div>
+
+              {/* Existing Purchase Option Card */}
+              <div className="rounded-xl border border-white/[0.08] bg-[#101719] p-3 space-y-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[#B9EF68]/20 bg-[#B9EF68]/10 text-[#B9EF68]">
+                      <Link2 className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-zinc-100">Add to Existing Purchase</span>
+                        {purchaseOptions.length === 0 && (
+                          <span className="text-[10px] text-zinc-500 font-normal">(No purchase records found)</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-zinc-400 truncate">
+                        Append these incoming parts into an existing purchase transaction record
+                      </p>
+                    </div>
+                  </div>
+                  <label className={`relative inline-flex items-center shrink-0 ${purchaseOptions.length === 0 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <input
+                      type="checkbox"
+                      disabled={purchaseOptions.length === 0}
+                      checked={isAddToExisting}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setIsAddToExisting(checked);
+                        if (checked && !selectedPurchaseTxId && purchaseOptions.length > 0) {
+                          setSelectedPurchaseTxId(purchaseOptions[0].value);
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-white/[0.08] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#B9EF68]"></div>
+                  </label>
+                </div>
+
+                {isAddToExisting && (
+                  <div className="pt-2 border-t border-white/[0.06] space-y-2">
+                    <div>
+                      <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                        Target Purchase Record
+                      </label>
+                      <CustomSelect
+                        value={selectedPurchaseTxId}
+                        onChange={(val) => setSelectedPurchaseTxId(val)}
+                        options={purchaseOptions}
+                        placeholder="Select a purchase record..."
+                      />
+                    </div>
+
+                    {selectedPurchaseTx && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05] text-[11px]">
+                        <div className="flex items-center gap-1.5 text-zinc-400">
+                          <span>Current record:</span>
+                          <span className="text-zinc-200 font-medium">
+                            {selectedPurchaseTx.quantity || 1} parts • {formatCurrency(selectedPurchaseTx.totalAmount || 0)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[#B9EF68]">
+                          <span>After adding:</span>
+                          <span className="font-semibold font-mono">
+                            {(selectedPurchaseTx.quantity || 1) + newIncomingQty} parts ({formatCurrency((selectedPurchaseTx.totalAmount || 0) + newIncomingTotal)})
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
               <div className="divide-y divide-white/[0.07] border-y border-white/[0.08]">
@@ -499,7 +701,9 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
               className="app-button app-button-primary flex items-center justify-center gap-2 px-5 h-[36px] min-h-[36px] rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
             >
               <Save className="w-4 h-4" />
-              Confirm & Save All to Stock
+              {isAddToExisting && selectedPurchaseTx
+                ? 'Confirm & Append to Purchase Record'
+                : 'Confirm & Save All to Stock'}
             </button>
           </div>
         )}

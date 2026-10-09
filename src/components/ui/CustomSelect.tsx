@@ -30,7 +30,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   className = '',
   icon,
   dropdownClassName = '',
-  fitLongestOption = true,
+  fitLongestOption = false,
 }) => {
   const listboxId = useId();
   const [isOpen, setIsOpen] = useState(false);
@@ -103,7 +103,10 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       const viewportBottom = viewportTop + viewportHeight;
       const viewportPadding = 8;
       const menuGap = 6;
-      const width = Math.min(viewportWidth - viewportPadding * 2, Math.max(rect.width, preferredWidth || 0));
+      const width = Math.min(
+        viewportWidth - viewportPadding * 2,
+        fitLongestOption && preferredWidth ? Math.max(rect.width, preferredWidth) : rect.width
+      );
       const left = Math.min(Math.max(viewportLeft + viewportPadding, rect.left), viewportRight - width - viewportPadding);
       const groupCount = new Set(options.map((option) => option.group).filter(Boolean)).size;
       const estimatedContentHeight = Math.min(MENU_CONTENT_HEIGHT_CAP, options.length * 34 + groupCount * 27 + 8);
@@ -274,7 +277,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                       : 'text-zinc-300 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
-                <span className="min-w-0 flex-1 whitespace-nowrap pr-2">{opt.label}</span>
+                <span className="min-w-0 flex-1 truncate pr-2" title={opt.label}>{opt.label}</span>
                 {isSelected && <Check className="w-3.5 h-3.5 text-[#B9EF68] shrink-0" />}
               </div>
             );
@@ -333,7 +336,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           ref={menuRef}
           id={listboxId}
           role="listbox"
-          style={{ ...menuPosition, boxSizing: 'border-box' }}
+          style={{
+            ...menuPosition,
+            width: `${menuPosition.width}px`,
+            maxWidth: `${menuPosition.width}px`,
+            boxSizing: 'border-box',
+          }}
           className={`fixed z-[500] overflow-hidden rounded-lg border border-white/[0.12] bg-[#0b1113]/98 shadow-2xl shadow-black/80 backdrop-blur-xl ${dropdownClassName}`}
         >
           <div

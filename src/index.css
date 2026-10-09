@@ -1597,7 +1597,12 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   [data-bottom-sheet-modal] .transaction-edit-modal .transaction-edit-item-input,
   [data-bottom-sheet-modal] .stock-modal .transaction-edit-modal .transaction-edit-item-input,
   [data-bottom-sheet-modal] .stock-modal .transaction-edit-modal input.transaction-edit-item-input,
-  [data-bottom-sheet-modal] input.transaction-edit-item-input {
+  [data-bottom-sheet-modal] input.transaction-edit-item-input,
+  [data-bottom-sheet-modal] .transaction-edit-modal .transaction-edit-cost-input,
+  [data-bottom-sheet-modal] .stock-modal .transaction-edit-modal .transaction-edit-cost-input,
+  [data-bottom-sheet-modal] .stock-modal .transaction-edit-modal input.transaction-edit-cost-input,
+  [data-bottom-sheet-modal] input.transaction-edit-cost-input,
+  .transaction-edit-cost-input {
     min-height: 20px !important;
     height: 20px !important;
     max-height: 20px !important;
@@ -1606,6 +1611,10 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
     padding-bottom: 0 !important;
     padding-block: 0 !important;
     font-size: 11px !important;
+    background-color: #101719 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 6px !important;
+    color: #f4f4f5 !important;
     box-sizing: border-box !important;
   }
 
@@ -1617,21 +1626,6 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
     max-height: 20px !important;
     box-sizing: border-box !important;
   }
-
-  [data-bottom-sheet-modal] .stock-modal .transaction-edit-modal input.transaction-edit-cost-input,
-  [data-bottom-sheet-modal] input.transaction-edit-cost-input,
-  .transaction-edit-cost-input {
-    height: 18px !important;
-    min-height: 18px !important;
-    max-height: 18px !important;
-    line-height: 18px !important;
-    padding: 0 !important;
-    padding-block: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    font-size: 11px !important;
-    box-sizing: border-box !important;
-  }
 }
 
 [data-bottom-sheet-modal] .transaction-edit-modal .transaction-edit-item-input,
@@ -1639,7 +1633,14 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 [data-bottom-sheet-modal] .stock-modal .transaction-edit-modal input.transaction-edit-item-input,
 [data-bottom-sheet-modal] input.transaction-edit-item-input,
 .transaction-edit-modal .transaction-edit-item-input,
-input.transaction-edit-item-input {
+input.transaction-edit-item-input,
+[data-bottom-sheet-modal] .transaction-edit-modal .transaction-edit-cost-input,
+[data-bottom-sheet-modal] .stock-modal .transaction-edit-modal .transaction-edit-cost-input,
+[data-bottom-sheet-modal] .stock-modal .transaction-edit-modal input.transaction-edit-cost-input,
+[data-bottom-sheet-modal] input.transaction-edit-cost-input,
+.transaction-edit-modal .transaction-edit-cost-input,
+input.transaction-edit-cost-input,
+.transaction-edit-cost-input {
   min-height: 20px !important;
   height: 20px !important;
   max-height: 20px !important;
@@ -1648,6 +1649,10 @@ input.transaction-edit-item-input {
   padding-bottom: 0 !important;
   padding-block: 0 !important;
   font-size: 11px !important;
+  background-color: #101719 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 6px !important;
+  color: #f4f4f5 !important;
   box-sizing: border-box !important;
 }
 
@@ -1657,21 +1662,6 @@ input.transaction-edit-item-input {
   height: 20px !important;
   min-height: 20px !important;
   max-height: 20px !important;
-  box-sizing: border-box !important;
-}
-
-[data-bottom-sheet-modal] .stock-modal .transaction-edit-modal input.transaction-edit-cost-input,
-[data-bottom-sheet-modal] input.transaction-edit-cost-input,
-.transaction-edit-cost-input {
-  height: 18px !important;
-  min-height: 18px !important;
-  max-height: 18px !important;
-  line-height: 18px !important;
-  padding: 0 !important;
-  padding-block: 0 !important;
-  border: none !important;
-  background: transparent !important;
-  font-size: 11px !important;
   box-sizing: border-box !important;
 }
 

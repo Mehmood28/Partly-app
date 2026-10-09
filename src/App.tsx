@@ -85,8 +85,13 @@ function AppContent() {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [isResetting, setIsResetting] = useState(false);
 
-  const handleSaveBulkItems = (parsedItems: ParsedBulkStockItem[]) => {
+  const handleSaveBulkItems = (parsedItems: ParsedBulkStockItem[], targetPurchaseTxId?: string) => {
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+    const targetTx = targetPurchaseTxId ? state.transactions.find((t) => t.id === targetPurchaseTxId) : undefined;
+    const fallbackSeller = targetTx ? (targetTx.seller || targetTx.platform || 'Other') : 'Other';
+    const fallbackDate = targetTx?.dateSortable || today;
+    const fallbackPayment = targetTx?.paymentMethod || 'Cash';
+
     const newComps: Omit<InventoryComponent, 'id' | 'assignedCount'>[] = parsedItems.map(item => {
       const qty = Math.max(1, Number(item.quantity) || 1);
       const unitCost = Number(item.unitCost) || 0;
@@ -98,13 +103,13 @@ function AppContent() {
 
       const purchaseEntries: PurchaseEntry[] = [{
         id: `ph-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        date: item.date || today,
+        date: item.date || fallbackDate,
         condition: item.condition || 'New Open Box',
         quantity: qty,
         unitPrice: unitCost,
         totalPrice: roundToCents(qty * unitCost),
-        paymentMethod: item.paymentMethod || 'Cash',
-        platform: item.seller || 'Other',
+        paymentMethod: item.paymentMethod || fallbackPayment,
+        platform: item.seller || fallbackSeller,
         healthPercent: health,
       }];
 
@@ -123,7 +128,7 @@ function AppContent() {
       };
     });
     
-    addComponents(newComps);
+    addComponents(newComps, targetPurchaseTxId);
   };
 
   const handleOpenAddComponent = React.useCallback(() => {

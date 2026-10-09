@@ -45,6 +45,30 @@ interface BuildCardProps {
   ) => { success: boolean; error?: string };
 }
 
+const MonitorPc: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M10 15H4a2 2 0 01-2-2V7a2 2 0 012-2h6" />
+    <path d="M10 19H5" />
+    <path d="M14 11h8" />
+    <path d="M14 7h8" />
+    <path d="M18 17h.01" />
+    <path d="M9 19v-4" />
+    <rect x="14" y="3" width="8" height="18" rx="1" />
+  </svg>
+);
+
 export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   isActive = true,
   isExpanded: propIsExpanded,
@@ -73,6 +97,18 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedSpecs, setCopiedSpecs] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsLightboxOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen]);
 
   const handleCopySpecs = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,6 +120,22 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     } else {
       showToast('Failed to copy clean PC specs to clipboard.', 'error');
     }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === 'string') {
+        updateBuild(build.id, { imageUrl: result });
+        showToast('Photo added to build!', 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   // Confirmation modal state
@@ -268,22 +320,27 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
       )}
       {isExpanded && (
         <div className="build-expanded px-3 pb-3 pt-3 sm:px-5 sm:pb-4 sm:pt-4">
-          <div className="build-overview">
-            <div className="build-overview-copy">
+          <div className="build-overview items-stretch">
+            <div className="build-overview-copy flex flex-col justify-between">
               <button type="button" className="build-expanded-heading" onClick={handleToggle} aria-label={`Collapse ${build.name}`}>
                 <span className="min-w-0">
                   <span className="build-expanded-title" title={build.name}>{build.name}</span>
                 </span>
                 <ChevronUp />
               </button>
-              <div className={`build-finances ${isSold ? 'build-finances-sold' : ''}`}>
+              <div className={`build-finances !mb-0 ${isSold ? 'build-finances-sold' : ''}`}>
                 <div><span>Cost</span><strong>{formatCurrency(partsCost)}</strong></div>
                 <div><span>{isSold ? 'Sold' : 'Target'}</span><strong>{displayedPrice !== undefined ? formatCurrency(displayedPrice) : '—'}</strong></div>
                 <div><span>Profit</span><strong className={getProfitTextColor(profit)}>{displayedPrice !== undefined ? formatSignedCurrency(profit) : '—'}</strong></div>
                 {isSold && <div><span>Margin</span><strong>{profitMarginPercent.toFixed(1)}%</strong></div>}
               </div>
-              {!isSold && <div className="build-date"><Calendar /><span>Built {formattedBuiltDate}</span></div>}
-              <div className="build-action-bar">
+              {!isSold && (
+                <div className="build-date flex items-center gap-1.5 !my-auto py-3">
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                  <span>Built {formattedBuiltDate}</span>
+                </div>
+              )}
+              <div className={`build-action-bar ${isSold ? 'mt-auto' : ''}`}>
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(build); }}
                   className="app-button"
@@ -455,10 +512,38 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 )}
               </div>
             </div>
-            {build.imageUrl ? (
-              <img src={build.imageUrl} alt={build.name} />
+            {hasBuildImage && build.imageUrl ? (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsLightboxOpen(true);
+                }}
+                className="relative aspect-square w-full rounded-xl overflow-hidden border border-white/[0.08] bg-[#0E1518] cursor-zoom-in group/thumb"
+                title="Click to view full photo"
+              >
+                <img
+                  src={build.imageUrl}
+                  alt={build.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-[1.02]"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
             ) : (
-              <div className="build-hero-placeholder"><ImageIcon /></div>
+              <label
+                className="relative aspect-square w-full rounded-xl bg-[#0e1518] border border-white/[0.08] hover:border-[#B9EF68]/40 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-200 overflow-hidden self-stretch group/slot select-none"
+                title="Add Photo"
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+                <MonitorPc className="w-12 h-12 text-[#b9ef68] transition-transform duration-200 group-hover/slot:scale-105" />
+                <span className="text-xs font-medium text-zinc-400 group-hover/slot:text-zinc-300 transition-colors">
+                  Add Photo
+                </span>
+              </label>
             )}
           </div>
 
@@ -868,6 +953,24 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           part={quantityPartData}
           onClose={() => setQuantityPartData(null)}
         />
+      )}
+
+      {/* In-App Image Lightbox Modal */}
+      {isLightboxOpen && build.imageUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Photo preview for ${build.name}`}
+          onClick={() => setIsLightboxOpen(false)}
+          className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center transition-opacity"
+        >
+          <img
+            src={build.imageUrl}
+            alt={build.name}
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[90vh] max-w-[90vw] object-contain select-none cursor-default"
+          />
+        </div>
       )}
 
       {/* Confirmation Modal */}

@@ -50,6 +50,29 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
     ? (CATEGORY_TAG_GROUPS[activeCategory] || [])
     : [];
 
+  const sortOptions = React.useMemo<{ value: SortOption; label: string }[]>(() => {
+    const base: { value: SortOption; label: string }[] = [
+      { value: 'newest-purchase', label: 'Recently Bought' },
+      { value: 'highest-price', label: 'Highest Price Per Unit' },
+      { value: 'lowest-price', label: 'Lowest Price Per Unit' },
+      { value: 'highest-stock', label: 'Highest Units in Stock' },
+      { value: 'lowest-stock', label: 'Lowest Units in Stock' },
+    ];
+    if (activeCategory === 'Storage') {
+      base.push(
+        { value: 'highest-health', label: 'Highest Health' },
+        { value: 'lowest-health', label: 'Lowest Health' }
+      );
+    }
+    return base;
+  }, [activeCategory]);
+
+  React.useEffect(() => {
+    if (activeCategory !== 'Storage' && (sortBy === 'highest-health' || sortBy === 'lowest-health')) {
+      onSortByChange?.('newest-purchase');
+    }
+  }, [activeCategory, sortBy, onSortByChange]);
+
   return (
     <div className={`inventory-filter-bar w-full flex flex-col gap-1.5 ${compactControls ? 'is-compact' : ''}`}>
       {showCategories && (
@@ -181,16 +204,10 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
               <CustomSelect
                 value={sortBy}
                 onChange={(val) => onSortByChange(val as SortOption)}
-                options={[
-                  { value: 'newest-purchase', label: 'Recently Bought' },
-                  { value: 'highest-price', label: 'Highest Price Per Unit' },
-                  { value: 'lowest-price', label: 'Lowest Price Per Unit' },
-                  { value: 'highest-stock', label: 'Highest Units in Stock' },
-                  { value: 'lowest-stock', label: 'Lowest Units in Stock' }
-                ]}
+                options={sortOptions}
                 icon={<ArrowDownWideNarrow className="h-3.5 w-3.5 text-[#B9EF68]" />}
                 className="w-full"
-                dropdownClassName="shadow-2xl min-w-[210px] py-1.5"
+                dropdownClassName="shadow-2xl py-1.5"
                 fitLongestOption={false}
               />
             </div>

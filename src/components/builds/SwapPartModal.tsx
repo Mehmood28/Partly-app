@@ -84,6 +84,24 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
     if (sortBy === 'lowest-price') return a.avgPrice - b.avgPrice;
     if (sortBy === 'highest-stock') return b.totalAvailable - a.totalAvailable;
     if (sortBy === 'lowest-stock') return a.totalAvailable - b.totalAvailable;
+    if (sortBy === 'highest-health') {
+      const getH = (item: typeof a) => {
+        const hs = item.validEntries.map(e => e.healthPercent).filter((h): h is number => typeof h === 'number' && Number.isFinite(h));
+        if (hs.length === 0) return typeof item.comp.healthPercent === 'number' ? item.comp.healthPercent : -1;
+        return Math.max(...hs);
+      };
+      const diff = getH(b) - getH(a);
+      if (diff !== 0) return diff;
+    }
+    if (sortBy === 'lowest-health') {
+      const getH = (item: typeof a) => {
+        const hs = item.validEntries.map(e => e.healthPercent).filter((h): h is number => typeof h === 'number' && Number.isFinite(h));
+        if (hs.length === 0) return typeof item.comp.healthPercent === 'number' ? item.comp.healthPercent : 999;
+        return Math.min(...hs);
+      };
+      const diff = getH(a) - getH(b);
+      if (diff !== 0) return diff;
+    }
     const latest = (entries: typeof a.validEntries) => entries.reduce((max, entry) => Math.max(max, new Date(entry.date).getTime() || 0), 0);
     return latest(b.validEntries) - latest(a.validEntries);
   });
