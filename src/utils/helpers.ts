@@ -821,6 +821,97 @@ export function getComponentStorageHealthStats(
   };
 }
 
+/**
+ * Calculates the most recent purchase batch timestamp for a component.
+ * Instead of sorting by the parent component's original creation date,
+ * it sorts by the most recent AVAILABLE batch date (skipping allocated/sold batches).
+ * If no available batches exist with valid dates, it gracefully falls back to the component's creation date.
+ */
+export function getComponentLatestPurchaseTimestamp(
+  comp: InventoryComponent,
+  builds?: PCBuild[],
+  precomputedMap?: Record<string, { explicitSum: number, unlinkedSum?: number, batches: Record<string, number> }>
+): number {
+  if (!comp) return 0;
+
+  let max = 0;
+
+  // 1. If explicit batches array is provided on the component (e.g. comp.batches)
+  if (Array.isArray((comp as any).batches) && (comp as any).batches.length > 0) {
+    const batches = (comp as any).batches;
+    for (let i = 0; i < batches.length; i++) {
+      const b = batches[i];
+      if (!b) continue;
+
+      // Strict availability check: skip if fully consumed, allocated, or sold
+      if (b.status === 'allocated' || b.status === 'sold' || b.status === 'consumed') {
+        continue;
+      }
+      if (typeof b.availableQuantity === 'number' && b.availableQuantity <= 0) {
+        continue;
+      }
+      if (typeof b.remainingQuantity === 'number' && b.remainingQuantity <= 0) {
+        continue;
+      }
+      if (typeof b.quantity === 'number' && b.quantity <= 0) {
+        continue;
+      }
+      if (b.isAllocated || b.isSold || b.isConsumed) {
+        continue;
+      }
+
+      // Check build allocations if builds or assignedCount are present and batch has an ID
+      const batchId = b.id || b.entry?.id;
+      if (batchId && (builds || (comp.assignedCount && comp.assignedCount > 0))) {
+        if (typeof b.availableQuantity !== 'number' && typeof b.remainingQuantity !== 'number') {
+          if (getPurchaseEntryRemainingQuantity(comp, batchId, builds || []) <= 0) {
+            continue;
+          }
+        }
+      }
+
+      const dateStr = b.date || b.entry?.date;
+      if (!dateStr) continue;
+
+      const t = getLocalCalendarTimestamp(dateStr) || new Date(dateStr).getTime() || 0;
+      if (t > max) max = t;
+    }
+  }
+
+  // 2. Evaluate unassigned / available batches from component purchaseHistory
+  if (comp.purchaseHistory && Array.isArray(comp.purchaseHistory) && comp.purchaseHistory.length > 0) {
+    // Determine which batches still have unassigned/available stock
+    const unassignedBatches = getUnassignedBatches(comp, builds || [], precomputedMap);
+    for (let i = 0; i < unassignedBatches.length; i++) {
+      const b = unassignedBatches[i];
+      if (!b || b.availableQuantity <= 0) continue;
+      const dateStr = b.entry?.date;
+      if (!dateStr) continue;
+
+      const t = getLocalCalendarTimestamp(dateStr) || new Date(dateStr).getTime() || 0;
+      if (t > max) max = t;
+    }
+  }
+
+  if (max > 0) return max;
+
+  // 3. Gracefully fall back to component creation date if no available batches exist
+  const creationDate = (comp as any).createdAt || (comp as any).createdDate || (comp as any).dateAdded;
+  if (creationDate) {
+    const t = getLocalCalendarTimestamp(creationDate) || new Date(creationDate).getTime() || 0;
+    if (t > 0) return t;
+  }
+
+  // Fallback to ID timestamp if formatted as comp-<timestamp>-... or item-<timestamp>-...
+  const idMatch = String(comp.id || '').match(/^(?:comp|item)-(\d{10,13})/);
+  if (idMatch) {
+    const idTime = parseInt(idMatch[1], 10);
+    if (!isNaN(idTime) && idTime > 0) return idTime;
+  }
+
+  return 0;
+}
+
 export function filterAndSortComponents(
   components: InventoryComponent[],
   options: FilterSortOptions
@@ -889,17 +980,8 @@ export function filterAndSortComponents(
     return true;
   });
 
-  // Fast date lookup helper avoiding array allocation inside comparator
-  const getLatestTimestamp = (comp: InventoryComponent): number => {
-    if (!comp.purchaseHistory || comp.purchaseHistory.length === 0) return 0;
-    let max = 0;
-    for (let i = 0; i < comp.purchaseHistory.length; i++) {
-      const time = new Date(comp.purchaseHistory[i].date).getTime() || 0;
-      if (time > max) max = time;
-    }
-    return max;
-  };
-
+  // Fast date lookup helper sorting by most recent batch date with fallback to creation date
+  // (Uses getComponentLatestPurchaseTimestamp)
   // 5. Sorting
   const costMap = new Map<string, number>();
   const getCompCost = (comp: InventoryComponent): number => {
@@ -931,6 +1013,16 @@ export function filterAndSortComponents(
     return stats;
   };
 
+  const timestampMap = new Map<string, number>();
+  const getCompTimestamp = (comp: InventoryComponent): number => {
+    let ts = timestampMap.get(comp.id);
+    if (ts === undefined) {
+      ts = getComponentLatestPurchaseTimestamp(comp, options.builds, precomputedMap);
+      timestampMap.set(comp.id, ts);
+    }
+    return ts;
+  };
+
   return filtered.sort((a, b) => {
     if (options.sortBy === 'highest-price') {
       return getCompCost(b) - getCompCost(a);
@@ -954,7 +1046,7 @@ export function filterAndSortComponents(
         if (healthB.avg !== healthA.avg) return healthB.avg - healthA.avg;
         if (healthB.min !== healthA.min) return healthB.min - healthA.min;
       }
-      return getLatestTimestamp(b) - getLatestTimestamp(a);
+      return getCompTimestamp(b) - getCompTimestamp(a);
     }
     if (options.sortBy === 'lowest-health') {
       const healthA = getCompHealth(a);
@@ -966,11 +1058,11 @@ export function filterAndSortComponents(
         if (healthA.avg !== healthB.avg) return healthA.avg - healthB.avg;
         if (healthA.max !== healthB.max) return healthA.max - healthB.max;
       }
-      return getLatestTimestamp(b) - getLatestTimestamp(a);
+      return getCompTimestamp(b) - getCompTimestamp(a);
     }
     
-    // Default sorting (newest-purchase)
-    return getLatestTimestamp(b) - getLatestTimestamp(a);
+    // Default sorting (newest-purchase / Recently Bought)
+    return getCompTimestamp(b) - getCompTimestamp(a);
   });
 }
 

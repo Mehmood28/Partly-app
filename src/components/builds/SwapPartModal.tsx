@@ -4,7 +4,7 @@ import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useInventory } from '../../context/InventoryContext';
 import { useToast } from '../../context/ToastContext';
 import { Box, ArrowRightLeft, X } from 'lucide-react';
-import { formatCurrency, getUnassignedBatches, filterAndSortComponents, getConflictingTags, determineSubCategory, SortOption } from '../../utils/helpers';
+import { formatCurrency, getUnassignedBatches, filterAndSortComponents, getConflictingTags, determineSubCategory, SortOption, getComponentLatestPurchaseTimestamp } from '../../utils/helpers';
 import { ConfirmModal } from '../ConfirmModal';
 import { InventoryFilterBar } from '../InventoryFilterBar';
 import { ComponentCard } from '../ComponentCard';
@@ -102,8 +102,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
       const diff = getH(a) - getH(b);
       if (diff !== 0) return diff;
     }
-    const latest = (entries: typeof a.validEntries) => entries.reduce((max, entry) => Math.max(max, new Date(entry.date).getTime() || 0), 0);
-    return latest(b.validEntries) - latest(a.validEntries);
+    return getComponentLatestPurchaseTimestamp(b.comp, state.builds) - getComponentLatestPurchaseTimestamp(a.comp, state.builds);
   });
 
   const handleSwap = (newComponentId: string, purchaseEntryId: string, targetQty: number) => {

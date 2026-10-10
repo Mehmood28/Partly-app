@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan to revert the AI Bulk Import pipeline to its stable extraction and staging table state, remove catalogMatcher.ts, eliminate auto-linking badges/dropdowns from the staging UI, simplify the server extraction prompt while preserving global metadata cascading and line-item overrides, and protect the calendar-day calculation for Last PC Sale.",
-  "updatedAt":  "2026-10-09T21:47:37.544970032Z",
+  "summary":  "Universal fix for \"Recently Bought\" inventory sorting logic across all catalog views and modals. Accurately sorts by the most recent purchase batch date with graceful fallback to component creation date.",
+  "updatedAt":  "2026-10-10T15:22:18.421122654Z",
   "requestFeedback":  true,
   "userFacing":  true
 }
