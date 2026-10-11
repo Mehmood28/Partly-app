@@ -1,6 +1,6 @@
 {
-  "summary":  "Universal fix for \"Recently Bought\" inventory sorting logic across all catalog views and modals. Accurately sorts by the most recent purchase batch date with graceful fallback to component creation date.",
-  "updatedAt":  "2026-10-10T15:22:18.421122654Z",
+  "summary":  "Implementation plan to fix multi-tag selection and filtering across all inventory and build picker views. Replaces substring matching with tag-first resolution, group conflict enforcement, and whole-word token matching for untagged items.",
+  "updatedAt":  "2026-10-11T18:01:00.752110556Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

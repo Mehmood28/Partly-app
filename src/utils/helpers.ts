@@ -951,30 +951,14 @@ export function filterAndSortComponents(
 
     // 4. Sub-Category / Sub-Tag Filter (Multi-select)
     if (options.subTags && options.subTags.length > 0) {
-      const compTags = (comp.tags || []).map((t) => (typeof t === 'string' ? t.toLowerCase().trim() : ''));
-      const compNameLower = String(comp.name || '').toLowerCase();
-      const compSpecLower = String(comp.specifications || '').toLowerCase();
-      
       const matchesAllSubTags = options.subTags.every((subTag) => {
-        const target = subTag.toLowerCase().trim();
-        return (
-          compTags.includes(target) ||
-          compNameLower.includes(target) ||
-          compSpecLower.includes(target)
-        );
+        return matchesComponentTag(comp, subTag, options.category);
       });
       if (!matchesAllSubTags) return false;
     } else if (options.subCategory && options.subCategory.trim()) {
-      const compTags = (comp.tags || []).map((t) => (typeof t === 'string' ? t.toLowerCase().trim() : ''));
-      const compNameLower = String(comp.name || '').toLowerCase();
-      const compSpecLower = String(comp.specifications || '').toLowerCase();
-      const target = options.subCategory.toLowerCase().trim();
-      const matches =
-        compTags.includes(target) ||
-        compNameLower.includes(target) ||
-        compSpecLower.includes(target) ||
-        determineSubCategory(comp)?.toLowerCase() === target;
-      if (!matches) return false;
+      if (!matchesComponentTag(comp, options.subCategory, options.category)) {
+        return false;
+      }
     }
 
     return true;
@@ -1360,20 +1344,184 @@ export const getConflictingTags = (tag: string, category?: string): string[] => 
   }
   return [tag];
 };
+
+function matchesTextForTag(text: string, targetLower: string): boolean {
+  switch (targetLower) {
+    case 'atx': {
+      // Must have standalone "atx"
+      if (!/(?:^|[^a-z0-9])atx(?:$|[^a-z0-9])/i.test(text)) return false;
+      // Must not be solely mATX, micro-ATX, e-ATX, or atx 3.0/3.1
+      const cleaned = text
+        .replace(/(?:m|micro|e|extended)[\s-]?atx/gi, '')
+        .replace(/atx[\s-]?3\.[01]/gi, '');
+      return /(?:^|[^a-z0-9])atx(?:$|[^a-z0-9])/i.test(cleaned);
+    }
+    case 'matx': {
+      return /(?:^|[^a-z0-9])(?:matx|m[\s-]?atx|micro[\s-]?atx)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'itx': {
+      return /(?:^|[^a-z0-9])(?:itx|m[\s-]?itx|mitx|mini[\s-]?itx)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'rgb': {
+      if (!/(?:^|[^a-z0-9])(?:a?rgb)(?:$|[^a-z0-9])/i.test(text)) return false;
+      const cleaned = text.replace(/(?:non|no|without)[\s-]?rgb/gi, '');
+      return /(?:^|[^a-z0-9])(?:a?rgb)(?:$|[^a-z0-9])/i.test(cleaned);
+    }
+    case 'non-rgb': {
+      return /(?:^|[^a-z0-9])(?:non[\s-]?rgb|no[\s-]?rgb|without[\s-]?rgb)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'black': {
+      return /(?:^|[^a-z0-9])(?:black|blk)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'white': {
+      return /(?:^|[^a-z0-9])(?:white|wht)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'ddr4': {
+      return /(?:^|[^a-z0-9])ddr4(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'ddr5': {
+      return /(?:^|[^a-z0-9])ddr5(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'am4': {
+      return /(?:^|[^a-z0-9])am4(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'am5': {
+      return /(?:^|[^a-z0-9])am5(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'intel': {
+      return /(?:^|[^a-z0-9])(?:intel|lga[\s-]?\d+|core[\s-]?i\d|core[\s-]?ultra)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'amd': {
+      return /(?:^|[^a-z0-9])(?:amd|ryzen|radeon)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case '50 series': {
+      return /(?:^|[^a-z0-9])(?:50[\s-]?series|rtx[\s-]?50\d{2}|5090|5080|5070|5060)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case '40 series': {
+      return /(?:^|[^a-z0-9])(?:40[\s-]?series|rtx[\s-]?40\d{2}|4090|4080|4070|4060)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case '30 series': {
+      return /(?:^|[^a-z0-9])(?:30[\s-]?series|rtx[\s-]?30\d{2}|3090|3080|3070|3060)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'gen5': {
+      return /(?:^|[^a-z0-9])(?:gen[\s-]?5|pcie[\s-]?5(?:\.0)?)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'gen4': {
+      return /(?:^|[^a-z0-9])(?:gen[\s-]?4|pcie[\s-]?4(?:\.0)?)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'gen3': {
+      return /(?:^|[^a-z0-9])(?:gen[\s-]?3|pcie[\s-]?3(?:\.0)?)(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'sata': {
+      return /(?:^|[^a-z0-9])sata(?:$|[^a-z0-9])/i.test(text);
+    }
+    case '360mm': {
+      return /(?:^|[^a-z0-9])360(?:\s*mm)?(?:$|[^a-z0-9])/i.test(text);
+    }
+    case '240mm': {
+      return /(?:^|[^a-z0-9])240(?:\s*mm)?(?:$|[^a-z0-9])/i.test(text);
+    }
+    case '280mm': {
+      return /(?:^|[^a-z0-9])280(?:\s*mm)?(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'air cooler': {
+      return (
+        /(?:^|[^a-z0-9])(?:air[\s-]?cooler|air[\s-]?cooling)(?:$|[^a-z0-9])/i.test(text) &&
+        !/(?:aio|liquid)/i.test(text)
+      );
+    }
+    case 'sfx': {
+      return /(?:^|[^a-z0-9])sfx(?:-l)?(?:$|[^a-z0-9])/i.test(text);
+    }
+    case 'atx 3.0 / 3.1': {
+      return /(?:atx[\s-]?3\.[01]|atx3\.[01]|12vhpwr|pcie[\s-]?5(?:\.0)?)/i.test(text);
+    }
+    case 'standard': {
+      return /(?:^|[^a-z0-9])standard(?:$|[^a-z0-9])/i.test(text);
+    }
+    default: {
+      const escaped = targetLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`(?:^|[^a-z0-9])${escaped}(?:$|[^a-z0-9])`, 'i').test(text);
+    }
+  }
+}
+
+/**
+ * Accurately determines if a component matches a target tag filter.
+ * 1. Checks explicit `comp.tags` first:
+ *    - If comp.tags contains the exact target tag -> true.
+ *    - If comp.tags contains a conflicting tag from the same mutually exclusive group
+ *      (e.g., comp has 'mATX' while target is 'ATX') -> false (strict group exclusivity).
+ * 2. Fallback for untagged parts or tag dimensions not present in comp.tags:
+ *    - Strict whole-word / token boundary matching on comp.name and comp.specifications.
+ *    - Prevents false-positive substring matches (e.g., 'mATX' or 'micro-ATX' matching 'ATX',
+ *      'Non-RGB' matching 'RGB', 'mITX' matching 'ITX').
+ */
+export function matchesComponentTag(
+  comp: import('../types').InventoryComponent,
+  targetTag: string,
+  category?: string
+): boolean {
+  if (!comp || !targetTag || !targetTag.trim()) return false;
+
+  const target = targetTag.trim();
+  const targetLower = target.toLowerCase();
+  const resolvedCategory = category || comp.category;
+
+  // 1. Explicit tags check
+  const rawCompTags = Array.isArray(comp.tags) ? comp.tags : [];
+  const compTagsLower = rawCompTags
+    .filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+    .map((t) => t.trim().toLowerCase());
+
+  if (compTagsLower.includes(targetLower)) {
+    return true;
+  }
+
+  // Check if component already has an explicit tag from the SAME mutually exclusive group
+  const groupTags = getConflictingTags(target, resolvedCategory);
+  const groupTagsLower = groupTags.map((t) => t.trim().toLowerCase());
+  const hasConflictingExplicitTag = compTagsLower.some(
+    (t) => groupTagsLower.includes(t) && t !== targetLower
+  );
+
+  if (hasConflictingExplicitTag) {
+    // Component explicitly belongs to a different tag in this group (e.g. tagged as mATX when searching for ATX)
+    return false;
+  }
+
+  // 2. Fallback for untagged parts or tag dimensions not explicitly tagged on this component
+  const nameStr = String(comp.name || '').toLowerCase();
+  const specStr = typeof comp.specifications === 'string' ? comp.specifications.toLowerCase() : '';
+  const combinedText = `${nameStr} ${specStr}`.trim();
+  if (!combinedText) return false;
+
+  return matchesTextForTag(combinedText, targetLower);
+}
+
 export const determineSubCategory = (comp: import('../types').InventoryComponent) => {
   if (!comp) return null;
   const possible = SUB_CATEGORIES[comp.category] || [];
-  const nameLower = String(comp.name || '').toLowerCase();
-  const specLower = typeof comp.specifications === 'string' ? comp.specifications.toLowerCase() : (comp.specifications ? String(comp.specifications).toLowerCase() : '');
-  const compTags = Array.isArray(comp.tags) ? comp.tags.map(t => String(t || '').trim().toLowerCase()) : [];
-  for (const sub of possible) {
-    const subLower = sub.toLowerCase();
-    if (nameLower.includes(subLower) || 
-        compTags.includes(subLower) ||
-        (specLower && specLower.includes(subLower))) {
+  if (possible.length === 0) return null;
+
+  // 1. Check explicit component tags first
+  const compTags = Array.isArray(comp.tags)
+    ? comp.tags.filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+    : [];
+  for (const tag of compTags) {
+    const match = possible.find((p) => p.toLowerCase() === tag.trim().toLowerCase());
+    if (match) return match;
+  }
+
+  // 2. Sort candidate tags so longer/more specific tags are evaluated first (e.g. mATX, ITX before ATX)
+  const sortedCandidates = [...possible].sort((a, b) => b.length - a.length);
+
+  for (const sub of sortedCandidates) {
+    if (matchesComponentTag(comp, sub, comp.category)) {
       return sub;
     }
   }
+
   return null;
 };
 

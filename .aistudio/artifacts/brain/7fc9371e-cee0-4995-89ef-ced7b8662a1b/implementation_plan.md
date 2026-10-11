@@ -1,131 +1,124 @@
-# Fix "Recently Bought" Inventory Sorting Logic Universally
+# Tag Selection & Multi-Tag Filtering Accuracy Fix
 
-Fix the "Recently Bought" inventory sorting filter so that whenever components have multiple batches (e.g., buying a second "Gigabyte X870E AORUS PRO ICE" on Oct 6th when the original component was added on Apr 30th), sorting is determined by the most recent batch date rather than the component's original creation date, with graceful fallback to creation date when no batches exist. Ensure universal consistency across all tabs and modals containing the filter.
+Resolve tag filtering issues where selecting multiple tags (e.g., `ATX` and `White`) incorrectly includes parts with conflicting or substring tags (such as `mATX` cases showing up under `ATX`), ensuring accurate part matching across all inventory and build pickers.
 
-## User Review & Critical Decisions
+### User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The codebase audit identified that all inventory catalog dropdowns and pickers share the centralized `filterAndSortComponents` engine in `src/utils/helpers.ts`, while `SwapPartModal.tsx` additionally contains a local comparator that must be aligned.
-> - **Batch Date Evaluation**: Evaluates `Math.max` across all batch dates in `(component as any).batches || component.purchaseHistory`. Dates will be parsed using the app's established local calendar parser (`getLocalCalendarTimestamp`) with ISO fallback to prevent timezone off-by-one shifts.
-> - **Graceful Fallback**: If a component has no batches (or all batch dates are missing/unparseable), sorting gracefully falls back to the component's creation date (`createdAt`, `createdDate`, `dateAdded`, or creation timestamp embedded in `component.id`).
-> - **Universal Application**: The fix applies automatically across all 6 views and modals consuming `SortOption = 'newest-purchase'`, and replaces the secondary custom sort in `SwapPartModal.tsx`.
+> The following architectural decisions were confirmed based on user feedback:
+
+- **Confirmed Decision 1**: Tag matching will prioritize explicitly assigned tags (`comp.tags`). If a component already has an explicit tag in a tag group (e.g. `mATX` in the Form Factor group), it will strictly respect that tag and never fall back to matching `ATX` from the component name. For untagged items, matching will use strict whole-word boundary token matching.
+- **Confirmed Decision 2**: The fix applies uniformly across all views where tags are selected or filtered:
+  - **Stock / Inventory View** (`InventoryView.tsx`)
+  - **Swap Part Modal** (`SwapPartModal.tsx`)
+  - **Allocate Part Modal** (`AllocatePartModal.tsx`)
+  - **Create Build Part Picker** (`BuildInventoryPicker.tsx`)
 
 ---
 
-## 1. Overview & Core Concept
+### 1. Overview & Core Concept
 
-- **What It Does**: The "Recently Bought" filter in Partly allows users to view stock sorted with newly purchased inventory at the top. This fix ensures that adding a new batch to an existing component catalog card immediately bumps that component to the top of the "Recently Bought" view, matching user expectations.
-- **Target Audience / Persona**: PC builders and inventory managers restocking high-volume components (like motherboards, RAM, and SSDs) who need to find and allocate newly purchased batches quickly without scrolling past older catalog items.
-- **Key Value**: Eliminates catalog misordering and lost visibility when re-ordering existing parts, making stock tracking reliable and predictable.
-
----
-
-## 2. User Experience & Visual Design
-
-- **Zero Visual Regression**: The UI remains completely identical across all views. The dropdown label `"Recently Bought"` in `InventoryFilterBar` remains unchanged.
-- **Dynamic List Response**:
-  - When a user logs a purchase for a component that was originally created months ago, selecting "Recently Bought" in the In-Stock view immediately reflects the latest purchase date.
-  - In build modals (`BuildModal`, `AllocatePartModal`, `SwapPartModal`) and sell modals (`SellPartModal`, `BulkSaleForm`), newly restocked components appear at the top of their respective category lists.
-- **Tie-Breaking Determinism**: If two components share the same recent batch date, the comparator falls back to component name or ID deterministically without list jumping.
+- **What It Does**: Upgrades the inventory filtering engine (`filterAndSortComponents` and `determineSubCategory`) so multi-tag selections (e.g., selecting `ATX` and `White`) strictly filter for parts that match all selected tags. Eliminates substring collisions like `mATX` matching `ATX`, `Non-RGB` matching `RGB`, and `mITX` matching `ITX`.
+- **Target Audience / Persona**: PC builders and inventory managers filtering through hundreds of stock components who need exact, reliable results when selecting form factors, colors, and hardware generations.
+- **Key Value**: Accurate inventory filtering prevents selecting incompatible parts (like putting an mATX case into an ATX build filter) and ensures search and tag filters work with zero false positives.
 
 ---
 
-## 3. Key Product Decisions & Trade-Offs
+### 2. User Experience & Visual Design
 
-- **Decision 1: Centralized Helper vs Per-Component Comparator**
-  - *Chosen Approach*: Export a shared helper `getComponentLatestPurchaseTimestamp(component: InventoryComponent): number` from `src/utils/helpers.ts` and use it inside `filterAndSortComponents` and `SwapPartModal.tsx`.
-  - *Why*: Prevents divergence. If batch schema or date normalization rules evolve, the sorting logic remains unified in one place.
-  - *Alternatives Considered*: Writing inline comparator logic in each modal was rejected as it caused the original divergence in `SwapPartModal.tsx`.
-
-- **Decision 2: Timezone-Safe Date Parsing**
-  - *Chosen Approach*: Use `getLocalCalendarTimestamp` from `src/utils/helpers.ts` first, falling back to `new Date(date).getTime()`.
-  - *Why*: Component purchase dates are stored as `"YYYY-MM-DD"`. Using vanilla `new Date("2026-10-06").getTime()` evaluates to UTC midnight, which in Western Hemisphere timezones can cause calendar offset discrepancies. `getLocalCalendarTimestamp` normalizes local midnight deterministically.
-
-- **Decision 3: Multi-Layer Creation Date Fallback**
-  - *Chosen Approach*: For components with 0 batches, inspect `createdAt`, `createdDate`, `dateAdded`, and regex timestamp from `component.id` (`comp-<timestamp>-...`).
-  - *Why*: Handles legacy data, imported backups, and in-memory drafts where explicit timestamps might be in varying properties.
+- **Tag Selection Flow**:
+  - The user taps a category (e.g. `Case`).
+  - The user taps a Form Factor tag (e.g. `ATX`) and a Color tag (e.g. `White`).
+  - Both tags illuminate with the active accent highlight (`#B9EF68`).
+  - The filtered list updates instantly, showing **only** parts that are both `ATX` and `White`.
+  - Parts tagged or titled with `mATX` or `ITX` are strictly excluded.
+- **Empty States & Feedback**:
+  - If no components match the combined tag criteria (e.g., `ITX` + `White` with 0 available stock), the clean "No parts found / No compatible parts found" empty state is displayed with clear guidance.
 
 ---
 
-## 4. Technical Architecture & Data Strategy
+### 3. Key Product Decisions & Trade-Offs
 
-### Component & Data Flow Diagram
+- **Decision 1: Tag-First Resolution with Conflict Elimination**:
+  - *Chosen Approach*: When a part has explicit tags (`comp.tags`), check if any tag belongs to the same mutually exclusive group as the target tag. If the part has an explicit tag from that group (e.g. `mATX` when searching for `ATX`), immediately reject it without falling back to fuzzy text matching.
+  - *Why*: Eliminates false positives when a part name mentions other terms or contains substrings.
+  - *Alternatives Considered*: Pure substring search (caused the current bug); strict tags-only (would break legacy or un-tagged inventory items).
+
+- **Decision 2: Token-Level Boundary Matching for Untagged Fallbacks**:
+  - *Chosen Approach*: If a component has no tags in a given group, evaluate `name` and `specifications` using isolated word/token boundary regexes that guard against prefixes (e.g., `(?<![a-z0-9\-])atx(?![a-z0-9])` with explicit exclusion of `m-?atx`, `micro-?atx`, `e-?atx`, and `non-rgb`).
+  - *Why*: Preserves support for untagged parts while guaranteeing that "Starlight mATX White" will never match an "ATX" filter.
+
+- **Decision 3: Centralized Engine Upgrade**:
+  - *Chosen Approach*: Implement `matchesComponentTag` and update `filterAndSortComponents` and `determineSubCategory` in `src/utils/helpers.ts`.
+  - *Why*: All four views (`InventoryView`, `SwapPartModal`, `AllocatePartModal`, `BuildInventoryPicker`) consume `filterAndSortComponents`, guaranteeing 100% consistent behavior across the entire app with zero code duplication.
+
+---
+
+### 4. Technical Architecture & Data Strategy
 
 ```
-┌────────────────────────────────────────────────────────┐
-│             Inventory Filter & Sort Engine             │
-│                 (src/utils/helpers.ts)                 │
-├────────────────────────────────────────────────────────┤
-│  getComponentLatestPurchaseTimestamp(component):       │
-│   1. Batches: Math.max(...validBatchTimestamps)        │
-│   2. Fallback: createdAt / createdDate / ID timestamp  │
-└───────────────────────────┬────────────────────────────┘
-                            │
-            Used by filterAndSortComponents()
-                            │
-       ┌────────────────────┼────────────────────┐
-       ▼                    ▼                    ▼
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│InventoryView │     │  BuildModal  │     │AllocatePart  │
-│  (Stock Tab) │     │ (Part Picker)│     │    Modal     │
-└──────────────┘     └──────────────┘     └──────────────┘
-       ▲                    ▲                    ▲
-       ├────────────────────┼────────────────────┤
-       ▼                    ▼                    ▼
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│ SwapPartModal│     │ SellPartModal│     │ BulkSaleForm │
-│  (Build Rig) │     │ (Loose Part) │     │ (Batch Pool) │
-└──────────────┘     └──────────────┘     └──────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                        User Tag Filter Selection                       │
+│             e.g. Active Sub-Tags: ["ATX", "White"]                     │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   filterAndSortComponents(...) Engine                  │
+│                                                                        │
+│   For each selected sub-tag, evaluate matchesComponentTag(comp, tag):  │
+│                                                                        │
+│   1. Explicit Tag Check:                                               │
+│      - comp.tags has exact tag? ───────────────► MATCH (true)          │
+│      - comp.tags has conflicting tag from same                         │
+│        mutually exclusive group (e.g. mATX)? ──► REJECT (false)        │
+│                                                                        │
+│   2. Fallback for Untagged Dimensions:                                 │
+│      - Token/word boundary match in name/specs                         │
+│        excluding negative & parent tokens? ────► MATCH (true)          │
+│      - Otherwise ──────────────────────────────► REJECT (false)        │
+│                                                                        │
+│   3. Combined Tag Enforcement (AND):                                   │
+│      - Every selected tag must return MATCH!                           │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                          Filtered Part Lists                           │
+│  ├─ Stock / Inventory Tab (InventoryView.tsx)                          │
+│  ├─ Swap Case / Swap Part Modal (SwapPartModal.tsx)                    │
+│  ├─ Allocate Part Modal (AllocatePartModal.tsx)                        │
+│  └─ Create Build Picker (BuildInventoryPicker.tsx)                     │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Detailed Code Audit & Affected Locations
+#### Detailed State & Implementation Steps:
 
 1. **`src/utils/helpers.ts`**:
-   - Implement and export `getComponentLatestPurchaseTimestamp(comp: InventoryComponent): number`:
-     ```ts
-     export function getComponentLatestPurchaseTimestamp(comp: InventoryComponent): number {
-       const batches = (comp as any).batches || comp.purchaseHistory || [];
-       if (Array.isArray(batches) && batches.length > 0) {
-         let max = 0;
-         for (let i = 0; i < batches.length; i++) {
-           const b = batches[i];
-           if (!b || !b.date) continue;
-           const t = getLocalCalendarTimestamp(b.date) || new Date(b.date).getTime() || 0;
-           if (t > max) max = t;
-         }
-         if (max > 0) return max;
-       }
+   - Implement `matchesComponentTag(comp: InventoryComponent, targetTag: string, category?: string): boolean`:
+     - Normalize target tag (case-insensitive).
+     - Identify if target tag belongs to a known tag group (e.g. `Form Factor: ['ATX', 'mATX', 'ITX']`, `Color: ['Black', 'White']`, `Lighting: ['RGB', 'Non-RGB']`, etc.).
+     - Check explicit `comp.tags`:
+       - If `comp.tags` contains target tag: return `true`.
+       - If `comp.tags` contains another tag from the same group: return `false` (explicit conflict).
+     - For components without a tag in that group, perform word-boundary token matching on `comp.name` and `comp.specifications`:
+       - Special handling for form factors (`atx` does not match `matx`, `micro-atx`, `eatx`).
+       - Special handling for lighting (`rgb` does not match `non-rgb`).
+       - Special handling for RAM generations (`ddr4` vs `ddr5`).
+   - Update `filterAndSortComponents`:
+     - Multi-tag filtering verifies `options.subTags.every(tag => matchesComponentTag(comp, tag, options.category))`.
+     - Single subCategory filtering verifies `matchesComponentTag(comp, options.subCategory, options.category)`.
+   - Update `determineSubCategory`:
+     - Prioritize explicit `comp.tags` first.
+     - When matching against name/specs, sort candidate tags by specificity (e.g. `mATX` and `ITX` before `ATX`, `Non-RGB` before `RGB`) and use token-bounded matching.
 
-       // Fallback to component creation date if no batches or valid batch dates exist
-       const creationDate = (comp as any).createdAt || (comp as any).createdDate || (comp as any).dateAdded;
-       if (creationDate) {
-         const t = getLocalCalendarTimestamp(creationDate) || new Date(creationDate).getTime() || 0;
-         if (t > 0) return t;
-       }
+2. **Verify All Consuming Views**:
+   - Verify `InventoryView.tsx`, `SwapPartModal.tsx`, `AllocatePartModal.tsx`, and `BuildInventoryPicker.tsx`.
+   - Confirm active subtag toggle handlers properly clear conflicting tags using `getConflictingTags`.
 
-       // ID timestamp fallback (e.g. comp-1729000000000-...)
-       const idMatch = String(comp.id || '').match(/^(?:comp|item)-(\d{10,13})/);
-       if (idMatch) {
-         const idTime = parseInt(idMatch[1], 10);
-         if (!isNaN(idTime) && idTime > 0) return idTime;
-       }
-
-       return 0;
-     }
-     ```
-   - In `filterAndSortComponents`:
-     - Update default/`'newest-purchase'` sort:
-       `return getComponentLatestPurchaseTimestamp(b) - getComponentLatestPurchaseTimestamp(a);`
-     - Update tie-breaking fallback in `'highest-health'` and `'lowest-health'`:
-       `return getComponentLatestPurchaseTimestamp(b) - getComponentLatestPurchaseTimestamp(a);`
-
-2. **`src/components/builds/SwapPartModal.tsx`**:
-   - Lines 105-107:
-     Replace the incomplete `latest(b.validEntries) - latest(a.validEntries)` with `getComponentLatestPurchaseTimestamp(b.comp) - getComponentLatestPurchaseTimestamp(a.comp)`.
-
-3. **Universal Verification Sites**:
-   - `src/components/InventoryView.tsx`: verified to invoke `filterAndSortComponents`.
-   - `src/components/builds/createBuild/BuildInventoryPicker.tsx`: verified to invoke `filterAndSortComponents`.
-   - `src/components/builds/AllocatePartModal.tsx`: verified to invoke `filterAndSortComponents`.
-   - `src/components/parts/sellPart/SellPartModal.tsx`: verified to invoke `filterAndSortComponents`.
-   - `src/components/parts/sellPart/BulkSaleForm.tsx`: verified to invoke `filterAndSortComponents`.
+3. **Validation & Quality Assurance**:
+   - Verify cases like "Starlight mATX White" are correctly excluded when `ATX` + `White` are selected.
+   - Verify that true ATX cases (e.g., "Lian Li O11 Vision Compact White") remain displayed when `ATX` + `White` are selected.
+   - Verify "Starlight mATX White" appears when `mATX` + `White` are selected.
+   - Verify RAM lighting (`RGB` vs `Non-RGB`), platform (`AM4` vs `AM5`), and cooler sizes work correctly.
+   - Run compilation and linting to ensure zero regressions.
