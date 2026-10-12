@@ -177,7 +177,7 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
         </div>
 
         {/* List */}
-        <div className="swap-results modal-results-list overflow-y-auto pr-1">
+        <div className="swap-results modal-results-list overflow-y-scroll pr-[3px]">
           {filteredParts.length === 0 ? (
             <div className="text-center py-12 px-4 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/[0.08] rounded-xl bg-[#101719]/50 mt-4">
               <Box className="w-8 h-8 mb-3 text-zinc-500" />

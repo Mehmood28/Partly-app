@@ -365,7 +365,7 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
           </button>
         </div>
 
-        <div className={`${parsedItems.length > 0 ? 'min-h-0 flex-1 overflow-y-auto space-y-1 px-3 pt-1 pb-2 sm:px-4' : 'space-y-3 px-3 py-3 sm:px-4'}`}>
+        <div className={`${parsedItems.length > 0 ? 'min-h-0 flex-1 overflow-y-scroll space-y-1 px-3 pt-1 pb-2 sm:px-4' : 'space-y-3 px-3 py-3 sm:px-4'}`}>
           {parsedItems.length === 0 ? (
             <>
               {/* Mode Selection */}
@@ -703,13 +703,13 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                                     type="button"
                                     onClick={() => toggleTag(idx, tag)}
                                     data-active={isSelected}
-                                    className={`app-chip app-subcategory-chip px-2.5 h-[26px] min-h-[26px] rounded-md transition-all text-xs font-sans font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
+                                    className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] px-2.5 h-[26px] min-h-[26px] rounded-md transition-all text-xs font-sans font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
                                       isSelected
-                                        ? 'app-chip-active text-white border-[#B9EF68]'
+                                        ? 'app-chip-active text-[#B9EF68] border-[#B9EF68]'
                                         : 'text-[#b1bac4] hover:text-zinc-200'
                                     }`}
                                   >
-                                    <span className={isSelected ? 'text-white' : 'text-[#b1bac4]'}>{tag}</span>
+                                    <span className={isSelected ? 'text-[#B9EF68]' : 'text-[#b1bac4]'}>{tag}</span>
                                   </button>
                                 );
                               })}

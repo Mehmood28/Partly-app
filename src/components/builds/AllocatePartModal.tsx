@@ -136,7 +136,7 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
           />
         </div>
 
-        <div className="allocate-results modal-results-list overflow-y-auto pr-1">
+        <div className="allocate-results modal-results-list overflow-y-scroll pr-[3px]">
           {!hasAnyItems ? (
             <div className="text-center py-8 px-4 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/[0.08] rounded-xl bg-[#101719]/50 mt-2">
               <Box className="w-7 h-7 mb-2 text-zinc-500" />

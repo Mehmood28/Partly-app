@@ -464,7 +464,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                 </span>
               </div>
               <div
-                className="overflow-y-auto pr-1 no-scrollbar flex flex-col max-h-56 sm:max-h-60"
+                className="overflow-y-scroll pr-[3px] flex flex-col max-h-56 sm:max-h-60"
                 style={{ gap: '5px' }}
               >
                 {editItems.map((item, idx) => (

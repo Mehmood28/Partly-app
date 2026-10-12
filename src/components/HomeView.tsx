@@ -14,7 +14,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(({
   onOpenBulkEntry 
 }) => {
   return (
-    <div className="home-layout pb-2">
+    <div className="home-layout">
       {/* Monthly Profit Goal */}
       <GoalBar />
       

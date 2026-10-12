@@ -388,13 +388,13 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                               disabled={isDisabled}
                               onClick={() => handleTagToggle(tag)}
                               data-active={isSelected}
-                              className={`app-chip app-subcategory-chip px-2.5 h-[26px] min-h-[26px] rounded-md transition-all text-xs font-sans font-semibold ${
+                              className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] px-2.5 h-[26px] min-h-[26px] rounded-md transition-all text-xs font-sans font-semibold ${
                                 isSelected
-                                  ? 'app-chip-active text-white border-[#B9EF68]'
+                                  ? 'app-chip-active text-[#B9EF68] border-[#B9EF68]'
                                   : 'text-[#b1bac4] hover:text-zinc-200'
                               } ${isDisabled ? 'opacity-60 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
                             >
-                              <span className={isSelected ? 'text-white' : 'text-[#b1bac4]'}>{tag}</span>
+                              <span className={isSelected ? 'text-[#B9EF68]' : 'text-[#b1bac4]'}>{tag}</span>
                             </button>
                           );
                         })}

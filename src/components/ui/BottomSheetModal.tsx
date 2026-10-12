@@ -45,9 +45,15 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onCl
             exit={{ y: 10, opacity: 0, scale: 0.98 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
             data-modal-layout={layout}
-            className={`pointer-events-auto relative flex w-full max-w-[calc(100vw-12px)] sm:max-w-3xl flex-col rounded-[14px] border border-white/[0.12] bg-[#0b1113]/98 p-3 shadow-[0_28px_80px_rgba(0,0,0,0.82)] backdrop-blur-xl sm:rounded-2xl sm:p-5 ${layout === 'workspace' ? 'modal-layout-workspace' : 'modal-layout-content'} ${className}`}
+            className={`pointer-events-auto relative flex w-full max-w-[calc(100vw-12px)] sm:max-w-3xl flex-col !overflow-hidden rounded-[14px] border border-white/[0.12] bg-[#0b1113]/98 p-3 shadow-[0_28px_80px_rgba(0,0,0,0.82)] backdrop-blur-xl sm:rounded-2xl sm:p-5 ${layout === 'workspace' ? 'modal-layout-workspace' : 'modal-layout-content'} ${className}`}
           >
-            {children}
+            {layout === 'content' ? (
+              <div className="modal-content-scroller flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden overscroll-contain pr-[3px]">
+                {children}
+              </div>
+            ) : (
+              children
+            )}
           </motion.div>
         </div>
       )}

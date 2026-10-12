@@ -10,7 +10,6 @@ import { ConfirmModal } from '../ConfirmModal';
 import { classifyTransaction } from '../../utils/transactionClassification';
 import { resolveTransactionDate } from '../../utils/bulkSaleGrouping';
 import { useVirtualListScroll } from '../../hooks/useVirtualListScroll';
-import { CustomScrollIndicator } from '../ui/CustomScrollIndicator';
 
 interface PurchaseHistoryViewProps {
   isActive?: boolean;
@@ -90,7 +89,11 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
   const rowVirtualizer = useVirtualizer({
     count: isVirtualized ? sortedTransactions.length : 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 100,
+    estimateSize: (index) => {
+      const tx = sortedTransactions[index];
+      if (tx && expandedIds.has(tx.id)) return 260;
+      return typeof window !== 'undefined' && window.innerWidth < 768 ? 86 : 96;
+    },
     getItemKey: (index) => sortedTransactions[index]?.id ?? index,
     overscan: 5,
     useCachedMeasurements: !isActive,
@@ -169,24 +172,29 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
           <p className="text-xs text-zinc-400">Try changing your search query.</p>
         </div>
       ) : !isVirtualized ? (
-        <div className="flex flex-col gap-[5px]">
-          {sortedTransactions.map((tx) => (
-            <React.Fragment key={tx.id}>{renderTransactionRow(tx)}</React.Fragment>
-          ))}
+        <div 
+          className="w-full max-h-[calc(100dvh-230px-env(safe-area-inset-bottom))] overflow-y-scroll pr-[3px] md:max-h-[calc(100dvh-220px)]"
+          style={{ overflowAnchor: 'none' }}
+        >
+          <div className="flex flex-col gap-[5px] pb-1.5">
+            {sortedTransactions.map((tx) => (
+              <React.Fragment key={tx.id}>{renderTransactionRow(tx)}</React.Fragment>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="relative">
+        <div className="w-full">
           <div
             ref={parentRef}
             onScroll={handleScroll}
-            className="h-[calc(100dvh-330px)] overflow-y-auto no-scrollbar pr-1 md:h-[calc(100dvh-210px)]"
+            className="w-full max-h-[calc(100dvh-230px-env(safe-area-inset-bottom))] overflow-y-scroll pr-[3px] md:max-h-[calc(100dvh-220px)]"
             style={{
               overflowAnchor: 'none',
             }}
           >
             <div
               style={{
-                height: `${rowVirtualizer.getTotalSize() + 76}px`,
+                height: `${rowVirtualizer.getTotalSize() + 6}px`,
                 width: '100%',
                 position: 'relative',
               }}
@@ -214,7 +222,6 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
               })}
             </div>
           </div>
-          <CustomScrollIndicator containerRef={parentRef} />
         </div>
       )}
 

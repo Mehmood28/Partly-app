@@ -82,7 +82,7 @@ export const BuildInventoryPicker: React.FC<BuildInventoryPickerProps> = ({
       />
 
       <div
-        className="build-inventory-list flex flex-col gap-[5px]"
+        className="build-inventory-list w-full flex flex-col gap-[5px]"
       >
         {filteredComponents.length === 0 ? (
           <div className="bg-[#101719] border border-white/[0.08] rounded-xl p-4 text-center text-xs text-zinc-400 font-sans">

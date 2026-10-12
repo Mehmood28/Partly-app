@@ -16,7 +16,6 @@ import {
 } from '../utils/helpers';
 import { Plus, Filter, Zap, Layers } from 'lucide-react';
 import { useVirtualListScroll } from '../hooks/useVirtualListScroll';
-import { CustomScrollIndicator } from './ui/CustomScrollIndicator';
 import { SetStorageHealthModal } from './stock/SetStorageHealthModal';
 
 interface InventoryViewProps {
@@ -129,7 +128,9 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
     getScrollElement: () => parentRef.current,
     estimateSize: (index) => {
       const row = virtualRows[index];
-      return row?.type === 'header' ? 34 : 110;
+      if (row?.type === 'header') return 34;
+      if (row?.component && row.component.id === expandedCardId) return 280;
+      return typeof window !== 'undefined' && window.innerWidth < 768 ? 64 : 78;
     },
     overscan: 4,
     getItemKey: (index) => virtualRows[index]?.key ?? index,
@@ -161,12 +162,12 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         </>
       );
 
-      return <div className="inventory-group inventory-group-heading">{headingContent}</div>;
+      return <div className="inventory-group inventory-group-heading w-full">{headingContent}</div>;
     }
 
     const component = row.component;
     const componentCard = (
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-2 w-full">
         <ComponentCard
           isActive={isActive !== false}
           isExpanded={expandedCardId === component.id}
@@ -185,8 +186,8 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
   };
 
   return (
-    <div className="stock-inventory-layout flex flex-col gap-4">
-      <div className="inventory-capital">
+    <div className="stock-inventory-layout flex flex-col items-stretch w-full gap-4">
+      <div className="inventory-capital w-full">
         <div className="flex min-w-0 flex-col justify-center p-3 sm:p-4">
           <div className="app-metric-label">Unassigned</div>
           <div className="app-metric-value">{formatCurrency(unassignedValue)}</div>
@@ -205,7 +206,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         <button
           type="button"
           onClick={() => onOpenAddComponent()}
-          className="app-button flex w-full items-center justify-center gap-1.5 px-4 h-[38px] text-xs font-bold text-[#0d1612] bg-gradient-to-r from-[#b9ef68] to-[#83e5df] border-none whitespace-nowrap shadow-sm hover:brightness-105 transition-all"
+          className="app-button flex w-full items-center justify-center gap-1.5 px-4 h-[38px] text-xs font-bold text-[#0d1612] bg-gradient-to-r from-[#b9ef68] to-[#83e5df] border-none whitespace-nowrap shadow-sm hover:brightness-105 transition-all outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68]"
           style={{ background: 'linear-gradient(90deg, #b9ef68 0%, #83e5df 100%)', color: '#0d1612', border: 'none' }}
           title="Add a new component"
         >
@@ -216,7 +217,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           <button
             type="button"
             onClick={onOpenBulkEntry}
-            className="app-button flex w-full items-center justify-center gap-1.5 px-4 h-[38px] text-xs font-bold text-[#0d1612] bg-gradient-to-r from-[#83e5df] to-[#b9ef68] border-none whitespace-nowrap shadow-sm hover:brightness-105 transition-all"
+            className="app-button flex w-full items-center justify-center gap-1.5 px-4 h-[38px] text-xs font-bold text-[#0d1612] bg-gradient-to-r from-[#83e5df] to-[#b9ef68] border-none whitespace-nowrap shadow-sm hover:brightness-105 transition-all outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68]"
             style={{ background: 'linear-gradient(90deg, #83e5df 0%, #b9ef68 100%)', color: '#0d1612', border: 'none' }}
             title="Fast Bulk Stock Entry via AI Text or Image Scan"
           >
@@ -226,7 +227,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         )}
       </div>
 
-      <div className="inventory-filters">
+      <div className="inventory-filters w-full">
         <InventoryFilterBar
           builds={state.builds}
           components={state.components.filter(c => calculateUnassignedQuantityStrict(c, state.builds) > 0)}
@@ -245,7 +246,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
 
       {/* Grouped Component Cards List (Virtualized) */}
       {groupedComponents.length === 0 ? (
-        <div className="app-panel space-y-3 p-10 text-center">
+        <div className="app-panel w-full space-y-3 p-10 text-center">
           <div className="w-10 h-10 rounded-xl bg-white/[0.04] text-zinc-400 flex items-center justify-center mx-auto border border-white/[0.06]">
             <Filter className="w-5 h-5" />
           </div>
@@ -259,18 +260,18 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
             <button
               type="button"
               onClick={() => onOpenAddComponent()}
-              className="app-button app-button-primary inline-flex items-center gap-1.5 px-4"
+              className="app-button app-button-primary inline-flex items-center gap-1.5 px-4 outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68]"
             >
               <Plus className="w-4 h-4" /> Add New Component
             </button>
           </div>
         </div>
       ) : !isVirtualized ? (
-        <div>
+        <div className="w-full max-h-[75dvh] min-h-[360px] overflow-y-scroll stock-inventory-scroll pr-[3px] flex flex-col items-stretch">
           {virtualRows.map((row) => (
             <div
               key={row.key}
-              className="inventory-stock-row"
+              className="inventory-stock-row w-full"
               data-type={row.type}
             >
               {renderInventoryRow(row)}
@@ -278,18 +279,18 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           ))}
         </div>
       ) : (
-        <div className="relative">
+        <div className="w-full">
           <div 
             ref={parentRef}
             onScroll={handleScroll}
-            className="max-h-[75dvh] min-h-[360px] overflow-y-auto no-scrollbar pr-1"
+            className="w-full max-h-[75dvh] min-h-[360px] overflow-y-scroll stock-inventory-scroll pr-[3px]"
             style={{
               overflowAnchor: 'none',
             }}
           >
             <div
               style={{
-                height: `${rowVirtualizer.getTotalSize() + 76}px`,
+                height: `${rowVirtualizer.getTotalSize() + 6}px`,
                 width: '100%',
                 position: 'relative',
               }}
@@ -301,7 +302,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                 return (
                   <div
                     key={row.key}
-                    className="inventory-stock-row"
+                    className="inventory-stock-row w-full"
                     data-type={row.type}
                     data-index={virtualRow.index}
                     ref={rowVirtualizer.measureElement}
@@ -319,7 +320,6 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
               })}
             </div>
           </div>
-          <CustomScrollIndicator containerRef={parentRef} />
         </div>
       )}
 

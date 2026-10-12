@@ -85,7 +85,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 onSubCategoryChange?.('');
               }}
               data-active={activeCategory === 'ALL'}
-              className={`relative flex-1 min-w-max px-2.5 py-0.5 rounded-[5px] text-[11.5px] font-medium leading-none flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[25px] ${
+              className={`relative flex-1 min-w-max px-2.5 py-0.5 rounded-[5px] text-[11.5px] font-medium leading-none flex items-center justify-center gap-1 transition-all duration-150 outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[25px] ${
                 activeCategory === 'ALL'
                   ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
                   : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
@@ -110,7 +110,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                     onSubCategoryChange?.('');
                   }}
                   data-active={isActive}
-                  className={`relative flex-1 min-w-max px-2.5 py-0.5 rounded-[5px] text-[11.5px] font-medium leading-none flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[25px] ${
+                  className={`relative flex-1 min-w-max px-2.5 py-0.5 rounded-[5px] text-[11.5px] font-medium leading-none flex items-center justify-center gap-1 transition-all duration-150 outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[25px] ${
                     isActive
                       ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
                       : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
@@ -156,7 +156,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                         }
                       }}
                       data-active={isActive}
-                      className={`relative px-2 py-0.5 rounded-[5px] text-[10.5px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[21px] ${
+                      className={`relative px-2 py-0.5 rounded-[5px] text-[10.5px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[21px] ${
                         isActive
                           ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
                           : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
@@ -189,7 +189,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
                 <button
                   type="button"
                   onClick={() => onSearchChange('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-white/[0.06] transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-white/[0.06] transition-colors outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68]"
                   title="Clear search"
                   aria-label="Clear search"
                 >

@@ -285,7 +285,7 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
           </button>
         </div>
 
-        <div ref={bodyRef} className="build-editor-body min-h-0 flex-1 overflow-y-auto">
+        <div ref={bodyRef} className="build-editor-body min-h-0 flex-1 overflow-y-scroll pr-[3px]">
           <BuildBasicDetails
             name={name}
             onNameChange={handleNameChange}

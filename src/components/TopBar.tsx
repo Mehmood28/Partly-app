@@ -38,7 +38,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({ isSessionHistoryOpen,
   }, [state]);
 
   return (
-    <header className="partly-header">
+    <header className="partly-header shrink-0">
       <div className="partly-masthead">
         <div className="partly-brand">
           <img className="partly-mark" src="/partly-icon-192.png" width="42" height="42" alt="" />

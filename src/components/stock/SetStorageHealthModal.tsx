@@ -254,7 +254,7 @@ export const SetStorageHealthModal: React.FC<SetStorageHealthModalProps> = ({
         </div>
 
         {/* Drive Cards List with purchase details */}
-        <div className="max-h-[52dvh] overflow-y-auto space-y-2 pr-1 no-scrollbar">
+        <div className="max-h-[52dvh] overflow-y-scroll space-y-2 pr-[3px]">
           {driveItems.map((item, idx) => {
             const hNum = parseInt(healthValues[idx] || '', 10);
             return (

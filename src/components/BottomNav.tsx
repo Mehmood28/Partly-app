@@ -15,7 +15,7 @@ export const BottomNav: React.FC<BottomNavProps> = React.memo(({
 
   const scrollToTop = () => { 
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
-    const activeContainer = document.querySelector('main > div:not(.hidden) .overflow-y-auto, main > div:not(.hidden) [data-scroll-container]');
+    const activeContainer = document.querySelector('main > div:not(.hidden) .overflow-y-scroll, main > div:not(.hidden) .overflow-y-auto, main > div:not(.hidden) [data-scroll-container]');
     if (activeContainer) {
       activeContainer.scrollTo({ top: 0, behavior: 'smooth' });
     }

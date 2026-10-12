@@ -188,7 +188,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Body */}
-        <div ref={bodyRef} className="build-editor-body min-h-0 flex-1 overflow-y-auto space-y-4 pt-3">
+        <div ref={bodyRef} className="build-editor-body min-h-0 flex-1 overflow-y-scroll space-y-4 pt-3 pr-[3px]">
           {/* Top Bar: Target Sale Price Input & Financial Metrics Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 border-b border-white/[0.09] pb-3.5 text-xs">
             <div className="sm:col-span-1">

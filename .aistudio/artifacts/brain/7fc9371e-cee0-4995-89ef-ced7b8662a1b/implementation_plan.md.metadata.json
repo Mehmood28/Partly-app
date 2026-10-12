@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan to fix multi-tag selection and filtering across all inventory and build picker views. Replaces substring matching with tag-first resolution, group conflict enforcement, and whole-word token matching for untagged items.",
-  "updatedAt":  "2026-10-11T18:01:00.752110556Z",
+  "summary":  "Detailed root-cause analysis and comprehensive implementation plan to solve sharp scrollbar edges, card overlap, and modal corner clipping across all app views and modals.",
+  "updatedAt":  "2026-10-11T20:23:40.640978608Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

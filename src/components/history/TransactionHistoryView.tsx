@@ -15,7 +15,6 @@ import {
   SoldPartSortOption 
 } from '../../utils/bulkSaleGrouping';
 import { useVirtualListScroll } from '../../hooks/useVirtualListScroll';
-import { CustomScrollIndicator } from '../ui/CustomScrollIndicator';
 
 interface TransactionHistoryViewProps {
   isActive?: boolean;
@@ -63,7 +62,11 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
   const rowVirtualizer = useVirtualizer({
     count: isVirtualized ? sortedDisplayItems.length : 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 100,
+    estimateSize: (index) => {
+      const item = sortedDisplayItems[index];
+      if (item && expandedIds.has(item.id)) return 260;
+      return typeof window !== 'undefined' && window.innerWidth < 768 ? 86 : 96;
+    },
     getItemKey: (index) => sortedDisplayItems[index]?.id ?? index,
     overscan: 5,
     useCachedMeasurements: !isActive,
@@ -158,24 +161,29 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
           <p className="text-xs text-zinc-400">Try changing your search query or selling/trading components from stock.</p>
         </div>
       ) : !isVirtualized ? (
-        <div className="flex flex-col gap-[5px]">
-          {sortedDisplayItems.map((item) => (
-            <React.Fragment key={item.id}>{renderTransactionRow(item)}</React.Fragment>
-          ))}
+        <div 
+          className="w-full max-h-[calc(100dvh-230px-env(safe-area-inset-bottom))] overflow-y-scroll pr-[3px] md:max-h-[calc(100dvh-220px)]"
+          style={{ overflowAnchor: 'none' }}
+        >
+          <div className="flex flex-col gap-[5px] pb-1.5">
+            {sortedDisplayItems.map((item) => (
+              <React.Fragment key={item.id}>{renderTransactionRow(item)}</React.Fragment>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="relative">
+        <div className="w-full">
           <div
             ref={parentRef}
             onScroll={handleScroll}
-            className="h-[calc(100dvh-330px)] overflow-y-auto no-scrollbar pr-1 md:h-[calc(100dvh-210px)]"
+            className="w-full max-h-[calc(100dvh-230px-env(safe-area-inset-bottom))] overflow-y-scroll pr-[3px] md:max-h-[calc(100dvh-220px)]"
             style={{
               overflowAnchor: 'none',
             }}
           >
             <div
               style={{
-                height: `${rowVirtualizer.getTotalSize() + 76}px`,
+                height: `${rowVirtualizer.getTotalSize() + 6}px`,
                 width: '100%',
                 position: 'relative',
               }}
@@ -203,7 +211,6 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
               })}
             </div>
           </div>
-          <CustomScrollIndicator containerRef={parentRef} />
         </div>
       )}
 

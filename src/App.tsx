@@ -228,20 +228,20 @@ function AppContent() {
   );
 
   return (
-    <div className="min-h-dvh bg-transparent text-zinc-100 font-sans selection:bg-[#A8FF3E]/25 selection:text-white flex flex-col md:flex-row">
+    <div className={`min-h-dvh bg-transparent text-zinc-100 font-sans selection:bg-[#A8FF3E]/25 selection:text-white flex flex-col md:flex-row ${activeTab === 'builds' ? 'h-dvh max-h-dvh overflow-hidden' : ''}`}>
       <BottomNav
         activeTab={activeTab}
         setActiveTab={handleTabChange}
       />
       
-      <div className="relative z-0 flex min-w-0 flex-1 flex-col bg-transparent">
+      <div className={`relative z-0 flex min-w-0 flex-1 flex-col bg-transparent ${activeTab === 'builds' ? 'h-dvh max-h-dvh overflow-hidden min-h-0' : ''}`}>
         <TopBar
           isSessionHistoryOpen={isSessionHistoryOpen}
           onToggleSessionHistory={() => setIsSessionHistoryOpen((prev) => !prev)}
         />
 
       {/* Main Container */}
-      <main className="app-page app-main flex w-full flex-1 flex-col">
+      <main className={`app-page app-main flex w-full flex-1 flex-col items-stretch ${activeTab === 'builds' ? 'app-main-builds min-h-0 overflow-hidden' : ''}`}>
         <React.Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-8 h-8 border-4 border-[#A8FF3E]/30 border-t-[#A8FF3E] rounded-full animate-spin"></div></div>}>
           {/* Home Tab */}
           <div className={activeTab === 'home' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
@@ -264,7 +264,7 @@ function AppContent() {
           </div>
 
           {/* Stock / Inventory Tab */}
-          <div className={activeTab === 'inventory' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
+          <div className={activeTab === 'inventory' ? 'flex flex-col items-stretch flex-1 w-full' : 'hidden'}>
             <StockView
               isActive={activeTab === 'inventory'}
               onOpenBulkEntry={handleOpenBulkEntry}
@@ -276,7 +276,7 @@ function AppContent() {
           </div>
 
           {/* Builds Tab */}
-          <div className={activeTab === 'builds' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
+          <div className={activeTab === 'builds' ? 'flex flex-col flex-1 w-full min-h-0 h-full' : 'hidden'}>
             <BuildsView 
               isActive={activeTab === 'builds'} 
               onOpenAddBuild={handleOpenAddBuild}

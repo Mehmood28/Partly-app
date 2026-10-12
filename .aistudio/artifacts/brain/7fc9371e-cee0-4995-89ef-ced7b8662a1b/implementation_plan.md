@@ -1,124 +1,132 @@
-# Tag Selection & Multi-Tag Filtering Accuracy Fix
+# Comprehensive Universal Rounded Scrollbar & Modal Containment Plan
 
-Resolve tag filtering issues where selecting multiple tags (e.g., `ATX` and `White`) incorrectly includes parts with conflicting or substring tags (such as `mATX` cases showing up under `ATX`), ensuring accurate part matching across all inventory and build pickers.
+A root-cause investigation and universal implementation architecture to ensure scrollbars throughout Partly have smooth rounded pill tips, stay strictly within rounded modal bounds, and operate in dedicated non-overlapping tracks with minimal card spacing.
 
 ### User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following architectural decisions were confirmed based on user feedback:
+> **Root Cause Diagnostic Summary**:
+> 1. **Sharp edges on scrollbars**: Modern Chromium (Chrome 121+) treats `scrollbar-width: thin` and `scrollbar-color` as standard CSS Scrollbars Level 1. When `* { scrollbar-width: thin; }` is present, Chromium **completely disables** all `::-webkit-scrollbar*` styling rules (including `border-radius: 9999px`), falling back to a flat rectangular box. Firefox alone needs `scrollbar-width`; Blink/WebKit engines must use dedicated `::-webkit-scrollbar` with `border-radius: 9999px` and ambient lime glow.
+> 2. **Hovering over cards**: Overzealous reduction to `pr-1` (4px) / `padding-right: 3px` eliminated the buffer required for a 4px scrollbar track plus border clearance. On mobile touch browsers (Android Chrome), overlay scrollbars directly overlap cards unless a balanced 6px gutter (`pr-1.5` / `padding-right: 6px`) and `scrollbar-gutter: stable` are enforced.
+> 3. **Bleeding past modal rounded corners**: In CSS, an element's native scrollbar cannot be clipped by its own `border-radius`. When outer modal containers (`confirm-modal-panel`, `modal-layout-content`) scroll directly, their scrollbars span from top=0 to bottom=100%, cutting across the curved corners. In addition, without `margin-block: 8px` on `::-webkit-scrollbar-track`, scroll thumbs run to the absolute edge of curved shells.
 
-- **Confirmed Decision 1**: Tag matching will prioritize explicitly assigned tags (`comp.tags`). If a component already has an explicit tag in a tag group (e.g. `mATX` in the Form Factor group), it will strictly respect that tag and never fall back to matching `ATX` from the component name. For untagged items, matching will use strict whole-word boundary token matching.
-- **Confirmed Decision 2**: The fix applies uniformly across all views where tags are selected or filtered:
-  - **Stock / Inventory View** (`InventoryView.tsx`)
-  - **Swap Part Modal** (`SwapPartModal.tsx`)
-  - **Allocate Part Modal** (`AllocatePartModal.tsx`)
-  - **Create Build Part Picker** (`BuildInventoryPicker.tsx`)
+- **Confirmed Decision 1 (Universal Pill Aesthetics)**: The scrollbar styling will mathematically mirror `WindowScrollIndicator` across all scrollable containers: 4px width, vibrant lime `#B9EF68` (`rgba(185, 239, 104, 0.8)`), soft ambient glow (`box-shadow: 0 0 6px rgba(185, 239, 104, 0.3)`), and full pill rounding (`border-radius: 9999px`).
+- **Confirmed Decision 2 (Dedicated 6px Scroll Lane)**: Replace the cramped 3px padding with a dedicated 6px lane (`pr-1.5` / `padding-right: 6px`) across all lists and modals. This provides a 4px scroll track plus 2px clearance, guaranteeing that scrollbars never hover over cards while preventing large empty gaps.
+- **Confirmed Decision 3 (Strict Modal Containment & Track Insets)**: Apply `margin-block: 8px` to `::-webkit-scrollbar-track` universally, preventing thumbs from reaching curved corner radii. Enforce outer shell `overflow: hidden` on modals while delegating vertical scrolling to bounded inner content bodies.
 
 ---
 
 ### 1. Overview & Core Concept
 
-- **What It Does**: Upgrades the inventory filtering engine (`filterAndSortComponents` and `determineSubCategory`) so multi-tag selections (e.g., selecting `ATX` and `White`) strictly filter for parts that match all selected tags. Eliminates substring collisions like `mATX` matching `ATX`, `Non-RGB` matching `RGB`, and `mITX` matching `ITX`.
-- **Target Audience / Persona**: PC builders and inventory managers filtering through hundreds of stock components who need exact, reliable results when selecting form factors, colors, and hardware generations.
-- **Key Value**: Accurate inventory filtering prevents selecting incompatible parts (like putting an mATX case into an ATX build filter) and ensures search and tag filters work with zero false positives.
+- **What It Does**: Resolves all visual and ergonomic scrollbar discrepancies across desktop and mobile browsers. Restores true rounded pill ends (`border-radius: 9999px`) on every scrollbar thumb, separates scroll tracks from component cards with minimal 2px clearance, and confines modal scrollbars within rounded borders.
+- **Target Audience / Persona**: PC builders, inventory managers, and hardware enthusiasts using mobile devices (Android Chrome, iOS Safari) and desktop browsers to manage inventory parts, review builds, and inspect transactions.
+- **Key Value**: Delivers a cohesive, dark-cyber UI feel where scrollbars match the main page indicator without covering cards or breaking container boundaries.
 
 ---
 
 ### 2. User Experience & Visual Design
 
-- **Tag Selection Flow**:
-  - The user taps a category (e.g. `Case`).
-  - The user taps a Form Factor tag (e.g. `ATX`) and a Color tag (e.g. `White`).
-  - Both tags illuminate with the active accent highlight (`#B9EF68`).
-  - The filtered list updates instantly, showing **only** parts that are both `ATX` and `White`.
-  - Parts tagged or titled with `mATX` or `ITX` are strictly excluded.
-- **Empty States & Feedback**:
-  - If no components match the combined tag criteria (e.g., `ITX` + `White` with 0 available stock), the clean "No parts found / No compatible parts found" empty state is displayed with clear guidance.
+- **Key User Flows**:
+  - *Inventory & Stock View*: Scrolling through components shows a sleek 4px lime pill running alongside cards in a dedicated 6px gutter. Cards retain full hover effects without the scrollbar overlapping borders.
+  - *Modals (Allocate Part, Swap Part, Build Editor, Quick Quote, Component Modal)*: Opening any dialog displays a contained list where the scrollbar starts below the top curve and ends above the bottom curve, never cutting across the rounded modal frame.
+  - *Small Alert & Confirm Dialogs (`ConfirmModal`)*: Dialog text and confirmation buttons remain fully visible, and any internal overflow scrolls cleanly within the inner body without bleeding past the 10px rounded corners.
+
+- **Visual Identity & Theme**:
+  - *Scrollbar Thumb*: `rgba(185, 239, 104, 0.8)` (`#B9EF68`), transitioning to `rgba(201, 238, 158, 0.95)` on hover.
+  - *Thumb Border Radius*: `9999px` (fully rounded pill ends).
+  - *Thumb Glow*: `box-shadow: 0 0 6px rgba(185, 239, 104, 0.3)`.
+  - *Track Background*: Fully transparent (`background: transparent`).
+  - *Track Vertical Inset*: `margin-block: 8px` (stops scrollbar travel 8px before container edges).
+  - *Card Clearance*: 6px right gutter (`pr-1.5` / `padding-right: 6px;`), ensuring a 4px scroll lane and 2px separation from card edges.
 
 ---
 
 ### 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Tag-First Resolution with Conflict Elimination**:
-  - *Chosen Approach*: When a part has explicit tags (`comp.tags`), check if any tag belongs to the same mutually exclusive group as the target tag. If the part has an explicit tag from that group (e.g. `mATX` when searching for `ATX`), immediately reject it without falling back to fuzzy text matching.
-  - *Why*: Eliminates false positives when a part name mentions other terms or contains substrings.
-  - *Alternatives Considered*: Pure substring search (caused the current bug); strict tags-only (would break legacy or un-tagged inventory items).
+- **Decision 1: Removal of Universal `scrollbar-width: thin` on WebKit/Blink**:
+  - *Chosen Approach*: Remove `* { scrollbar-width: thin; scrollbar-color: ... }` from the global rule in `src/index.css`. Scope standard CSS scrollbar properties exclusively to Firefox using `@supports (-moz-appearance: none)`. Provide pristine `::-webkit-scrollbar` rules with `border-radius: 9999px` for Chrome, Edge, and Safari.
+  - *Why*: In Chrome 121+, declaring `scrollbar-width` completely shuts off the `::-webkit-scrollbar` engine, which is why previous fixes produced sharp rectangular blocks instead of pills.
+  - *Alternatives Considered*: Retaining `scrollbar-width: thin` globally was the root cause of the bug; removing it from WebKit restores full pill rendering.
 
-- **Decision 2: Token-Level Boundary Matching for Untagged Fallbacks**:
-  - *Chosen Approach*: If a component has no tags in a given group, evaluate `name` and `specifications` using isolated word/token boundary regexes that guard against prefixes (e.g., `(?<![a-z0-9\-])atx(?![a-z0-9])` with explicit exclusion of `m-?atx`, `micro-?atx`, `e-?atx`, and `non-rgb`).
-  - *Why*: Preserves support for untagged parts while guaranteeing that "Starlight mATX White" will never match an "ATX" filter.
+- **Decision 2: Universal Track Insets via `margin-block: 8px`**:
+  - *Chosen Approach*: Add `margin-block: 8px` to `::-webkit-scrollbar-track`.
+  - *Why*: Browsers do not curve scrollbar tracks when an element has `border-radius`. By insetting the track by 8px vertically, the thumb stops moving before it enters the curved quadrant of the container.
+  - *Alternatives Considered*: Custom JavaScript scroll overlays inside every individual modal would add high complexity and performance overhead. CSS track insets combined with outer shell clipping solve the problem universally.
 
-- **Decision 3: Centralized Engine Upgrade**:
-  - *Chosen Approach*: Implement `matchesComponentTag` and update `filterAndSortComponents` and `determineSubCategory` in `src/utils/helpers.ts`.
-  - *Why*: All four views (`InventoryView`, `SwapPartModal`, `AllocatePartModal`, `BuildInventoryPicker`) consume `filterAndSortComponents`, guaranteeing 100% consistent behavior across the entire app with zero code duplication.
+- **Decision 3: Dedicated 6px Scroll Gutter (`pr-1.5` / `padding-right: 6px`)**:
+  - *Chosen Approach*: Standardize scroll padding from `pr-1` (4px) / 3px to `pr-1.5` (6px) / `padding-right: 6px` paired with `scrollbar-gutter: stable`.
+  - *Why*: A 4px scrollbar inside a 4px/3px padding box overlaps the card's 1px border. A 6px lane reserves 4px for the scrollbar and 2px for clean whitespace, preventing overlap without creating excessive gaps.
+
+- **Decision 4: Nested Scroll Architecture for Rounded Modals**:
+  - *Chosen Approach*: Ensure modal containers (`BottomSheetModal`, `ConfirmModal`) act as strict boundary shells (`overflow: hidden; rounded-[14px] sm:rounded-2xl`), while scrollable lists inside them are wrapped in dedicated inner containers (`overflow-y: scroll`) with top and bottom padding.
+  - *Why*: An element cannot clip its own scrollbar. Moving the scroll property to an inset inner container guarantees that the outer shell's `border-radius` and `overflow: hidden` strictly contain all visual elements.
 
 ---
 
-### 4. Technical Architecture & Data Strategy
+### 4. Technical Architecture & Component Mapping
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        User Tag Filter Selection                       │
-│             e.g. Active Sub-Tags: ["ATX", "White"]                     │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                   filterAndSortComponents(...) Engine                  │
-│                                                                        │
-│   For each selected sub-tag, evaluate matchesComponentTag(comp, tag):  │
-│                                                                        │
-│   1. Explicit Tag Check:                                               │
-│      - comp.tags has exact tag? ───────────────► MATCH (true)          │
-│      - comp.tags has conflicting tag from same                         │
-│        mutually exclusive group (e.g. mATX)? ──► REJECT (false)        │
-│                                                                        │
-│   2. Fallback for Untagged Dimensions:                                 │
-│      - Token/word boundary match in name/specs                         │
-│        excluding negative & parent tokens? ────► MATCH (true)          │
-│      - Otherwise ──────────────────────────────► REJECT (false)        │
-│                                                                        │
-│   3. Combined Tag Enforcement (AND):                                   │
-│      - Every selected tag must return MATCH!                           │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                          Filtered Part Lists                           │
-│  ├─ Stock / Inventory Tab (InventoryView.tsx)                          │
-│  ├─ Swap Case / Swap Part Modal (SwapPartModal.tsx)                    │
-│  ├─ Allocate Part Modal (AllocatePartModal.tsx)                        │
-│  └─ Create Build Picker (BuildInventoryPicker.tsx)                     │
-└────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                      Modal Dialog Shell                     │
+│    border-radius: 14px / 16px; overflow: hidden;            │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │ Modal Header / Sticky Controls                      │   │
+│   └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │ Inner Scroll Container                              │   │
+│   │ overflow-y: scroll; scrollbar-gutter: stable;       │   │
+│   │ padding-right: 6px; padding-block: 4px;             │   │
+│   │                                                     │   │
+│   │  ┌───────────────────────────────┐ ┌──────────────┐ │   │
+│   │  │ Component Cards (w-full)      │ │ Pill Thumb   │ │   │
+│   │  │                               │ │ 4px width    │ │   │
+│   │  │                               │ │ 2px gap      │ │   │
+│   │  │                               │ │ rounded ends │ │   │
+│   │  │                               │ │ stops 8px    │ │   │
+│   │  │                               │ │ before edge  │ │   │
+│   │  └───────────────────────────────┘ └──────────────┘ │   │
+│   └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │ Modal Footer / Sticky Actions                       │   │
+│   └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-#### Detailed State & Implementation Steps:
+#### Detailed Change Matrix
 
-1. **`src/utils/helpers.ts`**:
-   - Implement `matchesComponentTag(comp: InventoryComponent, targetTag: string, category?: string): boolean`:
-     - Normalize target tag (case-insensitive).
-     - Identify if target tag belongs to a known tag group (e.g. `Form Factor: ['ATX', 'mATX', 'ITX']`, `Color: ['Black', 'White']`, `Lighting: ['RGB', 'Non-RGB']`, etc.).
-     - Check explicit `comp.tags`:
-       - If `comp.tags` contains target tag: return `true`.
-       - If `comp.tags` contains another tag from the same group: return `false` (explicit conflict).
-     - For components without a tag in that group, perform word-boundary token matching on `comp.name` and `comp.specifications`:
-       - Special handling for form factors (`atx` does not match `matx`, `micro-atx`, `eatx`).
-       - Special handling for lighting (`rgb` does not match `non-rgb`).
-       - Special handling for RAM generations (`ddr4` vs `ddr5`).
-   - Update `filterAndSortComponents`:
-     - Multi-tag filtering verifies `options.subTags.every(tag => matchesComponentTag(comp, tag, options.category))`.
-     - Single subCategory filtering verifies `matchesComponentTag(comp, options.subCategory, options.category)`.
-   - Update `determineSubCategory`:
-     - Prioritize explicit `comp.tags` first.
-     - When matching against name/specs, sort candidate tags by specificity (e.g. `mATX` and `ITX` before `ATX`, `Non-RGB` before `RGB`) and use token-bounded matching.
+1. **Global Styles (`src/index.css`)**:
+   - Update scrollbar rules:
+     - Remove `* { scrollbar-width: thin; scrollbar-color: ... }` from WebKit scope.
+     - Add `@supports (-moz-appearance: none)` block for Firefox fallback.
+     - Configure `::-webkit-scrollbar { width: 4px; height: 4px; }`.
+     - Configure `::-webkit-scrollbar-track { background: transparent; margin-block: 8px; }`.
+     - Configure `::-webkit-scrollbar-thumb { background-color: rgba(185, 239, 104, 0.8); border-radius: 9999px; box-shadow: 0 0 6px rgba(185, 239, 104, 0.3); }`.
+     - Configure hover: `background-color: rgba(201, 238, 158, 0.95);`.
+   - Update list scroll classes (`.modal-results-list`, `.build-editor-body`, `.stock-inventory-scroll`):
+     - Set `padding-right: 6px;`.
+     - Set `scrollbar-gutter: stable;`.
+     - Set `overflow-y: scroll !important;`.
 
-2. **Verify All Consuming Views**:
-   - Verify `InventoryView.tsx`, `SwapPartModal.tsx`, `AllocatePartModal.tsx`, and `BuildInventoryPicker.tsx`.
-   - Confirm active subtag toggle handlers properly clear conflicting tags using `getConflictingTags`.
+2. **Modal Shell Containment**:
+   - `src/components/ui/BottomSheetModal.tsx`:
+     - Maintain strict `overflow-hidden` on the dialog card.
+     - Ensure `.modal-layout-content` delegates scrolling to inner body regions.
+   - `src/components/ConfirmModal.tsx`:
+     - Remove `overflow-y: auto` from `.confirm-modal-panel`.
+     - Wrap dialog message content in an inner scrollable container when text is long.
 
-3. **Validation & Quality Assurance**:
-   - Verify cases like "Starlight mATX White" are correctly excluded when `ATX` + `White` are selected.
-   - Verify that true ATX cases (e.g., "Lian Li O11 Vision Compact White") remain displayed when `ATX` + `White` are selected.
-   - Verify "Starlight mATX White" appears when `mATX` + `White` are selected.
-   - Verify RAM lighting (`RGB` vs `Non-RGB`), platform (`AM4` vs `AM5`), and cooler sizes work correctly.
-   - Run compilation and linting to ensure zero regressions.
+3. **Gutter Normalization Across Components**:
+   - Update `pr-1` to `pr-1.5` (6px) across:
+     - `src/components/InventoryView.tsx` (virtualized and non-virtualized inventory rows)
+     - `src/components/builds/AllocatePartModal.tsx` (`.modal-results-list`)
+     - `src/components/builds/SwapPartModal.tsx` (`.modal-results-list`)
+     - `src/components/BuildModal.tsx` (`.build-editor-body`)
+     - `src/components/builds/QuickQuoteModal.tsx` (`.build-editor-body`)
+     - `src/components/BuildsView.tsx`
+     - `src/components/history/TransactionHistoryView.tsx`
+     - `src/components/stock/PurchaseHistoryView.tsx`
+     - `src/components/activity/EditTransactionModal.tsx`
+     - `src/components/stock/SetStorageHealthModal.tsx`

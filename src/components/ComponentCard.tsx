@@ -128,10 +128,10 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
   }, [component, state.builds]);
 
   return (
-    <div className={`app-panel stock-card border-white/[0.08] transition-colors hover:border-[#B9EF68]/40 ${isExpanded ? 'stock-card-expanded' : ''}`}>
+    <div className={`app-panel stock-card w-full border-white/[0.08] transition-colors hover:border-[#B9EF68]/40 ${isExpanded ? 'stock-card-expanded' : ''}`}>
       {/* Collapsed Header Bar - Clickable for mobile */}
       <div
-        className="stock-card-header" role="button" tabIndex={0} aria-expanded={isExpanded}
+        className="stock-card-header w-full outline-none [-webkit-tap-highlight-color:transparent]" role="button" tabIndex={0} aria-expanded={isExpanded}
         onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); handleToggle(); } }}
         onClick={handleToggle}
       >
@@ -174,7 +174,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
       {/* Expanded Content Section */}
       {isExpanded && (
-        <div className="stock-expanded">
+        <div className="stock-expanded w-full">
 
           {/* Expanded Action Toolbar */}
           {showAdminActions && (onAddPurchaseEntry || onEditComponent || onDeleteComponent || onSetHealth) && (

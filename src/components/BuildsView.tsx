@@ -16,7 +16,6 @@ import { BuildCard } from './builds/BuildCard';
 import { QuickQuoteModal } from './builds/QuickQuoteModal';
 import { CustomSelect } from './ui/CustomSelect';
 import { useVirtualListScroll } from '../hooks/useVirtualListScroll';
-import { CustomScrollIndicator } from './ui/CustomScrollIndicator';
 import {
   Hammer,
   Plus,
@@ -183,14 +182,46 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       });
   }, [state.builds, statusFilter, deferredSearchQuery, sortBy]);
 
-  const isVirtualized = filteredBuilds.length > 12;
+  const isVirtualized = filteredBuilds.length > 250;
   const parentRef = useRef<HTMLDivElement>(null);
+  const nonVirtualRef = useRef<HTMLDivElement>(null);
   const scrollOffsetRef = useRef(0);
+
+  // Prevent any main page scrolling while Builds tab is active
+  React.useEffect(() => {
+    if (!isActive) return;
+    const origHtmlOverflow = document.documentElement.style.overflow;
+    const origBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    window.scrollTo(0, 0);
+
+    return () => {
+      document.documentElement.style.overflow = origHtmlOverflow;
+      document.body.style.overflow = origBodyOverflow;
+    };
+  }, [isActive]);
+
+  // Reset scroll position to top when switching between inner tabs
+  React.useEffect(() => {
+    if (nonVirtualRef.current) {
+      nonVirtualRef.current.scrollTop = 0;
+    }
+    if (parentRef.current) {
+      parentRef.current.scrollTop = 0;
+    }
+  }, [statusFilter]);
 
   const rowVirtualizer = useVirtualizer({
     count: isVirtualized ? filteredBuilds.length : 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 260,
+    estimateSize: (index) => {
+      const build = filteredBuilds[index];
+      if (build && build.id === expandedBuildId) {
+        return 380;
+      }
+      return typeof window !== 'undefined' && window.innerWidth < 768 ? 84 : 96;
+    },
     overscan: 4,
     getItemKey: (index) => filteredBuilds[index]?.id ?? index,
     useCachedMeasurements: !isActive,
@@ -226,9 +257,9 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
   );
 
   return (
-    <div className="builds-view flex flex-col">
+    <div className="builds-view flex flex-col flex-1 min-h-0 h-full">
       {/* Build workbench */}
-      <div className="builds-toolbar">
+      <div className="builds-toolbar shrink-0">
         <div className="flex items-start gap-1.5 min-w-0">
           <div className="builds-title-icon">
             <Hammer className="h-3.5 w-3.5" />
@@ -268,7 +299,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       </div>
 
       {/* Filter controls */}
-      <div className="app-panel builds-controls">
+      <div className="app-panel builds-controls shrink-0">
         {/* Status Filter Tabs: Planned, Available, Pending, Trade-Ins, Sold */}
         <div className="app-segmented build-status-tabs flex overflow-x-auto no-scrollbar sm:grid sm:grid-cols-5">
           <button 
@@ -369,7 +400,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
 
       {/* PC Builds Grid (Virtualized or Normal Document Flow) */}
       {filteredBuilds.length === 0 ? (
-        <div className="app-panel space-y-2 p-10 text-center text-zinc-400">
+        <div className="app-panel space-y-2 p-10 text-center text-zinc-400 shrink-0">
           <div className="text-sm font-semibold text-zinc-200">No {statusFilter.toLowerCase()} builds found</div>
           <p className="text-xs text-zinc-400">
             {statusFilter === 'Available'
@@ -382,24 +413,30 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
           </p>
         </div>
       ) : !isVirtualized ? (
-        <div className="flex flex-col gap-[5px] pr-1">
-          {filteredBuilds.map((build) => (
-            <React.Fragment key={build.id}>{renderBuildRow(build)}</React.Fragment>
-          ))}
+        <div 
+          ref={nonVirtualRef}
+          className="w-full flex-1 min-h-0 overflow-y-auto pr-[3px]"
+          style={{ overflowAnchor: 'none' }}
+        >
+          <div className="flex flex-col gap-[5px] pb-[5px]">
+            {filteredBuilds.map((build) => (
+              <React.Fragment key={build.id}>{renderBuildRow(build)}</React.Fragment>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="relative">
+        <div className="w-full flex-1 min-h-0 flex flex-col">
           <div 
             ref={parentRef}
             onScroll={handleScroll}
-            className="h-[calc(100dvh-330px)] overflow-y-auto no-scrollbar pr-1 md:h-[calc(100dvh-210px)]"
+            className="w-full flex-1 min-h-0 overflow-y-auto pr-[3px]"
             style={{
               overflowAnchor: 'none',
             }}
           >
             <div
               style={{
-                height: `${rowVirtualizer.getTotalSize() + 76}px`,
+                height: `${rowVirtualizer.getTotalSize()}px`,
                 width: '100%',
                 position: 'relative',
               }}
@@ -428,7 +465,6 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
               })}
             </div>
           </div>
-          <CustomScrollIndicator containerRef={parentRef} />
         </div>
       )}
 

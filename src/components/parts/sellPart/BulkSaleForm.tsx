@@ -358,7 +358,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
         />
 
         {/* Available Batches List */}
-        <div className="bulk-stock-pool pr-1">
+        <div className="bulk-stock-pool pr-[3px]">
           {filteredAvailableBatches.length === 0 ? (
             <div className="text-center py-5 text-xs text-zinc-500 font-sans">
               No matching available inventory batches found.

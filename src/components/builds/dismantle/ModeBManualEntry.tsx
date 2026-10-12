@@ -237,7 +237,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                               }
                               handleUpdatePart(part.id, { tags: newTags });
                             }}
-                            className={`app-chip app-subcategory-chip px-2 ${
+                            className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] px-2 ${
                               isSelected
                                 ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.08] text-[#9FF8F4]'
                                 : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:bg-white/[0.08] hover:text-zinc-200'
@@ -272,7 +272,7 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                           }
                           handleUpdatePart(part.id, { tags: newTags });
                         }}
-                        className={`app-chip app-subcategory-chip px-2 ${
+                        className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] px-2 ${
                           isSelected
                             ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.08] text-[#9FF8F4]'
                             : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:bg-white/[0.08] hover:text-zinc-200'
