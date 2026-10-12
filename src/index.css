@@ -327,29 +327,27 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
   transition: all 150ms ease;
 }
 .app-chip:focus { outline: none !important; }
-.app-chip:focus:not(:focus-visible):not(.app-chip-active):not([data-active='true']) {
-  outline: none !important;
-  box-shadow: none !important;
-}
-.app-chip:focus-visible {
-  outline: none !important;
-  box-shadow: inset 0 0 0 1px var(--app-lime) !important;
-}
 .app-chip-active,
-.app-chip[data-active='true'] {
+.app-chip[data-active='true'],
+.app-chip.is-active {
   color: var(--app-lime) !important;
+  border: 1px solid var(--app-lime) !important;
   border-color: var(--app-lime) !important;
-  background: rgba(185, 239, 104, 0.06) !important;
-  box-shadow: inset 0 0 0 1px var(--app-lime) !important;
+  background: rgba(185, 239, 104, 0.08) !important;
+  box-shadow: none !important;
 }
 .app-chip-active:focus,
 .app-chip[data-active='true']:focus,
+.app-chip.is-active:focus,
 .app-chip-active:focus:not(:focus-visible),
-.app-chip[data-active='true']:focus:not(:focus-visible) {
+.app-chip[data-active='true']:focus:not(:focus-visible),
+.app-chip.is-active:focus:not(:focus-visible) {
   color: var(--app-lime) !important;
+  border: 1px solid var(--app-lime) !important;
   border-color: var(--app-lime) !important;
-  background: rgba(185, 239, 104, 0.06) !important;
-  box-shadow: inset 0 0 0 1px var(--app-lime) !important;
+  background: rgba(185, 239, 104, 0.08) !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 .app-category-chip, .category-filters .app-chip { height:24px !important; min-height:24px !important; padding:0 9px !important; font-size:11.5px !important; line-height:1 !important; outline:none !important; -webkit-tap-highlight-color:transparent !important; }
 .app-subcategory-chip { height:22px !important; min-height:22px !important; padding:0 7.5px !important; font-size:10.5px !important; line-height:1 !important; outline:none !important; -webkit-tap-highlight-color:transparent !important; }
@@ -361,23 +359,65 @@ button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outli
   .category-segmented > button:hover { color:#e4e4e7 !important; background:rgba(255,255,255,.04) !important; }
 }
 .category-segmented > button:focus { outline:none !important; }
-.category-segmented > button:focus:not(:focus-visible):not([data-active='true']) { outline:none !important; box-shadow:none !important; }
-.category-segmented > button:focus-visible { outline:none !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
-.category-segmented > button[data-active='true'] { color:var(--app-lime) !important; background:rgba(185,239,104,.04) !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
+.category-segmented > button[data-active='true'],
+.category-segmented > button.is-active {
+  color:var(--app-lime) !important;
+  border:0 !important;
+  background:rgba(185,239,104,.06) !important;
+  box-shadow:inset 0 0 0 1px var(--app-lime) !important;
+}
 .category-segmented > button[data-active='true']:focus,
-.category-segmented > button[data-active='true']:focus:not(:focus-visible) { color:var(--app-lime) !important; background:rgba(185,239,104,.04) !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
+.category-segmented > button[data-active='true']:focus:not(:focus-visible),
+.category-segmented > button.is-active:focus,
+.category-segmented > button.is-active:focus:not(:focus-visible) {
+  color:var(--app-lime) !important;
+  border:0 !important;
+  background:rgba(185,239,104,.06) !important;
+  box-shadow:inset 0 0 0 1px var(--app-lime) !important;
+  outline:none !important;
+}
 
 .subcategory-segmented { display:inline-flex; flex-wrap:wrap; align-items:center; padding:2px; gap:2px; border-radius:7px; border:1px solid rgba(255,255,255,.08); background:#0d1416; width:auto; max-width:100%; }
-.subcategory-segmented > button { height:21px !important; min-height:21px !important; padding:0 8px !important; font-size:10.5px !important; font-weight:600 !important; line-height:1 !important; border:0 !important; border-radius:5px !important; background:transparent !important; color:#b1bac4 !important; display:flex !important; align-items:center !important; justify-content:center !important; flex-shrink:0 !important; outline:none !important; -webkit-tap-highlight-color:transparent !important; transition:all 150ms ease !important; }
+.subcategory-segmented > button {
+  height:21px !important;
+  min-height:21px !important;
+  padding:0 8px !important;
+  font-size:10.5px !important;
+  font-weight:600 !important;
+  line-height:1 !important;
+  border:0 !important;
+  border-radius:5px !important;
+  background:transparent !important;
+  color:#b1bac4 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  flex-shrink:0 !important;
+  outline:none !important;
+  -webkit-tap-highlight-color:transparent !important;
+  transition:all 150ms ease !important;
+}
 @media (hover: hover) and (pointer: fine) {
   .subcategory-segmented > button:hover { color:#e4e4e7 !important; background:rgba(255,255,255,.04) !important; }
 }
 .subcategory-segmented > button:focus { outline:none !important; }
-.subcategory-segmented > button:focus:not(:focus-visible):not([data-active='true']) { outline:none !important; box-shadow:none !important; }
-.subcategory-segmented > button:focus-visible { outline:none !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
-.subcategory-segmented > button[data-active='true'] { color:var(--app-lime) !important; background:rgba(185,239,104,.04) !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
+.subcategory-segmented > button[data-active='true'],
+.subcategory-segmented > button.is-active {
+  color:var(--app-lime) !important;
+  border:0 !important;
+  background:rgba(185,239,104,.08) !important;
+  box-shadow:inset 0 0 0 1px var(--app-lime) !important;
+}
 .subcategory-segmented > button[data-active='true']:focus,
-.subcategory-segmented > button[data-active='true']:focus:not(:focus-visible) { color:var(--app-lime) !important; background:rgba(185,239,104,.04) !important; box-shadow:inset 0 0 0 1px var(--app-lime) !important; }
+.subcategory-segmented > button[data-active='true']:focus:not(:focus-visible),
+.subcategory-segmented > button.is-active:focus,
+.subcategory-segmented > button.is-active:focus:not(:focus-visible) {
+  color:var(--app-lime) !important;
+  border:0 !important;
+  background:rgba(185,239,104,.08) !important;
+  box-shadow:inset 0 0 0 1px var(--app-lime) !important;
+  outline:none !important;
+}
 
 .app-ledger { background:transparent; border:0; border-radius:0; }
 .app-segmented { background:transparent; border-color:var(--app-line); border-radius:9px; padding:3px; gap:3px; }
@@ -1131,8 +1171,13 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
 /* Fixed navigation must remain usable above sheets and leave real scroll clearance. */
 .partly-navigation { z-index:400; }
 
-/* Compact Builds workbench. */
-.builds-view {
+/* Compact Builds and Stock workbench layouts. */
+.builds-view,
+.stock-layout,
+.stock-inventory-layout,
+.purchase-history-view,
+.transaction-history-view,
+.sold-parts-view {
   gap: 6px;
   display: flex;
   flex-direction: column;
@@ -1140,13 +1185,17 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   min-height: 0;
   height: 100%;
 }
+.app-main.app-main-fixed,
 .app-main.app-main-builds,
-.app-main:has(.builds-view) {
+.app-main:has(.builds-view),
+.app-main:has(.stock-layout) {
   padding-bottom: calc(57px + env(safe-area-inset-bottom)) !important;
 }
 @media (min-width: 640px) {
+  .app-main.app-main-fixed,
   .app-main.app-main-builds,
-  .app-main:has(.builds-view) {
+  .app-main:has(.builds-view),
+  .app-main:has(.stock-layout) {
     padding-bottom: calc(67px + env(safe-area-inset-bottom)) !important;
   }
 }
@@ -1348,11 +1397,18 @@ button.allocated-part:hover { background:rgba(255,255,255,.025); }
   .confirm-modal-panel { max-height:calc(100dvh - 6rem); }
   [data-bottom-sheet-modal] .modal-layout-content { max-height:calc(100dvh - 5.5rem); }
   .app-main { padding:0 12px calc(68px + env(safe-area-inset-bottom)); }
+  .app-main.app-main-fixed,
   .app-main.app-main-builds,
-  .app-main:has(.builds-view) {
+  .app-main:has(.builds-view),
+  .app-main:has(.stock-layout) {
     padding-bottom: calc(57px + env(safe-area-inset-bottom)) !important;
   }
-  .builds-view {
+  .builds-view,
+  .stock-layout,
+  .stock-inventory-layout,
+  .purchase-history-view,
+  .transaction-history-view,
+  .sold-parts-view {
     gap: 6px;
     display: flex;
     flex-direction: column;

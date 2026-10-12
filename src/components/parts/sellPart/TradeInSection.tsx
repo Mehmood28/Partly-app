@@ -92,10 +92,10 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                       type="button"
                       onClick={() => handleTradeTagToggle(tag)}
                       data-active={isSelected}
-                      className={`relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[20px] ${
+                      className={`app-chip app-subcategory-chip relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 outline-none [-webkit-tap-highlight-color:transparent] h-[20px] ${
                         isSelected
-                          ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
-                          : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                          ? 'app-chip-active is-active text-[#B9EF68] bg-[#B9EF68]/10'
+                          : 'text-[#b1bac4] bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
                       }`}
                     >
                       <span className="whitespace-nowrap">{tag}</span>
@@ -128,10 +128,10 @@ export const TradeInSection: React.FC<TradeInSectionProps> = ({
                 type="button"
                 onClick={() => handleTradeTagToggle(tag)}
                 data-active={isSelected}
-                className={`relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] h-[20px] ${
+                className={`app-chip app-subcategory-chip relative px-2 py-0.5 rounded-[5px] text-[10px] font-semibold leading-none flex items-center justify-center flex-shrink-0 transition-all duration-150 outline-none [-webkit-tap-highlight-color:transparent] h-[20px] ${
                   isSelected
-                    ? 'text-[#B9EF68] bg-[#B9EF68]/[0.03] shadow-[inset_0_0_0_1px_#B9EF68]'
-                    : 'text-[#b1bac4] border-0 bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                    ? 'app-chip-active is-active text-[#B9EF68] bg-[#B9EF68]/10'
+                    : 'text-[#b1bac4] bg-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
                 }`}
               >
                 <span className="whitespace-nowrap">{tag}</span>

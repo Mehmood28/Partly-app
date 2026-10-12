@@ -121,13 +121,13 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
   );
 
   return (
-    <div className="purchase-history-view flex flex-col gap-4">
-      <header className="purchase-page-heading">
+    <div className="purchase-history-view flex flex-col flex-1 min-h-0 h-full gap-2 sm:gap-3">
+      <header className="purchase-page-heading shrink-0">
         <h2>Purchases</h2>
         <p>Log and track all inventory purchases</p>
       </header>
 
-      <div className="records-toolbar purchase-records-toolbar">
+      <div className="records-toolbar purchase-records-toolbar shrink-0">
         <div className="relative w-full sm:flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -166,35 +166,35 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
 
       {/* Cards List (Virtualized or Normal Document Flow) */}
       {sortedTransactions.length === 0 ? (
-        <div className="text-center py-10 bg-[#0B1113] border border-white/[0.08] rounded-xl p-6 text-zinc-400 space-y-2">
+        <div className="text-center py-10 bg-[#0B1113] border border-white/[0.08] rounded-xl p-6 text-zinc-400 space-y-2 shrink-0">
           <Filter className="w-8 h-8 mx-auto mb-2 text-zinc-500" />
           <p className="text-sm font-semibold text-zinc-200">No purchase records found</p>
           <p className="text-xs text-zinc-400">Try changing your search query.</p>
         </div>
       ) : !isVirtualized ? (
         <div 
-          className="w-full max-h-[calc(100dvh-230px-env(safe-area-inset-bottom))] overflow-y-scroll pr-[3px] md:max-h-[calc(100dvh-220px)]"
+          className="w-full flex-1 min-h-0 overflow-y-auto pr-[3px]"
           style={{ overflowAnchor: 'none' }}
         >
-          <div className="flex flex-col gap-[5px] pb-1.5">
+          <div className="flex flex-col gap-[5px] pb-[5px]">
             {sortedTransactions.map((tx) => (
               <React.Fragment key={tx.id}>{renderTransactionRow(tx)}</React.Fragment>
             ))}
           </div>
         </div>
       ) : (
-        <div className="w-full">
+        <div className="w-full flex-1 min-h-0 flex flex-col">
           <div
             ref={parentRef}
             onScroll={handleScroll}
-            className="w-full max-h-[calc(100dvh-230px-env(safe-area-inset-bottom))] overflow-y-scroll pr-[3px] md:max-h-[calc(100dvh-220px)]"
+            className="w-full flex-1 min-h-0 overflow-y-auto pr-[3px]"
             style={{
               overflowAnchor: 'none',
             }}
           >
             <div
               style={{
-                height: `${rowVirtualizer.getTotalSize() + 6}px`,
+                height: `${rowVirtualizer.getTotalSize()}px`,
                 width: '100%',
                 position: 'relative',
               }}

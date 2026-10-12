@@ -186,8 +186,8 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
   };
 
   return (
-    <div className="stock-inventory-layout flex flex-col items-stretch w-full gap-4">
-      <div className="inventory-capital w-full">
+    <div className="stock-inventory-layout flex flex-col items-stretch w-full flex-1 min-h-0 h-full gap-2 sm:gap-3">
+      <div className="inventory-capital shrink-0 w-full">
         <div className="flex min-w-0 flex-col justify-center p-3 sm:p-4">
           <div className="app-metric-label">Unassigned</div>
           <div className="app-metric-value">{formatCurrency(unassignedValue)}</div>
@@ -202,7 +202,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         </div>
       </div>
 
-      <div className="inventory-actions stock-actions-row grid grid-cols-2 gap-2 w-full">
+      <div className="inventory-actions stock-actions-row shrink-0 grid grid-cols-2 gap-2 w-full">
         <button
           type="button"
           onClick={() => onOpenAddComponent()}
@@ -227,7 +227,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         )}
       </div>
 
-      <div className="inventory-filters w-full">
+      <div className="inventory-filters shrink-0 w-full">
         <InventoryFilterBar
           builds={state.builds}
           components={state.components.filter(c => calculateUnassignedQuantityStrict(c, state.builds) > 0)}
@@ -244,9 +244,9 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
         />
       </div>
 
-      {/* Grouped Component Cards List (Virtualized) */}
+      {/* Grouped Component Cards List (Virtualized or Normal Flow) */}
       {groupedComponents.length === 0 ? (
-        <div className="app-panel w-full space-y-3 p-10 text-center">
+        <div className="app-panel w-full space-y-3 p-10 text-center shrink-0">
           <div className="w-10 h-10 rounded-xl bg-white/[0.04] text-zinc-400 flex items-center justify-center mx-auto border border-white/[0.06]">
             <Filter className="w-5 h-5" />
           </div>
@@ -267,30 +267,35 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
           </div>
         </div>
       ) : !isVirtualized ? (
-        <div className="w-full max-h-[75dvh] min-h-[360px] overflow-y-scroll stock-inventory-scroll pr-[3px] flex flex-col items-stretch">
-          {virtualRows.map((row) => (
-            <div
-              key={row.key}
-              className="inventory-stock-row w-full"
-              data-type={row.type}
-            >
-              {renderInventoryRow(row)}
-            </div>
-          ))}
+        <div 
+          className="w-full flex-1 min-h-0 overflow-y-auto stock-inventory-scroll pr-[3px]"
+          style={{ overflowAnchor: 'none' }}
+        >
+          <div className="flex flex-col gap-[6px] pb-[6px]">
+            {virtualRows.map((row) => (
+              <div
+                key={row.key}
+                className="inventory-stock-row w-full"
+                data-type={row.type}
+              >
+                {renderInventoryRow(row)}
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="w-full">
+        <div className="w-full flex-1 min-h-0 flex flex-col">
           <div 
             ref={parentRef}
             onScroll={handleScroll}
-            className="w-full max-h-[75dvh] min-h-[360px] overflow-y-scroll stock-inventory-scroll pr-[3px]"
+            className="w-full flex-1 min-h-0 overflow-y-auto stock-inventory-scroll pr-[3px]"
             style={{
               overflowAnchor: 'none',
             }}
           >
             <div
               style={{
-                height: `${rowVirtualizer.getTotalSize() + 6}px`,
+                height: `${rowVirtualizer.getTotalSize()}px`,
                 width: '100%',
                 position: 'relative',
               }}
@@ -312,6 +317,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
                       left: 0,
                       width: '100%',
                       transform: `translateY(${virtualRow.start}px)`,
+                      paddingBottom: '6px',
                     }}
                   >
                     {renderInventoryRow(row)}

@@ -53,9 +53,9 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
   ];
 
   return (
-    <div className="stock-layout flex flex-col items-stretch w-full gap-4">
+    <div className="stock-layout flex flex-col items-stretch w-full flex-1 min-h-0 h-full gap-2 sm:gap-3">
       {/* Sub-tab Switcher Header */}
-      <div className="stock-subtabs w-full">
+      <div className="stock-subtabs shrink-0 w-full">
         <div className="app-segmented grid-cols-3 w-full">
           {subTabs.map((tab) => {
             const isSelected = activeSubTab === tab.id;
@@ -65,7 +65,7 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id)}
                 data-active={isSelected}
-                className="flex items-center justify-center gap-1.5 overflow-hidden px-1.5 whitespace-nowrap outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68]"
+                className="flex items-center justify-center gap-1.5 overflow-hidden px-1.5 whitespace-nowrap outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none"
               >
                 <Icon className={`relative z-10 h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-[#B9EF68]' : 'text-zinc-600'}`} />
                 <span className="relative z-10 truncate">{tab.label}</span>
@@ -77,8 +77,8 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
       </div>
 
       {/* Sub-view Content */}
-      <div className="mt-0.5 w-full flex flex-col items-stretch">
-        <div className={activeSubTab === 'in-stock' ? 'block w-full' : 'hidden'}>
+      <div className="w-full flex-1 min-h-0 flex flex-col items-stretch">
+        <div className={activeSubTab === 'in-stock' ? 'flex flex-col flex-1 min-h-0 h-full w-full' : 'hidden'}>
           <InventoryView
             isActive={Boolean(isActive && activeSubTab === 'in-stock')}
             onOpenBulkEntry={onOpenBulkEntry}
@@ -88,10 +88,10 @@ export const StockView: React.FC<StockViewProps> = React.memo(({
             onOpenSellPart={onOpenSellPart}
           />
         </div>
-        <div className={activeSubTab === 'purchases' ? 'block w-full' : 'hidden'}>
+        <div className={activeSubTab === 'purchases' ? 'flex flex-col flex-1 min-h-0 h-full w-full' : 'hidden'}>
           <PurchaseHistoryView isActive={Boolean(isActive && activeSubTab === 'purchases')} />
         </div>
-        <div className={activeSubTab === 'sold-parts' ? 'block w-full' : 'hidden'}>
+        <div className={activeSubTab === 'sold-parts' ? 'flex flex-col flex-1 min-h-0 h-full w-full' : 'hidden'}>
           <TransactionHistoryView isActive={Boolean(isActive && activeSubTab === 'sold-parts')} />
         </div>
       </div>

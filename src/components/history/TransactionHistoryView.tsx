@@ -110,13 +110,13 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
   };
 
   return (
-    <div className="sold-parts-view flex flex-col gap-4">
-      <header className="sold-parts-heading">
+    <div className="transaction-history-view sold-parts-view flex flex-col flex-1 min-h-0 h-full gap-2 sm:gap-3">
+      <header className="sold-parts-heading shrink-0">
         <h2>Sold Parts</h2>
         <p>Track loose-part sales and trade-ups</p>
       </header>
 
-      <div className="sold-parts-toolbar">
+      <div className="sold-parts-toolbar shrink-0">
         <div className="relative w-full sm:flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -155,35 +155,35 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = Rea
 
       {/* Cards List (Virtualized or Normal Document Flow) */}
       {sortedDisplayItems.length === 0 ? (
-        <div className="text-center py-10 bg-[#0B1113] border border-white/[0.08] rounded-xl p-6 text-zinc-400 space-y-2">
+        <div className="text-center py-10 bg-[#0B1113] border border-white/[0.08] rounded-xl p-6 text-zinc-400 space-y-2 shrink-0">
           <Filter className="w-8 h-8 mx-auto mb-2 text-zinc-500" />
           <p className="text-sm font-semibold text-zinc-200">No sold parts or trade-ups found</p>
           <p className="text-xs text-zinc-400">Try changing your search query or selling/trading components from stock.</p>
         </div>
       ) : !isVirtualized ? (
         <div 
-          className="w-full max-h-[calc(100dvh-230px-env(safe-area-inset-bottom))] overflow-y-scroll pr-[3px] md:max-h-[calc(100dvh-220px)]"
+          className="w-full flex-1 min-h-0 overflow-y-auto pr-[3px]"
           style={{ overflowAnchor: 'none' }}
         >
-          <div className="flex flex-col gap-[5px] pb-1.5">
+          <div className="flex flex-col gap-[5px] pb-[5px]">
             {sortedDisplayItems.map((item) => (
               <React.Fragment key={item.id}>{renderTransactionRow(item)}</React.Fragment>
             ))}
           </div>
         </div>
       ) : (
-        <div className="w-full">
+        <div className="w-full flex-1 min-h-0 flex flex-col">
           <div
             ref={parentRef}
             onScroll={handleScroll}
-            className="w-full max-h-[calc(100dvh-230px-env(safe-area-inset-bottom))] overflow-y-scroll pr-[3px] md:max-h-[calc(100dvh-220px)]"
+            className="w-full flex-1 min-h-0 overflow-y-auto pr-[3px]"
             style={{
               overflowAnchor: 'none',
             }}
           >
             <div
               style={{
-                height: `${rowVirtualizer.getTotalSize() + 6}px`,
+                height: `${rowVirtualizer.getTotalSize()}px`,
                 width: '100%',
                 position: 'relative',
               }}

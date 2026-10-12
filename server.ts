@@ -89,6 +89,140 @@ function parseModelJsonResponse(
   return parsed;
 }
 
+function parseDateToIso(str: string | null | undefined): string | undefined {
+  if (!str) return undefined;
+  const trimmed = String(str).trim();
+  if (!trimmed) return undefined;
+  const isoMatch = trimmed.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+  if (isoMatch) {
+    return `${isoMatch[1]}-${isoMatch[2].padStart(2, '0')}-${isoMatch[3].padStart(2, '0')}`;
+  }
+  const usMatch = trimmed.match(/\b(\d{1,2})[-/](\d{1,2})[-/](20\d{2})\b/);
+  if (usMatch) {
+    return `${usMatch[3]}-${usMatch[1].padStart(2, '0')}-${usMatch[2].padStart(2, '0')}`;
+  }
+  const monthMatch = trimmed.match(/\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(20\d{2})\b/i);
+  if (monthMatch) {
+    const months: Record<string, string> = {
+      jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+      jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+    };
+    const m = months[monthMatch[1].toLowerCase().slice(0, 3)];
+    const d = monthMatch[2].padStart(2, '0');
+    const y = monthMatch[3];
+    return `${y}-${m}-${d}`;
+  }
+  const d = new Date(trimmed);
+  if (!isNaN(d.getTime()) && d.getFullYear() > 2000) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  return undefined;
+}
+
+const KNOWN_CONDITIONS: string[] = [
+  'Sealed',
+  'New Open Box',
+  'New No Box',
+  'Used Open Box',
+  'Used No Box'
+];
+
+function extractConditionDeterministic(str: string): { condition?: string; cleaned: string } {
+  let cleaned = str;
+  let condition: string | undefined = undefined;
+
+  if (/\b(sealed|brand new in box|bnib|nib)\b/i.test(cleaned)) {
+    condition = 'Sealed';
+    cleaned = cleaned.replace(/\b(sealed|brand new in box|bnib|nib)\b/gi, ' ');
+  } else if (/\b(new open box)\b/i.test(cleaned)) {
+    condition = 'New Open Box';
+    cleaned = cleaned.replace(/\b(new open box)\b/gi, ' ');
+  } else if (/\b(new no box)\b/i.test(cleaned)) {
+    condition = 'New No Box';
+    cleaned = cleaned.replace(/\b(new no box)\b/gi, ' ');
+  } else if (/\b(used open box)\b/i.test(cleaned)) {
+    condition = 'Used Open Box';
+    cleaned = cleaned.replace(/\b(used open box)\b/gi, ' ');
+  } else if (/\b(used no box)\b/i.test(cleaned)) {
+    condition = 'Used No Box';
+    cleaned = cleaned.replace(/\b(used no box)\b/gi, ' ');
+  } else if (/\b(open box)\b/i.test(cleaned)) {
+    condition = 'New Open Box';
+    cleaned = cleaned.replace(/\b(open box)\b/gi, ' ');
+  } else if (/\b(used)\b/i.test(cleaned)) {
+    condition = 'Used Open Box';
+    cleaned = cleaned.replace(/\b(used)\b/gi, ' ');
+  }
+
+  return { condition, cleaned: cleaned.trim() };
+}
+
+function extractPaymentMethodDeterministic(str: string): { paymentMethod?: string; cleaned: string } {
+  let cleaned = str;
+  let paymentMethod: string | undefined = undefined;
+  const pmMatch = cleaned.match(/\b(e-transfer|cash|paypal|credit card|debit|crypto)\b/i);
+  if (pmMatch) {
+    const lower = pmMatch[1].toLowerCase();
+    paymentMethod = lower === 'e-transfer' ? 'E-Transfer' : lower === 'credit card' ? 'Credit Card' : (lower.charAt(0).toUpperCase() + lower.slice(1));
+    cleaned = cleaned.replace(pmMatch[0], ' ');
+  }
+  return { paymentMethod, cleaned: cleaned.trim() };
+}
+
+const HARDWARE_CATEGORY_NAMES = [
+  'Motherboard',
+  'CPU',
+  'GPU',
+  'RAM',
+  'Storage',
+  'PSU',
+  'Case',
+  'Cooling',
+  'Fans',
+  'Accessories',
+  'Other'
+];
+
+const KNOWN_SPEC_TAGS = [
+  'AM5', 'AM4', 'Intel', 'AMD',
+  'ATX', 'mATX', 'Micro-ATX', 'ITX', 'Mini-ITX', 'SFX', 'Standard', 'ATX 3.0 / 3.1',
+  'Black', 'White',
+  'DDR5', 'DDR4', 'RGB', 'Non-RGB',
+  'GEN5', 'GEN4', 'GEN3', 'SATA',
+  '360mm', '240mm', 'Air Cooler',
+  '50 Series', '40 Series', '30 Series'
+];
+
+function isPureSpecOrMetaSegment(segment: string): boolean {
+  const trimmed = segment.trim();
+  if (!trimmed) return true;
+  if (/^\$\s*\d+(\.\d+)?$/.test(trimmed)) return true;
+  if (/^\d+\s*x$/i.test(trimmed)) return true;
+  if (HARDWARE_CATEGORY_NAMES.some((c) => c.toLowerCase() === trimmed.toLowerCase())) return true;
+  if (KNOWN_CONDITIONS.some((c) => c.toLowerCase() === trimmed.toLowerCase())) return true;
+  if (KNOWN_SPEC_TAGS.some((t) => t.toLowerCase() === trimmed.toLowerCase())) return true;
+  return false;
+}
+
+function cleanExtractedName(rawName: string): string {
+  let name = rawName.trim();
+  // Strip leading category prefixes
+  name = name.replace(/^(?:Motherboard|CPU|GPU|RAM|Storage|PSU|Case|Cooling|Fans|Accessories|Other)\s*[•|·,\-\/:]?\s*/i, '');
+  // Strip accidental spec / condition prefixes prepended from multi-line specs
+  name = name.replace(/^(?:Intel|AMD|AM5|AM4)\s+(?:ATX|mATX|Micro-ATX|ITX|Mini-ITX)\s+(?:Black|White)\s+(?:Used|New)?\s*/i, '');
+  name = name.replace(/^(?:Intel|AMD|AM5|AM4)\s+(?:ATX|mATX|Micro-ATX|ITX|Mini-ITX)\s*/i, '');
+  name = name.replace(/^(?:ATX|mATX|Micro-ATX|ITX|Mini-ITX)\s+(?:Black|White)\s*/i, '');
+  name = name.replace(/^(?:Black|White)\s+(?:Used|New)?\s*/i, '');
+  name = name.replace(/^(?:Used|New)\s+(?:Open\s+Box|No\s+Box)\s*/i, '');
+  name = name.replace(/^(?:Used|New)\s+/i, '');
+  name = name.replace(/^[•|·:\s]+|[•|·:\s]+$/g, '').trim();
+  name = name.replace(/\s{2,}/g, ' ');
+  return name;
+}
+
 function deterministicParseBulkText(text: string): any[] {
   const rawLines = (text || '')
     .split(/\r?\n/)
@@ -97,181 +231,203 @@ function deterministicParseBulkText(text: string): any[] {
 
   if (rawLines.length === 0) return [];
 
-  let batchSeller = '';
-  let batchDate = '';
-  let batchCondition = '';
-  let batchPaymentMethod = '';
+  interface BatchState {
+    seller?: string;
+    date?: string;
+    paymentMethod?: string;
+    condition?: string;
+  }
 
-  const nonHeaderLines: string[] = [];
+  let currentBatch: BatchState = {};
+  const items: any[] = [];
 
-  for (const line of rawLines) {
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+
+    // Check if this line is an explicit header
     const isExplicitHeader =
       /^(?:supplier|seller|vendor|store|date|condition(?:\s+for\s+all)?|payment|notes?)\s*:/i.test(line) ||
       /^(?:batch\s+date|batch\s+condition|batch\s+seller)/i.test(line);
 
+    // Check if this line is a delimited header (e.g. "Zorn • Oct 1, 2025 • Cash")
     const isDelimitedHeader =
       !isExplicitHeader &&
-      !/\b(?:rtx|gtx|rx|ryzen|intel|core|ddr[45]|nvme|ssd|motherboard|b650|b850|x870|z790|am5|am4|360mm|240mm)\b/i.test(line) &&
+      !/\b(?:rtx|gtx|rx|ryzen|intel|core|ddr[45]|nvme|ssd|motherboard|b650|b850|x870|z790|am5|am4|360mm|240mm|rog|tuf|aorus|gigabyte|asus|msi|corsair)\b/i.test(line) &&
+      !/\$\s*\d+/.test(line) &&
       /(?:e-transfer|cash|paypal|credit card|debit|crypto|\b20\d{2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2})/i.test(line);
 
     if (isExplicitHeader || isDelimitedHeader) {
       if (/^(?:supplier|seller|vendor|store)\s*:\s*(.*)/i.test(line)) {
-        batchSeller = line.replace(/^(?:supplier|seller|vendor|store)\s*:\s*/i, '').trim();
+        currentBatch.seller = line.replace(/^(?:supplier|seller|vendor|store)\s*:\s*/i, '').trim();
       } else if (/^(?:date)\s*:\s*(.*)/i.test(line)) {
         const rawDate = line.replace(/^(?:date)\s*:\s*/i, '').trim();
-        const parsed = new Date(rawDate);
-        if (!isNaN(parsed.getTime())) {
-          batchDate = parsed.toISOString().split('T')[0];
-        } else {
-          batchDate = rawDate;
-        }
+        currentBatch.date = parseDateToIso(rawDate) || rawDate;
       } else if (/^(?:condition(?:\s+for\s+all)?)\s*:\s*(.*)/i.test(line)) {
-        const rawC = line.replace(/^(?:condition(?:\s+for\s+all)?)\s*:\s*/i, '').trim().toLowerCase();
-        if (/sealed/i.test(rawC)) batchCondition = 'Sealed';
-        else if (/new\s+open\s+box/i.test(rawC)) batchCondition = 'New Open Box';
-        else if (/new\s+no\s+box/i.test(rawC)) batchCondition = 'New No Box';
-        else if (/used\s+no\s+box/i.test(rawC)) batchCondition = 'Used No Box';
-        else if (/used/i.test(rawC)) batchCondition = 'Used Open Box';
-        else batchCondition = 'New No Box';
+        const rawC = line.replace(/^(?:condition(?:\s+for\s+all)?)\s*:\s*/i, '').trim();
+        const { condition } = extractConditionDeterministic(rawC);
+        if (condition) currentBatch.condition = condition;
       } else if (/^(?:payment)\s*:\s*(.*)/i.test(line)) {
-        batchPaymentMethod = line.replace(/^(?:payment)\s*:\s*/i, '').trim();
+        const rawP = line.replace(/^(?:payment)\s*:\s*/i, '').trim();
+        const { paymentMethod } = extractPaymentMethodDeterministic(rawP);
+        if (paymentMethod) currentBatch.paymentMethod = paymentMethod;
       } else if (isDelimitedHeader) {
-        const parts = line.split(/[•|·,\-\/]/).map((p) => p.trim()).filter(Boolean);
+        // Split by bullet or pipe (NOT by comma, so "Oct 1, 2025" is preserved intact!)
+        const parts = line.split(/[•|·]/).map((p) => p.trim()).filter(Boolean);
+        let detectedSeller = '';
+        let detectedDate = '';
+        let detectedPayment: string | undefined = undefined;
+        let detectedCondition: string | undefined = undefined;
+
         for (const part of parts) {
-          if (/\b(e-transfer|cash|paypal|credit card|debit|crypto)\b/i.test(part)) {
-            const pmMatch = part.match(/\b(e-transfer|cash|paypal|credit card|debit|crypto)\b/i);
-            if (pmMatch) {
-              const lower = pmMatch[1].toLowerCase();
-              batchPaymentMethod = lower === 'e-transfer' ? 'E-Transfer' : lower === 'credit card' ? 'Credit Card' : lower.charAt(0).toUpperCase() + lower.slice(1);
-            }
-          } else if (/\b(?:20\d{2}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4}|[a-zA-Z]+\s+\d{1,2},?\s+\d{4})\b/.test(part)) {
-            const parsed = new Date(part);
-            if (!isNaN(parsed.getTime())) {
-              batchDate = parsed.toISOString().split('T')[0];
-            }
-          } else if (!batchSeller && part.length >= 2 && !/^(date|payment|seller):/i.test(part)) {
-            batchSeller = part.replace(/^(?:seller|store)\s*:\s*/i, '').trim();
+          const isoDate = parseDateToIso(part);
+          if (isoDate) {
+            detectedDate = isoDate;
+            continue;
+          }
+
+          const { paymentMethod } = extractPaymentMethodDeterministic(part);
+          if (paymentMethod && !detectedPayment) {
+            detectedPayment = paymentMethod;
+            continue;
+          }
+
+          const { condition } = extractConditionDeterministic(part);
+          if (condition && !detectedCondition) {
+            detectedCondition = condition;
+            continue;
+          }
+
+          if (!detectedSeller && part.length >= 2 && !/^(date|payment|seller):/i.test(part)) {
+            detectedSeller = part.replace(/^(?:seller|store)\s*:\s*/i, '').trim();
           }
         }
+
+        // Delimited header starts a new batch scope
+        currentBatch = {
+          seller: detectedSeller || currentBatch.seller,
+          date: detectedDate || currentBatch.date,
+          paymentMethod: detectedPayment || currentBatch.paymentMethod,
+          condition: detectedCondition || currentBatch.condition,
+        };
       }
-    } else {
-      nonHeaderLines.push(line);
+      continue;
     }
-  }
 
-  // Group paired lines if formatted as (Category/Specs/Condition) followed by (Price/Qty/Product)
-  const groupedEntries: string[] = [];
-  for (let i = 0; i < nonHeaderLines.length; i++) {
-    const curr = nonHeaderLines[i];
-    const next = i + 1 < nonHeaderLines.length ? nonHeaderLines[i + 1] : null;
+    // Now we are on a hardware line item!
+    // Check if next line forms a 2-line paired block
+    const nextLine = i + 1 < rawLines.length ? rawLines[i + 1] : null;
+    let specsLine = '';
+    let dataLine = '';
 
-    if (
-      next &&
-      /^(?:Motherboard|CPU|GPU|RAM|Storage|PSU|Case|Cooling|Fans|Accessories|Other)\b/i.test(curr) &&
-      /^\s*[\$•\d]/i.test(next) &&
-      /\$\s*\d+/i.test(next)
-    ) {
-      groupedEntries.push(`${curr} • ${next}`);
-      i++; // Skip paired line
+    const isSpecsLine = (str: string) =>
+      /^(?:Motherboard|CPU|GPU|RAM|Storage|PSU|Case|Cooling|Fans|Accessories|Other)\b/i.test(str);
+
+    const isDataLine = (str: string) =>
+      /\$\s*\d+/.test(str) || /^\s*[\$•\d]*\d+\s*x\b/i.test(str);
+
+    if (nextLine && isSpecsLine(line) && isDataLine(nextLine)) {
+      specsLine = line;
+      dataLine = nextLine;
+      i++; // consume next line
+    } else if (nextLine && isDataLine(line) && isSpecsLine(nextLine)) {
+      dataLine = line;
+      specsLine = nextLine;
+      i++; // consume next line
     } else {
-      groupedEntries.push(curr);
+      // Single line item
+      specsLine = line;
+      dataLine = line;
     }
-  }
 
-  return groupedEntries.map((line) => {
-    let remaining = line;
-
-    // 1. Quantity (e.g. 10x, 2x, 5 pcs, 1 x)
+    // 1. Extract Quantity
     let quantity = 1;
-    const qtyMatch = remaining.match(/(\d+)\s*(?:x|pcs|units|ct)\s+/i) || remaining.match(/\b(\d+)\s*(?:x|pcs|units|ct)\b/i);
+    const qtyMatch = dataLine.match(/(\d+)\s*(?:x|pcs|units|ct)\s+/i) || dataLine.match(/\b(\d+)\s*(?:x|pcs|units|ct)\b/i);
     if (qtyMatch) {
       quantity = Math.max(1, parseInt(qtyMatch[1], 10) || 1);
-      remaining = remaining.replace(qtyMatch[0], ' ').trim();
     }
 
-    // 2. Unit cost or price ($225.99, $225)
+    // 2. Extract Unit Cost
     let unitCost = 0;
-    const costMatch = remaining.match(/\$\s*(\d+(?:\.\d+)?)/) || remaining.match(/\b(\d+\.\d{2})\b/);
+    const costMatch = dataLine.match(/\$\s*(\d+(?:\.\d+)?)/) || dataLine.match(/\b(\d+\.\d{2})\b/);
     if (costMatch) {
       unitCost = parseFloat(costMatch[1]) || 0;
-      remaining = remaining.replace(costMatch[0], ' ').trim();
     }
 
     // 3. Health percent for storage (e.g. 98% health)
     let healthPercent: number | undefined = undefined;
-    const healthMatch = remaining.match(/\b(\d{1,3})%\s*(?:health)?/i);
+    const healthMatch = (specsLine + ' ' + dataLine).match(/\b(\d{1,3})%\s*(?:health)?/i);
     if (healthMatch) {
       const parsedHealth = parseInt(healthMatch[1], 10);
       if (parsedHealth >= 0 && parsedHealth <= 100) {
         healthPercent = parsedHealth;
       }
-      remaining = remaining.replace(healthMatch[0], ' ').trim();
     }
 
-    // 4. Condition (Item-level condition overrides global batch condition)
-    let condition = batchCondition || 'Used Open Box';
-    if (/\b(sealed|brand new in box|bnib|nib)\b/i.test(remaining)) {
-      condition = 'Sealed';
-      remaining = remaining.replace(/\b(sealed|brand new in box|bnib|nib)\b/gi, ' ').trim();
-    } else if (/\b(new open box|open box)\b/i.test(remaining)) {
-      condition = 'New Open Box';
-      remaining = remaining.replace(/\b(new open box|open box)\b/gi, ' ').trim();
-    } else if (/\b(new no box)\b/i.test(remaining)) {
-      condition = 'New No Box';
-      remaining = remaining.replace(/\b(new no box)\b/gi, ' ').trim();
-    } else if (/\b(used no box)\b/i.test(remaining)) {
-      condition = 'Used No Box';
-      remaining = remaining.replace(/\b(used no box)\b/gi, ' ').trim();
-    } else if (/\b(used open box|used)\b/i.test(remaining)) {
-      condition = 'Used Open Box';
-      remaining = remaining.replace(/\b(used open box|used)\b/gi, ' ').trim();
-    }
+    // 4. Extract Condition (from specsLine or dataLine)
+    const combinedLine = `${specsLine} • ${dataLine}`;
+    const { condition: extractedCond } = extractConditionDeterministic(combinedLine);
+    const itemCondition = extractedCond || currentBatch.condition || 'Used Open Box';
 
-    // 5. Category (prioritize explicit hardware keywords over ambiguous sockets/chipsets)
+    // 5. Extract Category
     let category = 'Other';
-    const lower = remaining.toLowerCase();
-    if (/^(motherboard|mobo|mainboard)\b/i.test(remaining) || /\b(motherboard|mobo|mainboard|b650|b550|z790|z690|x670|b850|x870|b760|z890|a620)\b/i.test(lower)) {
+    const lowerCombined = combinedLine.toLowerCase();
+    if (/^(motherboard|mobo|mainboard)\b/i.test(specsLine) || /\b(motherboard|mobo|mainboard|b650|b550|z790|z690|x670|b850|x870|b760|z890|a620)\b/i.test(lowerCombined)) {
       category = 'Motherboard';
-    } else if (/^(gpu|graphics card)\b/i.test(remaining) || /\b(rtx|gtx|radeon|rx\s*\d|geforce|graphics card|gpu|arc\s*a)\b/i.test(lower)) {
+    } else if (/^(gpu|graphics card)\b/i.test(specsLine) || /\b(rtx|gtx|radeon|rx\s*\d|geforce|graphics card|gpu|arc\s*a)\b/i.test(lowerCombined)) {
       category = 'GPU';
-    } else if (/^(cpu|processor)\b/i.test(remaining) || /\b(ryzen|intel|core\s*i[3579]|cpu|processor|threadripper|7800x3d|7700x?|7600x?|5600x?|14900k?|13700k?|12600k?)\b/i.test(lower)) {
+    } else if (/^(cpu|processor)\b/i.test(specsLine) || /\b(ryzen|intel|core\s*i[3579]|cpu|processor|threadripper|7800x3d|7700x?|7600x?|5600x?|14900k?|13700k?|12600k?)\b/i.test(lowerCombined)) {
       category = 'CPU';
-    } else if (/^(ram|memory)\b/i.test(remaining) || /\b(ddr[45]|ram|memory|vengeance|trident|fury|corsair\s*rgb)\b/i.test(lower)) {
+    } else if (/^(ram|memory)\b/i.test(specsLine) || /\b(ddr[45]|ram|memory|vengeance|trident|fury|corsair\s*rgb)\b/i.test(lowerCombined)) {
       category = 'RAM';
-    } else if (/^(storage|ssd|nvme)\b/i.test(remaining) || /\b(ssd|nvme|m\.2|hard\s*drive|hdd|sata|evo|sn\d{3}|barracuda|kc3000|pm9a1)\b/i.test(lower)) {
+    } else if (/^(storage|ssd|nvme)\b/i.test(specsLine) || /\b(ssd|nvme|m\.2|hard\s*drive|hdd|sata|evo|sn\d{3}|barracuda|kc3000|pm9a1)\b/i.test(lowerCombined)) {
       category = 'Storage';
-    } else if (/^(cooling|cooler)\b/i.test(remaining) || /\b(cooler|aio|liquid\s*cool\w*|fan|heatsink|noctua|kraken|assassin|thermalright|\b\d{3}mm\b|hydroshift|prism|wraith)\b/i.test(lower)) {
+    } else if (/^(cooling|cooler)\b/i.test(specsLine) || /\b(cooler|aio|liquid\s*cool\w*|fan|heatsink|noctua|kraken|assassin|thermalright|\b\d{3}mm\b|hydroshift|prism|wraith)\b/i.test(lowerCombined)) {
       category = 'Cooling';
-    } else if (/^(psu|power supply)\b/i.test(remaining) || /\b(psu|power\s*supply|gold|bronze|platinum|watt|\b\d{3,4}w\b|corsair\s*rm\w*|seasonic|superflower|toughpower)\b/i.test(lower)) {
+    } else if (/^(psu|power supply)\b/i.test(specsLine) || /\b(psu|power\s*supply|gold|bronze|platinum|watt|\b\d{3,4}w\b|corsair\s*rm\w*|seasonic|superflower|toughpower)\b/i.test(lowerCombined)) {
       category = 'PSU';
-    } else if (/^(case|chassis)\b/i.test(remaining) || /\b(case|chassis|h9|h5|h7|o11|4000d|5000d|pop\s*air|ch160|montech|lancool)\b/i.test(lower)) {
+    } else if (/^(case|chassis)\b/i.test(specsLine) || /\b(case|chassis|h9|h5|h7|o11|4000d|5000d|pop\s*air|ch160|montech|lancool)\b/i.test(lowerCombined)) {
       category = 'Case';
     }
 
     // 6. Extract Tags
     const tags: string[] = [];
-    if (/\bAM5\b/i.test(remaining)) tags.push('AM5');
-    if (/\bAM4\b/i.test(remaining)) tags.push('AM4');
-    if (/\bIntel\b/i.test(remaining)) tags.push('Intel');
-    if (/\bATX\b/i.test(remaining)) tags.push('ATX');
-    if (/\bmATX\b/i.test(remaining) || /\bMicro-ATX\b/i.test(remaining)) tags.push('mATX');
-    if (/\bITX\b/i.test(remaining) || /\bMini-ITX\b/i.test(remaining)) tags.push('ITX');
-    if (/\bWhite\b/i.test(remaining)) tags.push('White');
-    if (/\bBlack\b/i.test(remaining)) tags.push('Black');
-    if (/\bDDR5\b/i.test(remaining)) tags.push('DDR5');
-    if (/\bDDR4\b/i.test(remaining)) tags.push('DDR4');
-    if (/\bGEN5\b/i.test(remaining)) tags.push('GEN5');
-    if (/\bGEN4\b/i.test(remaining)) tags.push('GEN4');
-    if (/\bGEN3\b/i.test(remaining)) tags.push('GEN3');
-    if (/\bSATA\b/i.test(remaining)) tags.push('SATA');
+    if (/\bAM5\b/i.test(combinedLine)) tags.push('AM5');
+    if (/\bAM4\b/i.test(combinedLine)) tags.push('AM4');
+    if (/\bIntel\b/i.test(combinedLine)) tags.push('Intel');
+    if (/\bATX\b/i.test(combinedLine)) tags.push('ATX');
+    if (/\bmATX\b/i.test(combinedLine) || /\bMicro-ATX\b/i.test(combinedLine)) tags.push('mATX');
+    if (/\bITX\b/i.test(combinedLine) || /\bMini-ITX\b/i.test(combinedLine)) tags.push('ITX');
+    if (/\bWhite\b/i.test(combinedLine)) tags.push('White');
+    if (/\bBlack\b/i.test(combinedLine)) tags.push('Black');
+    if (/\bDDR5\b/i.test(combinedLine)) tags.push('DDR5');
+    if (/\bDDR4\b/i.test(combinedLine)) tags.push('DDR4');
+    if (/\bGEN5\b/i.test(combinedLine)) tags.push('GEN5');
+    if (/\bGEN4\b/i.test(combinedLine)) tags.push('GEN4');
+    if (/\bGEN3\b/i.test(combinedLine)) tags.push('GEN3');
+    if (/\bSATA\b/i.test(combinedLine)) tags.push('SATA');
 
-    // Clean leading/trailing category prefixes and bullet separators
-    let cleanName = remaining
-      .replace(/^(?:Motherboard|CPU|GPU|RAM|Storage|PSU|Case|Cooling|Fans|Accessories|Other)\s*[•|·,\-\/]?\s*/i, '')
-      .replace(/[•|·,\-\/]+/g, ' ')
-      .replace(/^[,\-–—:\s•]+|[,\-–—:\s•]+$/g, '')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+    // 7. Extract Clean Product Name
+    let cleanName = '';
+    if (specsLine !== dataLine) {
+      // In a 2-line block, the product name is on dataLine!
+      let nameCandidate = dataLine;
+      nameCandidate = nameCandidate.replace(/\$\s*\d+(?:\.\d+)?/g, ' ');
+      nameCandidate = nameCandidate.replace(/(?:^|\b)\d+\s*(?:x|pcs|units|ct)\s*/gi, ' ');
+      nameCandidate = nameCandidate.replace(/[•|·]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+      cleanName = cleanExtractedName(nameCandidate);
+    } else {
+      // Single-line block: segments separated by bullets
+      const segments = line.split(/[•|·]/).map((s) => s.trim()).filter(Boolean);
+      const productSegments = segments.filter((seg) => !isPureSpecOrMetaSegment(seg));
+      if (productSegments.length > 0) {
+        let nameCandidate = productSegments.join(' ');
+        nameCandidate = nameCandidate.replace(/\$\s*\d+(?:\.\d+)?/g, ' ');
+        nameCandidate = nameCandidate.replace(/(?:^|\b)\d+\s*(?:x|pcs|units|ct)\s*/gi, ' ');
+        cleanName = cleanExtractedName(nameCandidate);
+      } else {
+        cleanName = cleanExtractedName(line);
+      }
+    }
 
     if (!cleanName) {
       cleanName = line;
@@ -320,19 +476,21 @@ function deterministicParseBulkText(text: string): any[] {
       }
     }
 
-    return {
+    items.push({
       name: cleanName,
       category,
       quantity,
       unitCost,
-      condition,
-      seller: batchSeller || undefined,
-      date: batchDate || undefined,
-      paymentMethod: batchPaymentMethod || undefined,
+      condition: itemCondition,
+      seller: currentBatch.seller || undefined,
+      date: currentBatch.date || undefined,
+      paymentMethod: currentBatch.paymentMethod || 'Cash',
       healthPercent: category === 'Storage' ? healthPercent : undefined,
       tags,
-    };
-  });
+    });
+  }
+
+  return items;
 }
 
 async function callWithTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMsg: string): Promise<T> {
@@ -524,66 +682,50 @@ async function startServer() {
 Extract individual PC components, quantities, costs, and purchase metadata from the user's input text or images.
 Accept ANY text format: multi-line item blocks, bullet-separated notes, formatted headers (e.g. 'Seller: Roop | Date: 2024-05-22'), unstructured free-form lists, chat logs, single-line entries, or receipts.
 
-CRITICAL RULE: BATCH METADATA HEADERS vs HARDWARE LINE ITEMS:
-1. Lines indicating metadata for the batch (e.g., "Supplier: Roop", "Store: Best Buy", "Date: Oct 9th 2026", "Condition for all: new no box", "Payment: Cash") are NOT hardware items.
+CRITICAL RULE 1: BATCH METADATA HEADERS vs HARDWARE LINE ITEMS:
+1. Lines indicating metadata for the batch (e.g., "Supplier: Roop", "Store: Best Buy", "Date: Oct 9th 2026", "Condition for all: new no box", "Payment: Cash", or bulleted headers like "Zorn • Oct 1, 2025 • Cash") are NOT hardware items.
 2. ABSOLUTE PROHIBITION: NEVER output a JSON item representing a header!
    - ❌ WRONG: { "name": "Supplier: Roop", "category": "Other", "unitCost": 0 }
-   - ❌ WRONG: { "name": "Condition for all: new no box", "category": "Other" }
+   - ❌ WRONG: { "name": "Zorn • Oct 1, 2025 • Cash", "category": "Other" }
    - ❌ WRONG: { "name": "Date: Oct 9th 2026", "category": "Other" }
-3. CASCADING RULE:
-   - Extract the batch seller ("Roop"), batch date ("2026-10-09"), batch condition ("New No Box"), and batch payment ("Cash").
-   - INJECT these values into every extracted hardware component item in that batch.
-   - If an individual item states its own override (e.g. "5070ti used"), the item's individual condition takes precedence over the batch condition.
+3. MULTI-BATCH SUPPORT:
+   - The user's text may contain MULTIPLE sequential purchase batch headers interspersed throughout (e.g., 'Zorn • Oct 1, 2025 • Cash', followed by items, then 'Madcaps • Oct 1, 2025 • Cash', followed by items, then 'Master • Oct 1, 2025 • Cash', followed by items).
+   - Items inherit the seller, date, and payment method of the header immediately above them!
+   - When a new header appears, subsequent items belong to that new seller and date. DO NOT apply the first seller to all items across the entire list!
+   - If multiple hardware items appear under the same header before a new header appears, all of those items share that header's seller and date.
 
-2. MULTI-LINE & DELIMITED ITEM BLOCKS:
-   - Items are frequently formatted in 2-line blocks separated by bullets ('•'), pipes ('|'), commas, or dashes:
-     Example:
-       Motherboard • AM5 • ATX • White • New Open Box
-       $274.52 • 1 x Gigabyte X870E Aorus Elite WiFi7 ICE
-     -> This represents ONE SINGLE item:
-       - name: "Gigabyte X870E Aorus Elite WiFi7 ICE"
-       - category: "Motherboard"
-       - tags: ["AM5", "ATX", "White"]
-       - condition: "New Open Box"
-       - unitCost: 274.52
-       - quantity: 1
-   - NEVER split a multi-line product entry into two separate items! Combine the category/specs line and the price/quantity/model line into one complete component item.
+CRITICAL RULE 2: MULTI-LINE 2-LINE ITEM BLOCKS & CLEAN PRODUCT NAMES:
+- Items are frequently formatted in 2-line blocks separated by bullets ('•'), pipes ('|'), or dashes:
+  Example:
+    Motherboard • Intel • ATX • Black • Used No Box
+    $200 • 1 x ASUS ROG Maximus Z690 Hero
+  -> This represents ONE SINGLE item:
+    - name: "ASUS ROG Maximus Z690 Hero"
+    - category: "Motherboard"
+    - tags: ["Intel", "ATX", "Black"]
+    - condition: "Used No Box"
+    - unitCost: 200
+    - quantity: 1
+- ABSOLUTE RULE FOR 'name':
+  - Extract the pure hardware brand and model ONLY (e.g. 'ASUS ROG Maximus Z690 Hero', 'Gigabyte Z790 EAGLE AX', 'ASUS TUF Gaming Z790-PLUS WIFI', 'Gigabyte B760M C').
+  - NEVER prepend category ('Motherboard'), socket ('Intel', 'AM5'), form-factor ('ATX', 'mATX'), color ('Black', 'White'), or condition ('Used', 'New') to the 'name'!
+  - The specs on line 1 belong in 'category', 'tags', and 'condition', NOT inside 'name'.
 
-3. CLEAN PRODUCT NAME RULES:
-   - 'name': Pure hardware brand and model name ONLY (e.g. 'Gigabyte X870E Aorus Elite WiFi7 ICE', 'ASUS ROG Strix X870-A Gaming WiFi', 'Ryzen 7 7800X3D', 'RTX 4070 Super', '1TB NVMe GEN4 SSD').
-   - NEVER include category names (e.g. 'Motherboard •'), bullet symbols ('•', '-', '*'), prices ('$274.52'), or quantity markers ('1 x', '2x') in the 'name' field.
+CRITICAL RULE 3: FIELD FORMATS:
+- 'category': One of 'GPU', 'CPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooling', 'Fans', 'Accessories', or 'Other'.
+- 'seller': Concise seller or store name ONLY (e.g. 'Zorn', 'Madcaps', 'Facebook', 'Auctionwin', 'Master', 'Best Buy'). Maximum 1-3 words.
+- 'date': Purchase date formatted strictly as YYYY-MM-DD (e.g. 'Oct 1, 2025' -> '2025-10-01').
+- 'paymentMethod': One of 'Cash', 'E-Transfer', 'PayPal', 'Credit Card', 'Debit', 'Crypto', or 'Other'. Default to 'Cash' if not stated.
+- 'condition': Exactly one of 'Sealed', 'New Open Box', 'New No Box', 'Used Open Box', or 'Used No Box'.
+- 'quantity': Integer quantity (e.g. '1 x' -> 1). Default to 1.
+- 'unitCost': Exact numeric per-unit cost without currency symbols (e.g. 200, 66, 156). Default to 0 if unstated.
+- 'healthPercent': ONLY for Storage items when an explicit health percentage is stated (e.g. '98% health' -> 98).
+- 'tags': Array of sub-category tags matching allowed presets (e.g. ['Intel', 'ATX', 'Black'], ['AM5', 'White']).
 
-4. FIELD RULES:
-   - 'category': One of 'GPU', 'CPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooling', 'Fans', 'Accessories', or 'Other'.
-   - 'seller': Concise seller or store name ONLY (e.g. 'Outlut Electronics', 'Roop', 'Best Buy', 'Amazon', 'Memory Express'). Maximum 1-3 words. If no seller is mentioned or identifiable, leave empty ("").
-   - 'date': Purchase date formatted as YYYY-MM-DD (e.g. '2026-10-06'). If no date is found, leave empty ("").
-   - 'paymentMethod': One of 'Cash', 'E-Transfer', 'PayPal', 'Credit Card', 'Debit', 'Crypto', or 'Other'. Default to 'Cash' if not stated.
-   - 'condition': Exactly one of 'Sealed', 'New Open Box', 'New No Box', 'Used Open Box', or 'Used No Box'. Default to 'Used Open Box' if used/unspecified.
-   - 'quantity': Integer quantity (e.g. '1 x' -> 1, '2 x' -> 2, '3x' -> 3). Default to 1.
-   - 'unitCost': Exact numeric per-unit cost without currency symbols (e.g. 274.52). If cost is not mentioned, set to 0.
-   - 'healthPercent': ONLY for Storage items when an explicit health percentage is stated (e.g. '98% health' -> 98). Leave absent if not stated.
-   - 'tags': Preset sub-category tags matching allowed values:
-     * CPU: AM5, AM4, Intel
-     * Motherboard: AM5, AM4, Intel, ATX, mATX, ITX, Black, White
-     * RAM: DDR5, DDR4, Black, White, RGB, Non-RGB
-     * GPU: 50 Series, 40 Series, 30 Series, AMD
-     * Storage: GEN5, GEN4, GEN3, SATA
-     * PSU: ATX, SFX, ATX 3.0 / 3.1, Standard, Black, White
-     * Case: ATX, mATX, ITX, Black, White
-     * Cooling: 360mm, 240mm, Air Cooler, Black, White
-
-5. CANONICAL HARDWARE SHORTHAND EXPANSION RULES:
-   - When the user inputs shorthand, slang, or truncated model names, standardize the 'name' field into clean canonical PC industry conventions while strictly preserving ALL stated brand and specification details:
-     * CPU: Standardize brand and tier (e.g., "9800x3d" -> "AMD Ryzen 7 9800X3D", "7800x3d" -> "AMD Ryzen 7 7800X3D", "14700k" -> "Intel Core i7-14700K").
-     * GPU: Preserve specific AIB brand, tier, and model name cleanly (e.g., "msi 5080 trio" -> "MSI GeForce RTX 5080 Gaming Trio", "7900xtx" -> "Radeon RX 7900 XTX").
-     * RAM: Preserve exact sub-brands and specs (e.g., "T-Force RGB 32gb 6000 cl30" -> "T-Force Delta RGB 32GB (2x16GB) DDR5 6000MHz CL30"). Do not prepend parent companies unless explicitly typed.
-     * Motherboard: "b650 eagle" -> "Gigabyte B650 Eagle AX", "b650 tomahawk" -> "MSI MAG B650 Tomahawk WiFi".
-     * Storage: "990 pro 1tb" -> "Samsung 990 PRO 1TB Gen4 NVMe SSD", "sn850x 2tb" -> "WD_BLACK SN850X 2TB Gen4 NVMe SSD".
-     * PSU: "rm850x" -> "Corsair RM850x 850W Gold PSU".
-
-   - STRICT COLOR RULE: DO NOT guess, assume, or infer color tags (Black/White) unless explicitly stated in the input text! Never add "Black" or "White" into the name or tags unless the raw text explicitly specified it.
-   - VERBATIM NAMES: DO NOT attempt to clean, standardize, or alter the component names. If the user provides a name with specific suffixes like '(8C/16T)' or color descriptors like 'White', you MUST extract the Name EXACTLY as it is written in the raw text.
-   - TAG MAPPING: You must explicitly extract and map all subcategory tags provided in the text block headers (e.g., 'Black', 'White', 'RGB', '50 Series') directly into the JSON 'tags' array. Never ignore explicit color tags.
+CRITICAL RULE 4: CANONICAL HARDWARE SHORTHAND EXPANSION RULES:
+- When the user inputs shorthand or slang, standardize into clean canonical PC industry conventions while strictly preserving ALL stated brand and model details.
+- STRICT COLOR RULE: DO NOT guess or infer color tags (Black/White) unless explicitly stated in the input text!
+- VERBATIM NAMES: Preserve exact model names and hyphens (e.g. 'Z790-A', 'Z790-PLUS', 'B760-PLUS').
 
 ABSOLUTE NEGATIVE CONSTRAINT:
 NEVER output internal reasoning, commentary, or headers as items. Every item in the output array must represent a real hardware component.`;
@@ -593,17 +735,17 @@ NEVER output internal reasoning, commentary, or headers as items. Every item in 
         items: {
           type: Type.OBJECT,
           properties: {
-            name: { type: Type.STRING, description: "Full name of the component, e.g. Ryzen 7 7700" },
+            name: { type: Type.STRING, description: "Full name of the component, e.g. ASUS ROG Maximus Z690 Hero" },
             category: { type: Type.STRING, description: "Category: GPU, CPU, RAM, Storage, Motherboard, PSU, Case, Cooling, Fans, Accessories, or Other" },
             tags: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
-              description: "Array of sub-category tags matching allowed presets (e.g. ['AM5'], ['GEN4'], ['DDR5'], ['White'], ['SATA'])"
+              description: "Array of sub-category tags matching allowed presets (e.g. ['AM5'], ['Intel'], ['ATX'], ['Black'], ['White'])"
             },
             quantity: { type: Type.INTEGER, description: "Quantity of this item" },
             unitCost: { type: Type.NUMBER, description: "Exact cost per single unit as a decimal number without rounding" },
             condition: { type: Type.STRING, description: "Condition: Sealed, New Open Box, New No Box, Used Open Box, or Used No Box" },
-            seller: { type: Type.STRING, description: "Clean seller or store name ONLY (e.g. 'Roop', 'Best Buy'). Maximum 1-3 words. Never include explanations." },
+            seller: { type: Type.STRING, description: "Clean seller or store name ONLY (e.g. 'Zorn', 'Madcaps'). Maximum 1-3 words." },
             date: { type: Type.STRING, description: "Purchase date in YYYY-MM-DD format" },
             paymentMethod: { type: Type.STRING, description: "Payment method: Cash, E-Transfer, PayPal, Credit Card, etc." },
             healthPercent: { type: Type.INTEGER, description: "SSD health percentage (0-100) if mentioned for storage items" }
@@ -622,65 +764,20 @@ NEVER output internal reasoning, commentary, or headers as items. Every item in 
       const rawData = parseModelJsonResponse(response.text, 'array');
       const rawArray = Array.isArray(rawData) ? rawData : [];
 
-      // 1. Identify and extract batch metadata from any accidental header rows
-      let batchSellerOverride = '';
-      let batchDateOverride = '';
-      let batchConditionOverride = '';
-      let batchPaymentOverride = '';
-
+      // 1. Filter out any accidental header rows
       const nonHeaderItems = rawArray.filter((item: any) => {
         const name = String(item.name || '').trim();
         const isHeaderRow =
           /^(?:supplier|seller|vendor|store|date|condition(?:\s+for\s+all)?|payment|notes?)\s*:/i.test(name) ||
-          /^(?:batch\s+date|batch\s+condition|batch\s+seller)/i.test(name);
-
-        if (isHeaderRow) {
-          if (/^(?:supplier|seller|vendor|store)\s*:\s*(.*)/i.test(name)) {
-            batchSellerOverride = name.replace(/^(?:supplier|seller|vendor|store)\s*:\s*/i, '').trim();
-          } else if (/^(?:date)\s*:\s*(.*)/i.test(name)) {
-            const rawD = name.replace(/^(?:date)\s*:\s*/i, '').trim();
-            const parsedD = new Date(rawD);
-            if (!isNaN(parsedD.getTime())) {
-              batchDateOverride = parsedD.toISOString().split('T')[0];
-            } else {
-              batchDateOverride = rawD;
-            }
-          } else if (/^(?:condition(?:\s+for\s+all)?)\s*:\s*(.*)/i.test(name)) {
-            const rawC = name.replace(/^(?:condition(?:\s+for\s+all)?)\s*:\s*/i, '').trim().toLowerCase();
-            if (/sealed/i.test(rawC)) batchConditionOverride = 'Sealed';
-            else if (/new\s+open\s+box/i.test(rawC)) batchConditionOverride = 'New Open Box';
-            else if (/new\s+no\s+box/i.test(rawC)) batchConditionOverride = 'New No Box';
-            else if (/used\s+no\s+box/i.test(rawC)) batchConditionOverride = 'Used No Box';
-            else if (/used/i.test(rawC)) batchConditionOverride = 'Used Open Box';
-            else batchConditionOverride = 'New No Box';
-          } else if (/^(?:payment)\s*:\s*(.*)/i.test(name)) {
-            batchPaymentOverride = name.replace(/^(?:payment)\s*:\s*/i, '').trim();
-          }
-          return false; // Drop header row from line items
-        }
-        return true;
+          /^(?:batch\s+date|batch\s+condition|batch\s+seller)/i.test(name) ||
+          /^[•|·\s]*(?:[a-zA-Z0-9\s]+)\s*[•|·]\s*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|\d{4})[^\n]*[•|·]\s*(?:Cash|E-Transfer|PayPal|Credit Card)/i.test(name);
+        return !isHeaderRow;
       });
-
-      // Also harvest batch values from items if some items had them and others missed them
-      for (const item of nonHeaderItems) {
-        if (!batchSellerOverride && item.seller && String(item.seller).trim().length > 0) {
-          batchSellerOverride = String(item.seller).trim();
-        }
-        if (!batchDateOverride && item.date && String(item.date).trim().length > 0) {
-          batchDateOverride = String(item.date).trim();
-        }
-        if (!batchConditionOverride && item.condition && item.condition !== 'Used Open Box') {
-          batchConditionOverride = item.condition;
-        }
-        if (!batchPaymentOverride && item.paymentMethod) {
-          batchPaymentOverride = item.paymentMethod;
-        }
-      }
 
       const data = nonHeaderItems.map((item: any) => {
         const itemTags = Array.isArray(item.tags) ? item.tags : [];
         let cleanSeller = '';
-        const rawSeller = item.seller || item.vendor || batchSellerOverride;
+        const rawSeller = item.seller || item.vendor;
         if (rawSeller && typeof rawSeller === 'string') {
           let str = rawSeller.trim();
           if (str.includes('\n')) str = str.split('\n')[0].trim();
@@ -704,13 +801,11 @@ NEVER output internal reasoning, commentary, or headers as items. Every item in 
           cleanName = cleanName.replace(new RegExp(`^${escapedSeller}\\s+`, 'i'), '').trim();
         }
 
-        // Apply cascaded condition if item's condition was absent or fallback 'Used Open Box' and batchConditionOverride exists
-        let condition = item.condition || 'Used Open Box';
-        if ((!item.condition || item.condition === 'Used Open Box') && batchConditionOverride) {
-          condition = batchConditionOverride;
-        }
+        // Clean accidental spec / category prefixes prepended to name
+        cleanName = cleanExtractedName(cleanName);
 
         // Normalize condition
+        let condition = item.condition || 'Used Open Box';
         const condLower = String(condition).toLowerCase();
         if (/sealed/i.test(condLower)) condition = 'Sealed';
         else if (/new\s+open\s+box/i.test(condLower)) condition = 'New Open Box';
@@ -718,8 +813,9 @@ NEVER output internal reasoning, commentary, or headers as items. Every item in 
         else if (/used\s+no\s+box/i.test(condLower)) condition = 'Used No Box';
         else if (/used\s+open\s+box|used/i.test(condLower)) condition = 'Used Open Box';
 
-        const date = item.date || batchDateOverride || undefined;
-        const paymentMethod = item.paymentMethod || batchPaymentOverride || undefined;
+        // Normalize date to YYYY-MM-DD
+        const date = item.date ? (parseDateToIso(item.date) || item.date) : undefined;
+        const paymentMethod = item.paymentMethod || 'Cash';
 
         const { vendor: _v, ...restItem } = item;
         return {

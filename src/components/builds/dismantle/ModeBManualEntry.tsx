@@ -237,10 +237,11 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                               }
                               handleUpdatePart(part.id, { tags: newTags });
                             }}
-                            className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] px-2 ${
+                            data-active={isSelected}
+                            className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] px-2 h-[22px] min-h-[22px] rounded-md transition-all text-xs font-semibold border ${
                               isSelected
-                                ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.08] text-[#9FF8F4]'
-                                : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:bg-white/[0.08] hover:text-zinc-200'
+                                ? 'app-chip-active is-active text-[#B9EF68] border-[#B9EF68] bg-[#B9EF68]/10'
+                                : 'text-[#b1bac4] border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] hover:text-zinc-200 hover:border-white/20'
                             }`}
                           >
                             {tag}
@@ -272,10 +273,11 @@ export const ModeBManualEntry: React.FC<ModeBManualEntryProps> = ({
                           }
                           handleUpdatePart(part.id, { tags: newTags });
                         }}
-                        className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] px-2 ${
+                        data-active={isSelected}
+                        className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] px-2 h-[22px] min-h-[22px] rounded-md transition-all text-xs font-semibold border ${
                           isSelected
-                            ? 'border-[#83E5DF]/50 bg-[#83E5DF]/[0.08] text-[#9FF8F4]'
-                            : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:bg-white/[0.08] hover:text-zinc-200'
+                            ? 'app-chip-active is-active text-[#B9EF68] border-[#B9EF68] bg-[#B9EF68]/10'
+                            : 'text-[#b1bac4] border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] hover:text-zinc-200 hover:border-white/20'
                         }`}
                       >
                         {tag}

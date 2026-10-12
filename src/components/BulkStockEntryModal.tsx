@@ -223,17 +223,46 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
           cleanName = cleanName.replace(new RegExp(`^${escapedSeller}\\s+`, 'i'), '').trim();
         }
 
-        // Apply cascaded condition if item's condition was absent or default 'Used Open Box' and clientBatchCondition exists
-        let condition = item.condition || 'Used Open Box';
-        if ((!item.condition || item.condition === 'Used Open Box') && clientBatchCondition) {
-          condition = clientBatchCondition;
+        // Clean accidental leading category prefixes
+        cleanName = cleanName.replace(/^(?:Motherboard|CPU|GPU|RAM|Storage|PSU|Case|Cooling|Fans|Accessories|Other)\s*[•|·,\-\/:]?\s*/i, '');
+        // Clean accidental spec / condition prefixes prepended to name
+        cleanName = cleanName.replace(/^(?:Intel|AMD|AM5|AM4)\s+(?:ATX|mATX|Micro-ATX|ITX|Mini-ITX)\s+(?:Black|White)\s+(?:Used|New)?\s*/i, '');
+        cleanName = cleanName.replace(/^(?:Intel|AMD|AM5|AM4)\s+(?:ATX|mATX|Micro-ATX|ITX|Mini-ITX)\s*/i, '');
+        cleanName = cleanName.replace(/^(?:ATX|mATX|Micro-ATX|ITX|Mini-ITX)\s+(?:Black|White)\s*/i, '');
+        cleanName = cleanName.replace(/^(?:Black|White)\s+(?:Used|New)?\s*/i, '');
+        cleanName = cleanName.replace(/^(?:Used|New)\s+(?:Open\s+Box|No\s+Box)\s*/i, '');
+        cleanName = cleanName.replace(/^(?:Used|New)\s+/i, '');
+        cleanName = cleanName.replace(/^[•|·:\s]+|[•|·:\s]+$/g, '').trim();
+        cleanName = cleanName.replace(/\s{2,}/g, ' ');
+
+        let condition = item.condition || clientBatchCondition || 'Used Open Box';
+
+        // Parse and ensure YYYY-MM-DD date format
+        let rawDate = item.date || clientBatchDate || undefined;
+        let formattedDate: string | undefined = undefined;
+        if (rawDate) {
+          const trimmedD = String(rawDate).trim();
+          const isoMatch = trimmedD.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+          if (isoMatch) {
+            formattedDate = `${isoMatch[1]}-${isoMatch[2].padStart(2, '0')}-${isoMatch[3].padStart(2, '0')}`;
+          } else {
+            const d = new Date(trimmedD);
+            if (!isNaN(d.getTime()) && d.getFullYear() > 2000) {
+              const y = d.getFullYear();
+              const m = String(d.getMonth() + 1).padStart(2, '0');
+              const day = String(d.getDate()).padStart(2, '0');
+              formattedDate = `${y}-${m}-${day}`;
+            } else {
+              formattedDate = trimmedD;
+            }
+          }
         }
 
         return {
           ...item,
           name: cleanName || item.name,
           seller: (cleanSeller || undefined) as Platform | undefined,
-          date: item.date || clientBatchDate || undefined,
+          date: formattedDate,
           paymentMethod: item.paymentMethod || clientBatchPayment || undefined,
           condition: condition as Condition,
           healthPercent: (item.category === 'Storage' && hasHealthMention) ? item.healthPercent : undefined,
@@ -703,10 +732,10 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
                                     type="button"
                                     onClick={() => toggleTag(idx, tag)}
                                     data-active={isSelected}
-                                    className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] px-2.5 h-[26px] min-h-[26px] rounded-md transition-all text-xs font-sans font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#B9EF68] ${
+                                    className={`app-chip app-subcategory-chip outline-none [-webkit-tap-highlight-color:transparent] px-2.5 h-[26px] min-h-[26px] rounded-md transition-all text-xs font-sans font-semibold border ${
                                       isSelected
-                                        ? 'app-chip-active text-[#B9EF68] border-[#B9EF68]'
-                                        : 'text-[#b1bac4] hover:text-zinc-200'
+                                        ? 'app-chip-active is-active text-[#B9EF68] border-[#B9EF68] bg-[#B9EF68]/10'
+                                        : 'text-[#b1bac4] border-white/[0.08] hover:text-zinc-200 hover:border-white/20'
                                     }`}
                                   >
                                     <span className={isSelected ? 'text-[#B9EF68]' : 'text-[#b1bac4]'}>{tag}</span>
