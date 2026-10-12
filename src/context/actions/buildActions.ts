@@ -8,7 +8,7 @@ import {
   PurchaseEntry,
   TransactionLogItem,
 } from '../../types';
-import { calculateBuildPartsCost, calculateUnassignedQuantityStrict, computeUnresolvedLegacyReservation, formatCurrency, getPurchaseEntryRemainingQuantity, getUnassignedBatches, parseDateLocal } from '../../utils/helpers';
+import { calculateBuildPartsCost, calculateUnassignedQuantityStrict, computeUnresolvedLegacyReservation, formatCurrency, getPurchaseEntryRemainingQuantity, getUnassignedBatches, parseDateLocal, roundToCents } from '../../utils/helpers';
 import { getBuildPresentation } from '../../utils/buildPresentation';
 import { AcquiredPCComponentInput, PurchasePCData, SellBuildData } from '../types';
 import {
@@ -777,8 +777,29 @@ export const handleRemovePartFromBuild = (
 
     const targetComp = prev.components.find((c) => c.id === componentId);
     if (!targetComp) {
-      // Orphaned / unlinked part whose component was deleted from inventory:
-      // Remove it cleanly from the build so the user is never locked out
+      // If the component was pruned or deleted from inventory while allocated to this build,
+      // restore it back into inventory so unassigning returns it to loose stock
+      const restoredEntryId = partToRemove.purchaseEntryId || `pe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const restoredCompId = componentId || `comp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const restoredEntry: PurchaseEntry = {
+        id: restoredEntryId,
+        date: new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }),
+        condition: 'Used',
+        quantity: partToRemove.quantity,
+        unitPrice: partToRemove.unitCostAtAssignment,
+        totalPrice: roundToCents(partToRemove.quantity * partToRemove.unitCostAtAssignment),
+        paymentMethod: 'Cash',
+        platform: 'Build Unassignment',
+        notes: `Returned from build: ${targetBuild.name}`,
+      };
+      const restoredComp: InventoryComponent = {
+        id: restoredCompId,
+        name: partToRemove.componentName || 'Unassigned Component',
+        category: partToRemove.category,
+        specifications: '',
+        assignedCount: 0,
+        purchaseHistory: [restoredEntry],
+      };
       const updatedParts = targetBuild.parts.filter((_, idx) => idx !== partIndex);
       const updatedBuilds = prev.builds.map((build) => {
         if (build.id === buildId) {
@@ -793,6 +814,7 @@ export const handleRemovePartFromBuild = (
         prev,
         {
           ...prev,
+          components: [restoredComp, ...prev.components],
           builds: updatedBuilds,
         },
         buildId
@@ -2694,9 +2716,64 @@ export const handleDismantleBuild = (
     return { nextState: prev, success: false, error: 'Build is not eligible for dismantling.' };
   }
 
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+
+  // Ensure all parts have their component and purchase entry present in inventory
+  let effectiveComponents = [...prev.components];
+  for (const part of targetBuild.parts || []) {
+    let comp = effectiveComponents.find((c) => c.id === part.componentId);
+    if (!comp) {
+      const restoredEntryId = part.purchaseEntryId || `pe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const restoredCompId = part.componentId || `comp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const restoredEntry: PurchaseEntry = {
+        id: restoredEntryId,
+        date: today,
+        condition: 'Used',
+        quantity: part.quantity,
+        unitPrice: part.unitCostAtAssignment,
+        totalPrice: roundToCents(part.quantity * part.unitCostAtAssignment),
+        paymentMethod: 'Cash',
+        platform: 'Build Dismantle',
+        notes: `Returned from dismantled build: ${targetBuild.name}`,
+      };
+      comp = {
+        id: restoredCompId,
+        name: part.componentName || 'Restored Component',
+        category: part.category,
+        specifications: '',
+        assignedCount: part.quantity,
+        purchaseHistory: [restoredEntry],
+      };
+      effectiveComponents.push(comp);
+    } else {
+      let pe = comp.purchaseHistory?.find((entry) => entry.id === part.purchaseEntryId);
+      if (!pe) {
+        const restoredEntryId = part.purchaseEntryId || `pe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const restoredEntry: PurchaseEntry = {
+          id: restoredEntryId,
+          date: today,
+          condition: 'Used',
+          quantity: part.quantity,
+          unitPrice: part.unitCostAtAssignment,
+          totalPrice: roundToCents(part.quantity * part.unitCostAtAssignment),
+          paymentMethod: 'Cash',
+          platform: 'Build Dismantle',
+          notes: `Returned from dismantled build: ${targetBuild.name}`,
+        };
+        const updatedHistory = [restoredEntry, ...(comp.purchaseHistory || [])];
+        const updatedComp = {
+          ...comp,
+          assignedCount: (comp.assignedCount ?? 0) + part.quantity,
+          purchaseHistory: updatedHistory,
+        };
+        effectiveComponents = effectiveComponents.map((c) => (c.id === comp!.id ? updatedComp : c));
+      }
+    }
+  }
+
   // VALIDATE ORDINARY DISMANTLE ALLOCATIONS
   for (const part of targetBuild.parts || []) {
-    const component = prev.components.find((c) => c.id === part.componentId);
+    const component = effectiveComponents.find((c) => c.id === part.componentId);
     if (!component) {
       return { nextState: prev, success: false, error: `Component ${part.componentName} not found in inventory.` };
     }
@@ -2749,15 +2826,13 @@ export const handleDismantleBuild = (
     }
   }
 
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
-
   // Unassign allocated parts from inventory components
   const qtyByCompId: Record<string, number> = {};
   targetBuild.parts.forEach((p) => {
     qtyByCompId[p.componentId] = (qtyByCompId[p.componentId] || 0) + p.quantity;
   });
 
-  const currentComponents = prev.components.map((comp) => {
+  const currentComponents = effectiveComponents.map((comp) => {
     const allocatedQty = qtyByCompId[comp.id];
     if (allocatedQty !== undefined && allocatedQty > 0) {
       const currentAssigned = comp.assignedCount ?? 0;

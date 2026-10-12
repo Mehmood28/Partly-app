@@ -300,9 +300,18 @@
 
 /* Reference layouts. A single system for the app, records, and all dialogs. */
 body { font-variant-numeric:tabular-nums; }
-button { cursor:pointer; }
+button { cursor:pointer; -webkit-tap-highlight-color:transparent; }
 button:disabled { cursor:not-allowed; }
 button:focus-visible, a:focus-visible { outline:2px solid var(--app-lime); outline-offset:3px; }
+.app-button:active,
+.privacy-toggle:active,
+.stock-admin-toolbar button:active,
+.session-toolbar > button:active {
+  transform: scale(0.97);
+}
+.partly-navigation button:active {
+  transform: scale(0.95);
+}
 .app-main { padding:0 24px calc(72px + env(safe-area-inset-bottom)); }
 .app-panel { background:linear-gradient(120deg,#111719,#101618); }
 .app-page-title { font-size:clamp(21px,2.4vw,30px); font-weight:750; letter-spacing:-.025em; }

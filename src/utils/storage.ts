@@ -492,6 +492,11 @@ export const areAppStatesEqual = (a: AppState, b: AppState): boolean => {
   try {
     if (a === b) return true;
     if (!a || !b) return false;
+    if (a.monthlyGoal !== b.monthlyGoal) return false;
+    if (a.components.length !== b.components.length) return false;
+    if (a.builds.length !== b.builds.length) return false;
+    if (a.transactions.length !== b.transactions.length) return false;
+    if (a.components.length === 0 && a.builds.length === 0 && a.transactions.length === 0) return true;
     return canonicalStringify(a) === canonicalStringify(b);
   } catch {
     return false;
@@ -594,7 +599,13 @@ export const executePersistedStateChange = async (
   }
 
   try {
-    await persistState(candidateState);
+    // Non-blocking background persistence so the UI state transition is immediate
+    const promise = persistState(candidateState);
+    if (promise && typeof (promise as Promise<unknown>).catch === 'function') {
+      (promise as Promise<unknown>).catch((err) => {
+        console.error('Background persistence error:', err);
+      });
+    }
   } catch {
     return {
       success: false,

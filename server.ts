@@ -625,6 +625,9 @@ async function forwardToDiscordWebhook(webhookUrl: string, formData: FormData) {
   if (response.status === 401 || response.status === 404) {
     throw new Error('Invalid or deleted Discord webhook URL.');
   }
+  if (response.status === 413) {
+    throw new Error('Image attachment exceeds Discord webhook file limit (8MB). Please compress or capture at lower resolution.');
+  }
   if (response.status === 429) {
     throw new Error(`Discord rate limit reached: ${errorDetails || 'Too many requests. Please wait a moment.'}`);
   }
@@ -926,10 +929,58 @@ Given a customer's build prompt and the current available in-stock inventory:
     }
   });
 
-  app.post('/api/generate-tier-builds', async (req, res) => {
-    try {
-      const { inventory, seed } = req.body;
+function deterministicGenerateTierBuilds(inventory: any[]): any[] {
+  if (!Array.isArray(inventory) || inventory.length === 0) return [];
 
+  const getPartsByCategory = (cat: string) =>
+    inventory.filter((item) => (item.category || '').toLowerCase() === cat.toLowerCase());
+
+  const gpus = getPartsByCategory('GPU').sort((a, b) => (b.unitCost || 0) - (a.unitCost || 0));
+  const cpus = getPartsByCategory('CPU').sort((a, b) => (b.unitCost || 0) - (a.unitCost || 0));
+  const mobos = getPartsByCategory('Motherboard').sort((a, b) => (b.unitCost || 0) - (a.unitCost || 0));
+  const rams = getPartsByCategory('RAM').sort((a, b) => (b.unitCost || 0) - (a.unitCost || 0));
+  const storages = getPartsByCategory('Storage').sort((a, b) => (b.unitCost || 0) - (a.unitCost || 0));
+  const psus = getPartsByCategory('PSU').sort((a, b) => (b.unitCost || 0) - (a.unitCost || 0));
+  const cases = getPartsByCategory('Case').sort((a, b) => (b.unitCost || 0) - (a.unitCost || 0));
+  const coolings = getPartsByCategory('Cooling').sort((a, b) => (b.unitCost || 0) - (a.unitCost || 0));
+
+  const pickForTier = (arr: any[], index: number) => {
+    if (arr.length === 0) return undefined;
+    return arr[Math.min(index, arr.length - 1)];
+  };
+
+  const tiers = [
+    { tier: 'tier1', tierName: 'HIGH-END FLAGSHIP', index: 0 },
+    { tier: 'tier2', tierName: 'MID-RANGE PERFORMANCE', index: Math.floor(Math.max(1, gpus.length / 2)) },
+    { tier: 'tier3', tierName: 'ENTRY / BUDGET', index: Math.max(0, gpus.length - 1) },
+  ];
+
+  return tiers.map(({ tier, tierName, index }) => {
+    const gpu = pickForTier(gpus, index);
+    const cpu = pickForTier(cpus, index);
+    const mobo = pickForTier(mobos, index);
+    const ram = pickForTier(rams, index);
+    const storage = pickForTier(storages, index);
+    const psu = pickForTier(psus, index);
+    const cCase = pickForTier(cases, index);
+    const cooling = pickForTier(coolings, index);
+
+    const partIds = [gpu?.id, cpu?.id, mobo?.id, ram?.id, storage?.id, psu?.id, cCase?.id, cooling?.id].filter(Boolean);
+    const buildName = cpu && gpu ? `${cpu.name} + ${gpu.name}` : cpu ? cpu.name : gpu ? gpu.name : `${tierName} Build`;
+
+    return {
+      tier,
+      tierName,
+      buildName,
+      partIds,
+      notes: 'Deterministic hardware synergy optimized from current stock.',
+    };
+  });
+}
+
+  app.post('/api/generate-tier-builds', async (req, res) => {
+    const { inventory, seed } = req.body;
+    try {
       const systemInstruction = `You are a professional PC building engineer optimizing pre-built inventory into 3 distinct market tiers:
 1. Tier 1: "High-End Flagship" - Premium gaming/creator rig using the highest-tier CPU, top GPU (e.g. RTX 5080/4090/4080/7900XTX), 360mm/240mm AIO cooler, 32GB/64GB high-speed RAM, fast Gen4/Gen5 NVMe, high-wattage PSU (850W-1000W+).
 2. Tier 2: "Mid-Range Performance" - The ultimate 1440p value/sweet-spot gaming rig (e.g. RTX 4070/4060Ti/RX 7800XT with Ryzen 5/7 or Intel i5/i7, 32GB RAM, 1TB-2TB NVMe, 750W PSU).
@@ -973,7 +1024,16 @@ RULES FOR EACH TIER:
       const builds = parseModelJsonResponse(response.text, 'array');
       res.json({ builds });
     } catch (err: any) {
-      console.error(err);
+      console.error('AI tier build generation error:', err?.message || err);
+      try {
+        const fallbackBuilds = deterministicGenerateTierBuilds(inventory);
+        if (fallbackBuilds.length > 0) {
+          console.info('[Tier Builds] Falling back to deterministic tier allocation.');
+          return res.json({ builds: fallbackBuilds });
+        }
+      } catch (fallbackErr) {
+        console.error('Deterministic tier fallback error:', fallbackErr);
+      }
       res.status(500).json({ error: err.message || 'Error generating tier builds' });
     }
   });
@@ -1038,6 +1098,12 @@ RULES FOR EACH TIER:
         parsedImage = parseDataUri(imageUrl);
       }
 
+      if (parsedImage && parsedImage.buffer.length > 7.5 * 1024 * 1024) {
+        return res.status(400).json({
+          error: 'Build photo is too large for Discord webhook (max 7.5MB). Please resize or capture at lower resolution.'
+        });
+      }
+
       const embed: any = {
         author: {
           name: 'Partly',
@@ -1098,6 +1164,12 @@ RULES FOR EACH TIER:
       const parsedImage = parseDataUri(imageBase64);
       if (!parsedImage) {
         return res.status(400).json({ error: 'Invalid image data URI format.' });
+      }
+
+      if (parsedImage.buffer.length > 7.5 * 1024 * 1024) {
+        return res.status(400).json({
+          error: 'Build card image is too large for Discord webhook (max 7.5MB). Please resize or compress.'
+        });
       }
 
       const fileName = `build-card.${parsedImage.ext}`;

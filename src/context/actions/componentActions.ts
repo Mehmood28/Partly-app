@@ -1304,35 +1304,65 @@ export const handleDeleteComponent = (
 
   const batches = getAllBatchesWithRemaining(existing, prev.builds);
 
-  // 4. Handle unresolved legacy allocations conservatively
-  const explicitSum = batches.reduce((sum, b) => sum + b.allocatedQuantity, 0);
-  let unlinkedFromBuilds = 0;
-  (prev.builds || []).forEach(b => {
-    (b.parts || []).forEach(p => {
-      if (p.componentId === id) {
-        const qty = Number(p.quantity) || 0;
-        if (!p.purchaseEntryId || !existing.purchaseHistory?.some(e => e.id === p.purchaseEntryId)) {
-          unlinkedFromBuilds += qty;
-        }
-      }
-    });
-  });
-  const unlinkedAssigned = Math.max(0, (Number(existing.assignedCount) || 0) - explicitSum, unlinkedFromBuilds);
-  if (unlinkedAssigned > 0) {
-    return { nextState: prev, success: false, error: `Cannot delete component. It has ${unlinkedAssigned} unresolved legacy allocations.` };
+  // 1. Calculate allocated and available quantities for this exact component ID
+  const totalAllocated = batches.reduce((sum, b) => sum + (Number(b.entry.quantity) - b.availableQuantity), 0);
+  const totalAvailable = batches.reduce((sum, b) => sum + b.availableQuantity, 0);
+
+  // 2. If NO units are allocated to any active build, fully delete the component
+  if (totalAllocated === 0) {
+    return {
+      nextState: {
+        ...prev,
+        components: prev.components.filter((c) => c.id !== id),
+      },
+      success: true,
+    };
   }
 
-  const totalUsed = batches.reduce((sum, b) => sum + (Number(b.entry.quantity) - b.availableQuantity), 0);
-  if (totalUsed > 0) {
-    return { nextState: prev, success: false, error: `Cannot delete component. ${totalUsed} units are currently allocated to live builds.` };
+  // 3. If all units are already allocated (0 unallocated stock remaining in inventory),
+  // deleting cannot free any unallocated stock.
+  if (totalAvailable <= 0) {
+    return {
+      nextState: prev,
+      success: false,
+      error: `Cannot delete component. All ${totalAllocated} unit(s) are currently allocated to live builds.`,
+    };
   }
+
+  // 4. If some units are allocated to builds and some units are unallocated in stock:
+  // Allow deleting the unallocated portion!
+  // Retain only the purchase batches/quantities that are allocated to live builds.
+  const updatedHistory = (existing.purchaseHistory || [])
+    .map((pe) => {
+      const batch = batches.find((b) => b.entry.id === pe.id);
+      if (!batch) return null;
+      const allocatedInBatch = Number(pe.quantity) - batch.availableQuantity;
+      if (allocatedInBatch <= 0) {
+        // Completely unallocated batch: remove it
+        return null;
+      }
+      // Partially or fully allocated batch: retain allocated quantity
+      return {
+        ...pe,
+        quantity: allocatedInBatch,
+        totalPrice: roundToCents(allocatedInBatch * pe.unitPrice),
+      };
+    })
+    .filter((pe): pe is PurchaseEntry => pe !== null);
+
+  const updatedComponent: InventoryComponent = {
+    ...existing,
+    assignedCount: totalAllocated,
+    purchaseHistory: updatedHistory,
+    unresolvedLegacyReservationByPurchaseEntryId: undefined,
+  };
 
   return {
     nextState: {
       ...prev,
-      components: prev.components.filter((c) => c.id !== id),
+      components: prev.components.map((c) => (c.id === id ? updatedComponent : c)),
     },
-    success: true
+    success: true,
   };
 };
 
@@ -1584,28 +1614,42 @@ export const handleDeletePurchaseEntry = (
     return { nextState: prev, success: false, error: 'Purchase entry not found.' };
   }
 
-  const explicitSum = batches.reduce((sum, b) => sum + b.allocatedQuantity, 0);
-  let unlinkedFromBuilds = 0;
-  (prev.builds || []).forEach(b => {
-    (b.parts || []).forEach(p => {
-      if (p.componentId === componentId) {
-        const qty = Number(p.quantity) || 0;
-        if (!p.purchaseEntryId || !existing.purchaseHistory?.some(e => e.id === p.purchaseEntryId)) {
-          unlinkedFromBuilds += qty;
-        }
-      }
-    });
-  });
-  const unlinkedAssigned = Math.max(0, (Number(existing.assignedCount) || 0) - explicitSum, unlinkedFromBuilds);
-  if (unlinkedAssigned > 0) {
-    return { nextState: prev, success: false, error: `Cannot delete purchase entry. Component has ${unlinkedAssigned} unresolved legacy allocations.` };
-  }
-
   const totalUsed = Number(batch.entry.quantity) - batch.availableQuantity;
-  if (totalUsed > 0) {
-    return { nextState: prev, success: false, error: `Cannot delete purchase entry. ${totalUsed} units are currently allocated to live builds.` };
+  if (totalUsed > 0 && batch.availableQuantity === 0) {
+    return { nextState: prev, success: false, error: `Cannot delete purchase entry. All ${totalUsed} unit(s) in this batch are currently allocated to live builds.` };
   }
 
+  // If partially allocated (e.g. entry had 2 units, 1 is allocated), trim the entry to its allocated quantity
+  if (totalUsed > 0 && batch.availableQuantity > 0) {
+    return {
+      nextState: {
+        ...prev,
+        components: prev.components.map((c) => {
+          if (c.id === componentId) {
+            return {
+              ...c,
+              purchaseHistory: (c.purchaseHistory || [])
+                .map((pe) => {
+                  if (pe.id === entryId) {
+                    return {
+                      ...pe,
+                      quantity: totalUsed,
+                      totalPrice: roundToCents(totalUsed * pe.unitPrice),
+                    };
+                  }
+                  return pe;
+                })
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+            };
+          }
+          return c;
+        }),
+      },
+      success: true,
+    };
+  }
+
+  // Fully unallocated batch (totalUsed === 0): remove the entry completely
   return {
     nextState: {
       ...prev,

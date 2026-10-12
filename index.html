@@ -23,29 +23,27 @@
     </style>
     <script>
       // Early global error suppression strictly for sandbox iframe cross-origin access warnings
-      window.addEventListener(
-        'error',
-        function (event) {
-          const msg = String(event.message || (event.error && event.error.message) || '');
-          const isCrossOriginFrameNoise =
-            msg.includes('cross-origin frame') ||
-            (msg.includes('Blocked a frame') && msg.includes('cross-origin'));
-          if (isCrossOriginFrameNoise) {
-            event.stopImmediatePropagation();
-            event.preventDefault();
-            return false;
-          }
-        },
-        true
-      );
+      if (window.self !== window.top) {
+        window.addEventListener(
+          'error',
+          function (event) {
+            const msg = String(event.message || (event.error && event.error.message) || '');
+            const isCrossOriginFrameNoise =
+              msg.includes('cross-origin frame') ||
+              (msg.includes('Blocked a frame') && msg.includes('cross-origin'));
+            if (isCrossOriginFrameNoise) {
+              event.stopImmediatePropagation();
+              event.preventDefault();
+              return false;
+            }
+          },
+          true
+        );
+      }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
-    <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    </noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/png" href="/partly-icon-48.png" sizes="48x48" />
     <link rel="apple-touch-icon" href="/partly-icon-180.png" sizes="180x180" />

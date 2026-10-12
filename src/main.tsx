@@ -60,8 +60,8 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-// Register service worker for offline availability
-if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+// Register service worker for offline availability in production
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((err) => {
       console.warn('ServiceWorker registration skipped:', err);

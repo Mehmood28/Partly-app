@@ -45,8 +45,8 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({ isSessionHistoryOpen,
           <div><h1>Partly</h1></div>
         </div>
         <div className="masthead-metrics">
-          <div><PackageOpen /><span>Inventory<strong>{formatCurrency(totalStockValuation)}</strong></span></div>
-          <div><TrendingUp /><span>Profit<strong className={getProfitTextColor(monthProfit)}>{formatSignedCurrency(monthProfit)}</strong></span></div>
+          <div><PackageOpen /><span>Inventory<strong className="tabular-nums">{formatCurrency(totalStockValuation)}</strong></span></div>
+          <div><TrendingUp /><span>Profit<strong className={`tabular-nums ${getProfitTextColor(monthProfit)}`}>{formatSignedCurrency(monthProfit)}</strong></span></div>
         </div>
         <button type="button" onClick={handleTogglePrivacy} aria-pressed={hideSupplierNames}
           aria-label={hideSupplierNames ? 'Show supplier names' : 'Hide supplier names'} className="privacy-toggle">

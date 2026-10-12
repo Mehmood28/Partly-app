@@ -146,7 +146,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
               <h3 className="stock-name">
                 {String(component.name || '')}
               </h3>
-              <span className="stock-total">{formatCurrency(unassignedVal)}</span>
+              <span className="stock-total tabular-nums">{formatCurrency(unassignedVal)}</span>
             </div>
             <div className="stock-summary">
               {(() => {
@@ -334,7 +334,14 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
       <ConfirmModal
         isOpen={showDeleteConfirm && isActive}
         title="Delete Component"
-        message={`Are you sure you want to delete "${String(component.name || "")}"? This will remove the component and its purchase history from inventory.`}
+        message={(() => {
+          const totalQty = (component.purchaseHistory || []).reduce((sum, e) => sum + (Number(e.quantity) || 0), 0);
+          const allocatedQty = Math.max(0, totalQty - unassignedQty);
+          if (allocatedQty > 0 && unassignedQty > 0) {
+            return `Are you sure you want to delete "${String(component.name || '')}" from stock? ${unassignedQty} unallocated unit(s) will be removed from inventory. ${allocatedQty} unit(s) will remain assigned to active builds.`;
+          }
+          return `Are you sure you want to delete "${String(component.name || "")}"? This will remove the component and its purchase history from inventory.`;
+        })()}
         confirmText="Delete Component"
         onConfirm={() => {
           const result = onDeleteComponent?.(component.id);
@@ -355,8 +362,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
         confirmText="Delete Entry"
         onConfirm={() => {
           if (deletingEntryId) {
-            const compId = deletingEntryId ? component.purchaseHistory.find(e => e.id === deletingEntryId)?._originalComponentId || component.id : component.id;
-            const result = onDeletePurchaseEntry?.(compId, deletingEntryId);
+            const result = onDeletePurchaseEntry?.(component.id, deletingEntryId);
             if (result && !result.success) {
               showToast(result.error || 'Cannot delete purchase entry', 'error');
             } else {
