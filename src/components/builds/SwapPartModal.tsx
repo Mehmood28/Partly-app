@@ -1,4 +1,4 @@
-import React, { useState, useDeferredValue } from 'react';
+import React, { useState, useDeferredValue, useEffect } from 'react';
 import { PCBuild, PCBuildPart } from '../../types';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useInventory } from '../../context/InventoryContext';
@@ -34,6 +34,15 @@ export const SwapPartModal: React.FC<SwapPartModalProps> = ({ build, currentPart
     date: string;
     unitPrice: number;
   } | null>(null);
+
+  useEffect(() => {
+    setSearchQuery('');
+    setActiveSubTags([]);
+    setSortBy('newest-purchase');
+    setExpandedPartId(null);
+    setErrorMsg(null);
+    setPendingSwap(null);
+  }, [build?.id, currentPart?.componentId, currentPart?.purchaseEntryId, isOpen]);
 
   const handleSubTagToggle = (tag: string) => {
     setActiveSubTags((prev) => {

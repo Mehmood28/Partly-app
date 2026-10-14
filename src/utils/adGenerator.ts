@@ -30,7 +30,7 @@ export function generateMarketplaceAd(
   const psu = getPartsStr('PSU');
   const pcCase = getPartsStr('Case');
   const fans = getPartsStr('Fans');
-  const extras = getPartsStr('Extras');
+  const extras = [getPartsStr('Accessories'), getPartsStr('Other'), getPartsStr('Extras')].filter(Boolean).join(' + ') || null;
 
   let specs = '';
   if (gpu) specs += `\n■ GPU: ${gpu}`;

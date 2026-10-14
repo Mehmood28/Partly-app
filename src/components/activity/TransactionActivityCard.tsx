@@ -324,6 +324,7 @@ export const TransactionActivityCard: React.FC<TransactionActivityCardProps> = R
             <TransactionCardActions
               tx={tx}
               isPartSale={isPartSale}
+              canEdit={!isPCPurchase}
               onEdit={onEdit}
               onDelete={onDelete}
               onRelistPart={() => setIsRelistConfirmOpen(true)}

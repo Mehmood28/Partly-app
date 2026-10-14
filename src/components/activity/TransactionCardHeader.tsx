@@ -4,6 +4,7 @@ import { InventoryComponent, TransactionLogItem } from '../../types';
 import {
   formatCurrency,
   normalizeTag,
+  formatReadableDate,
 } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { usePrivacy } from '../../context/PrivacyContext';
@@ -85,7 +86,7 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
       <button type="button" className="record-header sold-part-header" onClick={onToggle} aria-expanded={isExpanded}>
         <div className="sold-part-title-row">
           <h3>{displayTitle}</h3>
-          <time>{String(recordedDate || '').split('T')[0]}</time>
+          <time>{formatReadableDate(recordedDate) || String(recordedDate || '').split('T')[0]}</time>
           {isExpanded ? <ChevronUp /> : <ChevronDown />}
         </div>
         <div className="sold-part-status-row">
@@ -112,7 +113,7 @@ export const TransactionCardHeader: React.FC<TransactionCardHeaderProps> = ({
 
   return (
     <button type="button" className="record-header" onClick={onToggle} aria-expanded={isExpanded}>
-      <div className="record-topline"><StatusIcon className="h-4 w-4" /><span>{subCategoryLabel}</span><time>{String(recordedDate || '').split('T')[0]}</time>{isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}</div>
+      <div className="record-topline"><StatusIcon className="h-4 w-4" /><span>{subCategoryLabel}</span><time>{formatReadableDate(recordedDate) || String(recordedDate || '').split('T')[0]}</time>{isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}</div>
       <h3>{displayTitle}</h3>
       {isPurchase ? (
         <dl className="record-purchase-fields">{fields.map(f => <div key={f.label}><dt>{f.label}</dt><dd>{f.value}</dd></div>)}<div className="record-paid"><dt>Paid</dt><dd>{formatCurrency(tx.totalAmount)}</dd></div></dl>

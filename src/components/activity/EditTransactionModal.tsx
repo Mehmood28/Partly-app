@@ -7,6 +7,7 @@ import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useToast } from '../../context/ToastContext';
 import { prepareTransactionEdit } from './transactionEditParsers';
 import { getCleanTransactionTitle, parseBatchItem, inferCategory, ParsedBatchItem } from './activityHelpers';
+import { CustomSelect } from '../ui/CustomSelect';
 import { roundToCents, formatCurrency } from '../../utils/helpers';
 
 interface EditTransactionModalProps {
@@ -344,12 +345,14 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
               <input
                 type="text"
                 required
+                readOnly={isMasked}
                 value={isMasked && !titleEdited ? getMaskedTitle(editTitle, editSeller) : editTitle}
                 onChange={(e) => {
+                  if (isMasked) return;
                   setTitleEdited(true);
                   setEditTitle(e.target.value);
                 }}
-                className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
+                className={`app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans ${isMasked ? 'opacity-70 cursor-not-allowed' : ''}`}
                 placeholder={isMasked ? "e.g. Purchased" : "e.g. Purchased: Facebook Marketplace"}
               />
             </div>
@@ -359,12 +362,14 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
               <input
                 type="text"
                 required
+                readOnly={isMasked}
                 value={isMasked && !summaryEdited ? getMaskedSummary(editItemSummary, editSeller) : editItemSummary}
                 onChange={(e) => {
+                  if (isMasked) return;
                   setSummaryEdited(true);
                   setEditItemSummary(e.target.value);
                 }}
-                className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
+                className={`app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans ${isMasked ? 'opacity-70 cursor-not-allowed' : ''}`}
                 placeholder="e.g. RTX 4070 Super 12GB"
               />
             </div>
@@ -442,12 +447,16 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
 
               <div>
                 <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Payment Method</label>
-                <input
-                  type="text"
+                <CustomSelect
                   value={editPaymentMethod}
-                  onChange={(e) => setEditPaymentMethod(e.target.value)}
-                  className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
-                  placeholder="e.g. Cash / E-Transfer"
+                  onChange={(val) => setEditPaymentMethod(val)}
+                  options={(() => {
+                    const baseOpts = ['Cash', 'E-Transfer', 'Credit Card', 'Trade-In'];
+                    const opts = editPaymentMethod && !baseOpts.includes(editPaymentMethod)
+                      ? [...baseOpts, editPaymentMethod]
+                      : baseOpts;
+                    return opts.map(pm => ({ value: pm, label: pm }));
+                  })()}
                 />
               </div>
             </div>

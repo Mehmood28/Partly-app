@@ -30,6 +30,28 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
   const [taxPercent, setTaxPercent] = useState<string>('0');
   const [healthPercent, setHealthPercent] = useState<string>('');
 
+  const resetForm = React.useCallback(() => {
+    setDate(new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }));
+    setCondition('New Open Box');
+    setQuantity('1');
+    setUnitPrice('');
+    setPaymentMethod('E-Transfer');
+    setPlatform('');
+    setTaxPercent('0');
+    setHealthPercent('');
+  }, []);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen, componentName, resetForm]);
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const qtyNum = parseInt(quantity, 10);
@@ -49,12 +71,16 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
       taxPercent: parseFloat(taxPercent) || 0,
       healthPercent: category === 'Storage' ? parsedHealth : undefined,
     });
-    setHealthPercent('');
-    onClose();
+    handleClose();
   };
 
+  const basePaymentOptions: PaymentMethod[] = ['Cash', 'E-Transfer', 'Credit Card'];
+  const paymentOptions = basePaymentOptions.includes(paymentMethod)
+    ? basePaymentOptions
+    : [...basePaymentOptions, paymentMethod];
+
   return (
-    <BottomSheetModal isOpen={isOpen} onClose={onClose} layout="content" className="stock-modal max-w-md !p-0">
+    <BottomSheetModal isOpen={isOpen} onClose={handleClose} layout="content" className="stock-modal max-w-md !p-0">
       <form 
         className="modal-standard-form w-full"
         onSubmit={handleSubmit}
@@ -70,7 +96,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close modal"
             className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
@@ -154,13 +180,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
               <CustomSelect
                 value={paymentMethod}
                 onChange={(val) => setPaymentMethod(val as PaymentMethod)}
-                options={[
-                  { value: 'E-Transfer', label: 'E-Transfer' },
-                  { value: 'Cash', label: 'Cash' },
-                  { value: 'PayPal', label: 'PayPal' },
-                  { value: 'Credit Card', label: 'Credit Card' },
-                  { value: 'Debit', label: 'Debit' }
-                ]}
+                options={paymentOptions.map((pm) => ({ value: pm, label: pm }))}
               />
             </div>
           </div>
@@ -199,7 +219,7 @@ export const PurchaseEntryModal: React.FC<PurchaseEntryModalProps> = ({
         <div className="modal-standard-footer flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             Cancel

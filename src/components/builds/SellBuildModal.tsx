@@ -332,12 +332,11 @@ export const SellBuildModal: React.FC<SellBuildModalProps> = ({ build, isOpen = 
               <CustomSelect
                 value={paymentMethod}
                 onChange={(val) => setPaymentMethod(val as PaymentMethod)}
-                options={[
-                  { value: 'E-Transfer', label: 'E-Transfer' },
-                  { value: 'Cash', label: 'Cash' },
-                  { value: 'PayPal', label: 'PayPal' },
-                  { value: 'Credit Card', label: 'Credit Card' }
-                ]}
+                options={(() => {
+                  const baseOpts: PaymentMethod[] = ['Cash', 'E-Transfer', 'Credit Card'];
+                  const opts = baseOpts.includes(paymentMethod) ? baseOpts : [...baseOpts, paymentMethod];
+                  return opts.map(pm => ({ value: pm, label: pm }));
+                })()}
               />
             </div>
           </div>

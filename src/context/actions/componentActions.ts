@@ -5,6 +5,7 @@ import {
   InventoryComponent,
   PaymentMethod,
   PCBuild,
+  Platform,
   PurchaseEntry,
   TransactionLogItem,
 } from '../../types';
@@ -374,8 +375,8 @@ export const handleSaveComponent = (
   if (updatedPurchaseEntry) {
     const entry = updatedPurchaseEntry.entry;
     const newQty = Number(entry.quantity);
-    if (!Number.isFinite(newQty) || newQty <= 0 || !Number.isInteger(newQty)) {
-      return { nextState: prev, success: false, error: 'Quantity must be a positive whole number.' };
+    if (!Number.isFinite(newQty) || newQty < 0 || !Number.isInteger(newQty)) {
+      return { nextState: prev, success: false, error: 'Quantity must be a non-negative whole number.' };
     }
     const unitPrice = Number(entry.unitPrice);
     const rawTotalPrice = entry.totalPrice ?? null;
@@ -472,25 +473,29 @@ export const handleSaveComponent = (
       let newTx: TransactionLogItem | null = null;
 
       if (updatedPurchaseEntry) {
-        sourceHistory = sourceHistory
-          .map((e) =>
-            e.id === updatedPurchaseEntry.entryId
-              ? {
-                  ...e, // Preserve provenance
-                  date: updatedPurchaseEntry.entry.date,
-                  condition: updatedPurchaseEntry.entry.condition,
-                  quantity: validatedUpdatedEntry!.quantity,
-                  unitPrice: validatedUpdatedEntry!.unitPrice,
-                  totalPrice: validatedUpdatedEntry!.totalPrice,
-                  paymentMethod: updatedPurchaseEntry.entry.paymentMethod,
-                  platform: updatedPurchaseEntry.entry.platform,
-                  taxPercent: validatedUpdatedEntry!.taxPercent,
-                  healthPercent: updatedPurchaseEntry.entry.healthPercent !== undefined ? (Number.isFinite(Number(updatedPurchaseEntry.entry.healthPercent)) ? Number(updatedPurchaseEntry.entry.healthPercent) : undefined) : e.healthPercent,
-                  notes: updatedPurchaseEntry.entry.notes || '',
-                }
-              : { ...e }
-          )
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        if (validatedUpdatedEntry!.quantity === 0) {
+          sourceHistory = sourceHistory.filter((e) => e.id !== updatedPurchaseEntry.entryId);
+        } else {
+          sourceHistory = sourceHistory
+            .map((e) =>
+              e.id === updatedPurchaseEntry.entryId
+                ? {
+                    ...e, // Preserve provenance
+                    date: updatedPurchaseEntry.entry.date,
+                    condition: updatedPurchaseEntry.entry.condition,
+                    quantity: validatedUpdatedEntry!.quantity,
+                    unitPrice: validatedUpdatedEntry!.unitPrice,
+                    totalPrice: validatedUpdatedEntry!.totalPrice,
+                    paymentMethod: updatedPurchaseEntry.entry.paymentMethod,
+                    platform: updatedPurchaseEntry.entry.platform,
+                    taxPercent: validatedUpdatedEntry!.taxPercent,
+                    healthPercent: updatedPurchaseEntry.entry.healthPercent !== undefined ? (Number.isFinite(Number(updatedPurchaseEntry.entry.healthPercent)) ? Number(updatedPurchaseEntry.entry.healthPercent) : undefined) : e.healthPercent,
+                    notes: updatedPurchaseEntry.entry.notes || '',
+                  }
+                : { ...e }
+            )
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        }
       } else if (newPurchaseEntry) {
         const isStorage = targetComp.category === 'Storage';
         const createdEntries = createGroupedPurchaseBatches(newPurchaseEntry, validatedNewEntry!, isStorage);
@@ -624,7 +629,7 @@ export const handleSaveComponent = (
       });
 
       let patchedTransactions = rewiredTransactions;
-      if (updatedPurchaseEntry && validatedUpdatedEntry) {
+      if (updatedPurchaseEntry && validatedUpdatedEntry && validatedUpdatedEntry.quantity > 0) {
         const entryId = updatedPurchaseEntry.entryId;
         const targetEntry = (sourceComp.purchaseHistory || []).find((e) => e.id === entryId);
         patchedTransactions = rewiredTransactions.map((tx) => {
@@ -682,25 +687,29 @@ export const handleSaveComponent = (
         let updatedHistory = (c.purchaseHistory || []).map((pe) => ({ ...pe }));
 
         if (updatedPurchaseEntry) {
-          updatedHistory = updatedHistory
-            .map((e) =>
-              e.id === updatedPurchaseEntry.entryId
-                ? {
-                    ...e, // Preserve provenance
-                    date: updatedPurchaseEntry.entry.date,
-                    condition: updatedPurchaseEntry.entry.condition,
-                    quantity: validatedUpdatedEntry!.quantity,
-                    unitPrice: validatedUpdatedEntry!.unitPrice,
-                    totalPrice: validatedUpdatedEntry!.totalPrice,
-                    paymentMethod: updatedPurchaseEntry.entry.paymentMethod,
-                    platform: updatedPurchaseEntry.entry.platform,
-                    taxPercent: validatedUpdatedEntry!.taxPercent,
-                    healthPercent: updatedPurchaseEntry.entry.healthPercent !== undefined ? (Number.isFinite(Number(updatedPurchaseEntry.entry.healthPercent)) ? Number(updatedPurchaseEntry.entry.healthPercent) : undefined) : e.healthPercent,
-                    notes: updatedPurchaseEntry.entry.notes || '',
-                  }
-                : { ...e }
-            )
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          if (validatedUpdatedEntry!.quantity === 0) {
+            updatedHistory = updatedHistory.filter((e) => e.id !== updatedPurchaseEntry.entryId);
+          } else {
+            updatedHistory = updatedHistory
+              .map((e) =>
+                e.id === updatedPurchaseEntry.entryId
+                  ? {
+                      ...e, // Preserve provenance
+                      date: updatedPurchaseEntry.entry.date,
+                      condition: updatedPurchaseEntry.entry.condition,
+                      quantity: validatedUpdatedEntry!.quantity,
+                      unitPrice: validatedUpdatedEntry!.unitPrice,
+                      totalPrice: validatedUpdatedEntry!.totalPrice,
+                      paymentMethod: updatedPurchaseEntry.entry.paymentMethod,
+                      platform: updatedPurchaseEntry.entry.platform,
+                      taxPercent: validatedUpdatedEntry!.taxPercent,
+                      healthPercent: updatedPurchaseEntry.entry.healthPercent !== undefined ? (Number.isFinite(Number(updatedPurchaseEntry.entry.healthPercent)) ? Number(updatedPurchaseEntry.entry.healthPercent) : undefined) : e.healthPercent,
+                      notes: updatedPurchaseEntry.entry.notes || '',
+                    }
+                  : { ...e }
+              )
+              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          }
         } else if (newPurchaseEntry) {
           const isStorage = (componentData.category !== undefined ? componentData.category : c.category) === 'Storage';
           const createdEntries = createGroupedPurchaseBatches(newPurchaseEntry, validatedNewEntry!, isStorage);
@@ -761,7 +770,7 @@ export const handleSaveComponent = (
     let updatedTransactions = prev.transactions;
     if (newTx) {
       updatedTransactions = [newTx, ...prev.transactions];
-    } else if (updatedPurchaseEntry && validatedUpdatedEntry) {
+    } else if (updatedPurchaseEntry && validatedUpdatedEntry && validatedUpdatedEntry.quantity > 0) {
       const entryId = updatedPurchaseEntry.entryId;
       const targetEntry = (sourceComp.purchaseHistory || []).find((e) => e.id === entryId);
 
@@ -1449,8 +1458,8 @@ export const handleUpdatePurchaseEntry = (
   }
 
   const newQty = Number(entry.quantity);
-  if (!Number.isFinite(newQty) || newQty <= 0 || !Number.isInteger(newQty)) {
-    return { nextState: prev, success: false, error: 'Quantity must be a positive whole number.' };
+  if (!Number.isFinite(newQty) || newQty < 0 || !Number.isInteger(newQty)) {
+    return { nextState: prev, success: false, error: 'Quantity must be a non-negative whole number.' };
   }
 
   const unitPrice = Number(entry.unitPrice);
@@ -1489,6 +1498,10 @@ export const handleUpdatePurchaseEntry = (
   const totalUsed = Number(batch.entry.quantity) - batch.availableQuantity;
   if (newQty < totalUsed) {
     return { nextState: prev, success: false, error: `Cannot reduce quantity below ${totalUsed}. These units are currently allocated to live builds.` };
+  }
+
+  if (newQty === 0 && totalUsed === 0) {
+    return handleDeletePurchaseEntry(prev, componentId, entryId);
   }
   
   // Check no-op
@@ -2300,10 +2313,15 @@ export const handleDistributeDriveHealths = (
     unitPrice: number;
     paymentMethod: PaymentMethod;
     platform?: string;
+    seller?: Platform;
     taxPercent?: number;
     notes?: string;
     healthPercent: number;
     originalEntryId?: string;
+    sourcePurchaseTransactionId?: string;
+    sourcePurchasedBuildId?: string;
+    sourceTradeInBuildId?: string;
+    sourceSaleTransactionId?: string;
   }
 
   const unassignedUnits: UnassignedUnit[] = [];
@@ -2335,10 +2353,15 @@ export const handleDistributeDriveHealths = (
         unitPrice: entry.unitPrice,
         paymentMethod: entry.paymentMethod,
         platform: entry.platform,
+        seller: entry.seller,
         taxPercent: entry.taxPercent,
         notes: entry.notes,
         healthPercent: Math.round(batchHealths[i]),
         originalEntryId: assignedCount === 0 && i === 0 ? entry.id : undefined,
+        sourcePurchaseTransactionId: entry.sourcePurchaseTransactionId,
+        sourcePurchasedBuildId: entry.sourcePurchasedBuildId,
+        sourceTradeInBuildId: entry.sourceTradeInBuildId,
+        sourceSaleTransactionId: entry.sourceSaleTransactionId,
       });
     }
   }
@@ -2350,11 +2373,16 @@ export const handleDistributeDriveHealths = (
     unitPrice: number;
     paymentMethod: PaymentMethod;
     platform?: string;
+    seller?: Platform;
     taxPercent?: number;
     notes?: string;
     healthPercent: number;
     count: number;
     reusableEntryId?: string;
+    sourcePurchaseTransactionId?: string;
+    sourcePurchasedBuildId?: string;
+    sourceTradeInBuildId?: string;
+    sourceSaleTransactionId?: string;
   }
 
   const groups = new Map<string, GroupedUnassigned>();
@@ -2366,9 +2394,14 @@ export const handleDistributeDriveHealths = (
       unit.unitPrice,
       unit.paymentMethod,
       unit.platform || '',
+      unit.seller || '',
       unit.taxPercent || 0,
       unit.healthPercent,
       unit.notes || '',
+      unit.sourcePurchaseTransactionId || '',
+      unit.sourcePurchasedBuildId || '',
+      unit.sourceTradeInBuildId || '',
+      unit.sourceSaleTransactionId || '',
     ].join('|');
 
     const existing = groups.get(key);
@@ -2384,11 +2417,16 @@ export const handleDistributeDriveHealths = (
         unitPrice: unit.unitPrice,
         paymentMethod: unit.paymentMethod,
         platform: unit.platform,
+        seller: unit.seller,
         taxPercent: unit.taxPercent,
         notes: unit.notes,
         healthPercent: unit.healthPercent,
         count: 1,
         reusableEntryId: unit.originalEntryId,
+        sourcePurchaseTransactionId: unit.sourcePurchaseTransactionId,
+        sourcePurchasedBuildId: unit.sourcePurchasedBuildId,
+        sourceTradeInBuildId: unit.sourceTradeInBuildId,
+        sourceSaleTransactionId: unit.sourceSaleTransactionId,
       });
     }
   }
@@ -2408,10 +2446,15 @@ export const handleDistributeDriveHealths = (
       unitPrice: group.unitPrice,
       totalPrice: roundToCents(group.count * group.unitPrice),
       paymentMethod: group.paymentMethod,
-      platform: group.platform,
+      platform: group.platform || '',
+      seller: group.seller,
       taxPercent: group.taxPercent,
       healthPercent: group.healthPercent,
       notes: group.notes,
+      sourcePurchaseTransactionId: group.sourcePurchaseTransactionId,
+      sourcePurchasedBuildId: group.sourcePurchasedBuildId,
+      sourceTradeInBuildId: group.sourceTradeInBuildId,
+      sourceSaleTransactionId: group.sourceSaleTransactionId,
     });
   }
 

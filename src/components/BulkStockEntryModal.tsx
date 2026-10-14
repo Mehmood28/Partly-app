@@ -7,14 +7,14 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { useInventory } from '../context/InventoryContext';
 import { CustomSelect } from './ui/CustomSelect';
 import { useToast } from '../context/ToastContext';
-import { normalizeTag, normalizeTags, SUB_CATEGORIES, getConflictingTags, formatCurrency, roundToCents } from '../utils/helpers';
+import { normalizeTag, normalizeTags, SUB_CATEGORIES, getConflictingTags, formatCurrency, roundToCents, normalizeDateString } from '../utils/helpers';
 import { classifyTransaction } from '../utils/transactionClassification';
 import { getCleanTransactionTitle } from './activity/activityHelpers';
 
 const CATEGORY_OPTIONS = CATEGORIES.map((value) => ({ value, label: value }));
 const CONDITION_OPTIONS = ['Sealed', 'New Open Box', 'New No Box', 'Used Open Box', 'Used No Box']
   .map((value) => ({ value, label: value }));
-const PAYMENT_OPTIONS = ['Cash', 'E-Transfer', 'PayPal', 'Credit Card', 'Other']
+const PAYMENT_OPTIONS = ['Cash', 'E-Transfer', 'Credit Card']
   .map((value) => ({ value, label: value }));
 
 export interface ParsedBulkStockItem {
@@ -143,137 +143,49 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
         body: JSON.stringify(payload),
       });
 
-      const contentType = res.headers.get('content-type') || '';
-      if (!res.ok || !contentType.includes('application/json')) {
-        let errMessage = `Server error (${res.status})`;
-        try {
-          const errData = await res.json();
-          if (errData && errData.error) errMessage = errData.error;
-        } catch {
-          const rawText = await res.text().catch(() => '');
-          if (rawText.toLowerCase().includes('<!doctype') || rawText.toLowerCase().includes('<html')) {
-            errMessage = 'Server is currently starting up or unavailable. Please try again in a moment.';
-          }
-        }
+      const rawBody = await res.text();
+      let parsedJson: any = null;
+      try {
+        parsedJson = rawBody ? JSON.parse(rawBody) : null;
+      } catch {
+        parsedJson = null;
+      }
+
+      if (!res.ok) {
+        const errMessage =
+          (parsedJson && parsedJson.error) ||
+          (rawBody.toLowerCase().includes('<!doctype') || rawBody.toLowerCase().includes('<html')
+            ? 'Server is currently starting up or unavailable. Please try again in a moment.'
+            : `Server error (${res.status})`);
         throw new Error(errMessage);
       }
-      const data: ParsedBulkStockItem[] = await res.json();
-      const rawList = Array.isArray(data) ? data : [];
 
-      // Defensive client-side header absorption guard
-      let clientBatchSeller = '';
-      let clientBatchDate = '';
-      let clientBatchCondition: Condition | undefined = undefined;
-      let clientBatchPayment: PaymentMethod | undefined = undefined;
+      const rawList: ParsedBulkStockItem[] = Array.isArray(parsedJson) ? parsedJson : [];
 
-      const nonHeaderList = rawList.filter((item: any) => {
-        const name = String(item.name || '').trim();
-        const isHeaderRow =
-          /^(?:supplier|seller|vendor|store|date|condition(?:\s+for\s+all)?|payment|notes?)\s*:/i.test(name) ||
-          /^(?:batch\s+date|batch\s+condition|batch\s+seller)/i.test(name);
+      const enrichedData: ParsedBulkStockItem[] = rawList
+        .filter((item) => item && typeof item.name === 'string' && item.name.trim().length >= 2)
+        .map((item) => {
+          const parsedHealth =
+            item.category === 'Storage' &&
+            item.healthPercent !== undefined &&
+            item.healthPercent !== null &&
+            !Number.isNaN(Number(item.healthPercent))
+              ? Math.min(100, Math.max(0, Math.round(Number(item.healthPercent))))
+              : undefined;
 
-        if (isHeaderRow) {
-          if (/^(?:supplier|seller|vendor|store)\s*:\s*(.*)/i.test(name)) {
-            clientBatchSeller = name.replace(/^(?:supplier|seller|vendor|store)\s*:\s*/i, '').trim();
-          } else if (/^(?:date)\s*:\s*(.*)/i.test(name)) {
-            const rawD = name.replace(/^(?:date)\s*:\s*/i, '').trim();
-            const parsedD = new Date(rawD);
-            if (!isNaN(parsedD.getTime())) {
-              clientBatchDate = parsedD.toISOString().split('T')[0];
-            } else {
-              clientBatchDate = rawD;
-            }
-          } else if (/^(?:condition(?:\s+for\s+all)?)\s*:\s*(.*)/i.test(name)) {
-            const rawC = name.replace(/^(?:condition(?:\s+for\s+all)?)\s*:\s*/i, '').trim().toLowerCase();
-            if (/sealed/i.test(rawC)) clientBatchCondition = 'Sealed';
-            else if (/new\s+open\s+box/i.test(rawC)) clientBatchCondition = 'New Open Box';
-            else if (/new\s+no\s+box/i.test(rawC)) clientBatchCondition = 'New No Box';
-            else if (/used\s+no\s+box/i.test(rawC)) clientBatchCondition = 'Used No Box';
-            else if (/used/i.test(rawC)) clientBatchCondition = 'Used Open Box';
-            else clientBatchCondition = 'New No Box';
-          } else if (/^(?:payment)\s*:\s*(.*)/i.test(name)) {
-            const rawP = name.replace(/^(?:payment)\s*:\s*/i, '').trim();
-            clientBatchPayment = rawP as PaymentMethod;
-          }
-          return false; // Silently absorb header data and discard item
-        }
-        return true;
-      });
-
-      const hasHealthMention = /(?:\bhealth\b|\b\d{1,3}%\b)/i.test(textInput);
-      const enrichedData: ParsedBulkStockItem[] = nonHeaderList.map((item) => {
-        const rawSeller = item.seller || (item as any).vendor || clientBatchSeller;
-        let cleanSeller = rawSeller ? String(rawSeller).trim() : '';
-        if (cleanSeller.includes('\n')) cleanSeller = cleanSeller.split('\n')[0].trim();
-        cleanSeller = cleanSeller.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim();
-        cleanSeller = cleanSeller.replace(/^(?:Seller|Vendor|Supplier|Store)\s*:\s*/i, '').trim();
-        if (cleanSeller.length > 30) {
-          const firstWord = cleanSeller.split(/[\s,;|]/)[0];
-          cleanSeller = firstWord.length > 1 ? firstWord : cleanSeller.slice(0, 30);
-        }
-
-        let cleanName = String(item.name || '').trim();
-        // Strip leading bullets, dots, dashes, and quantity indicators (e.g. "• 1 x " or "1 x ")
-        cleanName = cleanName.replace(/^[•\-\*\s]+/, '');
-        cleanName = cleanName.replace(/^\d+\s*x\s+/i, '');
-        cleanName = cleanName.replace(/^[•\-\*\s]+/, '').trim();
-
-        if (cleanSeller && cleanName) {
-          const escapedSeller = cleanSeller.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          cleanName = cleanName.replace(new RegExp(`^${escapedSeller}\\s+`, 'i'), '').trim();
-        }
-
-        // Clean accidental leading category prefixes
-        cleanName = cleanName.replace(/^(?:Motherboard|CPU|GPU|RAM|Storage|PSU|Case|Cooling|Fans|Accessories|Other)\s*[•|·,\-\/:]?\s*/i, '');
-        // Clean accidental spec / condition prefixes prepended to name
-        cleanName = cleanName.replace(/^(?:Intel|AMD|AM5|AM4)\s+(?:ATX|mATX|Micro-ATX|ITX|Mini-ITX)\s+(?:Black|White)\s+(?:Used|New)?\s*/i, '');
-        cleanName = cleanName.replace(/^(?:Intel|AMD|AM5|AM4)\s+(?:ATX|mATX|Micro-ATX|ITX|Mini-ITX)\s*/i, '');
-        cleanName = cleanName.replace(/^(?:ATX|mATX|Micro-ATX|ITX|Mini-ITX)\s+(?:Black|White)\s*/i, '');
-        cleanName = cleanName.replace(/^(?:Black|White)\s+(?:Used|New)?\s*/i, '');
-        cleanName = cleanName.replace(/^(?:Used|New)\s+(?:Open\s+Box|No\s+Box)\s*/i, '');
-        cleanName = cleanName.replace(/^(?:Used|New)\s+/i, '');
-        cleanName = cleanName.replace(/^[•|·:\s]+|[•|·:\s]+$/g, '').trim();
-        cleanName = cleanName.replace(/\s{2,}/g, ' ');
-
-        let condition = item.condition || clientBatchCondition || 'Used Open Box';
-
-        // Parse and ensure YYYY-MM-DD date format
-        let rawDate = item.date || clientBatchDate || undefined;
-        let formattedDate: string | undefined = undefined;
-        if (rawDate) {
-          const trimmedD = String(rawDate).trim();
-          const isoMatch = trimmedD.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
-          if (isoMatch) {
-            formattedDate = `${isoMatch[1]}-${isoMatch[2].padStart(2, '0')}-${isoMatch[3].padStart(2, '0')}`;
-          } else {
-            const d = new Date(trimmedD);
-            if (!isNaN(d.getTime()) && d.getFullYear() > 2000) {
-              const y = d.getFullYear();
-              const m = String(d.getMonth() + 1).padStart(2, '0');
-              const day = String(d.getDate()).padStart(2, '0');
-              formattedDate = `${y}-${m}-${day}`;
-            } else {
-              formattedDate = trimmedD;
-            }
-          }
-        }
-
-        return {
-          ...item,
-          name: cleanName || item.name,
-          seller: (cleanSeller || undefined) as Platform | undefined,
-          date: formattedDate,
-          paymentMethod: item.paymentMethod || clientBatchPayment || undefined,
-          condition: condition as Condition,
-          healthPercent: (item.category === 'Storage' && hasHealthMention) ? item.healthPercent : undefined,
-          tags: normalizeTags(item.tags || [], item.category),
-        };
-      }).filter((item) => {
-        if (!item.name || item.name.trim().length < 2) return false;
-        if (/^[•\-\*\s]+$/.test(item.name)) return false;
-        if (/^(?:supplier|seller|vendor|store|date|condition(?:\s+for\s+all)?|payment|notes?)\s*:/i.test(item.name)) return false;
-        return true;
-      });
+          return {
+            name: item.name.trim(),
+            category: CATEGORIES.includes(item.category) ? item.category : 'Other',
+            quantity: Math.max(1, Math.round(Number(item.quantity) || 1)),
+            unitCost: Math.max(0, Number(item.unitCost) || 0),
+            condition: (item.condition || 'Used Open Box') as Condition,
+            seller: item.seller ? String(item.seller).trim() : undefined,
+            date: item.date ? normalizeDateString(String(item.date).trim()) : undefined,
+            paymentMethod: (item.paymentMethod || 'Cash') as PaymentMethod,
+            healthPercent: parsedHealth,
+            tags: normalizeTags(item.tags || [], item.category),
+          };
+        });
 
       setParsedItems(enrichedData);
     } catch (err: unknown) {

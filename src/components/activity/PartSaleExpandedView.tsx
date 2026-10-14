@@ -1,6 +1,6 @@
 import React from 'react';
 import { InventoryComponent, TransactionLogItem } from '../../types';
-import { formatCurrency } from '../../utils/helpers';
+import { formatCurrency, formatReadableDate } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 
@@ -52,7 +52,7 @@ export const PartSaleExpandedView: React.FC<PartSaleExpandedViewProps> = ({
       <section>
         <h4>Sale &amp; component</h4>
         <dl>
-          <div><dt>Sale date</dt><dd>{String(saleDate || tx.dateSortable || tx.timestamp).split('T')[0]}</dd></div>
+          <div><dt>Sale date</dt><dd>{formatReadableDate(saleDate || tx.dateSortable || tx.timestamp) || String(saleDate || tx.dateSortable || tx.timestamp || '').split('T')[0]}</dd></div>
           <div><dt>Type</dt><dd>{matchedComp?.category || '—'}</dd></div>
           <div><dt>Details</dt><dd>{matchedComp?.tags?.join(' · ') || '—'}</dd></div>
           <div><dt>Condition</dt><dd>{sourceBatch?.condition || '—'}</dd></div>

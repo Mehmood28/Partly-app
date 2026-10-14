@@ -1,4 +1,4 @@
-import React, { useState, useDeferredValue, useMemo } from 'react';
+import React, { useState, useDeferredValue, useMemo, useEffect } from 'react';
 import { PCBuild, ComponentCategory, CATEGORIES } from '../../types';
 import {
   calculateUnassignedQuantityStrict,
@@ -43,6 +43,16 @@ export const AllocatePartModal: React.FC<AllocatePartModalProps> = ({ build, isO
 
   const [activeCategoryTab, setActiveCategoryTab] = useState<ComponentCategory | 'ALL'>('ALL');
   const [activeSubTags, setActiveSubTags] = useState<string[]>([]);
+
+  useEffect(() => {
+    setSearchQuery('');
+    setSortBy('newest-purchase');
+    setExpandedPartId(null);
+    setAllocationQuantities({});
+    setPendingAllocation(null);
+    setActiveCategoryTab('ALL');
+    setActiveSubTags([]);
+  }, [build?.id, isOpen]);
 
   const handleCategoryChange = (c: string) => {
     setActiveCategoryTab(c as ComponentCategory | 'ALL');

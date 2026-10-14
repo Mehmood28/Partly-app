@@ -14,7 +14,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import { BottomSheetModal } from './ui/BottomSheetModal';
 import { ConfirmModal } from './ConfirmModal';
-import { getUnassignedBatches, SUB_CATEGORIES, getConflictingTags, CATEGORY_TAG_GROUPS, normalizeTags, roundToCents } from '../utils/helpers';
+import { getUnassignedBatches, SUB_CATEGORIES, getConflictingTags, CATEGORY_TAG_GROUPS, normalizeTags, roundToCents, formatReadableDate } from '../utils/helpers';
 import { isPartedOutTradeInEntry, resolvePartedOutEntryOrigin, resolvePurchaseEntrySeller } from '../utils/tradeInOrigin';
 
 interface ComponentModalProps {
@@ -63,6 +63,12 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
   const [condition, setCondition] = useState<Condition>('New Open Box');
   const [taxPercent, setTaxPercent] = useState<string>('0');
   const [healthPercent, setHealthPercent] = useState<string>('');
+  const [editingAllocatedQty, setEditingAllocatedQty] = useState<number>(0);
+
+  const liveComponent = initialComponent ? state.components.find((c) => c.id === initialComponent.id) : null;
+  const availablePurchaseBatches = liveComponent
+    ? getUnassignedBatches(liveComponent, state.builds)
+    : [];
 
   const prevInitialCompRef = React.useRef(initialComponent);
 
@@ -149,6 +155,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     setHealthPercent('');
     setIncludePurchase(true);
     setEditingPurchaseId(null);
+    setEditingAllocatedQty(0);
     resetPurchaseForm();
     onClose();
   };
@@ -165,10 +172,14 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
   };
 
   const handleEditPurchase = (ph: PurchaseEntry) => {
+    const batch = availablePurchaseBatches.find((b) => b.entry.id === ph.id);
+    const availQty = batch ? batch.availableQuantity : 0;
+    const allocated = Math.max(0, Number(ph.quantity) - availQty);
+    setEditingAllocatedQty(allocated);
     setEditingPurchaseId(ph.id);
     setIncludePurchase(true);
     setUnitPrice(String(roundToCents(ph.unitPrice)));
-    setQuantity(ph.quantity.toString());
+    setQuantity(String(availQty));
     setPlatform(resolvePurchaseEntrySeller(ph, state.transactions, state.builds) || '');
     setPaymentMethod(ph.paymentMethod);
     setPurchaseDate(ph.date);
@@ -179,6 +190,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
 
   const handleCancelEditPurchase = () => {
     setEditingPurchaseId(null);
+    setEditingAllocatedQty(0);
     setIncludePurchase(false);
     resetPurchaseForm();
   };
@@ -193,14 +205,31 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
 
     if (editingPurchaseId && initialComponent) {
       const priceNum = parseFloat(unitPrice) || 0;
-      const qtyNum = parseInt(quantity, 10) || 1;
+      const parsedQty = parseInt(quantity, 10);
+      const availQty = isNaN(parsedQty) ? 0 : Math.max(0, parsedQty);
+      const totalQtyNum = availQty + editingAllocatedQty;
       const parsedHealth = healthPercent.trim() !== '' ? Math.min(100, Math.max(0, parseFloat(healthPercent))) : undefined;
+
+      if (totalQtyNum === 0) {
+        const result = deletePurchaseEntry(initialComponent.id, editingPurchaseId);
+        if (result && !result.success) {
+          showToast(result.error || 'Cannot delete purchase entry', 'error');
+          return;
+        }
+        setEditingPurchaseId(null);
+        setEditingAllocatedQty(0);
+        setIncludePurchase(false);
+        resetPurchaseForm();
+        onClose();
+        return;
+      }
+
       const updatedEntry = {
         date: purchaseDate,
         condition,
-        quantity: qtyNum,
+        quantity: totalQtyNum,
         unitPrice: priceNum,
-        totalPrice: priceNum * qtyNum,
+        totalPrice: roundToCents(priceNum * totalQtyNum),
         paymentMethod,
         platform,
         taxPercent: parseFloat(taxPercent) || 0,
@@ -212,8 +241,8 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
           name: name.trim(),
           category,
           specifications,
-          tags: selectedTags.length > 0 ? selectedTags : undefined,
-          purchaseHistory: initialComponent?.purchaseHistory || [],
+          tags: selectedTags.length > 0 ? normalizeTags(selectedTags, category) : undefined,
+          purchaseHistory: liveComponent?.purchaseHistory || initialComponent?.purchaseHistory || [],
           healthPercent: category === 'Storage' ? parsedHealth : undefined,
         },
         undefined,
@@ -230,6 +259,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
       }
       
       setEditingPurchaseId(null);
+      setEditingAllocatedQty(0);
       setIncludePurchase(false);
       resetPurchaseForm();
       onClose();
@@ -247,7 +277,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         condition,
         quantity: qtyNum,
         unitPrice: priceNum,
-        totalPrice: priceNum * qtyNum,
+        totalPrice: roundToCents(priceNum * qtyNum),
         paymentMethod,
         platform,
         taxPercent: parseFloat(taxPercent) || 0,
@@ -260,7 +290,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
       category,
       specifications,
       tags: selectedTags.length > 0 ? normalizeTags(selectedTags, category) : undefined,
-      purchaseHistory: initialComponent?.purchaseHistory || [],
+      purchaseHistory: liveComponent?.purchaseHistory || initialComponent?.purchaseHistory || [],
       healthPercent: category === 'Storage' ? parsedHealth : undefined,
     };
 
@@ -277,11 +307,6 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     
     handleCloseAndReset();
   };
-
-  const liveComponent = initialComponent ? state.components.find(c => c.id === initialComponent.id) : null;
-  const availablePurchaseBatches = liveComponent
-    ? getUnassignedBatches(liveComponent, state.builds)
-    : [];
 
   return (
     <BottomSheetModal isOpen={isOpen} onClose={handleCloseAndReset} layout="content" className="stock-modal max-w-lg !p-0">
@@ -317,7 +342,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <div className={category === 'Storage' ? 'sm:col-span-1' : 'sm:col-span-2'}>
+            <div className="sm:col-span-2">
               <label className="block text-zinc-300 font-medium mb-1 text-xs">Model Name *</label>
               <input
                 type="text"
@@ -339,23 +364,6 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                 className={selectedCompId !== 'NEW' && !initialComponent ? "opacity-70 pointer-events-none" : ""}
               />
             </div>
-
-            {category === 'Storage' && (
-              <div>
-                <label className="block text-zinc-300 font-medium mb-1 text-xs">Health (%)</label>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min="0"
-                  max="100"
-                  value={healthPercent}
-                  onChange={(e) => setHealthPercent(e.target.value)}
-                  disabled={selectedCompId !== 'NEW' && !initialComponent}
-                  className="app-field h-11 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm font-mono"
-                  placeholder="100"
-                />
-              </div>
-            )}
             
             <div className="col-span-full">
               <div className="flex items-center justify-between mb-1.5">
@@ -435,7 +443,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                   <div key={ph.id} className="flex items-center justify-between bg-[#101719] border border-white/[0.08] p-2.5 rounded-xl">
                     <div className="text-xs">
                       <div className="text-zinc-200 font-medium flex items-center gap-1.5 flex-wrap">
-                        <span>{ph.date}{!hideSupplierNames ? ` · ${displaySeller}` : ''}</span>
+                        <span>{formatReadableDate(ph.date) || String(ph.date || '').split('T')[0]}{!hideSupplierNames ? ` · ${displaySeller}` : ''}</span>
                         {isTradeUp && (
                           <span className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0 px-1.5 py-0.5 rounded text-[11px] font-mono font-medium uppercase leading-none inline-flex items-center">
                             TRADE UP
@@ -509,10 +517,17 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-zinc-300 font-medium mb-1 text-xs">Quantity</label>
+                  <label className="block text-zinc-300 font-medium mb-1 text-xs flex items-center justify-between">
+                    <span>{editingPurchaseId ? 'Available Stock Qty' : 'Quantity'}</span>
+                    {editingPurchaseId && editingAllocatedQty > 0 && (
+                      <span className="text-[10px] font-mono font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                        +{editingAllocatedQty} in builds
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="number" inputMode="decimal"
-                    min="1"
+                    min={editingPurchaseId && editingAllocatedQty > 0 ? "0" : "1"}
                     required={includePurchase}
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
@@ -556,14 +571,11 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                   <CustomSelect
                     value={paymentMethod}
                     onChange={(val) => setPaymentMethod(val as PaymentMethod)}
-                    options={[
-                      { value: 'E-Transfer', label: 'E-Transfer' },
-                      { value: 'Cash', label: 'Cash' },
-                      { value: 'PayPal', label: 'PayPal' },
-                      { value: 'Credit Card', label: 'Credit Card' },
-                      { value: 'Debit', label: 'Debit' },
-                      { value: 'Trade-In', label: 'Trade-In' }
-                    ]}
+                    options={(() => {
+                      const baseOpts: PaymentMethod[] = ['Cash', 'E-Transfer', 'Credit Card', 'Trade-In'];
+                      const opts = baseOpts.includes(paymentMethod) ? baseOpts : [...baseOpts, paymentMethod];
+                      return opts.map(pm => ({ value: pm, label: pm }));
+                    })()}
                   />
                 </div>
                 <div>
@@ -618,7 +630,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         <div className="modal-standard-footer flex items-center justify-end gap-2.5 border-t border-white/[0.08]">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCloseAndReset}
             className="px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B9EF68]"
           >
             Cancel

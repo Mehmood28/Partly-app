@@ -1,5 +1,6 @@
 import { PCBuild, InventoryComponent } from '../types';
 import { getBuildPresentation } from './buildPresentation';
+import { formatReadableDate } from './helpers';
 
 export const generateInvoice = async (build: PCBuild, components: InventoryComponent[]) => {
   const { default: jsPDF } = await import('jspdf');
@@ -16,7 +17,9 @@ export const generateInvoice = async (build: PCBuild, components: InventoryCompo
   doc.setFontSize(10);
   doc.setTextColor(100);
   doc.text(`Invoice ID: INV-${build.id.substring(0, 8).toUpperCase()}`, 14, 30);
-  doc.text(`Date: ${build.saleDate || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}`, 14, 35);
+  const rawDate = build.saleDate || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+  const invoiceDate = formatReadableDate(rawDate) || rawDate;
+  doc.text(`Date: ${invoiceDate}`, 14, 35);
   doc.text(`Status: Paid`, 14, 40);
 
   // Billing Info

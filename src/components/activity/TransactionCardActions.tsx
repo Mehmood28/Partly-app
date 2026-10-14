@@ -5,6 +5,7 @@ import { TransactionLogItem } from '../../types';
 interface TransactionCardActionsProps {
   tx: TransactionLogItem;
   isPartSale: boolean;
+  canEdit?: boolean;
   onEdit: (tx: TransactionLogItem) => void;
   onDelete: (id: string) => void;
   onRelistPart?: (tx: TransactionLogItem) => void;
@@ -14,20 +15,33 @@ interface TransactionCardActionsProps {
 export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
   tx,
   isPartSale,
+  canEdit = true,
   onEdit,
   onDelete,
   onRelistPart,
   onRelistBulkSale,
-}) => (
-    <div className="record-actions">
+}) => {
+  const hasRelist = Boolean(
+    (isPartSale && tx.bulkSaleGroupId && onRelistBulkSale) ||
+    (isPartSale && onRelistPart)
+  );
+  const isOnlyDelete = !canEdit && !hasRelist;
+
+  return (
+    <div
+      className={`record-actions ${isOnlyDelete ? '!grid-cols-1' : ''}`}
+      style={isOnlyDelete ? { gridTemplateColumns: '1fr' } : undefined}
+    >
       <div className="contents">
-        <button
-          onClick={(e) => { e.stopPropagation(); onEdit(tx); }}
-          className="app-button flex items-center justify-center gap-1.5 px-2"
-          title="Edit Log Record"
-        >
-          <Pencil className="w-3.5 h-3.5" /> Edit Record
-        </button>
+        {canEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(tx); }}
+            className="app-button flex items-center justify-center gap-1.5 px-2"
+            title="Edit Log Record"
+          >
+            <Pencil className="w-3.5 h-3.5" /> Edit Record
+          </button>
+        )}
         {isPartSale && tx.bulkSaleGroupId && onRelistBulkSale ? (
           <button
             onClick={(e) => { e.stopPropagation(); onRelistBulkSale(); }}
@@ -49,10 +63,11 @@ export const TransactionCardActions: React.FC<TransactionCardActionsProps> = ({
 
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(tx.id); }}
-        className="app-button app-button-danger flex items-center justify-center gap-1.5 px-2"
+        className={`app-button app-button-danger flex items-center justify-center gap-1.5 px-2 ${isOnlyDelete ? 'col-span-full w-full' : ''}`}
         title="Delete Activity Log"
       >
         <Trash2 className="w-3.5 h-3.5" /> Delete
       </button>
     </div>
-);
+  );
+};

@@ -25,7 +25,7 @@ interface InventoryFilterBarProps {
   showCategories?: boolean;
 }
 
-export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
+export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = React.memo(({
   builds = [],
   components,
   searchQuery,
@@ -216,4 +216,4 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
       )}
     </div>
   );
-};
+});

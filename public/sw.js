@@ -53,7 +53,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (!url.protocol.startsWith('http')) return;
-  if (url.pathname.startsWith('/api')) return;
+  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/src/') || url.pathname.startsWith('/@') || url.pathname.startsWith('/node_modules/')) return;
 
   if (event.request.mode === 'navigate') {
     event.respondWith(

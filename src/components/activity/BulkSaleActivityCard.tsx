@@ -15,7 +15,7 @@ import {
 } from '../../utils/bulkSaleGrouping';
 import { formatSignedCurrency, getProfitTextColor } from '../../utils/financialDisplay';
 import { TransactionLogItem } from '../../types';
-import { formatCurrency } from '../../utils/helpers';
+import { formatCurrency, formatReadableDate } from '../../utils/helpers';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { ConfirmModal } from '../ConfirmModal';
 
@@ -52,7 +52,7 @@ export const BulkSaleActivityCard: React.FC<BulkSaleActivityCardProps> = React.m
   return (
     <div className="app-panel transaction-card bulk-sale-card group flex flex-col transition-colors">
       <button type="button" className="record-header bulk-sale-header" onClick={handleToggle} aria-expanded={isExpanded}>
-        <div className="sold-part-title-row"><h3>Bulk Part Sale</h3><time>{group.saleDate}</time>{isExpanded ? <ChevronUp /> : <ChevronDown />}</div>
+        <div className="sold-part-title-row"><h3>Bulk Part Sale</h3><time>{formatReadableDate(group.saleDate) || String(group.saleDate || '').split('T')[0]}</time>{isExpanded ? <ChevronUp /> : <ChevronDown />}</div>
         <div className="sold-part-status-row"><Layers /><strong>Bulk sale</strong><span>{group.lineCount} lines · {group.totalUnits} units</span></div>
         <dl className="record-finances">
           <div><dt>Cost</dt><dd>{formatCurrency(group.totalCost)}</dd></div>

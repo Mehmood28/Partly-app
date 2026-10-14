@@ -1,4 +1,4 @@
-import { parseDateLocal } from './helpers';
+import { parseDateLocal, formatReadableDate } from './helpers';
 
 export const BUILD_WARRANTY_DAYS = 30;
 
@@ -120,7 +120,10 @@ export function getBuildWarrantyInfo(
 
   const daysLeft = Math.max(0, validWarrantyDays - daysElapsed);
   const isActive = daysElapsed < validWarrantyDays;
-  const expiryFormatted = expiryDate.toLocaleDateString();
+  const expYear = expiryDate.getFullYear();
+  const expMonth = String(expiryDate.getMonth() + 1).padStart(2, '0');
+  const expDay = String(expiryDate.getDate()).padStart(2, '0');
+  const expiryFormatted = formatReadableDate(`${expYear}-${expMonth}-${expDay}`) || `${expDay} ${expMonth} ${expYear}`;
 
   const statusText = isActive
     ? `ACTIVE (${daysLeft} DAYS REMAINING)`

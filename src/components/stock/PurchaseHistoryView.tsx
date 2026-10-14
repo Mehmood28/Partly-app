@@ -121,7 +121,7 @@ export const PurchaseHistoryView: React.FC<PurchaseHistoryViewProps> = React.mem
   );
 
   return (
-    <div className="purchase-history-view flex flex-col flex-1 min-h-0 h-full gap-2 sm:gap-3">
+    <div className="purchase-history-view w-full flex flex-col flex-1 min-h-0 h-full gap-2 sm:gap-3">
       <header className="purchase-page-heading shrink-0">
         <h2>Purchases</h2>
         <p>Log and track all inventory purchases</p>

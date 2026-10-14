@@ -80,8 +80,13 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
     onlyAvailable: true,
   }), [state.components, deferredSearchQuery, selectedCategory, activeSubTags, sortBy, state.builds]);
 
+  const precomputedMap = useMemo(() => precomputeAssignedBatches(state.builds), [state.builds]);
+  const availableComponents = useMemo(
+    () => state.components.filter((c) => calculateUnassignedQuantityStrict(c, state.builds, precomputedMap) > 0),
+    [state.components, state.builds, precomputedMap]
+  );
+
   const groupedComponents = useMemo(() => {
-    const precomputedMap = precomputeAssignedBatches(state.builds);
     return CATEGORIES.map((category) => {
       const items = filteredComponents.filter((c) => c.category === category);
       const totalUnits = items.reduce((sum, c) => {
@@ -90,7 +95,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
       const totalVal = items.reduce((sum, c) => sum + calculateUnassignedValueStrict(c, state.builds, precomputedMap), 0);
       return { category, items, totalUnits, totalVal };
     }).filter((group) => group.items.length > 0 && group.totalUnits > 0);
-  }, [filteredComponents, state.builds]);
+  }, [filteredComponents, state.builds, precomputedMap]);
 
   const { looseValuation: unassignedValue, activeBuildsCost, totalStockValuation: totalInventoryValue } = useMemo(() => calculateInventoryMetrics(state), [state]);
 
@@ -230,7 +235,7 @@ export const InventoryView: React.FC<InventoryViewProps> = React.memo(({
       <div className="inventory-filters shrink-0 w-full">
         <InventoryFilterBar
           builds={state.builds}
-          components={state.components.filter(c => calculateUnassignedQuantityStrict(c, state.builds) > 0)}
+          components={availableComponents}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           activeCategory={selectedCategory}

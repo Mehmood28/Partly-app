@@ -47,13 +47,15 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({ isOpen, onCl
             data-modal-layout={layout}
             className={`pointer-events-auto relative flex w-full max-w-[calc(100vw-12px)] sm:max-w-3xl flex-col !overflow-hidden rounded-[14px] border border-white/[0.12] bg-[#0b1113]/98 p-3 shadow-[0_28px_80px_rgba(0,0,0,0.82)] backdrop-blur-xl sm:rounded-2xl sm:p-5 ${layout === 'workspace' ? 'modal-layout-workspace' : 'modal-layout-content'} ${className}`}
           >
-            {layout === 'content' ? (
-              <div className="modal-content-scroller flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden overscroll-contain pr-[3px]">
-                {children}
-              </div>
-            ) : (
-              children
-            )}
+            <div
+              className={
+                layout === 'content'
+                  ? 'modal-content-scroller flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden overscroll-contain pr-[3px]'
+                  : 'flex flex-1 min-h-0 w-full h-full flex-col overflow-hidden'
+              }
+            >
+              {children}
+            </div>
           </motion.div>
         </div>
       )}

@@ -13,6 +13,7 @@ import { SwapPartModal } from './SwapPartModal';
 import { EditBuildPartQuantityModal } from './EditBuildPartQuantityModal';
 import { BuildShareImageCard } from './BuildShareImageCard';
 import { hasShareableBuildImage, shareBuildImageToDiscord } from './discordShareHelpers';
+import { compressBuildImage } from '../../utils/imageResizer';
 import { SoldBuildTransactionPanel } from './SoldBuildTransactionPanel';
 import { normalizePlatform } from '../../utils/platformDisplay';
 import { ConfirmModal } from '../ConfirmModal';
@@ -122,20 +123,19 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result === 'string') {
-        updateBuild(build.id, { imageUrl: result });
-        showToast('Photo added to build!', 'success');
-      }
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    try {
+      const compressed = await compressBuildImage(file);
+      updateBuild(build.id, { imageUrl: compressed });
+      showToast('Photo added to build!', 'success');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to process photo upload.', 'error');
+    } finally {
+      e.target.value = '';
+    }
   };
 
   // Confirmation modal state
@@ -391,13 +391,15 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                       >
                         <FileText className="w-3.5 h-3.5" /> {acquiredBreakdown.length > 0 ? 'Edit Breakdown' : 'Itemize'}
                       </button>
-                    ) : canDeleteBuildDraft(build) ? (
+                    ) : null}
+
+                    {canDeleteBuildDraft(build, state.components) ? (
                       <button
                         onClick={(e) => { e.stopPropagation(); onDelete(build); }}
                         className="app-button app-button-danger"
-                        title="Delete empty draft build"
+                        title={isPurchasedPC(build) ? 'Delete purchased PC' : 'Delete empty draft build'}
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Delete Draft
+                        <Trash2 className="w-3.5 h-3.5" /> {isPurchasedPC(build) ? 'Delete PC' : 'Delete Draft'}
                       </button>
                     ) : null}
 
@@ -1010,7 +1012,9 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
         }}
         aria-hidden="true"
       >
-        <BuildShareImageCard ref={imageCardRef} build={build} components={state.components} />
+        {(isExpanded || imageShareStatus === 'loading') && (
+          <BuildShareImageCard ref={imageCardRef} build={build} components={state.components} />
+        )}
       </div>
     </div>
   );

@@ -66,6 +66,22 @@ export const handleUpdateTransaction = (
     };
   }
 
+  // Guard: Purchased PC records cannot be edited
+  if (
+    targetTx.purchaseKind === 'PC' ||
+    prev.builds.some(
+      (b) =>
+        b.purchaseTransactionId === targetTx.id ||
+        (targetTx.relatedComponentId && b.id === targetTx.relatedComponentId && b.acquisitionSource === 'Purchased')
+    )
+  ) {
+    return {
+      nextState: prev,
+      success: false,
+      error: 'Purchased PC records cannot be edited. Delete and re-add the PC purchase if changes are needed.',
+    };
+  }
+
   if (updates.id !== undefined && updates.id !== targetTx.id) {
     return { nextState: prev, success: false, error: 'Transaction ID cannot be changed.' };
   }
@@ -279,18 +295,14 @@ export const handleUpdateTransaction = (
           targetCompIds.add(parsed.comp.id);
           if (parsed.entry) {
             targetEntryIds.add(parsed.entry.id);
-          } else {
-            const match = (parsed.comp.purchaseHistory || []).find(
-              (e) =>
-                e.sourcePurchaseTransactionId === targetTx.id ||
-                (oldSeller && (e.seller === oldSeller || e.platform === oldSeller)) ||
-                e.date === targetTx.dateSortable ||
-                e.date === targetTx.timestamp
-            );
-            if (match) {
-              targetEntryIds.add(match.id);
-            }
           }
+          const matches = (parsed.comp.purchaseHistory || []).filter(
+            (e) =>
+              e.sourcePurchaseTransactionId === targetTx.id ||
+              (targetTx.relatedPurchaseEntryId && e.id === targetTx.relatedPurchaseEntryId) ||
+              ((e.date === targetTx.dateSortable || e.date === targetTx.timestamp) && (!oldSeller || e.seller === oldSeller || e.platform === oldSeller))
+          );
+          matches.forEach((m) => targetEntryIds.add(m.id));
         }
       });
     }
@@ -300,17 +312,13 @@ export const handleUpdateTransaction = (
       const comp = prev.components.find((c) => c.id === targetTx.relatedComponentId);
       if (comp) {
         targetCompIds.add(comp.id);
-        const match = (comp.purchaseHistory || []).find(
+        const matches = (comp.purchaseHistory || []).filter(
           (e) =>
             e.sourcePurchaseTransactionId === targetTx.id ||
             (targetTx.relatedPurchaseEntryId && e.id === targetTx.relatedPurchaseEntryId) ||
-            (oldSeller && (e.seller === oldSeller || e.platform === oldSeller)) ||
-            e.date === targetTx.dateSortable ||
-            e.date === targetTx.timestamp
+            ((e.date === targetTx.dateSortable || e.date === targetTx.timestamp) && (!oldSeller || e.seller === oldSeller || e.platform === oldSeller))
         );
-        if (match) {
-          targetEntryIds.add(match.id);
-        }
+        matches.forEach((m) => targetEntryIds.add(m.id));
       }
     }
 
@@ -335,16 +343,14 @@ export const handleUpdateTransaction = (
       );
       if (compByName) {
         targetCompIds.add(compByName.id);
-        const match = (compByName.purchaseHistory || []).find(
+        const matches = (compByName.purchaseHistory || []).filter(
           (e) =>
             e.sourcePurchaseTransactionId === targetTx.id ||
-            (oldSeller && (e.seller === oldSeller || e.platform === oldSeller)) ||
-            e.date === targetTx.dateSortable ||
-            e.date === targetTx.timestamp
+            (targetTx.relatedPurchaseEntryId && e.id === targetTx.relatedPurchaseEntryId) ||
+            ((e.date === targetTx.dateSortable || e.date === targetTx.timestamp) && (!oldSeller || e.seller === oldSeller || e.platform === oldSeller))
         );
-        if (match) {
-          targetEntryIds.add(match.id);
-        } else if (compByName.purchaseHistory && compByName.purchaseHistory.length === 1) {
+        matches.forEach((m) => targetEntryIds.add(m.id));
+        if (matches.length === 0 && compByName.purchaseHistory && compByName.purchaseHistory.length === 1) {
           targetEntryIds.add(compByName.purchaseHistory[0].id);
         }
       }
@@ -374,17 +380,22 @@ export const handleUpdateTransaction = (
     }
 
     updatedComponents = prev.components.map((comp) => {
-      const hasMatchingEntries = (comp.purchaseHistory || []).some(
-        (pe) => targetEntryIds.has(pe.id) || pe.sourcePurchaseTransactionId === targetTx.id
-      );
       const isTargetComp = targetCompIds.has(comp.id);
+      const isTargetEntry = (pe: PurchaseEntry) =>
+        targetEntryIds.has(pe.id) ||
+        pe.sourcePurchaseTransactionId === targetTx.id ||
+        (isTargetComp && ((pe.date === targetTx.dateSortable || pe.date === targetTx.timestamp) && (!oldSeller || pe.seller === oldSeller || pe.platform === oldSeller)));
+
+      const hasMatchingEntries = (comp.purchaseHistory || []).some(isTargetEntry);
 
       if (!hasMatchingEntries && !isTargetComp) {
         return comp;
       }
 
+      const matchingEntryCount = (comp.purchaseHistory || []).filter(isTargetEntry).length;
+
       const updatedHistory = (comp.purchaseHistory || []).map((pe) => {
-        if (targetEntryIds.has(pe.id) || pe.sourcePurchaseTransactionId === targetTx.id) {
+        if (isTargetEntry(pe)) {
           let updatedQty = pe.quantity || 1;
           let updatedUnitPrice = pe.unitPrice;
           let updatedTotalPrice = pe.totalPrice;
@@ -394,7 +405,15 @@ export const handleUpdateTransaction = (
             const byComp = itemMapByCompId.get(comp.id);
             const matchData = byEntry || byComp;
 
-            if (matchData) {
+            if (matchingEntryCount > 1) {
+              if (matchData) {
+                updatedUnitPrice = matchData.unitPrice;
+              } else if (isSingleItemPurchase && (isAmountChanged || isQtyChanged)) {
+                updatedUnitPrice = roundToCents(totalAmount / (purchaseQty || 1));
+              }
+              updatedQty = pe.quantity;
+              updatedTotalPrice = roundToCents(pe.quantity * updatedUnitPrice);
+            } else if (matchData) {
               if (matchData.quantity !== undefined && matchData.quantity > 0) {
                 updatedQty = matchData.quantity;
               }
@@ -416,6 +435,7 @@ export const handleUpdateTransaction = (
             quantity: updatedQty,
             unitPrice: updatedUnitPrice,
             totalPrice: updatedTotalPrice,
+            healthPercent: pe.healthPercent,
             date: isDateChanged ? dateSortable : pe.date,
             paymentMethod: paymentMethod ? (paymentMethod as PaymentMethod) : pe.paymentMethod,
             platform: isSellerChanged ? ((seller || pe.platform || '') as Platform) : pe.platform,
@@ -512,6 +532,40 @@ export const handleDeleteTransaction = (
 
     if (tradeInBuild && tradeInBuild.status === 'Trade-In Processing') {
       buildsToRemove.push(tradeInBuild.id);
+    }
+  }
+
+  // Guard: If this transaction is a Purchased PC
+  const isPCPurchase =
+    targetTx.type === 'PURCHASE' &&
+    (targetTx.purchaseKind === 'PC' ||
+      prev.builds.some(
+        (b) => b.purchaseTransactionId === id || (targetTx.relatedComponentId && b.id === targetTx.relatedComponentId)
+      ));
+
+  if (isPCPurchase) {
+    const purchasedBuild = prev.builds.find(
+      (b) => b.purchaseTransactionId === id || (targetTx.relatedComponentId && b.id === targetTx.relatedComponentId)
+    );
+    const hasPartedOutEntries = prev.components.some((c) =>
+      (c.purchaseHistory || []).some(
+        (pe) =>
+          pe.sourcePurchaseTransactionId === id ||
+          (purchasedBuild && pe.sourcePurchasedBuildId === purchasedBuild.id)
+      )
+    );
+    const isModifiedOrSold =
+      purchasedBuild &&
+      (purchasedBuild.status === 'Sold' ||
+        (purchasedBuild.parts && purchasedBuild.parts.length > 0));
+
+    if (hasPartedOutEntries || isModifiedOrSold) {
+      // Downstream records or allocations exist: block deletion to protect accounting integrity
+      return prev;
+    }
+
+    if (purchasedBuild) {
+      buildsToRemove.push(purchasedBuild.id);
     }
   }
 

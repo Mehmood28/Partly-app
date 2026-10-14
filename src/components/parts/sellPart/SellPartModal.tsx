@@ -3,13 +3,13 @@ import { useInventory } from '../../../context/InventoryContext';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { useToast } from '../../../context/ToastContext';
 import { CATEGORIES, ComponentCategory, InventoryComponent, PaymentMethod, Platform } from '../../../types';
-import { calculateEffectiveUnitCost, calculateUnassignedQuantityStrict, filterAndSortComponents, formatCurrency, getAllBatchesWithRemaining, getConflictingTags, SortOption } from '../../../utils/helpers';
+import { calculateEffectiveUnitCost, calculateUnassignedQuantityStrict, filterAndSortComponents, formatCurrency, formatReadableDate, getAllBatchesWithRemaining, getConflictingTags, SortOption } from '../../../utils/helpers';
 import { normalizePlatform } from '../../../utils/platformDisplay';
 import { BottomSheetModal } from '../../ui/BottomSheetModal';
 import { CustomSelect } from '../../ui/CustomSelect';
 import { InventoryFilterBar } from '../../InventoryFilterBar';
 import { X, Tag, Package, Plus, Layers, TrendingUp } from 'lucide-react';
-import { getEstimatedNumericValue, parseCashPaidOnTop } from './sellPartHelpers';
+import { parseCashPaidOnTop } from './sellPartHelpers';
 import { SaleDetailsForm } from './SaleDetailsForm';
 import { TradeInSection, TradeDirection } from './TradeInSection';
 import { BulkSaleForm } from './BulkSaleForm';
@@ -136,12 +136,8 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
         const batches = getAllBatchesWithRemaining(comp, state.builds).filter((b) => b.availableQuantity > 0);
         const targetEntryId = preselectedEntryId || (batches.length > 0 ? batches[0].entry.id : comp.purchaseHistory?.[0]?.id || '');
         setSelectedEntryId(targetEntryId);
-
-        const batch = batches.find((b) => b.entry.id === targetEntryId) || batches[0];
-        const unitCost = batch ? batch.unitCost : calculateEffectiveUnitCost(comp, state.builds);
-        const estValue = getEstimatedNumericValue(comp, unitCost);
-        setUnitSalePrice(estValue.toFixed(2));
-        setTotalSalePrice(estValue.toFixed(2));
+        setUnitSalePrice('');
+        setTotalSalePrice('');
       } else {
         setSelectedComponentId('');
         setSelectedEntryId('');
@@ -197,10 +193,8 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
       const batches = getAllBatchesWithRemaining(comp, state.builds).filter((b) => b.availableQuantity > 0);
       const firstEntryId = batches[0]?.entry.id || comp.purchaseHistory?.[0]?.id || '';
       setSelectedEntryId(firstEntryId);
-      const unitCost = batches[0] ? batches[0].unitCost : calculateEffectiveUnitCost(comp, state.builds);
-      const estValue = getEstimatedNumericValue(comp, unitCost);
-      setUnitSalePrice(estValue.toFixed(2));
-      setTotalSalePrice((estValue * quantity).toFixed(2));
+      setUnitSalePrice('');
+      setTotalSalePrice('');
       const batchStock = batches[0] ? batches[0].availableQuantity : calculateUnassignedQuantityStrict(comp, state.builds);
       if (batchStock > 0 && quantity > batchStock) {
         setQuantity(batchStock);
@@ -212,9 +206,8 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
     setSelectedEntryId(entryId);
     const batch = availableBatches.find((b) => b.entry.id === entryId);
     if (batch && currentComponent) {
-      const estValue = getEstimatedNumericValue(currentComponent, batch.unitCost);
-      setUnitSalePrice(estValue.toFixed(2));
-      setTotalSalePrice((estValue * quantity).toFixed(2));
+      setUnitSalePrice('');
+      setTotalSalePrice('');
       if (quantity > batch.availableQuantity) {
         setQuantity(batch.availableQuantity);
       }
@@ -451,15 +444,16 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
           </div>
         </div>
 
-        {saleMode === 'bulk' ? (
-          <div className="sell-part-content">
-            <BulkSaleForm
-              onClose={handleCloseAndReset}
-              initialComponentId={preselectedComponent?.id}
-              initialPurchaseEntryId={preselectedEntryId || undefined}
-            />
-          </div>
-        ) : hasNoInStockParts ? (
+        <div className={saleMode === 'bulk' ? 'sell-part-content' : 'hidden'}>
+          <BulkSaleForm
+            onClose={handleCloseAndReset}
+            initialComponentId={preselectedComponent?.id}
+            initialPurchaseEntryId={preselectedEntryId || undefined}
+          />
+        </div>
+
+        <div className={saleMode === 'single' ? 'single-part-wrapper' : 'hidden'}>
+          {hasNoInStockParts ? (
           <div className="flex flex-col gap-4 p-6 text-center">
             <div className="w-12 h-12 rounded-xl bg-[#B9EF68]/15 border border-[#B9EF68]/30 text-[#B9EF68] flex items-center justify-center mx-auto">
               <Package className="w-6 h-6" />
@@ -575,7 +569,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
                       onChange={handleBatchChange}
                       options={availableBatches.map(b => ({
                         value: b.entry.id,
-                        label: `${b.entry.date} · ${b.entry.condition}${currentComponent.category === 'Storage' && typeof b.entry.healthPercent === 'number' ? ` · ${b.entry.healthPercent}%` : ''} · ${formatCurrency(b.unitCost)} each (${b.availableQuantity} available)${!hideSupplierNames && b.entry.platform ? ` · ${b.entry.platform}` : ''}`,
+                        label: `${formatReadableDate(b.entry.date) || String(b.entry.date || '').split('T')[0]} · ${b.entry.condition}${currentComponent.category === 'Storage' && typeof b.entry.healthPercent === 'number' ? ` · ${b.entry.healthPercent}%` : ''} · ${formatCurrency(b.unitCost)} each (${b.availableQuantity} available)${!hideSupplierNames && b.entry.platform ? ` · ${b.entry.platform}` : ''}`,
                       }))}
                       placeholder="Select batch..."
                       fitLongestOption={false}
@@ -708,6 +702,7 @@ export const SellPartModal: React.FC<SellPartModalProps> = ({
             )}
           </form>
         )}
+        </div>
       </div>
     </BottomSheetModal>
   );

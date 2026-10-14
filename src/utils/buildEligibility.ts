@@ -2,15 +2,33 @@ import { PCBuild, TransactionLogItem, InventoryComponent, ComponentCategory, COM
 import { isAcquiredPC } from './acquiredPC';
 
 /**
- * 1. Delete Draft is allowed only when:
+ * 1. Delete Draft is allowed when:
  * - Build exists.
  * - Build is not Sold.
- * - It is not an acquired whole PC.
- * - It has zero allocated parts.
+ * - Zero allocated parts.
+ * - For Purchased PCs: allowed when no parted-out entries exist for it in components.
+ * - Other acquired PCs (Trade-In) cannot be deleted.
  */
-export function canDeleteBuildDraft(build: PCBuild | null | undefined): boolean {
+export function canDeleteBuildDraft(
+  build: PCBuild | null | undefined,
+  components?: InventoryComponent[]
+): boolean {
   if (!build) return false;
   if (build.status === 'Sold') return false;
+  if (build.parts && build.parts.length > 0) return false;
+
+  if (build.acquisitionSource === 'Purchased') {
+    if (!components) return true;
+    const hasPartedOut = components.some((c) =>
+      (c.purchaseHistory || []).some(
+        (pe) =>
+          pe.sourcePurchasedBuildId === build.id ||
+          (build.purchaseTransactionId && pe.sourcePurchaseTransactionId === build.purchaseTransactionId)
+      )
+    );
+    return !hasPartedOut;
+  }
+
   if (isAcquiredPC(build)) return false;
   return !build.parts || build.parts.length === 0;
 }

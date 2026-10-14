@@ -5,9 +5,6 @@ import { useInventory } from '../context/InventoryContext';
 import { usePrivacy } from '../context/PrivacyContext';
 import { useToast } from '../context/ToastContext';
 import {
-  calculateEffectiveUnitCost,
-  calculateUnassignedQuantityStrict,
-  calculateUnassignedValueStrict,
   formatCurrency,
   formatReadableDate,
   getCategoryPresentation,
@@ -94,24 +91,17 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
     });
   }, [component, state.builds, draftSelectedParts]);
 
-  const unassignedQty = draftSelectedParts
-    ? visibleBatches.reduce((sum, b) => sum + b.availableQuantity, 0)
-    : calculateUnassignedQuantityStrict(component, state.builds);
+  const unassignedQty = visibleBatches.reduce((sum, b) => sum + b.availableQuantity, 0);
 
-  const unassignedVal = draftSelectedParts
-    ? visibleBatches.reduce((sum, b) => sum + b.availableQuantity * b.unitCost, 0)
-    : calculateUnassignedValueStrict(component, state.builds);
+  const unassignedVal = visibleBatches.reduce((sum, b) => sum + b.availableQuantity * b.unitCost, 0);
 
-  const avgCost = draftSelectedParts
-    ? (unassignedQty > 0 ? unassignedVal / unassignedQty : 0)
-    : calculateEffectiveUnitCost(component, state.builds);
+  const avgCost = unassignedQty > 0 ? unassignedVal / unassignedQty : 0;
 
   const categoryPresentation = getCategoryPresentation(component.category);
 
   const storageHealth = React.useMemo(() => {
     if (component.category !== 'Storage') return undefined;
-    const batches = getUnassignedBatches(component, state.builds);
-    const healths = batches
+    const healths = visibleBatches
       .filter((b) => typeof b.entry.healthPercent === 'number' && b.availableQuantity > 0)
       .map((b) => b.entry.healthPercent as number);
 
@@ -125,7 +115,7 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
       return `${minH}%`;
     }
     return `${minH}%-${maxH}%`;
-  }, [component, state.builds]);
+  }, [component.category, component.healthPercent, visibleBatches]);
 
   return (
     <div className={`app-panel stock-card w-full border-white/[0.08] transition-colors hover:border-[#B9EF68]/40 ${isExpanded ? 'stock-card-expanded' : ''}`}>

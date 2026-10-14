@@ -512,12 +512,33 @@ export function normalizeDateString(dateStr: string, defaultYear = new Date().ge
     return trimmed;
   }
 
-  // 5. Numeric MDY: e.g. "8/14/2026", "08/14/2026"
-  const mdyMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (mdyMatch) {
-    const month = parseInt(mdyMatch[1], 10);
-    const day = parseInt(mdyMatch[2], 10);
-    const year = parseInt(mdyMatch[3], 10);
+  // 5. Day, Month name, and Year (with optional ordinal suffix): e.g. "8th Oct 2026", "08 Oct 2026", "21st September 2026"
+  const dayMonthYearMatch = trimmed.match(/^(\d{1,2})(?:st|nd|rd|th)?\s+([a-zA-Z]+),?\s+(\d{4})(?:\s+.*)?$/);
+  if (dayMonthYearMatch) {
+    const day = parseInt(dayMonthYearMatch[1], 10);
+    const mName = dayMonthYearMatch[2].toLowerCase();
+    const month = MONTH_NAME_TO_NUMBER[mName];
+    const year = parseInt(dayMonthYearMatch[3], 10);
+    if (month && year >= 1970 && year <= 2100) {
+      const maxDays = new Date(year, month, 0).getDate();
+      if (day >= 1 && day <= maxDays) {
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+    return trimmed;
+  }
+
+  // 6. Numeric DMY (or fallback MDY): e.g. "14/08/2026", "14/8/2026", "8/14/2026"
+  const dmyMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dmyMatch) {
+    let day = parseInt(dmyMatch[1], 10);
+    let month = parseInt(dmyMatch[2], 10);
+    const year = parseInt(dmyMatch[3], 10);
+    if (month > 12 && day <= 12) {
+      // Legacy MM/DD/YYYY fallback
+      month = parseInt(dmyMatch[1], 10);
+      day = parseInt(dmyMatch[2], 10);
+    }
     if (year >= 1970 && year <= 2100 && month >= 1 && month <= 12) {
       const maxDays = new Date(year, month, 0).getDate();
       if (day >= 1 && day <= maxDays) {
@@ -597,12 +618,17 @@ export function parseDateLocal(dateStr?: string): { year: number; monthIndex: nu
     return null;
   }
 
-  // 2. Numeric MDY format: M/D/YYYY or MM/DD/YYYY (with optional time suffix e.g. " 1:44 PM")
-  const mdyNumericMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+.*)?$/);
-  if (mdyNumericMatch) {
-    const month = parseInt(mdyNumericMatch[1], 10);
-    const day = parseInt(mdyNumericMatch[2], 10);
-    const year = parseInt(mdyNumericMatch[3], 10);
+  // 2. Numeric DMY format (or legacy fallback MDY): D/M/YYYY or DD/MM/YYYY (with optional time suffix e.g. " 1:44 PM")
+  const dmyNumericMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+.*)?$/);
+  if (dmyNumericMatch) {
+    let day = parseInt(dmyNumericMatch[1], 10);
+    let month = parseInt(dmyNumericMatch[2], 10);
+    const year = parseInt(dmyNumericMatch[3], 10);
+    if (month > 12 && day <= 12) {
+      // Legacy MM/DD/YYYY fallback
+      month = parseInt(dmyNumericMatch[1], 10);
+      day = parseInt(dmyNumericMatch[2], 10);
+    }
     if (year >= 1970 && year <= 2100 && month >= 1 && month <= 12) {
       const maxDays = new Date(year, month, 0).getDate();
       if (day >= 1 && day <= maxDays) {
@@ -613,7 +639,7 @@ export function parseDateLocal(dateStr?: string): { year: number; monthIndex: nu
         };
       }
     }
-    // Recognized numeric MDY format with invalid calendar date -> return null immediately
+    // Recognized numeric format with invalid calendar date -> return null immediately
     return null;
   }
 
@@ -638,6 +664,26 @@ export function parseDateLocal(dateStr?: string): { year: number; monthIndex: nu
     return null;
   }
 
+  // 3b. Day, Month name, and Year (with optional ordinal suffix): e.g. "8th Oct 2026", "08 Oct 2026", "21st September 2026 1:44 PM"
+  const dayMonthYearMatch = trimmed.match(/^(\d{1,2})(?:st|nd|rd|th)?\s+([a-zA-Z]+),?\s+(\d{4})(?:\s+.*)?$/);
+  if (dayMonthYearMatch) {
+    const day = parseInt(dayMonthYearMatch[1], 10);
+    const mName = dayMonthYearMatch[2].toLowerCase();
+    const month = MONTH_NAME_TO_NUMBER[mName];
+    const year = parseInt(dayMonthYearMatch[3], 10);
+    if (month && year >= 1970 && year <= 2100) {
+      const maxDays = new Date(year, month, 0).getDate();
+      if (day >= 1 && day <= maxDays) {
+        return {
+          year,
+          monthIndex: month - 1,
+          day,
+        };
+      }
+    }
+    return null;
+  }
+
   // 4. Month name and Year only: e.g. "August 2026", "Aug 2026"
   const monthYearMatch = trimmed.match(/^([a-zA-Z]+)\s+(\d{4})$/);
   if (monthYearMatch) {
@@ -657,11 +703,28 @@ export function parseDateLocal(dateStr?: string): { year: number; monthIndex: nu
   return null;
 }
 
+export function formatOrdinalDay(day: number): string {
+  const mod100 = day % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${day}th`;
+  switch (day % 10) {
+    case 1: return `${day}st`;
+    case 2: return `${day}nd`;
+    case 3: return `${day}rd`;
+    default: return `${day}th`;
+  }
+}
+
 export function formatReadableDate(dateStr?: string): string | null {
   const parsed = parseDateLocal(dateStr);
   if (!parsed) return null;
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${MONTHS[parsed.monthIndex]} ${parsed.day}, ${parsed.year}`;
+  return `${formatOrdinalDay(parsed.day)} ${MONTHS[parsed.monthIndex]} ${parsed.year}`;
+}
+
+export function formatNumericDate(dateStr?: string): string | null {
+  const parsed = parseDateLocal(dateStr);
+  if (!parsed) return null;
+  return `${String(parsed.day).padStart(2, '0')}/${String(parsed.monthIndex + 1).padStart(2, '0')}/${parsed.year}`;
 }
 
 export interface RelativeDateOptions {
@@ -732,10 +795,10 @@ export function formatRelativeCalendarDate(
   const day = targetDate.getDate();
 
   if (targetDate.getFullYear() === ref.getFullYear()) {
-    return `${monthName} ${day}`;
+    return `${formatOrdinalDay(day)} ${monthName}`;
   }
 
-  return `${monthName} ${day}, ${targetDate.getFullYear()}`;
+  return `${formatOrdinalDay(day)} ${monthName} ${targetDate.getFullYear()}`;
 }
 
 export type SortOption = 

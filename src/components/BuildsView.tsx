@@ -92,10 +92,10 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
     }
     if (status === 'Sold') {
       setSortBy('recently_sold');
-    } else if (sortBy === 'recently_sold') {
+    } else {
       setSortBy('newest');
     }
-  }, [onStatusFilterChange, sortBy]);
+  }, [onStatusFilterChange]);
 
   const handleOpenEditModal = React.useCallback((build: PCBuild) => {
     setEditingBuild(build);
@@ -468,11 +468,11 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
         </div>
       )}
 
-      <EditBuildModal build={editingBuild} isOpen={isActive !== false} onClose={() => setEditingBuild(null)} />
-      <AllocatePartModal build={allocatingBuild} isOpen={isActive !== false} onClose={() => setAllocatingBuild(null)} />
+      <EditBuildModal build={editingBuild} isOpen={!!editingBuild && isActive !== false} onClose={() => setEditingBuild(null)} />
+      <AllocatePartModal build={allocatingBuild} isOpen={!!allocatingBuild && isActive !== false} onClose={() => setAllocatingBuild(null)} />
       <DismantleRigModal
         build={dismantlingBuild}
-        isOpen={isActive !== false}
+        isOpen={!!dismantlingBuild && isActive !== false}
         onClose={() => setDismantlingBuild(null)}
         onConfirm={(buildId, extractedParts) => {
           const isTradeIn = dismantlingBuild?.acquisitionSource === 'Trade-In';
@@ -495,7 +495,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       />
       <ItemizeTradeInModal
         build={itemizingBuild}
-        isOpen={isActive !== false}
+        isOpen={!!itemizingBuild && isActive !== false}
         onClose={() => setItemizingBuild(null)}
         onConfirm={(buildId, breakdown) => {
           const acquisitionType = itemizingBuild?.acquisitionSource === 'Purchased' ? 'Purchased PC' : 'Trade-in PC';
@@ -510,7 +510,7 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       />
       <SellBuildModal 
         build={sellingBuild} 
-        isOpen={isActive !== false}
+        isOpen={!!sellingBuild && isActive !== false}
         onClose={() => setSellingBuild(null)} 
         onConfirm={(buildId, saleData) => {
           const res = sellBuild(buildId, saleData);
@@ -524,9 +524,13 @@ export const BuildsView: React.FC<BuildsViewProps> = React.memo(({
       />
       <ConfirmModal
         isOpen={!!deletingBuild && isActive !== false}
-        title="Delete Build Draft"
-        message={`Are you sure you want to delete the draft build "${deletingBuild?.name}"?`}
-        confirmText="Delete Draft"
+        title={deletingBuild?.acquisitionSource === 'Purchased' ? "Delete Purchased PC" : "Delete Build Draft"}
+        message={
+          deletingBuild?.acquisitionSource === 'Purchased'
+            ? `Are you sure you want to delete the purchased PC "${deletingBuild?.name}" and its purchase transaction?`
+            : `Are you sure you want to delete the draft build "${deletingBuild?.name}"?`
+        }
+        confirmText={deletingBuild?.acquisitionSource === 'Purchased' ? "Delete PC" : "Delete Draft"}
         onConfirm={() => {
           if (deletingBuild) {
             deleteBuild(deletingBuild.id);

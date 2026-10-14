@@ -65,7 +65,10 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
               (c.platform || '') === (cleanPh.platform || '') &&
               (c.taxPercent || 0) === (cleanPh.taxPercent || 0) &&
               c.healthPercent === cleanPh.healthPercent &&
-              (c.notes || '') === (cleanPh.notes || '')
+              (c.notes || '') === (cleanPh.notes || '') &&
+              (c.sourcePurchaseTransactionId || '') === (cleanPh.sourcePurchaseTransactionId || '') &&
+              (c.sourcePurchasedBuildId || '') === (cleanPh.sourcePurchasedBuildId || '') &&
+              (c.sourceTradeInBuildId || '') === (cleanPh.sourceTradeInBuildId || '')
           );
           if (match) {
             idRemappings[cleanPh.id] = match.id;
@@ -158,7 +161,12 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
 
   // Synchronize single-purchase transaction prices to their linked component purchase entries
   transactions.forEach((tx) => {
-    if (tx.type === 'PURCHASE' && typeof tx.totalAmount === 'number' && (!tx.detailsList || tx.detailsList.length <= 1)) {
+    if (
+      tx.type === 'PURCHASE' &&
+      tx.purchaseKind !== 'PC' &&
+      typeof tx.totalAmount === 'number' &&
+      (!tx.detailsList || tx.detailsList.length <= 1)
+    ) {
       const targetCompId = tx.relatedComponentId;
       const targetEntryId = tx.relatedPurchaseEntryId;
       const qty = tx.quantity || tx.relatedComponentQty || 1;
@@ -168,12 +176,13 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
       if (targetCompId) {
         const comp = components.find((c) => c && c.id === targetCompId);
         if (comp && comp.purchaseHistory) {
-          const entry = comp.purchaseHistory.find(
+          const matchingEntries = comp.purchaseHistory.filter(
             (e) => (targetEntryId && e.id === targetEntryId) || e.sourcePurchaseTransactionId === tx.id
           );
-          if (entry) {
+          if (matchingEntries.length === 1) {
+            const entry = matchingEntries[0];
             entry.unitPrice = cleanUnit;
-            entry.totalPrice = cleanTotal;
+            entry.totalPrice = roundToCents(entry.quantity * cleanUnit);
           }
         }
       }

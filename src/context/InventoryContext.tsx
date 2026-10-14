@@ -51,7 +51,7 @@ import {
   handleSaveAcquiredPCComponentBreakdown,
   handleSaveTradeInComponentBreakdown,
 } from './actions/buildActions';
-import { isAcquiredPC } from '../utils/acquiredPC';
+import { canDeleteBuildDraft } from '../utils/buildEligibility';
 import {
   handleAddTransaction,
   handleUpdateTransaction,
@@ -179,34 +179,23 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Component Actions
   const saveComponent = useCallback(
     (options: SaveComponentOptions) => {
-      let resultError: string | undefined;
-      let hasError = false;
+      const current = stateRef.current;
+      const result = handleSaveComponent(current, options);
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
 
-      setState((prevState) => {
-        const result = handleSaveComponent(prevState, options);
-        if (!result.success) {
-          hasError = true;
-          resultError = result.error;
-          return prevState;
-        }
-
-        if (result.nextState !== prevState) {
-          const targetId = options.existingComponentId;
-          const existing = targetId ? prevState.components.find((c) => c.id === targetId) : undefined;
-          const compName = options.componentData.name || (existing ? existing.name : 'Component');
-          const label = existing ? `Edit component: ${compName}` : `Add component: ${compName}`;
-          saveStateToHistory(label);
-          return result.nextState;
-        }
-        return prevState;
-      });
-
-      if (hasError) {
-        return { success: false, error: resultError };
+      if (result.nextState !== current) {
+        const targetId = options.existingComponentId;
+        const existing = targetId ? current.components.find((c) => c.id === targetId) : undefined;
+        const compName = options.componentData.name || (existing ? existing.name : 'Component');
+        const label = existing ? `Edit component: ${compName}` : `Add component: ${compName}`;
+        saveStateToHistory(label);
+        setState(result.nextState);
       }
       return { success: true };
     },
-    [saveStateToHistory]
+    [saveStateToHistory, stateRef]
   );
 
   const addComponent = useCallback(
@@ -318,32 +307,21 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updatePurchaseEntry = useCallback(
     (componentId: string, entryId: string, entry: Omit<PurchaseEntry, 'id'>) => {
-      let resultError: string | undefined;
-      let hasError = false;
+      const current = stateRef.current;
+      const result = handleUpdatePurchaseEntry(current, componentId, entryId, entry);
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
 
-      setState((prevState) => {
-        const result = handleUpdatePurchaseEntry(prevState, componentId, entryId, entry);
-        if (!result.success) {
-          hasError = true;
-          resultError = result.error;
-          return prevState;
-        }
-
-        if (result.nextState !== prevState) {
-          const comp = prevState.components.find((c) => c.id === componentId);
-          const compName = comp ? comp.name : 'Component';
-          saveStateToHistory(`Edit purchase batch: ${compName}`);
-          return result.nextState;
-        }
-        return prevState;
-      });
-
-      if (hasError) {
-        return { success: false, error: resultError };
+      if (result.nextState !== current) {
+        const comp = current.components.find((c) => c.id === componentId);
+        const compName = comp ? comp.name : 'Component';
+        saveStateToHistory(`Edit purchase batch: ${compName}`);
+        setState(result.nextState);
       }
       return { success: true };
     },
-    [saveStateToHistory]
+    [saveStateToHistory, stateRef]
   );
 
   const deletePurchaseEntry = useCallback(
@@ -720,16 +698,15 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const build = current.builds.find((b) => b.id === buildId);
       if (
         !build ||
-        build.status === 'Sold' ||
-        (build.parts && build.parts.length > 0) ||
-        isAcquiredPC(build)
+        !canDeleteBuildDraft(build, current.components)
       ) {
         return;
       }
       const nextState = handleDeleteBuild(current, buildId);
       if (nextState === current) return;
       const buildName = build.name;
-      saveStateToHistory(`Delete build draft: ${buildName}`);
+      const isPurchased = build.acquisitionSource === 'Purchased';
+      saveStateToHistory(isPurchased ? `Delete purchased PC: ${buildName}` : `Delete build draft: ${buildName}`);
       setState(nextState);
     },
     [saveStateToHistory, stateRef]
@@ -853,6 +830,35 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             (tradeInBuild.parts && tradeInBuild.parts.length > 0));
 
         if (hasExtractedEntries || isModifiedOrSold) {
+          return;
+        }
+      }
+
+      // Check if this transaction is a Purchased PC that has parted out entries or is modified/sold
+      const isPCPurchase =
+        existing.type === 'PURCHASE' &&
+        (existing.purchaseKind === 'PC' ||
+          stateRef.current.builds.some(
+            (b) => b.purchaseTransactionId === id || (existing.relatedComponentId && b.id === existing.relatedComponentId)
+          ));
+
+      if (isPCPurchase) {
+        const purchasedBuild = stateRef.current.builds.find(
+          (b) => b.purchaseTransactionId === id || (existing.relatedComponentId && b.id === existing.relatedComponentId)
+        );
+        const hasPartedOutEntries = stateRef.current.components.some((c) =>
+          (c.purchaseHistory || []).some(
+            (pe) =>
+              pe.sourcePurchaseTransactionId === id ||
+              (purchasedBuild && pe.sourcePurchasedBuildId === purchasedBuild.id)
+          )
+        );
+        const isModifiedOrSold =
+          purchasedBuild &&
+          (purchasedBuild.status === 'Sold' ||
+            (purchasedBuild.parts && purchasedBuild.parts.length > 0));
+
+        if (hasPartedOutEntries || isModifiedOrSold) {
           return;
         }
       }

@@ -97,8 +97,9 @@ function AppContent() {
       const unitCost = Number(item.unitCost) || 0;
       const isStorage = item.category === 'Storage';
 
-      const health = isStorage && item.healthPercent !== undefined
-        ? Math.min(100, Math.max(0, Math.round(Number(item.healthPercent) || 100)))
+      const parsedHealth = Number(item.healthPercent);
+      const health = isStorage && item.healthPercent !== undefined && item.healthPercent !== null && Number.isFinite(parsedHealth)
+        ? Math.min(100, Math.max(0, Math.round(parsedHealth)))
         : undefined;
 
       const purchaseEntries: PurchaseEntry[] = [{
@@ -123,8 +124,7 @@ function AppContent() {
         specifications: '',
         tags: itemTags.length > 0 ? itemTags : undefined,
         purchaseHistory: purchaseEntries,
-        healthPercent: isStorage ? (purchaseEntries[0]?.healthPercent ?? item.healthPercent) : undefined,
-        targetMarketValuePerUnit: (item.unitCost || 0) * 1.5, // Default market-value estimate.
+        healthPercent: isStorage ? (purchaseEntries[0]?.healthPercent ?? health) : undefined,
       };
     });
     

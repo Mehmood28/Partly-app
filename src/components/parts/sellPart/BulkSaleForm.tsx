@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useInventory } from '../../../context/InventoryContext';
 import { useToast } from '../../../context/ToastContext';
 import { CATEGORIES, PaymentMethod, InventoryComponent, PurchaseEntry } from '../../../types';
-import { getAllBatchesWithRemaining, formatCurrency, filterAndSortComponents, getConflictingTags, SortOption } from '../../../utils/helpers';
+import { getAllBatchesWithRemaining, formatCurrency, formatReadableDate, filterAndSortComponents, getConflictingTags, SortOption } from '../../../utils/helpers';
 import { InventoryFilterBar } from '../../InventoryFilterBar';
 import { CustomSelect } from '../../ui/CustomSelect';
 import { PAYMENT_METHODS } from './SaleDetailsForm';
@@ -112,17 +112,12 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
         const batches = getAllBatchesWithRemaining(comp, state.builds);
         const match = batches.find((b) => b.entry.id === initialPurchaseEntryId);
         if (match && match.availableQuantity > 0) {
-          const defaultPrice = comp.targetMarketValuePerUnit && comp.targetMarketValuePerUnit > 0
-            ? comp.targetMarketValuePerUnit.toString()
-            : match.unitCost > 0
-            ? (match.unitCost * 1.25).toFixed(2)
-            : '0';
           return [
             {
               componentId: initialComponentId,
               purchaseEntryId: initialPurchaseEntryId,
               quantity: match.availableQuantity,
-              unitSalePrice: defaultPrice,
+              unitSalePrice: '',
             },
           ];
         }
@@ -170,19 +165,13 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
     const key = `${item.component.id}::${item.entry.id}`;
     if (selectedBatchKeys.has(key)) return;
 
-    const defaultPrice = item.component.targetMarketValuePerUnit && item.component.targetMarketValuePerUnit > 0
-      ? Number(item.component.targetMarketValuePerUnit).toFixed(2)
-      : item.unitCost > 0
-      ? (item.unitCost * 1.25).toFixed(2)
-      : '0.00';
-
     setSelectedLines((prev) => [
       ...prev,
       {
         componentId: item.component.id,
         purchaseEntryId: item.entry.id,
         quantity: item.availableQuantity > 0 ? item.availableQuantity : 1,
-        unitSalePrice: defaultPrice,
+        unitSalePrice: '',
       },
     ]);
   };
@@ -294,8 +283,9 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
         );
         return;
       }
-      if (item.unitPrice < 0 || isNaN(item.unitPrice)) {
-        showToast(`Please provide a valid sale price for ${item.component.name}.`, 'error');
+      const price = parseFloat(item.line.unitSalePrice);
+      if (isNaN(price) || price <= 0) {
+        showToast(`Please enter a valid positive sale price for ${item.component.name}.`, 'error');
         return;
       }
     }
@@ -394,7 +384,7 @@ export const BulkSaleForm: React.FC<BulkSaleFormProps> = ({
                       {item.entry.date && (
                         <>
                           <span>·</span>
-                          <span>{item.entry.date}</span>
+                          <span>{formatReadableDate(item.entry.date) || String(item.entry.date || '').split('T')[0]}</span>
                         </>
                       )}
                     </div>

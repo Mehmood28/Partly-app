@@ -2441,13 +2441,25 @@ export const handleDeleteBuild = (
   buildId: string
 ): AppState => {
   const targetBuild = prev.builds.find((b) => b.id === buildId);
-  if (!targetBuild || !canDeleteBuildDraft(targetBuild)) {
+  if (!targetBuild || !canDeleteBuildDraft(targetBuild, prev.components)) {
     return prev;
   }
+
+  const isPurchasedPC = targetBuild.acquisitionSource === 'Purchased';
+  const updatedTransactions = isPurchasedPC
+    ? prev.transactions.filter(
+        (t) =>
+          !(
+            (targetBuild.purchaseTransactionId && t.id === targetBuild.purchaseTransactionId) ||
+            (t.type === 'PURCHASE' && t.relatedComponentId === buildId)
+          )
+      )
+    : prev.transactions;
 
   return {
     ...prev,
     builds: prev.builds.filter((b) => b.id !== buildId),
+    transactions: updatedTransactions,
   };
 };
 

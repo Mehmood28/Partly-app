@@ -5,10 +5,7 @@ import { PaymentMethod } from '../../../types';
 export const PAYMENT_METHODS: PaymentMethod[] = [
   'Cash',
   'E-Transfer',
-  'PayPal',
   'Credit Card',
-  'Debit',
-  'Crypto',
 ];
 
 interface SaleDetailsFormProps {
@@ -195,7 +192,12 @@ export const SaleDetailsForm: React.FC<SaleDetailsFormProps> = ({
             <CustomSelect
               value={paymentMethod}
               onChange={(val) => setPaymentMethod(val as PaymentMethod)}
-              options={PAYMENT_METHODS.map(pm => ({ value: pm, label: pm }))}
+              options={(() => {
+                const opts = PAYMENT_METHODS.includes(paymentMethod)
+                  ? PAYMENT_METHODS
+                  : [...PAYMENT_METHODS, paymentMethod];
+                return opts.map(pm => ({ value: pm, label: pm }));
+              })()}
             />
           </div>
         </div>
