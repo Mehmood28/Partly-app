@@ -356,8 +356,23 @@ export const handleUpdateTransaction = (
       }
     }
 
-    const itemMapByEntryId = new Map<string, { quantity?: number; unitPrice: number; totalPrice: number }>();
-    const itemMapByCompId = new Map<string, { quantity?: number; unitPrice: number; totalPrice: number }>();
+    const oldQtyByEntryId = new Map<string, number>();
+    const oldQtyByCompId = new Map<string, number>();
+
+    if (isPurchase && targetTx.detailsList && targetTx.detailsList.length > 0) {
+      targetTx.detailsList.forEach((detail) => {
+        const parsed = parseBatchItem(detail, prev.components, targetTx);
+        if (parsed.entry) {
+          oldQtyByEntryId.set(parsed.entry.id, parsed.quantity);
+        }
+        if (parsed.comp) {
+          oldQtyByCompId.set(parsed.comp.id, parsed.quantity);
+        }
+      });
+    }
+
+    const itemMapByEntryId = new Map<string, { quantity?: number; oldQty?: number; unitPrice: number; totalPrice: number }>();
+    const itemMapByCompId = new Map<string, { quantity?: number; oldQty?: number; unitPrice: number; totalPrice: number }>();
 
     if (isPurchase && updatedDetailsList && updatedDetailsList.length > 0) {
       updatedDetailsList.forEach((detail) => {
@@ -365,6 +380,7 @@ export const handleUpdateTransaction = (
         if (parsed.entry) {
           itemMapByEntryId.set(parsed.entry.id, {
             quantity: parsed.quantity,
+            oldQty: oldQtyByEntryId.get(parsed.entry.id) ?? (parsed.comp ? oldQtyByCompId.get(parsed.comp.id) : undefined),
             unitPrice: parsed.unitPrice,
             totalPrice: parsed.totalPrice,
           });
@@ -372,6 +388,7 @@ export const handleUpdateTransaction = (
         if (parsed.comp) {
           itemMapByCompId.set(parsed.comp.id, {
             quantity: parsed.quantity,
+            oldQty: oldQtyByCompId.get(parsed.comp.id) ?? (parsed.entry ? oldQtyByEntryId.get(parsed.entry.id) : undefined),
             unitPrice: parsed.unitPrice,
             totalPrice: parsed.totalPrice,
           });
@@ -413,19 +430,23 @@ export const handleUpdateTransaction = (
               }
               updatedQty = pe.quantity;
               updatedTotalPrice = roundToCents(pe.quantity * updatedUnitPrice);
-            } else if (matchData) {
-              if (matchData.quantity !== undefined && matchData.quantity > 0) {
-                updatedQty = matchData.quantity;
-              }
-              updatedUnitPrice = matchData.unitPrice;
-              updatedTotalPrice = matchData.totalPrice;
-            } else if (isSingleItemPurchase) {
-              if (purchaseQty !== undefined && purchaseQty > 0) {
-                updatedQty = purchaseQty;
-              }
-              if (isAmountChanged || isQtyChanged) {
-                updatedUnitPrice = roundToCents(totalAmount / (updatedQty || 1));
-                updatedTotalPrice = roundToCents(totalAmount);
+            } else if (matchingEntryCount === 1) {
+              if (matchData) {
+                updatedUnitPrice = matchData.unitPrice;
+                const oldLineQty = matchData.oldQty ?? matchData.quantity ?? pe.quantity;
+                const newLineQty = matchData.quantity ?? oldLineQty;
+                const qtyDelta = newLineQty - oldLineQty;
+                updatedQty = qtyDelta !== 0 ? Math.max(1, pe.quantity + qtyDelta) : pe.quantity;
+                updatedTotalPrice = roundToCents(updatedQty * updatedUnitPrice);
+              } else if (isSingleItemPurchase) {
+                if (isAmountChanged || isQtyChanged) {
+                  updatedUnitPrice = roundToCents(totalAmount / (purchaseQty || 1));
+                }
+                const oldTxQty = targetTx.quantity || targetTx.relatedComponentQty || pe.quantity;
+                const newTxQty = purchaseQty || oldTxQty;
+                const qtyDelta = newTxQty - oldTxQty;
+                updatedQty = qtyDelta !== 0 ? Math.max(1, pe.quantity + qtyDelta) : pe.quantity;
+                updatedTotalPrice = roundToCents(updatedQty * updatedUnitPrice);
               }
             }
           }

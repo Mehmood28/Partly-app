@@ -96,12 +96,7 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         });
         setSelectedTags(normalizeTags(matchedTags, compCat));
 
-        const initialHealth = initialComponent.healthPercent !== undefined
-          ? initialComponent.healthPercent.toString()
-          : (initialComponent.purchaseHistory?.[0]?.healthPercent !== undefined
-              ? initialComponent.purchaseHistory[0].healthPercent.toString()
-              : '');
-        setHealthPercent(initialHealth);
+        setHealthPercent('');
         setIncludePurchase(false);
         setEditingPurchaseId(null);
       } else {
@@ -291,7 +286,9 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
       specifications,
       tags: selectedTags.length > 0 ? normalizeTags(selectedTags, category) : undefined,
       purchaseHistory: liveComponent?.purchaseHistory || initialComponent?.purchaseHistory || [],
-      healthPercent: category === 'Storage' ? parsedHealth : undefined,
+      healthPercent: category === 'Storage'
+        ? (includePurchase ? parsedHealth : (liveComponent?.healthPercent ?? initialComponent?.healthPercent))
+        : undefined,
     };
 
     const result = onSave(
