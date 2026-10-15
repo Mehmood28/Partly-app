@@ -100,7 +100,7 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
   const executeExportJSON = () => {
     if (!isHydrated) return;
     try {
-      const dataStr = JSON.stringify(state, null, 2);
+      const dataStr = JSON.stringify(state);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -114,6 +114,29 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
       recordBackup();
     } catch (err) {
       console.error('Export error:', err);
+    }
+  };
+
+  const executeExportCompactJSON = () => {
+    if (!isHydrated) return;
+    try {
+      const compactData = {
+        ...state,
+        builds: state.builds.map(({ imageUrl, ...rest }) => rest),
+      };
+      const dataStr = JSON.stringify(compactData);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const dateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+      link.href = url;
+      link.download = `partly_compact_${dateStr}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Compact export error:', err);
     }
   };
 
@@ -308,6 +331,26 @@ export const DataSyncView: React.FC<DataSyncViewProps> = React.memo(({
                   </div>
                   <div className="text-[11px] text-zinc-400 mt-0.5">
                     {!isHydrated ? 'Loading database...' : 'Save offline backup file'}
+                  </div>
+                </div>
+              </button>
+
+              <button
+                onClick={executeExportCompactJSON}
+                disabled={!isHydrated}
+                className={`data-action group ${!isHydrated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={!isHydrated ? 'Waiting for local database to finish loading...' : undefined}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <FileDown className="w-4 h-4 text-[#B9EF68]" />
+                  <ArrowRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-[#B9EF68] transition-colors" />
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-zinc-100 group-hover:text-white">
+                    Export Compact (.json)
+                  </div>
+                  <div className="text-[11px] text-zinc-400 mt-0.5">
+                    {!isHydrated ? 'Loading database...' : 'No photos · Fast AI audit'}
                   </div>
                 </div>
               </button>
