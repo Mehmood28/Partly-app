@@ -167,55 +167,58 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
         <div className="stock-expanded w-full">
 
           {/* Expanded Action Toolbar */}
-          {showAdminActions && (onAddPurchaseEntry || onEditComponent || onDeleteComponent || onSetHealth) && (
-            <div className="stock-admin-toolbar">
-              {onAddPurchaseEntry && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddPurchaseEntry(component.id);
-                  }}
-                  className="app-button app-button-outline flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-2 text-[11px] font-semibold"
-                >
-                  <Plus className="w-3 h-3" /> Add Stock
-                </button>
-              )}
-              {onSetHealth && component.category === 'Storage' && unassignedQty > 0 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSetHealth(component);
-                  }}
-                  className="app-button app-button-outline flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-2 text-[11px] font-semibold text-[#83E5DF] border-[#83E5DF]/30 hover:border-[#83E5DF] hover:bg-[#83E5DF]/10"
-                  title="Set individual SMART health % for in-stock drives"
-                >
-                  <Activity className="w-3 h-3 text-[#83E5DF]" /> Set Health
-                </button>
-              )}
-              {onEditComponent && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditComponent(component);
-                  }}
-                  className="app-button flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-2 text-[11px] font-semibold"
-                >
-                  <Pencil className="w-3 h-3" /> Edit
-                </button>
-              )}
-              {onDeleteComponent && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDeleteConfirm(true);
-                  }}
-                  className="app-button app-button-danger flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-2 text-[11px] font-semibold"
-                >
-                  <Trash2 className="w-3 h-3" /> Delete
-                </button>
-              )}
-            </div>
-          )}
+          {showAdminActions && (onAddPurchaseEntry || onEditComponent || onDeleteComponent || onSetHealth) && (() => {
+            const hasSetHealth = Boolean(onSetHealth && component.category === 'Storage' && unassignedQty > 0);
+            return (
+              <div className={`stock-admin-toolbar ${hasSetHealth ? '!grid-cols-4' : ''}`}>
+                {onAddPurchaseEntry && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddPurchaseEntry(component.id);
+                    }}
+                    className={`app-button app-button-outline flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap ${hasSetHealth ? 'px-1.5 text-[11px]' : 'px-2 text-xs'} font-semibold`}
+                  >
+                    <Plus className="w-3 h-3 shrink-0" /> Add Stock
+                  </button>
+                )}
+                {hasSetHealth && onSetHealth && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSetHealth(component);
+                    }}
+                    className="app-button app-button-outline flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap px-1.5 text-[11px] font-semibold text-[#83E5DF] border-[#83E5DF]/30 hover:border-[#83E5DF] hover:bg-[#83E5DF]/10"
+                    title="Set individual SMART health % for in-stock drives"
+                  >
+                    <Activity className="w-3 h-3 text-[#83E5DF] shrink-0" /> Set Health
+                  </button>
+                )}
+                {onEditComponent && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditComponent(component);
+                    }}
+                    className={`app-button flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap ${hasSetHealth ? 'px-1.5 text-[11px]' : 'px-2 text-xs'} font-semibold`}
+                  >
+                    <Pencil className="w-3 h-3 shrink-0" /> Edit
+                  </button>
+                )}
+                {onDeleteComponent && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteConfirm(true);
+                    }}
+                    className={`app-button app-button-danger flex h-[28px] min-h-[28px] items-center justify-center gap-1 whitespace-nowrap ${hasSetHealth ? 'px-1.5 text-[11px]' : 'px-2 text-xs'} font-semibold`}
+                  >
+                    <Trash2 className="w-3 h-3 shrink-0" /> Delete
+                  </button>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Available inventory batches. */}
           <div>
@@ -243,6 +246,13 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
                     const entryUnitPrice = batch.unitCost;
                     const entryTotal = entryUnitPrice * batch.availableQuantity;
 
+                    const parentTx = entry.sourcePurchaseTransactionId
+                      ? state.transactions.find((tx) => tx.id === entry.sourcePurchaseTransactionId && tx.type === 'PURCHASE')
+                      : undefined;
+                    const resolvedSeller = entry.platform || entry.seller || parentTx?.seller || parentTx?.platform;
+                    const resolvedDate = parentTx?.dateSortable || entry.date;
+                    const resolvedPaymentMethod = parentTx?.paymentMethod || entry.paymentMethod;
+
                     const isTradeUpBatch = state.transactions.some(
                       (tx) =>
                         tx.type === 'EXCHANGE' &&
@@ -256,19 +266,19 @@ export const ComponentCard: React.FC<ComponentCardProps> = React.memo(({
 
                     const sellerText = isPartedOutTradeInBatch
                       ? (tradeInOrigin?.buyerName ? `Traded in by ${tradeInOrigin.buyerName}` : 'Trade-in')
-                      : (!hideSupplierNames && entry.platform ? normalizePlatform(String(entry.platform)) : '—');
+                      : (!hideSupplierNames && resolvedSeller ? normalizePlatform(String(resolvedSeller)) : '—');
 
                     return (
                       <React.Fragment key={entry.id}>
                         <div className={`stock-batch-compact ${renderBatchFooter ? '!pr-0' : ''}`}>
                           <div className="stock-batch-line stock-batch-line-primary">
-                            <strong>{formatReadableDate(entry.date) || entry.date}</strong>
+                            <strong>{formatReadableDate(resolvedDate) || resolvedDate}</strong>
                             <span><em>Seller</em><span className="stock-batch-value">{sellerText}</span></span>
                             <span>{batch.availableQuantity > 1 ? `${batch.availableQuantity} × ${formatCurrency(entryUnitPrice)}` : ''}</span>
                           </div>
                           <div className="stock-batch-line stock-batch-line-secondary">
                             <span>{entry.condition}{component.category === 'Storage' && typeof entry.healthPercent === 'number' ? ` · ${entry.healthPercent}%` : ''}</span>
-                            <span><em>Payment</em><span className="stock-batch-value">{isPartedOutTradeInBatch ? 'Trade-in' : (entry.paymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span></span>
+                            <span><em>Payment</em><span className="stock-batch-value">{isPartedOutTradeInBatch ? 'Trade-in' : (resolvedPaymentMethod || '—')}{isTradeUpBatch ? ' · Trade-up' : ''}</span></span>
                             <strong>{formatCurrency(entryTotal)}</strong>
                           </div>
                           {!renderBatchFooter && (

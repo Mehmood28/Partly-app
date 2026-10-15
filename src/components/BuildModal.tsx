@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Hammer } from 'lucide-react';
+import { X, Hammer, AlertCircle } from 'lucide-react';
 import { BuildStatus, ComponentCategory, InventoryComponent, PCBuild, PCBuildPart } from '../types';
 import { useInventory } from '../context/InventoryContext';
 import { useToast } from '../context/ToastContext';
@@ -11,6 +11,7 @@ import { generateBuildTitleFromParts } from './builds/createBuild/buildModalHelp
 import { calculateComponentBatchesWithStock } from './builds/createBuild/buildModalHelpers';
 import { getAllBatchesWithRemaining, getConflictingTags } from '../utils/helpers';
 import { isWarrantyPreset } from '../utils/warranty';
+import { checkBuildCompatibility } from '../utils/compatibility';
 
 interface BuildModalProps {
   isOpen: boolean;
@@ -303,6 +304,29 @@ export const BuildModal: React.FC<BuildModalProps> = ({ isOpen, onClose, onSave,
             customWarrantyDays={customWarrantyDays}
             onCustomWarrantyDaysChange={setCustomWarrantyDays}
           />
+
+          {(() => {
+            const compatibilityParts = selectedParts.map((p) => {
+              const comp = state.components.find((c) => c.id === p.componentId);
+              return {
+                category: p.category,
+                name: p.componentName || comp?.name || '',
+                tags: comp?.tags || [],
+              };
+            });
+            const compatibilityWarnings = checkBuildCompatibility(compatibilityParts);
+            if (compatibilityWarnings.length === 0) return null;
+            return (
+              <div className="border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs px-3 py-2 rounded-xl flex flex-col gap-1.5 my-3">
+                {compatibilityWarnings.map((warning, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-400 mt-0.5" />
+                    <span>{warning}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
 
           <BuildSelectedPartsList
             selectedParts={selectedParts}

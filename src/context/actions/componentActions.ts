@@ -1038,6 +1038,33 @@ export const handleAddComponents = (
 ): AppState => {
   if (compsData.length === 0) return prev;
   if (compsData.length === 1 && !targetPurchaseTransactionId) return handleAddComponent(prev, compsData[0]);
+
+  // When multiple items are added without an existing target transaction,
+  // check if there are multiple distinct (platform, date, paymentMethod) combinations.
+  // If so, partition compsData by platform.toLowerCase()||date||paymentMethod and create
+  // a separate PURCHASE transaction for each group.
+  if (!targetPurchaseTransactionId && compsData.length > 1) {
+    const groups = new Map<string, typeof compsData>();
+    for (const comp of compsData) {
+      const ph = comp.purchaseHistory?.[0];
+      const platform = (ph?.platform || (ph as any)?.seller || 'Other').trim();
+      const date = (ph?.date || '').trim();
+      const paymentMethod = (ph?.paymentMethod || 'Cash').trim();
+      const partitionKey = `${platform.toLowerCase()}||${date}||${paymentMethod}`;
+      if (!groups.has(partitionKey)) {
+        groups.set(partitionKey, []);
+      }
+      groups.get(partitionKey)!.push(comp);
+    }
+
+    if (groups.size > 1) {
+      let currentState = prev;
+      for (const groupItems of groups.values()) {
+        currentState = handleAddComponents(currentState, groupItems);
+      }
+      return currentState;
+    }
+  }
   
   // 1. Validate all and map entries
   const parsedComps: {
@@ -1132,13 +1159,97 @@ export const handleAddComponents = (
     ? targetExistingTx.id
     : `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-  parsedComps.forEach(({ compData, entries }) => {
+  // Ensure per-batch seller, date, paymentMethod are normalized and not overwritten
+  parsedComps.forEach(({ entries }) => {
     entries.forEach((e) => {
-      e.sourcePurchaseTransactionId = effectiveTxId;
-      e.seller = defaultSeller;
-      if (!e.platform) e.platform = defaultSeller;
+      const itemSeller = e.platform || e.seller || defaultSeller;
+      e.platform = itemSeller;
+      e.seller = itemSeller;
+      if (!e.date) e.date = fallbackDate;
       if (!e.paymentMethod) e.paymentMethod = defaultPaymentMethod;
     });
+  });
+
+  // Check for multi-seller / multi-date / multi-payment import grouping
+  const distinctGroups = new Map<string, typeof parsedComps>();
+  if (!targetExistingTx && compsData.length > 1) {
+    parsedComps.forEach((item) => {
+      const e = item.entries[0];
+      const key = `${(e?.platform || defaultSeller).trim().toLowerCase()}||${e?.date || fallbackDate}||${e?.paymentMethod || defaultPaymentMethod}`;
+      if (!distinctGroups.has(key)) {
+        distinctGroups.set(key, []);
+      }
+      distinctGroups.get(key)!.push(item);
+    });
+  }
+
+  const isMultiGroupImport = !targetExistingTx && compsData.length > 1 && distinctGroups.size > 1;
+
+  if (isMultiGroupImport) {
+    let groupIdx = 0;
+    for (const [_, groupItems] of distinctGroups.entries()) {
+      const groupTxId = `tx-${Date.now()}-${groupIdx++}-${Math.random().toString(36).substring(2, 9)}`;
+      const firstGroupEntry = groupItems[0]?.entries[0];
+      const groupSeller = firstGroupEntry?.platform || defaultSeller;
+      const groupDate = firstGroupEntry?.date || fallbackDate;
+      const groupPaymentMethod = firstGroupEntry?.paymentMethod || defaultPaymentMethod;
+
+      let groupTotalQty = 0;
+      let groupTotalAmt = 0;
+
+      groupItems.forEach(({ entries }) => {
+        entries.forEach((e) => {
+          e.sourcePurchaseTransactionId = groupTxId;
+        });
+      });
+
+      groupItems.forEach((c) => {
+        groupTotalQty += c.compTotalQuantity || 1;
+        groupTotalAmt = roundToCents(groupTotalAmt + c.compTotalPrice);
+      });
+
+      const groupCategories = Array.from(new Set(groupItems.map((c) => c.compData.category).filter(Boolean)));
+      let groupTitle = '';
+      if (groupItems.length === 1) {
+        const singleName = groupItems[0].compData.name;
+        groupTitle = groupTotalQty > 1 ? `Purchased ${groupTotalQty}x ${singleName}` : `Purchased ${singleName}`;
+      } else if (groupCategories.length === 1) {
+        const catPlural = formatCategoryPlural(groupCategories[0]);
+        groupTitle = `Purchased ${groupTotalQty}x ${catPlural}`;
+      } else {
+        groupTitle = `Purchased Mixed Parts (${groupTotalQty} ${groupTotalQty === 1 ? 'Part' : 'Parts'})`;
+      }
+
+      const groupTx: TransactionLogItem = {
+        id: groupTxId,
+        type: 'PURCHASE',
+        title: `Bulk Purchase: ${groupSeller}`,
+        timestamp: groupDate,
+        dateSortable: groupDate,
+        itemCount: groupItems.length,
+        quantity: groupTotalQty,
+        totalAmount: groupTotalAmt,
+        platform: groupSeller,
+        seller: groupSeller,
+        paymentMethod: groupPaymentMethod,
+        itemNameOrSummary: groupTitle,
+        detailsList: groupItems.map((c) => {
+          const qty = c.compTotalQuantity || 1;
+          const cost = c.entries.length > 0 ? (c.compTotalPrice / qty) : 0;
+          return `${qty}x ${c.compData.name} (${formatCurrency(cost)}/ea)`;
+        }),
+      };
+      newTxs.push(groupTx);
+    }
+  } else {
+    parsedComps.forEach(({ entries }) => {
+      entries.forEach((e) => {
+        e.sourcePurchaseTransactionId = effectiveTxId;
+      });
+    });
+  }
+
+  parsedComps.forEach(({ compData, entries }) => {
     const explicitTargetId = (compData as any).targetComponentId;
     let existingCompIndex = explicitTargetId
       ? componentsToKeep.findIndex((c) => c.id === explicitTargetId)
@@ -1241,26 +1352,28 @@ export const handleAddComponents = (
     };
   }
 
-  const newTx: TransactionLogItem = {
-    id: effectiveTxId,
-    type: 'PURCHASE',
-    title: `Bulk Purchase: ${defaultSeller}`,
-    timestamp: displayTimestamp,
-    dateSortable: newestDate,
-    itemCount: compsData.length,
-    quantity: overallTotalQuantity,
-    totalAmount: overallTotalAmount,
-    platform: defaultSeller,
-    seller: defaultSeller,
-    paymentMethod: defaultPaymentMethod,
-    itemNameOrSummary: bulkSummaryTitle,
-    detailsList: parsedComps.map((c) => {
-      const qty = c.compTotalQuantity || 1;
-      const cost = c.entries.length > 0 ? (c.compTotalPrice / qty) : 0;
-      return `${qty}x ${c.compData.name} (${formatCurrency(cost)}/ea)`;
-    }),
-  };
-  newTxs.push(newTx);
+  if (!isMultiGroupImport) {
+    const newTx: TransactionLogItem = {
+      id: effectiveTxId,
+      type: 'PURCHASE',
+      title: `Bulk Purchase: ${defaultSeller}`,
+      timestamp: displayTimestamp,
+      dateSortable: newestDate,
+      itemCount: compsData.length,
+      quantity: overallTotalQuantity,
+      totalAmount: overallTotalAmount,
+      platform: defaultSeller,
+      seller: defaultSeller,
+      paymentMethod: defaultPaymentMethod,
+      itemNameOrSummary: bulkSummaryTitle,
+      detailsList: parsedComps.map((c) => {
+        const qty = c.compTotalQuantity || 1;
+        const cost = c.entries.length > 0 ? (c.compTotalPrice / qty) : 0;
+        return `${qty}x ${c.compData.name} (${formatCurrency(cost)}/ea)`;
+      }),
+    };
+    newTxs.push(newTx);
+  }
 
   return {
     ...prev,

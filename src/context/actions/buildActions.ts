@@ -24,7 +24,7 @@ import {
 import { BUILD_WARRANTY_DAYS, isValidWarrantyDays, normalizeWarrantyDays } from '../../utils/warranty';
 import { resolveTradeInBuildOrigin } from '../../utils/tradeInOrigin';
 import { getAcquiredPCBreakdown, isAcquiredPC, isPurchasedPC } from '../../utils/acquiredPC';
-import { generateBuildTitleFromParts } from '../../utils/buildTitle';
+import { generateBuildTitleFromParts, maybeRegenerateBuildTitle } from '../../utils/buildTitle';
 
 export const handleAddBuild = (
   prev: AppState,
@@ -607,7 +607,23 @@ export const handleAllocatePartToBuild = (
           unitCostAtAssignment: avgCost,
         });
       }
-      return { ...build, parts: newParts };
+
+      let resolvedName = build.name;
+      if (
+        (targetComp.category === 'CPU' || targetComp.category === 'GPU') &&
+        build.status !== 'Sold'
+      ) {
+        const allParts = [
+          ...newParts.map((p) => ({ category: p.category, componentName: p.componentName })),
+          ...((build.acquisitionComponentBreakdown || build.tradeInComponentBreakdown || []) as Array<{ category: string; name: string }>).map((p) => ({
+            category: p.category,
+            componentName: p.name,
+          })),
+        ];
+        resolvedName = maybeRegenerateBuildTitle(build.name, allParts);
+      }
+
+      return { ...build, name: resolvedName, parts: newParts };
     }
     return build;
   });
@@ -801,10 +817,25 @@ export const handleRemovePartFromBuild = (
         purchaseHistory: [restoredEntry],
       };
       const updatedParts = targetBuild.parts.filter((_, idx) => idx !== partIndex);
+      let resolvedName = targetBuild.name;
+      if (
+        (partToRemove.category === 'CPU' || partToRemove.category === 'GPU') &&
+        targetBuild.status !== 'Sold'
+      ) {
+        const allParts = [
+          ...updatedParts.map((p) => ({ category: p.category, componentName: p.componentName })),
+          ...((targetBuild.acquisitionComponentBreakdown || targetBuild.tradeInComponentBreakdown || []) as Array<{ category: string; name: string }>).map((p) => ({
+            category: p.category,
+            componentName: p.name,
+          })),
+        ];
+        resolvedName = maybeRegenerateBuildTitle(targetBuild.name, allParts);
+      }
       const updatedBuilds = prev.builds.map((build) => {
         if (build.id === buildId) {
           return {
             ...build,
+            name: resolvedName,
             parts: updatedParts,
           };
         }
@@ -866,10 +897,26 @@ export const handleRemovePartFromBuild = (
 
     const updatedParts = targetBuild.parts.filter((_, idx) => idx !== partIndex);
 
+    let resolvedName = targetBuild.name;
+    if (
+      (partToRemove.category === 'CPU' || partToRemove.category === 'GPU') &&
+      targetBuild.status !== 'Sold'
+    ) {
+      const allParts = [
+        ...updatedParts.map((p) => ({ category: p.category, componentName: p.componentName })),
+        ...((targetBuild.acquisitionComponentBreakdown || targetBuild.tradeInComponentBreakdown || []) as Array<{ category: string; name: string }>).map((p) => ({
+          category: p.category,
+          componentName: p.name,
+        })),
+      ];
+      resolvedName = maybeRegenerateBuildTitle(targetBuild.name, allParts);
+    }
+
     const updatedBuilds = prev.builds.map((build) => {
       if (build.id === buildId) {
         return {
           ...build,
+          name: resolvedName,
           parts: updatedParts,
         };
       }
@@ -1455,8 +1502,21 @@ export const handleSwapPartInBuild = (
       ];
     }
 
+    let resolvedName = targetBuild.name;
+    if (
+      (oldBasePart.category === 'CPU' || oldBasePart.category === 'GPU' || newComp.category === 'CPU' || newComp.category === 'GPU') &&
+      targetBuild.status !== 'Sold'
+    ) {
+      const allParts = [
+        ...updatedParts.map((p) => ({ category: p.category, componentName: p.componentName })),
+        ...updatedBreakdown.map((p) => ({ category: p.category, componentName: p.name })),
+      ];
+      resolvedName = maybeRegenerateBuildTitle(targetBuild.name, allParts);
+    }
+
     const updatedTargetBuild: PCBuild = {
       ...targetBuild,
+      name: resolvedName,
       estimatedCost: newEstimatedCost,
       parts: updatedParts,
       ...(isPurchased
@@ -1683,10 +1743,26 @@ export const handleSwapPartInBuild = (
     ];
   }
 
+  let resolvedName = targetBuild.name;
+  if (
+    (originalPart.category === 'CPU' || originalPart.category === 'GPU' || newComp.category === 'CPU' || newComp.category === 'GPU') &&
+    targetBuild.status !== 'Sold'
+  ) {
+    const allParts = [
+      ...updatedParts.map((p) => ({ category: p.category, componentName: p.componentName })),
+      ...((targetBuild.acquisitionComponentBreakdown || targetBuild.tradeInComponentBreakdown || []) as Array<{ category: string; name: string }>).map((p) => ({
+        category: p.category,
+        componentName: p.name,
+      })),
+    ];
+    resolvedName = maybeRegenerateBuildTitle(targetBuild.name, allParts);
+  }
+
   const updatedBuilds = prev.builds.map((build) => {
     if (build.id === buildId) {
       return {
         ...build,
+        name: resolvedName,
         parts: updatedParts,
       };
     }

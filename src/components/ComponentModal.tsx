@@ -175,9 +175,16 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     setIncludePurchase(true);
     setUnitPrice(String(roundToCents(ph.unitPrice)));
     setQuantity(String(availQty));
-    setPlatform(resolvePurchaseEntrySeller(ph, state.transactions, state.builds) || '');
-    setPaymentMethod(ph.paymentMethod);
-    setPurchaseDate(ph.date);
+    const parentTx = ph.sourcePurchaseTransactionId
+      ? state.transactions.find((tx) => tx.id === ph.sourcePurchaseTransactionId && tx.type === 'PURCHASE')
+      : undefined;
+    const resolvedSeller = ph.platform || ph.seller || parentTx?.seller || parentTx?.platform || resolvePurchaseEntrySeller(ph, state.transactions, state.builds);
+    const resolvedDate = parentTx?.dateSortable || ph.date;
+    const resolvedPaymentMethod = parentTx?.paymentMethod || ph.paymentMethod;
+
+    setPlatform(resolvedSeller || '');
+    setPaymentMethod(resolvedPaymentMethod);
+    setPurchaseDate(resolvedDate);
     setCondition(ph.condition);
     setTaxPercent((ph.taxPercent || 0).toString());
     setHealthPercent(ph.healthPercent !== undefined ? ph.healthPercent.toString() : '');
@@ -429,25 +436,32 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
                         tx.incomingComponentId === liveComponent.id &&
                         tx.incomingPurchaseEntryId === ph.id
                 );
+                const parentTx = ph.sourcePurchaseTransactionId
+                  ? state.transactions.find((tx) => tx.id === ph.sourcePurchaseTransactionId && tx.type === 'PURCHASE')
+                  : undefined;
+                const resolvedSeller = ph.platform || ph.seller || parentTx?.seller || parentTx?.platform;
+                const resolvedDate = parentTx?.dateSortable || ph.date;
+                const resolvedPaymentMethod = parentTx?.paymentMethod || ph.paymentMethod;
+
                 const isPartedOutTradeInBatch = isPartedOutTradeInEntry(ph);
                 const tradeInOrigin = isPartedOutTradeInBatch
                   ? resolvePartedOutEntryOrigin(ph, state.transactions, state.builds)
                   : null;
                 const displaySeller = isPartedOutTradeInBatch
                   ? (tradeInOrigin?.buyerName ? `Traded in by ${tradeInOrigin.buyerName}` : 'Trade-in')
-                  : (ph.platform ? `Seller: ${ph.platform}` : 'Unknown');
+                  : (resolvedSeller ? `Seller: ${resolvedSeller}` : 'Unknown');
                 return (
                   <div key={ph.id} className="flex items-center justify-between bg-[#101719] border border-white/[0.08] p-2.5 rounded-xl">
                     <div className="text-xs">
                       <div className="text-zinc-200 font-medium flex items-center gap-1.5 flex-wrap">
-                        <span>{formatReadableDate(ph.date) || String(ph.date || '').split('T')[0]}{!hideSupplierNames ? ` · ${displaySeller}` : ''}</span>
+                        <span>{formatReadableDate(resolvedDate) || String(resolvedDate || '').split('T')[0]}{!hideSupplierNames ? ` · ${displaySeller}` : ''}</span>
                         {isTradeUp && (
                           <span className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0 px-1.5 py-0.5 rounded text-[11px] font-mono font-medium uppercase leading-none inline-flex items-center">
                             TRADE UP
                           </span>
                         )}
                       </div>
-                      <div className="text-zinc-400 font-mono text-[11px] mt-0.5">Qty: {availableQuantity} available &middot; ${(ph.unitPrice || 0).toFixed(2)}{availableQuantity > 1 ? '/ea' : ''}</div>
+                      <div className="text-zinc-400 font-mono text-[11px] mt-0.5">Qty: {availableQuantity} available &middot; ${(ph.unitPrice || 0).toFixed(2)}{availableQuantity > 1 ? '/ea' : ''}{resolvedPaymentMethod ? ` &middot; ${resolvedPaymentMethod}` : ''}</div>
                     </div>
                     <div className="flex gap-1">
                       <button type="button" onClick={() => handleEditPurchase(ph)} className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors" title="Edit purchase">

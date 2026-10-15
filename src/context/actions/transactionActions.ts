@@ -396,23 +396,40 @@ export const handleUpdateTransaction = (
       });
     }
 
+    const isTargetEntry = (pe: PurchaseEntry, isTargetComp: boolean) =>
+      targetEntryIds.has(pe.id) ||
+      pe.sourcePurchaseTransactionId === targetTx.id ||
+      (isTargetComp && ((pe.date === targetTx.dateSortable || pe.date === targetTx.timestamp) && (!oldSeller || pe.seller === oldSeller || pe.platform === oldSeller)));
+
+    // Gather all linked batches across all components to check if all shared the same seller
+    const allLinkedBatches: PurchaseEntry[] = [];
+    prev.components.forEach((c) => {
+      const isCompTarget = targetCompIds.has(c.id);
+      (c.purchaseHistory || []).forEach((pe) => {
+        if (isTargetEntry(pe, isCompTarget)) {
+          allLinkedBatches.push(pe);
+        }
+      });
+    });
+    const linkedSellers = new Set(
+      allLinkedBatches.map((b) => (b.platform || b.seller || '').trim().toLowerCase()).filter(Boolean)
+    );
+    const allSharedSameSeller = linkedSellers.size <= 1;
+
     updatedComponents = prev.components.map((comp) => {
       const isTargetComp = targetCompIds.has(comp.id);
-      const isTargetEntry = (pe: PurchaseEntry) =>
-        targetEntryIds.has(pe.id) ||
-        pe.sourcePurchaseTransactionId === targetTx.id ||
-        (isTargetComp && ((pe.date === targetTx.dateSortable || pe.date === targetTx.timestamp) && (!oldSeller || pe.seller === oldSeller || pe.platform === oldSeller)));
+      const isCompTargetEntry = (pe: PurchaseEntry) => isTargetEntry(pe, isTargetComp);
 
-      const hasMatchingEntries = (comp.purchaseHistory || []).some(isTargetEntry);
+      const hasMatchingEntries = (comp.purchaseHistory || []).some(isCompTargetEntry);
 
       if (!hasMatchingEntries && !isTargetComp) {
         return comp;
       }
 
-      const matchingEntryCount = (comp.purchaseHistory || []).filter(isTargetEntry).length;
+      const matchingEntryCount = (comp.purchaseHistory || []).filter(isCompTargetEntry).length;
 
       const updatedHistory = (comp.purchaseHistory || []).map((pe) => {
-        if (isTargetEntry(pe)) {
+        if (isCompTargetEntry(pe)) {
           let updatedQty = pe.quantity || 1;
           let updatedUnitPrice = pe.unitPrice;
           let updatedTotalPrice = pe.totalPrice;
@@ -451,26 +468,40 @@ export const handleUpdateTransaction = (
             }
           }
 
+          const currentBatchSeller = (pe.platform || pe.seller || '').trim();
+          const shouldUpdateBatchSeller =
+            isSellerChanged &&
+            (allSharedSameSeller ||
+              !currentBatchSeller ||
+              !oldSeller ||
+              currentBatchSeller.toLowerCase() === oldSeller.toLowerCase());
+
           return {
             ...pe,
             quantity: updatedQty,
             unitPrice: updatedUnitPrice,
             totalPrice: updatedTotalPrice,
             healthPercent: pe.healthPercent,
-            date: isDateChanged ? dateSortable : pe.date,
-            paymentMethod: paymentMethod ? (paymentMethod as PaymentMethod) : pe.paymentMethod,
-            platform: isSellerChanged ? ((seller || pe.platform || '') as Platform) : pe.platform,
-            seller: isSellerChanged ? ((seller || pe.seller || '') as Platform) : pe.seller,
+            date: isPurchase ? dateSortable : (isDateChanged ? dateSortable : pe.date),
+            paymentMethod: isPurchase
+              ? (paymentMethod ? (paymentMethod as PaymentMethod) : pe.paymentMethod)
+              : (paymentMethod ? (paymentMethod as PaymentMethod) : pe.paymentMethod),
+            platform: shouldUpdateBatchSeller ? ((seller || pe.platform || '') as Platform) : pe.platform,
+            seller: shouldUpdateBatchSeller ? ((seller || pe.seller || '') as Platform) : pe.seller,
             sourcePurchaseTransactionId: targetTx.id,
           };
         }
         return pe;
       }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+      const shouldUpdateCompSeller =
+        isSellerChanged &&
+        (allSharedSameSeller || !comp.seller || comp.seller.toLowerCase() === oldSeller.toLowerCase());
+
       return {
         ...comp,
-        seller: isSellerChanged ? ((seller || comp.seller || '') as Platform) : comp.seller,
-        platform: isSellerChanged ? ((seller || comp.platform || '') as Platform) : comp.platform,
+        seller: shouldUpdateCompSeller ? ((seller || comp.seller || '') as Platform) : comp.seller,
+        platform: shouldUpdateCompSeller ? ((seller || comp.platform || '') as Platform) : comp.platform,
         purchaseHistory: updatedHistory,
       };
     });

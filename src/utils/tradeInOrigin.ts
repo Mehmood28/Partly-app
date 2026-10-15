@@ -207,5 +207,6 @@ export const resolvePurchaseEntrySeller = (
   transactions: TransactionLogItem[],
   builds: PCBuild[]
 ): string | undefined =>
-  resolvePartedOutEntryOrigin(entry, transactions, builds)?.buyerName ||
-  nonEmptyString(entry.platform);
+  nonEmptyString(entry.platform) ||
+  nonEmptyString(entry.seller) ||
+  resolvePartedOutEntryOrigin(entry, transactions, builds)?.buyerName;

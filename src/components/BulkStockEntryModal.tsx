@@ -128,7 +128,13 @@ export const BulkStockEntryModal: React.FC<BulkStockEntryModalProps> = ({ isOpen
   const handleParse = async () => {
     setIsParsing(true);
     try {
-      const payload: { text?: string; images?: string[] } = {};
+      const payload: {
+        text?: string;
+        images?: string[];
+        catalog?: Array<{ name: string; category: string; tags: string[] }>;
+      } = {
+        catalog: state.components.map((c) => ({ name: c.name, category: c.category, tags: c.tags || [] })),
+      };
       if (activeTab === 'text') {
         if (!textInput.trim()) return;
         payload.text = textInput;

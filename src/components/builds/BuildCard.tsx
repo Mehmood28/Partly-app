@@ -26,6 +26,7 @@ import { CategoryIcon } from '../ui/CategoryIcon';
 import { CopyAdWarrantyModal } from './CopyAdWarrantyModal';
 import { copyCleanSpecs } from '../../utils/cleanSpecsHelper';
 import { isWarrantyPreset } from '../../utils/warranty';
+import { checkBuildCompatibility } from '../../utils/compatibility';
 
 interface BuildCardProps {
   isActive?: boolean;
@@ -620,6 +621,37 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
               transaction={exactTransaction}
             />
           )}
+
+          {/* Hardware Compatibility Guardrails */}
+          {!isSold && (() => {
+            const allBuildParts = [
+              ...build.parts.map((p) => {
+                const comp = state.components.find((c) => c.id === p.componentId);
+                return {
+                  category: p.category,
+                  name: p.componentName || comp?.name || '',
+                  tags: comp?.tags || [],
+                };
+              }),
+              ...acquiredBreakdown.map((p) => ({
+                category: p.category,
+                name: p.name,
+                tags: p.tags || [],
+              })),
+            ];
+            const compatibilityWarnings = checkBuildCompatibility(allBuildParts);
+            if (compatibilityWarnings.length === 0) return null;
+            return (
+              <div className="border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs px-3 py-2 rounded-xl flex flex-col gap-1.5 mb-2">
+                {compatibilityWarnings.map((warning, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-400 mt-0.5" />
+                    <span>{warning}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
 
           {/* Full Allocated Parts List */}
           <div className="build-parts-section">

@@ -316,9 +316,17 @@ async function startServer() {
 
   app.post('/api/parse-bulk-entry', async (req, res) => {
     const started = performance.now();
-    const { text, images } = req.body;
+    const { text, images, catalog } = req.body;
     try {
       let parts: any[] = [];
+      if (Array.isArray(catalog) && catalog.length > 0) {
+        const formattedCatalog = catalog
+          .map((c: any) => `${c?.category || 'Other'} | ${c?.name || ''}${c?.tags?.length ? ` | ${c.tags.join(', ')}` : ''}`)
+          .join('\n');
+        parts.push({
+          text: `EXISTING INVENTORY CATALOG:\n${formattedCatalog}\n`
+        });
+      }
       if (text) {
         parts.push({ text: "Parse the following text for PC components inventory:\n" + text });
       }
@@ -371,7 +379,10 @@ Use your built-in world knowledge of all PC hardware brands, product lines, and 
 6. BATCH METADATA ('seller', 'date', 'condition', 'paymentMethod'):
    - Propagate batch-level headers (Seller, Date, Condition, Payment Method) to all items under that batch until a new batch header appears.
    - Interpret numeric dates as day-first DD/MM/YYYY (Canadian format) and output 'YYYY-MM-DD'.
-   - Default 'condition' to 'Used Open Box' and 'paymentMethod' to 'Cash' if not specified.`;
+   - Default 'condition' to 'Used Open Box' and 'paymentMethod' to 'Cash' if not specified.
+
+7. EXISTING CATALOG MATCHING (CRITICAL FOR DEDUPLICATION):
+   - Whenever an imported part matches an existing model, capacity, chipset, and color/edition from the EXISTING INVENTORY CATALOG provided above, output the exact 'name', 'category', and 'tags' from that catalog entry. This ensures exact inventory deduplication and consistent naming across purchases.`;
 
       const responseSchema = {
         type: Type.ARRAY,

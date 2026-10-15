@@ -1,6 +1,7 @@
 import localforage from 'localforage';
 import { AppState, InventoryComponent, PCBuild, PurchaseEntry, TransactionLogItem } from '../types';
 import { normalizeTags, roundToCents, formatCurrency } from './helpers';
+import { maybeRegenerateBuildTitle } from './buildTitle';
 
 export const STORAGE_KEY = 'pc_inventory_tracker_v2';
 export const DB_NAME = 'PartlyPCInventoryDB';
@@ -42,6 +43,11 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
   const parsedObj = parsed as Record<string, unknown>;
   const { sheetStats: _obsoleteSheetStats, ...parsedWithoutSheetStats } = parsedObj;
   const idRemappings: Record<string, string> = {};
+
+  const rawTransactions = Array.isArray(parsedObj.transactions)
+    ? (cloneStoredValue(parsedObj.transactions) as TransactionLogItem[])
+    : [];
+
   const components = Array.isArray(parsedObj.components)
     ? (cloneStoredValue(parsedObj.components) as InventoryComponent[]).map((comp) => {
         if (!comp) return comp;
@@ -49,13 +55,88 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         const rawHistory = Array.isArray(comp.purchaseHistory) ? comp.purchaseHistory : [];
         for (const ph of rawHistory) {
           if (!ph) continue;
-          const cleanNotes = ph.notes === 'Bulk imported' ? undefined : ph.notes;
+
+          // Strip obsolete scratch keys
+          const {
+            _remainingUnassigned: _unused1,
+            _assignedQty: _unused2,
+            _qtyInBuild: _unused3,
+            _originalComponentId: _unused4,
+            sellerName: _unused5,
+            ...rawEntry
+          } = ph as any;
+
+          const cleanNotes = rawEntry.notes === 'Bulk imported' ? undefined : rawEntry.notes;
           const cleanPh: PurchaseEntry = {
-            ...ph,
-            unitPrice: typeof ph.unitPrice === 'number' ? roundToCents(ph.unitPrice) : ph.unitPrice,
-            totalPrice: typeof ph.totalPrice === 'number' ? roundToCents(ph.totalPrice) : ph.totalPrice,
+            ...rawEntry,
+            unitPrice: typeof rawEntry.unitPrice === 'number' ? roundToCents(rawEntry.unitPrice) : rawEntry.unitPrice,
+            totalPrice: typeof rawEntry.totalPrice === 'number' ? roundToCents(rawEntry.totalPrice) : rawEntry.totalPrice,
             notes: cleanNotes,
           };
+
+          // Backfill missing sourcePurchaseTransactionId
+          if (!cleanPh.sourcePurchaseTransactionId) {
+            // 1. Direct transaction references (relatedPurchaseEntryId / originalPurchaseEntrySnapshot)
+            const directTx = rawTransactions.find(
+              (tx) =>
+                tx.type === 'PURCHASE' &&
+                (tx.relatedPurchaseEntryId === cleanPh.id ||
+                  (tx as any).originalPurchaseEntrySnapshot?.id === cleanPh.id)
+            );
+            if (directTx) {
+              cleanPh.sourcePurchaseTransactionId = directTx.id;
+            } else {
+              // 2. Sibling batch matching on the same component (date + unitPrice + platform)
+              const sibling = rawHistory.find(
+                (s: any) =>
+                  s &&
+                  s.id !== cleanPh.id &&
+                  s.sourcePurchaseTransactionId &&
+                  s.date === cleanPh.date &&
+                  Math.abs(Number(s.unitPrice) - Number(cleanPh.unitPrice)) < 0.005 &&
+                  (s.platform || '') === (cleanPh.platform || '')
+              );
+              if (sibling) {
+                cleanPh.sourcePurchaseTransactionId = sibling.sourcePurchaseTransactionId;
+              } else {
+                // 3. Unique PURCHASE transaction matching on date + seller + componentName
+                const matchingTxs = rawTransactions.filter((tx) => {
+                  if (tx.type !== 'PURCHASE') return false;
+                  const dateMatches = tx.dateSortable === cleanPh.date || tx.timestamp?.startsWith(cleanPh.date);
+                  if (!dateMatches) return false;
+                  const txSeller = (tx.seller || tx.platform || '').trim().toLowerCase();
+                  const entrySeller = (cleanPh.platform || cleanPh.seller || '').trim().toLowerCase();
+                  const sellerMatches = !entrySeller || !txSeller || txSeller === entrySeller;
+                  if (!sellerMatches) return false;
+                  const nameMatches =
+                    tx.relatedComponentId === comp.id ||
+                    (tx.itemNameOrSummary && comp.name && tx.itemNameOrSummary.toLowerCase().includes(comp.name.toLowerCase())) ||
+                    (tx.detailsList && comp.name && tx.detailsList.some((d) => d.toLowerCase().includes(comp.name.toLowerCase())));
+                  return nameMatches;
+                });
+                if (matchingTxs.length === 1) {
+                  cleanPh.sourcePurchaseTransactionId = matchingTxs[0].id;
+                }
+              }
+            }
+          }
+
+          // Parent transaction lookup for authoritative per-batch seller priority
+          const parentTx = cleanPh.sourcePurchaseTransactionId
+            ? rawTransactions.find((tx) => tx.id === cleanPh.sourcePurchaseTransactionId && tx.type === 'PURCHASE')
+            : undefined;
+
+          // Preserve entry.platform as authoritative per-batch seller
+          if (cleanPh.platform && String(cleanPh.platform).trim()) {
+            cleanPh.seller = cleanPh.platform;
+          } else {
+            const fallbackSeller = cleanPh.seller || parentTx?.seller || parentTx?.platform;
+            if (fallbackSeller) {
+              cleanPh.platform = fallbackSeller;
+              cleanPh.seller = fallbackSeller;
+            }
+          }
+
           const match = normalizedHistory.find(
             (c) =>
               c.date === cleanPh.date &&
@@ -63,6 +144,7 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
               c.unitPrice === cleanPh.unitPrice &&
               c.paymentMethod === cleanPh.paymentMethod &&
               (c.platform || '') === (cleanPh.platform || '') &&
+              (c.seller || '') === (cleanPh.seller || '') &&
               (c.taxPercent || 0) === (cleanPh.taxPercent || 0) &&
               c.healthPercent === cleanPh.healthPercent &&
               (c.notes || '') === (cleanPh.notes || '') &&
@@ -78,13 +160,27 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
             normalizedHistory.push(cleanPh);
           }
         }
+
+        // Clean specifications: reset corrupted '[object Object]' or non-string
+        const cleanSpecs = typeof comp.specifications === 'string' && comp.specifications !== '[object Object]'
+          ? comp.specifications
+          : '';
+
+        // Clean tags: for category === 'CPU' where name starts with 'Intel', replace any 'AM4' or 'AM5' with 'Intel'
+        let cleanTags = Array.isArray(comp.tags) ? normalizeTags(comp.tags, comp.category) : [];
+        if (comp.category === 'CPU' && typeof comp.name === 'string' && comp.name.trim().startsWith('Intel')) {
+          cleanTags = Array.from(new Set(cleanTags.map((t) => (t === 'AM4' || t === 'AM5' ? 'Intel' : t))));
+        }
+
         return {
           ...comp,
-          tags: Array.isArray(comp.tags) ? normalizeTags(comp.tags, comp.category) : [],
+          specifications: cleanSpecs,
+          tags: cleanTags,
           purchaseHistory: normalizedHistory,
         };
       })
     : [];
+
   const builds = Array.isArray(parsedObj.builds)
     ? (cloneStoredValue(parsedObj.builds) as PCBuild[]).map((build) => {
         if (!build) return build;
@@ -119,8 +215,23 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
               };
             })
           : build.parts;
+
+        // Auto-sync build name for unsold builds if out of sync
+        let resolvedName = build.name;
+        if (normalizedStatus !== 'Sold') {
+          const allParts = [
+            ...(normalizedParts || []).map((p) => ({ category: p.category, componentName: p.componentName })),
+            ...((build.acquisitionComponentBreakdown || build.tradeInComponentBreakdown || []) as Array<{ category: string; name: string }>).map((p) => ({
+              category: p.category,
+              componentName: p.name,
+            })),
+          ];
+          resolvedName = maybeRegenerateBuildTitle(build.name, allParts);
+        }
+
         return {
           ...build,
+          name: resolvedName,
           status: normalizedStatus,
           salePrice: typeof build.salePrice === 'number' ? roundToCents(build.salePrice) : build.salePrice,
           estimatedCost: typeof build.estimatedCost === 'number' ? roundToCents(build.estimatedCost) : build.estimatedCost,
