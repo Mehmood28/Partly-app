@@ -5,20 +5,23 @@ import { PrivacyProvider } from './context/PrivacyContext';
 import { BottomNav } from './components/BottomNav';
 import { TopBar } from './components/TopBar';
 import { HomeView } from './components/HomeView';
-import { StockView } from './components/StockView';
-import { BuildsView, FilterStatus } from './components/BuildsView';
-import { AnalyticsView } from './components/AnalyticsView';
-import { DataSyncView } from './components/DataSyncView';
+import type { FilterStatus } from './components/BuildsView';
 import { ComponentModal } from './components/ComponentModal';
 import { PurchaseEntryModal } from './components/PurchaseEntryModal';
 import { ConfirmModal } from './components/ConfirmModal';
-import { BuildModal } from './components/BuildModal';
-import { BuyPCModal } from './components/builds/BuyPCModal';
-import { SellPartModal } from './components/parts/sellPart/SellPartModal';
-import { BulkStockEntryModal, ParsedBulkStockItem } from './components/BulkStockEntryModal';
+import type { ParsedBulkStockItem } from './components/BulkStockEntryModal';
 import { InventoryComponent, PCBuild, PurchaseEntry } from './types';
 import { normalizeTags, roundToCents } from './utils/helpers';
 import { WindowScrollIndicator } from './components/ui/WindowScrollIndicator';
+
+const StockView = React.lazy(() => import('./components/StockView').then(m => ({ default: m.StockView })));
+const BuildsView = React.lazy(() => import('./components/BuildsView').then(m => ({ default: m.BuildsView })));
+const AnalyticsView = React.lazy(() => import('./components/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
+const DataSyncView = React.lazy(() => import('./components/DataSyncView').then(m => ({ default: m.DataSyncView })));
+const BuildModal = React.lazy(() => import('./components/BuildModal').then(m => ({ default: m.BuildModal })));
+const BuyPCModal = React.lazy(() => import('./components/builds/BuyPCModal').then(m => ({ default: m.BuyPCModal })));
+const SellPartModal = React.lazy(() => import('./components/parts/sellPart/SellPartModal').then(m => ({ default: m.SellPartModal })));
+const BulkStockEntryModal = React.lazy(() => import('./components/BulkStockEntryModal').then(m => ({ default: m.BulkStockEntryModal })));
 
 function AppContent() {
   const { showToast } = useToast();
@@ -33,6 +36,7 @@ function AppContent() {
   } = useInventory();
 
   const [activeTab, setActiveTab] = useState<'home' | 'inventory' | 'builds' | 'analytics' | 'data'>('home');
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set(['home']));
   const [buildsStatusFilter, setBuildsStatusFilter] = useState<FilterStatus>('Available');
 
   // Modals state
@@ -53,6 +57,12 @@ function AppContent() {
 
   const handleTabChange = React.useCallback((tab: 'home' | 'inventory' | 'builds' | 'analytics' | 'data') => {
     setActiveTab(tab);
+    setVisitedTabs((prev) => {
+      if (prev.has(tab)) return prev;
+      const next = new Set(prev);
+      next.add(tab);
+      return next;
+    });
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
@@ -61,6 +71,12 @@ function AppContent() {
       setBuildsStatusFilter(filter);
     }
     setActiveTab('builds');
+    setVisitedTabs((prev) => {
+      if (prev.has('builds')) return prev;
+      const next = new Set(prev);
+      next.add('builds');
+      return next;
+    });
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
@@ -266,37 +282,94 @@ function AppContent() {
           </div>
 
           {/* Stock / Inventory Tab */}
-          <div className={activeTab === 'inventory' ? 'flex flex-col items-stretch flex-1 w-full min-h-0 h-full' : 'hidden'}>
-            <StockView
-              isActive={activeTab === 'inventory'}
-              onOpenBulkEntry={handleOpenBulkEntry}
-              onOpenAddComponent={handleOpenAddComponent}
-              onOpenAddPurchaseEntry={handleOpenAddPurchaseEntry}
-              onEditComponent={handleEditComponent}
-              onOpenSellPart={handleOpenSellPart}
-            />
-          </div>
+          {(activeTab === 'inventory' || visitedTabs.has('inventory')) && (
+            <div className={activeTab === 'inventory' ? 'flex flex-col items-stretch flex-1 w-full min-h-0 h-full' : 'hidden'}>
+              <StockView
+                isActive={activeTab === 'inventory'}
+                onOpenBulkEntry={handleOpenBulkEntry}
+                onOpenAddComponent={handleOpenAddComponent}
+                onOpenAddPurchaseEntry={handleOpenAddPurchaseEntry}
+                onEditComponent={handleEditComponent}
+                onOpenSellPart={handleOpenSellPart}
+              />
+            </div>
+          )}
 
           {/* Builds Tab */}
-          <div className={activeTab === 'builds' ? 'flex flex-col flex-1 w-full min-h-0 h-full' : 'hidden'}>
-            <BuildsView 
-              isActive={activeTab === 'builds'} 
-              onOpenAddBuild={handleOpenAddBuild}
-              onOpenBuyPC={() => setIsBuyPCModalOpen(true)}
-              statusFilter={buildsStatusFilter}
-              onStatusFilterChange={setBuildsStatusFilter}
-            />
-          </div>
+          {(activeTab === 'builds' || visitedTabs.has('builds')) && (
+            <div className={activeTab === 'builds' ? 'flex flex-col flex-1 w-full min-h-0 h-full' : 'hidden'}>
+              <BuildsView 
+                isActive={activeTab === 'builds'} 
+                onOpenAddBuild={handleOpenAddBuild}
+                onOpenBuyPC={() => setIsBuyPCModalOpen(true)}
+                statusFilter={buildsStatusFilter}
+                onStatusFilterChange={setBuildsStatusFilter}
+              />
+            </div>
+          )}
 
           {/* Analytics Tab */}
-          <div className={activeTab === 'analytics' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
-            <AnalyticsView />
-          </div>
+          {(activeTab === 'analytics' || visitedTabs.has('analytics')) && (
+            <div className={activeTab === 'analytics' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
+              <AnalyticsView />
+            </div>
+          )}
 
           {/* Data Tab */}
-          <div className={activeTab === 'data' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
-            <DataSyncView isActive={activeTab === 'data'} onResetData={handleResetAllData} />
-          </div>
+          {(activeTab === 'data' || visitedTabs.has('data')) && (
+            <div className={activeTab === 'data' ? 'flex flex-col flex-1 w-full' : 'hidden'}>
+              <DataSyncView isActive={activeTab === 'data'} onResetData={handleResetAllData} />
+            </div>
+          )}
+
+          {/* Lazy Modals within Suspense boundary */}
+          <React.Suspense fallback={null}>
+            {isSellPartModalOpen && (
+              <SellPartModal
+                isOpen={isSellPartModalOpen && activeTab === 'inventory'}
+                onClose={handleCloseSellPartModal}
+                preselectedComponent={sellPartPreselectedComp}
+                preselectedEntryId={sellPartPreselectedEntryId}
+                onOpenAddComponent={() => {
+                  handleCloseSellPartModal();
+                  handleOpenAddComponent();
+                }}
+              />
+            )}
+            {isBulkEntryModalOpen && (
+              <BulkStockEntryModal
+                isOpen={isBulkEntryModalOpen && activeTab === 'inventory'}
+                onClose={handleCloseBulkEntryModal}
+                onSaveAll={handleSaveBulkItems}
+              />
+            )}
+            {isBuildModalOpen && (
+              <BuildModal
+                isOpen={isBuildModalOpen && activeTab === 'builds'}
+                onClose={handleCloseBuildModal}
+                initialData={initialBuildData}
+                onSave={addBuild}
+              />
+            )}
+            {isBuyPCModalOpen && (
+              <BuyPCModal
+                isOpen={isBuyPCModalOpen}
+                isVisible={activeTab === 'builds'}
+                onClose={() => setIsBuyPCModalOpen(false)}
+                onConfirm={(purchase) => {
+                  const result = purchasePC(purchase);
+                  if (!result.success) {
+                    showToast(result.error || 'Unable to save this PC purchase.', 'error');
+                    return result;
+                  }
+                  setIsBuyPCModalOpen(false);
+                  setBuildsStatusFilter('Pending');
+                  showToast('PC purchase saved in Pending builds.', 'success');
+                  return result;
+                }}
+              />
+            )}
+          </React.Suspense>
         </React.Suspense>
       </main>
 
@@ -313,43 +386,6 @@ function AppContent() {
         onClose={handleClosePurchaseModal}
         onSave={(entryData) => {
           if (purchaseModalComponentId) addPurchaseEntry(purchaseModalComponentId, entryData);
-        }}
-      />
-      <SellPartModal
-        isOpen={isSellPartModalOpen && activeTab === 'inventory'}
-        onClose={handleCloseSellPartModal}
-        preselectedComponent={sellPartPreselectedComp}
-        preselectedEntryId={sellPartPreselectedEntryId}
-        onOpenAddComponent={() => {
-          handleCloseSellPartModal();
-          handleOpenAddComponent();
-        }}
-      />
-      <BulkStockEntryModal
-        isOpen={isBulkEntryModalOpen && activeTab === 'inventory'}
-        onClose={handleCloseBulkEntryModal}
-        onSaveAll={handleSaveBulkItems}
-      />
-      <BuildModal
-        isOpen={isBuildModalOpen && activeTab === 'builds'}
-        onClose={handleCloseBuildModal}
-        initialData={initialBuildData}
-        onSave={addBuild}
-      />
-      <BuyPCModal
-        isOpen={isBuyPCModalOpen}
-        isVisible={activeTab === 'builds'}
-        onClose={() => setIsBuyPCModalOpen(false)}
-        onConfirm={(purchase) => {
-          const result = purchasePC(purchase);
-          if (!result.success) {
-            showToast(result.error || 'Unable to save this PC purchase.', 'error');
-            return result;
-          }
-          setIsBuyPCModalOpen(false);
-          setBuildsStatusFilter('Pending');
-          showToast('PC purchase saved in Pending builds.', 'success');
-          return result;
         }}
       />
       <ConfirmModal

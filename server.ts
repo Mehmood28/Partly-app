@@ -809,22 +809,54 @@ RULES FOR EACH TIER:
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
+    let viteInitError: any = null;
+    let viteMiddleware: any = null;
+
+    app.use((req, res, next) => {
+      if (viteMiddleware) {
+        return viteMiddleware(req, res, next);
+      }
+      if (viteInitError) {
+        return next(viteInitError);
+      }
+      const checkReady = () => {
+        if (res.writableEnded || req.destroyed) return;
+        if (viteMiddleware) {
+          viteMiddleware(req, res, next);
+        } else if (viteInitError) {
+          next(viteInitError);
+        } else {
+          setTimeout(checkReady, 20);
+        }
+      };
+      checkReady();
     });
-    app.use(vite.middlewares);
+
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+
+    try {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      viteMiddleware = vite.middlewares;
+    } catch (err) {
+      viteInitError = err;
+      console.error('Failed to create Vite dev server:', err);
+    }
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
-  }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 startServer();
