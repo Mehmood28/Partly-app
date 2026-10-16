@@ -24,6 +24,7 @@ interface PurchaseDisplayItem {
   totalPrice: number;
   tags: string[];
   condition?: string;
+  healthPercent?: number;
   platform?: string;
   paymentMethod?: string;
 }
@@ -65,21 +66,30 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
         totalPrice: entry.totalPrice,
         tags: component.tags || [],
         condition: entry.condition,
+        healthPercent: entry.healthPercent !== undefined
+          ? entry.healthPercent
+          : (component.category === 'Storage' ? component.healthPercent : undefined),
         platform: entry.platform,
         paymentMethod: entry.paymentMethod,
       })))
     : [];
-  const acquisitionItems: PurchaseDisplayItem[] = purchasedBuild?.acquisitionComponentBreakdown?.map((item) => ({
-    category: item.category,
-    itemName: item.name,
-    quantity: item.quantity,
-    unitPrice: item.unitCost,
-    totalPrice: item.quantity * item.unitCost,
-    tags: item.tags || [],
-    condition: undefined,
-    platform: tx.platform,
-    paymentMethod: tx.paymentMethod,
-  })) || [];
+  const acquisitionItems: PurchaseDisplayItem[] = purchasedBuild?.acquisitionComponentBreakdown?.map((item) => {
+    const matchingComp = components.find(
+      (c) => c.name.toLowerCase() === item.name.toLowerCase() && c.category === item.category
+    );
+    return {
+      category: item.category,
+      itemName: item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitCost,
+      totalPrice: item.quantity * item.unitCost,
+      tags: item.tags || [],
+      condition: undefined,
+      healthPercent: item.category === 'Storage' ? matchingComp?.healthPercent : undefined,
+      platform: tx.platform,
+      paymentMethod: tx.paymentMethod,
+    };
+  }) || [];
   const rawDetailItems = (tx.detailsList || []).map((detail) => parseBatchItem(detail, components, tx));
   let detailItems = rawDetailItems;
   if (
@@ -112,6 +122,9 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
         totalPrice: tx.totalAmount || 0,
         tags: matchedComp.tags || [],
         condition: tx.originalPurchaseEntrySnapshot?.condition || matchedComp.purchaseHistory?.[0]?.condition,
+        healthPercent: tx.originalPurchaseEntrySnapshot?.healthPercent !== undefined
+          ? tx.originalPurchaseEntrySnapshot.healthPercent
+          : (matchedComp.category === 'Storage' ? matchedComp.healthPercent : undefined),
         platform: tx.platform,
         paymentMethod: tx.paymentMethod,
       }]
@@ -140,20 +153,27 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
       <h4>{title} <span>· {items.length} {items.length === 1 ? 'part' : 'parts'}</span></h4>
       <div className="purchase-items">
         <div className="purchase-item-head"><span>Part / details</span><span className="text-right">Qty</span><span className="text-right">Unit price</span></div>
-        {items.map((item, index) => (
-          <div key={index} className="purchase-item">
-            <div className="purchase-item-name">
-              <strong>{item.itemName}</strong>
-              <span>{[
-                ...(item.tags || []),
-                item.condition,
-                !hideSupplierNames && item.platform ? normalizePlatform(item.platform) : undefined,
-              ].filter(Boolean).join(' · ')}</span>
+        {items.map((item, index) => {
+          const healthText = item.healthPercent !== undefined && item.healthPercent !== null && !isNaN(Number(String(item.healthPercent).replace(/%/g, '')))
+            ? `${String(item.healthPercent).replace(/%/g, '').trim()}%`
+            : undefined;
+
+          return (
+            <div key={index} className="purchase-item">
+              <div className="purchase-item-name">
+                <strong>{item.itemName}</strong>
+                <span>{[
+                  ...(item.tags || []),
+                  item.condition,
+                  healthText,
+                  !hideSupplierNames && item.platform ? normalizePlatform(item.platform) : undefined,
+                ].filter(Boolean).join(' · ')}</span>
+              </div>
+              <div data-label="Qty" className="text-right font-mono">{item.quantity}</div>
+              <div data-label="Unit price" className="text-right font-mono">{formatCurrency(item.unitPrice)}</div>
             </div>
-            <div data-label="Qty" className="text-right font-mono">{item.quantity}</div>
-            <div data-label="Unit price" className="text-right font-mono">{formatCurrency(item.unitPrice)}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -171,7 +191,13 @@ export const PurchaseExpandedView: React.FC<PurchaseExpandedViewProps> = ({ tx, 
         <section>
           <h4>Purchased part</h4>
           <p className="text-zinc-100">{matchedComp.name}</p>
-          <p>{[matchedComp.category, ...(matchedComp.tags || [])].join(' · ')}</p>
+          <p>{[
+            matchedComp.category,
+            ...(matchedComp.tags || []),
+            matchedComp.healthPercent !== undefined && matchedComp.healthPercent !== null
+              ? `${String(matchedComp.healthPercent).replace(/%/g, '').trim()}%`
+              : undefined,
+          ].filter(Boolean).join(' · ')}</p>
         </section>
       ) : null}
       {tx.notes && (

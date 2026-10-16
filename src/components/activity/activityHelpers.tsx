@@ -11,6 +11,7 @@ export interface ParsedBatchItem {
   category: string;
   tags: string[];
   condition: string;
+  healthPercent?: number;
   platform: string;
   paymentMethod: string;
   comp?: InventoryComponent;
@@ -158,6 +159,15 @@ export const parseBatchItem = (
     }
   }
 
+  let healthPercent: number | undefined = undefined;
+  if (purchaseEntry?.healthPercent !== undefined && Number.isFinite(Number(purchaseEntry.healthPercent))) {
+    healthPercent = Number(purchaseEntry.healthPercent);
+  } else if (!isMultiItemTx && tx.originalPurchaseEntrySnapshot?.healthPercent !== undefined && Number.isFinite(Number(tx.originalPurchaseEntrySnapshot.healthPercent))) {
+    healthPercent = Number(tx.originalPurchaseEntrySnapshot.healthPercent);
+  } else if ((category === 'Storage' || comp?.category === 'Storage') && comp?.healthPercent !== undefined && Number.isFinite(Number(comp.healthPercent))) {
+    healthPercent = Number(comp.healthPercent);
+  }
+
   const itemPlatform = purchaseEntry?.platform || tx.platform || '';
   const itemPaymentMethod = purchaseEntry?.paymentMethod || tx.paymentMethod || '';
   const totalPrice = isSingleItemPurchase && typeof tx.totalAmount === 'number' && Number.isFinite(tx.totalAmount)
@@ -172,6 +182,7 @@ export const parseBatchItem = (
     category,
     tags,
     condition,
+    healthPercent,
     platform: itemPlatform,
     paymentMethod: itemPaymentMethod,
     comp,
