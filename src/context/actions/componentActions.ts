@@ -368,7 +368,7 @@ export const patchMatchingPurchaseTransaction = (
 export const handleSaveComponent = (
   prev: AppState,
   options: SaveComponentOptions
-): { nextState: AppState; success: boolean; error?: string } => {
+): { nextState: AppState; success: boolean; error?: string; warning?: string } => {
   const { componentData, existingComponentId, newPurchaseEntry, updatedPurchaseEntry } = options;
   
   let validatedUpdatedEntry: { quantity: number; unitPrice: number; totalPrice: number; taxPercent: number } | null = null;
@@ -768,6 +768,8 @@ export const handleSaveComponent = (
     });
 
     let updatedTransactions = prev.transactions;
+    let unmatchedTransactionWarning: string | undefined = undefined;
+
     if (newTx) {
       updatedTransactions = [newTx, ...prev.transactions];
     } else if (updatedPurchaseEntry && validatedUpdatedEntry && validatedUpdatedEntry.quantity > 0) {
@@ -779,6 +781,8 @@ export const handleSaveComponent = (
         tx.originalPurchaseEntrySnapshot?.id === entryId ||
         (!!targetEntry?.sourcePurchaseTransactionId && tx.id === targetEntry.sourcePurchaseTransactionId)
       );
+
+      let matchedTxCount = 0;
 
       updatedTransactions = prev.transactions.map((tx) => {
         let isMatchedTx = false;
@@ -805,6 +809,7 @@ export const handleSaveComponent = (
         }
 
         if (!isMatchedTx) return tx;
+        matchedTxCount++;
 
         const compName = componentData.name || (prev.components.find((comp) => comp.id === existingComponentId)?.name) || tx.itemNameOrSummary;
 
@@ -821,6 +826,10 @@ export const handleSaveComponent = (
           targetEntry
         );
       });
+
+      if (matchedTxCount === 0) {
+        unmatchedTransactionWarning = 'Purchase batch updated, but no matching purchase transaction was found. The transaction log was not automatically updated.';
+      }
     }
 
     const nextStateObj = {
@@ -830,12 +839,13 @@ export const handleSaveComponent = (
     };
     
     if (!newTx && JSON.stringify(prev.components) === JSON.stringify(updatedComponents)) {
-      return { nextState: prev, success: true };
+      return { nextState: prev, success: true, warning: unmatchedTransactionWarning };
     }
 
     return {
       nextState: nextStateObj,
-      success: true
+      success: true,
+      warning: unmatchedTransactionWarning
     };
   } else {
     // Brand new component creation
@@ -1564,7 +1574,7 @@ export const handleUpdatePurchaseEntry = (
   componentId: string,
   entryId: string,
   entry: Omit<PurchaseEntry, 'id'>
-): { nextState: AppState; success: boolean; error?: string } => {
+): { nextState: AppState; success: boolean; error?: string; warning?: string } => {
   const existing = prev.components.find((c) => c.id === componentId);
   if (!existing) {
     return { nextState: prev, success: false, error: 'Component not found.' };
@@ -1642,6 +1652,8 @@ export const handleUpdatePurchaseEntry = (
     (!!targetEntry?.sourcePurchaseTransactionId && tx.id === targetEntry.sourcePurchaseTransactionId)
   );
 
+  let matchedTxCount = 0;
+
   const updatedTransactions = prev.transactions.map((tx) => {
     let isMatchedTx = false;
     if (hasDirectLinkedTx) {
@@ -1667,6 +1679,7 @@ export const handleUpdatePurchaseEntry = (
     }
 
     if (!isMatchedTx) return tx;
+    matchedTxCount++;
 
     const compName = existing.name || tx.itemNameOrSummary;
 
@@ -1683,6 +1696,10 @@ export const handleUpdatePurchaseEntry = (
       targetEntry
     );
   });
+
+  const unmatchedTransactionWarning = matchedTxCount === 0
+    ? 'Purchase batch updated, but no matching purchase transaction was found. The transaction log was not automatically updated.'
+    : undefined;
 
   return {
     nextState: {
@@ -1719,7 +1736,8 @@ export const handleUpdatePurchaseEntry = (
         return c;
       }),
     },
-    success: true
+    success: true,
+    warning: unmatchedTransactionWarning,
   };
 };
 

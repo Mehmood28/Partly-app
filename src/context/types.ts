@@ -130,14 +130,14 @@ export interface InventoryContextType {
   resetToDefault: () => Promise<ImportDataResult>;
 
   // Component Actions
-  saveComponent: (options: SaveComponentOptions) => { success: boolean; error?: string };
+  saveComponent: (options: SaveComponentOptions) => { success: boolean; error?: string; warning?: string };
   addComponent: (comp: Omit<InventoryComponent, 'id' | 'assignedCount'>) => void;
   addComponents: (comps: Omit<InventoryComponent, 'id' | 'assignedCount'>[], targetPurchaseTransactionId?: string) => void;
   updateComponent: (id: string, updates: Partial<InventoryComponent>) => void;
   bulkUpdateComponentTags: (updates: { id: string; tags: string[] }[]) => void;
   deleteComponent: (id: string) => { success: boolean; error?: string };
   addPurchaseEntry: (componentId: string, entry: Omit<PurchaseEntry, 'id'>) => void;
-  updatePurchaseEntry: (componentId: string, entryId: string, entry: Omit<PurchaseEntry, 'id'>) => { success: boolean; error?: string };
+  updatePurchaseEntry: (componentId: string, entryId: string, entry: Omit<PurchaseEntry, 'id'>) => { success: boolean; error?: string; warning?: string };
   deletePurchaseEntry: (componentId: string, entryId: string) => { success: boolean; error?: string };
   distributeDriveHealths: (componentId: string, unitHealths: DriveHealthInput[]) => { success: boolean; error?: string };
   updateMarketValue: (componentId: string, value: number) => void;

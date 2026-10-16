@@ -25,7 +25,7 @@ interface ComponentModalProps {
     purchaseEntry?: Omit<PurchaseEntry, 'id'>,
     existingComponentId?: string,
     updatedPurchaseEntry?: { entryId: string; entry: Omit<PurchaseEntry, 'id'> }
-  ) => { success: boolean; error?: string } | void;
+  ) => { success: boolean; error?: string; warning?: string } | void;
   initialComponent?: InventoryComponent | null;
 }
 
@@ -260,6 +260,10 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
         return;
       }
       
+      if (result && result.warning) {
+        showToast(result.warning, 'warning');
+      }
+      
       setEditingPurchaseId(null);
       setEditingAllocatedQty(0);
       setIncludePurchase(false);
@@ -307,6 +311,10 @@ export const ComponentModal: React.FC<ComponentModalProps> = ({
     if (result && !result.success) {
       showToast(result.error || 'Cannot save changes', 'error');
       return;
+    }
+
+    if (result && result.warning) {
+      showToast(result.warning, 'warning');
     }
     
     handleCloseAndReset();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TransactionLogItem } from '../../types';
-import { X, Pencil } from 'lucide-react';
+import { X, Pencil, Trash2 } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
@@ -128,6 +128,20 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
         unitPrice: it.unitPrice,
       }));
 
+      const newTotal = updated.reduce((sum, it) => sum + it.subtotal, 0);
+      setEditAmount(String(roundToCents(newTotal)));
+      return updated;
+    });
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setEditItems((prev) => {
+      const updated = prev.filter((_, i) => i !== index);
+      initialItemsRef.current = updated.map((it) => ({
+        name: it.name,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice,
+      }));
       const newTotal = updated.reduce((sum, it) => sum + it.subtotal, 0);
       setEditAmount(String(roundToCents(newTotal)));
       return updated;
@@ -481,8 +495,21 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                     key={idx}
                     className="bg-[#101719] px-2.5 py-1.5 rounded-lg border border-white/[0.06] space-y-1 hover:border-white/[0.1] transition-colors"
                   >
-                    <div className="text-xs font-semibold text-zinc-100 break-words leading-tight">
-                      {item.name}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xs font-semibold text-zinc-100 break-words leading-tight">
+                        {item.name}
+                      </div>
+                      {editItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(idx)}
+                          aria-label={`Remove ${item.name}`}
+                          className="text-zinc-500 hover:text-rose-400 p-0.5 rounded transition-colors shrink-0"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between gap-2 h-5">

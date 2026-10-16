@@ -204,7 +204,8 @@ export const handleUpdateTransaction = (
   const isSingleItemPurchase = isPurchase && (
     updates.detailsList ? updates.detailsList.length <= 1 : (!targetTx.detailsList || targetTx.detailsList.length <= 1)
   );
-  const hasPurchaseEntryFieldChange = isPurchase && (isAmountChanged || isSellerChanged || isPaymentMethodChanged || isDateChanged || isQtyChanged);
+  const isDetailsListChanged = isPurchase && updates.detailsList !== undefined;
+  const hasPurchaseEntryFieldChange = isPurchase && (isAmountChanged || isSellerChanged || isPaymentMethodChanged || isDateChanged || isQtyChanged || isDetailsListChanged);
 
   const newUnitPrice = roundToCents(totalAmount / (purchaseQty || 1));
 
@@ -213,7 +214,7 @@ export const handleUpdateTransaction = (
     updatedDetailsList = updates.detailsList;
   } else if (isSingleItemPurchase && (isAmountChanged || isItemNameChanged || isQtyChanged || !targetTx.detailsList || targetTx.detailsList.length <= 1)) {
     updatedDetailsList = [`${purchaseQty}x ${itemNameOrSummary} (${formatCurrency(newUnitPrice)}/ea)`];
-  } else if (isPurchase && targetTx.detailsList && targetTx.detailsList.length > 1 && isAmountChanged) {
+  } else if (isPurchase && targetTx.detailsList && targetTx.detailsList.length > 1 && isAmountChanged && !updates.detailsList) {
     const rawParsed = targetTx.detailsList.map((d) => parseBatchItem(d, prev.components, targetTx));
     const oldSum = rawParsed.reduce((s, it) => s + ((it.quantity || 1) * it.unitPrice), 0);
     if (oldSum > 0) {
@@ -396,6 +397,41 @@ export const handleUpdateTransaction = (
       });
     }
 
+    const removedEntryIds = new Set<string>();
+
+    if (isPurchase && updates.detailsList && targetTx.detailsList && targetTx.detailsList.length > 0) {
+      const oldDetailsParsed = targetTx.detailsList.map((d) => parseBatchItem(d, prev.components, targetTx));
+      const newDetailsParsed = updatedDetailsList.map((d) => parseBatchItem(d, prev.components, updatedTarget));
+
+      const newEntryIds = new Set(newDetailsParsed.map((d) => d.entry?.id).filter(Boolean) as string[]);
+      const newCompIds = new Set(newDetailsParsed.map((d) => d.comp?.id).filter(Boolean) as string[]);
+      const newNames = new Set(newDetailsParsed.map((d) => d.itemName.trim().toLowerCase()));
+
+      oldDetailsParsed.forEach((oldItem) => {
+        const isRetained =
+          (oldItem.entry?.id && newEntryIds.has(oldItem.entry.id)) ||
+          (oldItem.comp?.id && newCompIds.has(oldItem.comp.id)) ||
+          newNames.has(oldItem.itemName.trim().toLowerCase());
+
+        if (!isRetained) {
+          if (oldItem.entry?.id) {
+            removedEntryIds.add(oldItem.entry.id);
+          }
+          if (oldItem.comp?.id) {
+            (oldItem.comp.purchaseHistory || []).forEach((pe) => {
+              if (
+                pe.sourcePurchaseTransactionId === targetTx.id ||
+                targetTx.relatedPurchaseEntryId === pe.id ||
+                ((pe.date === targetTx.dateSortable || pe.date === targetTx.timestamp) && (!oldSeller || pe.seller === oldSeller || pe.platform === oldSeller))
+              ) {
+                removedEntryIds.add(pe.id);
+              }
+            });
+          }
+        }
+      });
+    }
+
     const isTargetEntry = (pe: PurchaseEntry, isTargetComp: boolean) =>
       targetEntryIds.has(pe.id) ||
       pe.sourcePurchaseTransactionId === targetTx.id ||
@@ -421,78 +457,104 @@ export const handleUpdateTransaction = (
       const isCompTargetEntry = (pe: PurchaseEntry) => isTargetEntry(pe, isTargetComp);
 
       const hasMatchingEntries = (comp.purchaseHistory || []).some(isCompTargetEntry);
+      const hasRemovedEntries = (comp.purchaseHistory || []).some((pe) => removedEntryIds.has(pe.id));
 
-      if (!hasMatchingEntries && !isTargetComp) {
+      if (!hasMatchingEntries && !hasRemovedEntries && !isTargetComp) {
         return comp;
       }
 
       const matchingEntryCount = (comp.purchaseHistory || []).filter(isCompTargetEntry).length;
 
-      const updatedHistory = (comp.purchaseHistory || []).map((pe) => {
-        if (isCompTargetEntry(pe)) {
-          let updatedQty = pe.quantity || 1;
-          let updatedUnitPrice = pe.unitPrice;
-          let updatedTotalPrice = pe.totalPrice;
-
-          if (isPurchase) {
-            const byEntry = itemMapByEntryId.get(pe.id);
-            const byComp = itemMapByCompId.get(comp.id);
-            const matchData = byEntry || byComp;
-
-            if (matchingEntryCount > 1) {
-              if (matchData) {
-                updatedUnitPrice = matchData.unitPrice;
-              } else if (isSingleItemPurchase && (isAmountChanged || isQtyChanged)) {
-                updatedUnitPrice = roundToCents(totalAmount / (purchaseQty || 1));
-              }
-              updatedQty = pe.quantity;
-              updatedTotalPrice = roundToCents(pe.quantity * updatedUnitPrice);
-            } else if (matchingEntryCount === 1) {
-              if (matchData) {
-                updatedUnitPrice = matchData.unitPrice;
-                const oldLineQty = matchData.oldQty ?? matchData.quantity ?? pe.quantity;
-                const newLineQty = matchData.quantity ?? oldLineQty;
-                const qtyDelta = newLineQty - oldLineQty;
-                updatedQty = qtyDelta !== 0 ? Math.max(1, pe.quantity + qtyDelta) : pe.quantity;
-                updatedTotalPrice = roundToCents(updatedQty * updatedUnitPrice);
-              } else if (isSingleItemPurchase) {
-                if (isAmountChanged || isQtyChanged) {
-                  updatedUnitPrice = roundToCents(totalAmount / (purchaseQty || 1));
-                }
-                const oldTxQty = targetTx.quantity || targetTx.relatedComponentQty || pe.quantity;
-                const newTxQty = purchaseQty || oldTxQty;
-                const qtyDelta = newTxQty - oldTxQty;
-                updatedQty = qtyDelta !== 0 ? Math.max(1, pe.quantity + qtyDelta) : pe.quantity;
-                updatedTotalPrice = roundToCents(updatedQty * updatedUnitPrice);
-              }
+      const updatedHistory = (comp.purchaseHistory || [])
+        .map((pe) => {
+          if (removedEntryIds.has(pe.id)) {
+            const batches = getAllBatchesWithRemaining(comp, prev.builds);
+            const batchInfo = batches.find((b) => b.entry.id === pe.id);
+            const isAllocated = batchInfo ? batchInfo.allocatedQuantity > 0 : false;
+            if (!isAllocated) {
+              return null;
             }
+            return {
+              ...pe,
+              sourcePurchaseTransactionId: undefined,
+            };
           }
 
-          const currentBatchSeller = (pe.platform || pe.seller || '').trim();
-          const shouldUpdateBatchSeller =
-            isSellerChanged &&
-            (allSharedSameSeller ||
-              !currentBatchSeller ||
-              !oldSeller ||
-              currentBatchSeller.toLowerCase() === oldSeller.toLowerCase());
+          if (isCompTargetEntry(pe)) {
+            let updatedQty = pe.quantity || 1;
+            let updatedUnitPrice = pe.unitPrice;
+            let updatedTotalPrice = pe.totalPrice;
 
-          return {
-            ...pe,
-            quantity: updatedQty,
-            unitPrice: updatedUnitPrice,
-            totalPrice: updatedTotalPrice,
-            healthPercent: pe.healthPercent,
-            date: isPurchase ? dateSortable : (isDateChanged ? dateSortable : pe.date),
-            paymentMethod: isPurchase
-              ? (paymentMethod ? (paymentMethod as PaymentMethod) : pe.paymentMethod)
-              : (paymentMethod ? (paymentMethod as PaymentMethod) : pe.paymentMethod),
-            platform: shouldUpdateBatchSeller ? ((seller || pe.platform || '') as Platform) : pe.platform,
-            seller: shouldUpdateBatchSeller ? ((seller || pe.seller || '') as Platform) : pe.seller,
-            sourcePurchaseTransactionId: targetTx.id,
-          };
+            if (isPurchase) {
+              const byEntry = itemMapByEntryId.get(pe.id);
+              const byComp = itemMapByCompId.get(comp.id);
+              const matchData = byEntry || byComp;
+
+              if (matchingEntryCount > 1) {
+                if (matchData) {
+                  updatedUnitPrice = matchData.unitPrice;
+                } else if (isSingleItemPurchase && (isAmountChanged || isQtyChanged)) {
+                  updatedUnitPrice = roundToCents(totalAmount / (purchaseQty || 1));
+                }
+                updatedQty = pe.quantity;
+                updatedTotalPrice = roundToCents(pe.quantity * updatedUnitPrice);
+              } else if (matchingEntryCount === 1) {
+                if (matchData) {
+                  updatedUnitPrice = matchData.unitPrice;
+                  const oldLineQty = matchData.oldQty ?? matchData.quantity ?? pe.quantity;
+                  const newLineQty = matchData.quantity ?? oldLineQty;
+                  const qtyDelta = newLineQty - oldLineQty;
+                  updatedQty = qtyDelta !== 0 ? Math.max(1, pe.quantity + qtyDelta) : pe.quantity;
+                  updatedTotalPrice = roundToCents(updatedQty * updatedUnitPrice);
+                } else if (isSingleItemPurchase) {
+                  if (isAmountChanged || isQtyChanged) {
+                    updatedUnitPrice = roundToCents(totalAmount / (purchaseQty || 1));
+                  }
+                  const oldTxQty = targetTx.quantity || targetTx.relatedComponentQty || pe.quantity;
+                  const newTxQty = purchaseQty || oldTxQty;
+                  const qtyDelta = newTxQty - oldTxQty;
+                  updatedQty = qtyDelta !== 0 ? Math.max(1, pe.quantity + qtyDelta) : pe.quantity;
+                  updatedTotalPrice = roundToCents(updatedQty * updatedUnitPrice);
+                }
+              }
+            }
+
+            const currentBatchSeller = (pe.platform || pe.seller || '').trim();
+            const shouldUpdateBatchSeller =
+              isSellerChanged &&
+              (allSharedSameSeller ||
+                !currentBatchSeller ||
+                !oldSeller ||
+                currentBatchSeller.toLowerCase() === oldSeller.toLowerCase());
+
+            return {
+              ...pe,
+              quantity: updatedQty,
+              unitPrice: updatedUnitPrice,
+              totalPrice: updatedTotalPrice,
+              healthPercent: pe.healthPercent,
+              date: isPurchase ? dateSortable : (isDateChanged ? dateSortable : pe.date),
+              paymentMethod: isPurchase
+                ? (paymentMethod ? (paymentMethod as PaymentMethod) : pe.paymentMethod)
+                : (paymentMethod ? (paymentMethod as PaymentMethod) : pe.paymentMethod),
+              platform: shouldUpdateBatchSeller ? ((seller || pe.platform || '') as Platform) : pe.platform,
+              seller: shouldUpdateBatchSeller ? ((seller || pe.seller || '') as Platform) : pe.seller,
+              sourcePurchaseTransactionId: targetTx.id,
+            };
+          }
+          return pe;
+        })
+        .filter((pe): pe is PurchaseEntry => pe !== null)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      if (updatedHistory.length === 0 && (Number(comp.assignedCount) || 0) === 0) {
+        const totalAllocated = (prev.builds || []).reduce((sum, b) => {
+          return sum + (b.parts || []).filter((p) => p.componentId === comp.id).reduce((s, p) => s + (Number(p.quantity) || 0), 0);
+        }, 0);
+        if (totalAllocated === 0) {
+          return null;
         }
-        return pe;
-      }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      }
 
       const shouldUpdateCompSeller =
         isSellerChanged &&
@@ -504,7 +566,7 @@ export const handleUpdateTransaction = (
         platform: shouldUpdateCompSeller ? ((seller || comp.platform || '') as Platform) : comp.platform,
         purchaseHistory: updatedHistory,
       };
-    });
+    }).filter((c): c is InventoryComponent => c !== null);
   }
 
   const updatedBuilds = isSellerChanged

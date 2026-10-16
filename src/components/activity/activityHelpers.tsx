@@ -15,6 +15,7 @@ export interface ParsedBatchItem {
   paymentMethod: string;
   comp?: InventoryComponent;
   entry?: PurchaseEntry;
+  hasExplicitPrice?: boolean;
 }
 
 export function inferCategory(name: string): string {
@@ -36,6 +37,7 @@ export const parseBatchItem = (
   tx: TransactionLogItem
 ): ParsedBatchItem => {
   const match = detailStr.match(/^(?:(\d+)x\s+)?(.*?)(?:\s+\(\$([\d\.,]+)(?:\/ea)?\))?$/i);
+  const hasExplicitPrice = Boolean(match && match[3] !== undefined);
   
   let quantity = 1;
   let itemName = detailStr;
@@ -132,7 +134,7 @@ export const parseBatchItem = (
   const isSingleItemPurchase = tx.type === 'PURCHASE' && (!tx.detailsList || tx.detailsList.length <= 1);
   if (isSingleItemPurchase && typeof tx.totalAmount === 'number' && Number.isFinite(tx.totalAmount)) {
     unitPrice = roundToCents(tx.totalAmount / (quantity || 1));
-  } else if (unitPrice === 0 && purchaseEntry) {
+  } else if (!hasExplicitPrice && purchaseEntry) {
     unitPrice = purchaseEntry.unitPrice || (purchaseEntry.totalPrice / (purchaseEntry.quantity || 1));
   }
 
@@ -174,6 +176,7 @@ export const parseBatchItem = (
     paymentMethod: itemPaymentMethod,
     comp,
     entry: purchaseEntry,
+    hasExplicitPrice,
   };
 };
 

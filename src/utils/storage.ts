@@ -42,7 +42,6 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
 
   const parsedObj = parsed as Record<string, unknown>;
   const { sheetStats: _obsoleteSheetStats, ...parsedWithoutSheetStats } = parsedObj;
-  const idRemappings: Record<string, string> = {};
 
   const rawTransactions = Array.isArray(parsedObj.transactions)
     ? (cloneStoredValue(parsedObj.transactions) as TransactionLogItem[])
@@ -74,7 +73,7 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
             notes: cleanNotes,
           };
 
-          // Backfill missing sourcePurchaseTransactionId
+          // Backfill missing sourcePurchaseTransactionId via deterministic exact link only
           if (!cleanPh.sourcePurchaseTransactionId) {
             // 1. Direct transaction references (relatedPurchaseEntryId / originalPurchaseEntrySnapshot)
             const directTx = rawTransactions.find(
@@ -85,39 +84,6 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
             );
             if (directTx) {
               cleanPh.sourcePurchaseTransactionId = directTx.id;
-            } else {
-              // 2. Sibling batch matching on the same component (date + unitPrice + platform)
-              const sibling = rawHistory.find(
-                (s: any) =>
-                  s &&
-                  s.id !== cleanPh.id &&
-                  s.sourcePurchaseTransactionId &&
-                  s.date === cleanPh.date &&
-                  Math.abs(Number(s.unitPrice) - Number(cleanPh.unitPrice)) < 0.005 &&
-                  (s.platform || '') === (cleanPh.platform || '')
-              );
-              if (sibling) {
-                cleanPh.sourcePurchaseTransactionId = sibling.sourcePurchaseTransactionId;
-              } else {
-                // 3. Unique PURCHASE transaction matching on date + seller + componentName
-                const matchingTxs = rawTransactions.filter((tx) => {
-                  if (tx.type !== 'PURCHASE') return false;
-                  const dateMatches = tx.dateSortable === cleanPh.date || tx.timestamp?.startsWith(cleanPh.date);
-                  if (!dateMatches) return false;
-                  const txSeller = (tx.seller || tx.platform || '').trim().toLowerCase();
-                  const entrySeller = (cleanPh.platform || cleanPh.seller || '').trim().toLowerCase();
-                  const sellerMatches = !entrySeller || !txSeller || txSeller === entrySeller;
-                  if (!sellerMatches) return false;
-                  const nameMatches =
-                    tx.relatedComponentId === comp.id ||
-                    (tx.itemNameOrSummary && comp.name && tx.itemNameOrSummary.toLowerCase().includes(comp.name.toLowerCase())) ||
-                    (tx.detailsList && comp.name && tx.detailsList.some((d) => d.toLowerCase().includes(comp.name.toLowerCase())));
-                  return nameMatches;
-                });
-                if (matchingTxs.length === 1) {
-                  cleanPh.sourcePurchaseTransactionId = matchingTxs[0].id;
-                }
-              }
             }
           }
 
@@ -137,28 +103,7 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
             }
           }
 
-          const match = normalizedHistory.find(
-            (c) =>
-              c.date === cleanPh.date &&
-              c.condition === cleanPh.condition &&
-              c.unitPrice === cleanPh.unitPrice &&
-              c.paymentMethod === cleanPh.paymentMethod &&
-              (c.platform || '') === (cleanPh.platform || '') &&
-              (c.seller || '') === (cleanPh.seller || '') &&
-              (c.taxPercent || 0) === (cleanPh.taxPercent || 0) &&
-              c.healthPercent === cleanPh.healthPercent &&
-              (c.notes || '') === (cleanPh.notes || '') &&
-              (c.sourcePurchaseTransactionId || '') === (cleanPh.sourcePurchaseTransactionId || '') &&
-              (c.sourcePurchasedBuildId || '') === (cleanPh.sourcePurchasedBuildId || '') &&
-              (c.sourceTradeInBuildId || '') === (cleanPh.sourceTradeInBuildId || '')
-          );
-          if (match) {
-            idRemappings[cleanPh.id] = match.id;
-            match.quantity += cleanPh.quantity;
-            match.totalPrice = roundToCents(match.quantity * match.unitPrice);
-          } else {
-            normalizedHistory.push(cleanPh);
-          }
+          normalizedHistory.push(cleanPh);
         }
 
         // Clean specifications: reset corrupted '[object Object]' or non-string
@@ -204,10 +149,8 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         const normalizedParts = Array.isArray(build.parts)
           ? build.parts.map((p) => {
               if (!p) return p;
-              const mappedEntryId = p.purchaseEntryId ? idRemappings[p.purchaseEntryId] || p.purchaseEntryId : p.purchaseEntryId;
               return {
                 ...p,
-                purchaseEntryId: mappedEntryId,
                 unitCostAtAssignment:
                   typeof p.unitCostAtAssignment === 'number'
                     ? roundToCents(p.unitCostAtAssignment)
@@ -244,9 +187,6 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
   const transactions = Array.isArray(parsedObj.transactions)
     ? (cloneStoredValue(parsedObj.transactions) as TransactionLogItem[]).map((tx) => {
         if (!tx) return tx;
-        const mappedRelatedEntryId = tx.relatedPurchaseEntryId ? idRemappings[tx.relatedPurchaseEntryId] || tx.relatedPurchaseEntryId : tx.relatedPurchaseEntryId;
-        const mappedIncomingEntryId = tx.incomingPurchaseEntryId ? idRemappings[tx.incomingPurchaseEntryId] || tx.incomingPurchaseEntryId : tx.incomingPurchaseEntryId;
-        const mappedOutgoingEntryId = tx.outgoingPurchaseEntryId ? idRemappings[tx.outgoingPurchaseEntryId] || tx.outgoingPurchaseEntryId : tx.outgoingPurchaseEntryId;
         const cleanTotal = typeof tx.totalAmount === 'number' ? roundToCents(tx.totalAmount) : tx.totalAmount;
         let detailsList = tx.detailsList;
         if (tx.type === 'PURCHASE' && detailsList && detailsList.length === 1 && typeof cleanTotal === 'number') {
@@ -259,9 +199,6 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         }
         return {
           ...tx,
-          relatedPurchaseEntryId: mappedRelatedEntryId,
-          incomingPurchaseEntryId: mappedIncomingEntryId,
-          outgoingPurchaseEntryId: mappedOutgoingEntryId,
           totalAmount: cleanTotal,
           profitMargin: typeof tx.profitMargin === 'number' ? roundToCents(tx.profitMargin) : tx.profitMargin,
           soldUnitCost: typeof tx.soldUnitCost === 'number' ? roundToCents(tx.soldUnitCost) : tx.soldUnitCost,
@@ -269,36 +206,6 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
         };
       })
     : [];
-
-  // Synchronize single-purchase transaction prices to their linked component purchase entries
-  transactions.forEach((tx) => {
-    if (
-      tx.type === 'PURCHASE' &&
-      tx.purchaseKind !== 'PC' &&
-      typeof tx.totalAmount === 'number' &&
-      (!tx.detailsList || tx.detailsList.length <= 1)
-    ) {
-      const targetCompId = tx.relatedComponentId;
-      const targetEntryId = tx.relatedPurchaseEntryId;
-      const qty = tx.quantity || tx.relatedComponentQty || 1;
-      const cleanTotal = tx.totalAmount;
-      const cleanUnit = roundToCents(cleanTotal / qty);
-
-      if (targetCompId) {
-        const comp = components.find((c) => c && c.id === targetCompId);
-        if (comp && comp.purchaseHistory) {
-          const matchingEntries = comp.purchaseHistory.filter(
-            (e) => (targetEntryId && e.id === targetEntryId) || e.sourcePurchaseTransactionId === tx.id
-          );
-          if (matchingEntries.length === 1) {
-            const entry = matchingEntries[0];
-            entry.unitPrice = cleanUnit;
-            entry.totalPrice = roundToCents(entry.quantity * cleanUnit);
-          }
-        }
-      }
-    }
-  });
 
   let resolvedGoal = 10000;
   if (isValidMonthlyGoal(parsedObj.monthlyGoal)) {

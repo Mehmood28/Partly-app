@@ -193,7 +193,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         saveStateToHistory(label);
         setState(result.nextState);
       }
-      return { success: true };
+      return { success: true, warning: result.warning };
     },
     [saveStateToHistory, stateRef]
   );
@@ -319,7 +319,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         saveStateToHistory(`Edit purchase batch: ${compName}`);
         setState(result.nextState);
       }
-      return { success: true };
+      return { success: true, warning: result.warning };
     },
     [saveStateToHistory, stateRef]
   );
