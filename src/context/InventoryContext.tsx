@@ -491,14 +491,19 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 
   const updateBuild = useCallback(
-    (buildId: string, updates: Partial<PCBuild>) => {
+    (buildId: string, updates: Partial<PCBuild>): { success: boolean; error?: string } => {
       const current = stateRef.current;
       const build = current.builds.find((b) => b.id === buildId);
-      if (!build) return;
+      if (!build) {
+        return { success: false, error: 'Build not found.' };
+      }
 
       const { status: _ignoredStatus, ...validUpdates } = updates;
+      if ('status' in updates && Object.keys(validUpdates).length === 0) {
+        return { success: false, error: 'Use updateBuildStatus to change build status.' };
+      }
       if (Object.keys(validUpdates).length === 0) {
-        return;
+        return { success: true };
       }
 
       const nextState = handleUpdateBuild(current, buildId, updates);
@@ -507,6 +512,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         saveStateToHistory(`Edit build: ${buildName}`);
         setState(nextState);
       }
+      return { success: true };
     },
     [saveStateToHistory, stateRef]
   );

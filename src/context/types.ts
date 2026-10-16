@@ -161,7 +161,7 @@ export interface InventoryContextType {
   purchasePC: (purchase: PurchasePCData) => { success: boolean; error?: string };
   addImportedBuilds: (builds: PCBuild[]) => void;
   updateBuildStatus: (buildId: string, status: PCBuild['status']) => void;
-  updateBuild: (buildId: string, updates: Partial<PCBuild>) => void;
+  updateBuild: (buildId: string, updates: Partial<PCBuild>) => { success: boolean; error?: string };
   allocatePartToBuild: (
     buildId: string,
     componentId: string,
