@@ -478,10 +478,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 
   const updateBuildStatus = useCallback(
-    (buildId: string, status: PCBuild['status']) => {
+    (buildId: string, status: PCBuild['status'], metadata?: { pendingDate?: string }) => {
       const build = stateRef.current.builds.find((b) => b.id === buildId);
       const buildName = build ? build.name : 'Build';
-      const nextState = handleUpdateBuildStatus(stateRef.current, buildId, status);
+      const nextState = handleUpdateBuildStatus(stateRef.current, buildId, status, metadata);
       if (nextState !== stateRef.current) {
         saveStateToHistory(`Set build to ${status}: ${buildName}`);
         setState(() => nextState);

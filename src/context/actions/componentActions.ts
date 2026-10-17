@@ -19,6 +19,7 @@ import {
   DriveHealthInput,
 } from '../types';
 import { parseBatchItem } from '../../components/activity/activityHelpers';
+import { syncComponentUpdateToPurchaseTransactions } from '../../utils/purchaseSync';
 
 /**
  * Normalizes a string for deterministic component matching:
@@ -832,6 +833,24 @@ export const handleSaveComponent = (
       }
     }
 
+    const updatedComp = updatedComponents.find((c) => c.id === existingComponentId);
+    if (updatedComp) {
+      const entryPayload = validatedUpdatedEntry && updatedPurchaseEntry
+        ? {
+            ...updatedPurchaseEntry.entry,
+            quantity: validatedUpdatedEntry.quantity,
+            unitPrice: validatedUpdatedEntry.unitPrice,
+            totalPrice: validatedUpdatedEntry.totalPrice,
+          }
+        : undefined;
+      updatedTransactions = syncComponentUpdateToPurchaseTransactions(
+        updatedTransactions,
+        updatedComp,
+        updatedPurchaseEntry?.entryId,
+        entryPayload
+      );
+    }
+
     const nextStateObj = {
       ...prev,
       transactions: updatedTransactions,
@@ -1422,7 +1441,8 @@ export const handleUpdateComponent = (
 
   const components = [...prev.components];
   components[targetIndex] = updatedComponent;
-  return { ...prev, components };
+  const transactions = syncComponentUpdateToPurchaseTransactions(prev.transactions, updatedComponent);
+  return { ...prev, components, transactions };
 };
 
 export const handleDeleteComponent = (
@@ -1701,40 +1721,59 @@ export const handleUpdatePurchaseEntry = (
     ? 'Purchase batch updated, but no matching purchase transaction was found. The transaction log was not automatically updated.'
     : undefined;
 
+  const updatedNextComponents = prev.components.map((c) => {
+    if (c.id === componentId) {
+      return {
+        ...c,
+        healthPercent: c.category === 'Storage'
+          ? (normalizedNewHealth !== undefined ? normalizedNewHealth : c.healthPercent)
+          : c.healthPercent,
+        purchaseHistory: (c.purchaseHistory || [])
+          .map((e) =>
+            e.id === entryId
+              ? {
+                  ...e, // Preserve provenance
+                  date: entry.date,
+                  condition: entry.condition,
+                  quantity: newQty,
+                  unitPrice: unitPrice,
+                  totalPrice: totalPrice,
+                  paymentMethod: entry.paymentMethod,
+                  platform: entry.platform,
+                  taxPercent: taxPercent,
+                  healthPercent: normalizedNewHealth !== undefined ? normalizedNewHealth : e.healthPercent,
+                  notes: entry.notes || '',
+                }
+              : { ...e }
+          )
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+      };
+    }
+    return c;
+  });
+
+  const updatedTargetComp = updatedNextComponents.find((c) => c.id === componentId);
+  const finalSyncedTransactions = updatedTargetComp
+    ? syncComponentUpdateToPurchaseTransactions(updatedTransactions, updatedTargetComp, entryId, {
+        date: entry.date,
+        condition: entry.condition,
+        quantity: newQty,
+        unitPrice,
+        totalPrice,
+        paymentMethod: entry.paymentMethod,
+        platform: entry.platform,
+        seller: entry.platform,
+        taxPercent,
+        healthPercent: normalizedNewHealth,
+        notes: entry.notes || '',
+      })
+    : updatedTransactions;
+
   return {
     nextState: {
       ...prev,
-      transactions: updatedTransactions,
-      components: prev.components.map((c) => {
-        if (c.id === componentId) {
-          return {
-            ...c,
-            healthPercent: c.category === 'Storage'
-              ? (normalizedNewHealth !== undefined ? normalizedNewHealth : c.healthPercent)
-              : c.healthPercent,
-            purchaseHistory: (c.purchaseHistory || [])
-              .map((e) =>
-                e.id === entryId
-                  ? {
-                      ...e, // Preserve provenance
-                      date: entry.date,
-                      condition: entry.condition,
-                      quantity: newQty,
-                      unitPrice: unitPrice,
-                      totalPrice: totalPrice,
-                      paymentMethod: entry.paymentMethod,
-                      platform: entry.platform,
-                      taxPercent: taxPercent,
-                      healthPercent: normalizedNewHealth !== undefined ? normalizedNewHealth : e.healthPercent,
-                      notes: entry.notes || '',
-                    }
-                  : { ...e }
-              )
-              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-          };
-        }
-        return c;
-      }),
+      transactions: finalSyncedTransactions,
+      components: updatedNextComponents,
     },
     success: true,
     warning: unmatchedTransactionWarning,

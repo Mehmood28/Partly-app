@@ -59,9 +59,15 @@ export const parseBatchItem = (
   const relatedComponentId = !isMultiItemTx ? tx.relatedComponentId?.trim() : undefined;
   const relatedPurchaseEntryId = !isMultiItemTx ? tx.relatedPurchaseEntryId?.trim() : undefined;
   
-  let comp: InventoryComponent | undefined = relatedComponentId
-    ? components.find((candidate) => candidate.id === relatedComponentId)
-    : undefined;
+  // Check if tx has structured purchaseLineItems matching this line
+  const matchedLineItem = tx.purchaseLineItems?.find((li) => {
+    const liName = (li.name || '').toLowerCase().trim();
+    return liName === itemLower || (liName && itemLower && (liName.includes(itemLower) || itemLower.includes(liName)));
+  });
+
+  let comp: InventoryComponent | undefined = matchedLineItem?.componentId
+    ? components.find((candidate) => candidate.id === matchedLineItem.componentId)
+    : (relatedComponentId ? components.find((candidate) => candidate.id === relatedComponentId) : undefined);
 
   if (!comp) {
     // 1. Exact or substring match
@@ -92,6 +98,24 @@ export const parseBatchItem = (
       }
     }
     comp = bestMatch;
+  }
+
+  // 3. Fallback for renamed items in purchase transaction
+  if (!comp && tx.type === 'PURCHASE') {
+    const txDate = tx.dateSortable || tx.timestamp?.split(' ')[0] || '';
+    const inferred = inferCategory(itemName);
+    const candidate = components.find((c) => {
+      const hasMatchingBatch = c.purchaseHistory?.some((e) => {
+        const matchesTx = e.sourcePurchaseTransactionId === tx.id;
+        const matchesDate = !txDate || e.date === txDate || e.date?.startsWith(txDate);
+        const matchesPrice = Math.abs(e.unitPrice - unitPrice) < 0.05;
+        return matchesTx || (matchesDate && matchesPrice);
+      });
+      return c.category === inferred && hasMatchingBatch;
+    });
+    if (candidate) {
+      comp = candidate;
+    }
   }
 
   const exactPurchaseEntry = relatedComponentId && relatedPurchaseEntryId
@@ -174,17 +198,18 @@ export const parseBatchItem = (
     ? roundToCents(tx.totalAmount)
     : (unitPrice > 0 ? roundToCents(unitPrice * quantity) : 0);
 
+  const resolvedItemName = comp?.name || matchedLineItem?.name || itemName;
   return {
-    itemName,
+    itemName: resolvedItemName,
     quantity,
     unitPrice,
     totalPrice,
     category,
     tags,
-    condition,
+    condition: matchedLineItem?.condition || condition,
     healthPercent,
-    platform: itemPlatform,
-    paymentMethod: itemPaymentMethod,
+    platform: matchedLineItem?.seller || matchedLineItem?.platform || itemPlatform,
+    paymentMethod: matchedLineItem?.paymentMethod || itemPaymentMethod,
     comp,
     entry: purchaseEntry,
     hasExplicitPrice,

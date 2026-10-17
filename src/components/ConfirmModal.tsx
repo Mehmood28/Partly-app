@@ -16,6 +16,7 @@ interface ConfirmModalProps {
   variant?: 'danger' | 'emerald' | 'amber' | 'violet';
   isBusy?: boolean;
   busyText?: string;
+  children?: React.ReactNode;
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -29,6 +30,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   variant = 'danger',
   isBusy = false,
   busyText = 'Working...',
+  children,
 }) => {
   useModalScrollLock(isOpen);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -105,6 +107,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             
             <div className="mb-4">
               <p className="text-xs text-zinc-300 leading-relaxed font-sans">{message}</p>
+              {children}
             </div>
 
             <div className="flex items-center justify-end gap-2 shrink-0">

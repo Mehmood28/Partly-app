@@ -2,6 +2,7 @@ import { AppState, ComponentCategory, TransactionLogItem, InventoryComponent, Pu
 import { getAllBatchesWithRemaining, parseDateLocal, formatCurrency, roundToCents } from '../../utils/helpers';
 import { classifyTransaction } from '../../utils/transactionClassification';
 import { parseBatchItem } from '../../components/activity/activityHelpers';
+import { syncPurchaseTransactionUpdateToComponents, recalculatePurchaseRollups, resolvePurchaseLineItems } from '../../utils/purchaseSync';
 
 const inferCategory = (name: string): ComponentCategory => {
   const n = (name || '').toLowerCase();
@@ -263,6 +264,67 @@ export const handleUpdateTransaction = (
     detailsList: updatedDetailsList,
     originalPurchaseEntrySnapshot: updatedSnapshot,
   };
+
+  if (isPurchase && updates.purchaseLineItems && updates.purchaseLineItems.length > 0) {
+    const { nextComponents, nextBuilds } = syncPurchaseTransactionUpdateToComponents(
+      prev.components,
+      prev.builds,
+      targetTx.id,
+      updates.purchaseLineItems,
+      dateSortable
+    );
+
+    // Check for removed items
+    const oldLineItems = resolvePurchaseLineItems(targetTx, prev.components);
+    const newCompIds = new Set(updates.purchaseLineItems.map((li) => li.componentId).filter(Boolean));
+    const newEntryIds = new Set(updates.purchaseLineItems.map((li) => li.purchaseEntryId).filter(Boolean));
+
+    const finalComponents = nextComponents.map((comp) => {
+      const removedFromComp = oldLineItems.filter(
+        (old) =>
+          (old.componentId === comp.id || comp.purchaseHistory?.some((e) => e.id === old.purchaseEntryId)) &&
+          !newCompIds.has(comp.id) &&
+          !newEntryIds.has(old.purchaseEntryId)
+      );
+
+      if (removedFromComp.length === 0) return comp;
+
+      const removedEntryIdSet = new Set(removedFromComp.map((r) => r.purchaseEntryId).filter(Boolean));
+      const filteredHistory = (comp.purchaseHistory || []).filter((pe) => {
+        if (!removedEntryIdSet.has(pe.id)) return true;
+        const batches = getAllBatchesWithRemaining(comp, prev.builds);
+        const batchInfo = batches.find((b) => b.entry.id === pe.id);
+        const isAllocated = batchInfo ? batchInfo.allocatedQuantity > 0 : false;
+        return isAllocated;
+      });
+
+      return {
+        ...comp,
+        purchaseHistory: filteredHistory,
+      };
+    });
+
+    const rolledUpTx = recalculatePurchaseRollups(
+      {
+        ...updatedTarget,
+        title,
+        customTitleOverride,
+        dateSortable,
+        timestamp: isDateChanged ? dateSortable : targetTx.timestamp,
+      },
+      updates.purchaseLineItems
+    );
+
+    return {
+      nextState: {
+        ...prev,
+        transactions: prev.transactions.map((t) => (t.id === id ? rolledUpTx : t)),
+        components: finalComponents,
+        builds: nextBuilds,
+      },
+      success: true,
+    };
+  }
 
   let updatedComponents = prev.components;
 

@@ -1,4 +1,4 @@
-import { PaymentMethod, TransactionType } from '../../types';
+import { PaymentMethod, TransactionType, PurchaseLineItem } from '../../types';
 import { isValidCalendarDate, parseStrictNumber } from '../builds/sellBuildParsers';
 import { roundToCents } from '../../utils/helpers';
 
@@ -24,6 +24,7 @@ export interface TransactionEditInputs {
   paymentMethod: string;
   dateSortable: string;
   detailsList?: string[];
+  purchaseLineItems?: PurchaseLineItem[];
   quantity?: number;
 }
 
@@ -42,6 +43,7 @@ export type PreparedTransactionEdit =
         paymentMethod?: PaymentMethod;
         dateSortable: string;
         detailsList?: string[];
+        purchaseLineItems?: PurchaseLineItem[];
       };
     }
   | { success: false; error: string };
@@ -115,6 +117,7 @@ export const prepareTransactionEdit = (
         : undefined,
       dateSortable,
       detailsList: inputs.detailsList,
+      purchaseLineItems: inputs.purchaseLineItems,
     },
   };
 };

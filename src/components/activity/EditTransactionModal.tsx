@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TransactionLogItem } from '../../types';
+import { TransactionLogItem, Condition, PaymentMethod, PurchaseLineItem, ComponentCategory } from '../../types';
 import { X, Pencil, Trash2 } from 'lucide-react';
 import { useInventory } from '../../context/InventoryContext';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { BottomSheetModal } from '../ui/BottomSheetModal';
 import { useToast } from '../../context/ToastContext';
 import { prepareTransactionEdit } from './transactionEditParsers';
-import { getCleanTransactionTitle, parseBatchItem, inferCategory, ParsedBatchItem } from './activityHelpers';
+import { getCleanTransactionTitle } from './activityHelpers';
 import { CustomSelect } from '../ui/CustomSelect';
 import { roundToCents, formatCurrency } from '../../utils/helpers';
+import { resolvePurchaseLineItems } from '../../utils/purchaseSync';
 
 interface EditTransactionModalProps {
   tx: TransactionLogItem | null;
@@ -17,12 +18,40 @@ interface EditTransactionModalProps {
 }
 
 interface EditablePurchaseItem {
+  id?: string;
+  componentId?: string;
+  purchaseEntryId?: string;
   name: string;
+  specifications: string;
+  category?: ComponentCategory;
+  condition: Condition;
+  seller: string;
+  paymentMethod: PaymentMethod;
   quantity: number;
   unitPrice: number;
   unitPriceStr: string;
   subtotal: number;
+  healthPercent?: number;
 }
+
+const CONDITION_OPTIONS = [
+  'Sealed',
+  'New Open Box',
+  'New No Box',
+  'Used Open Box',
+  'Used No Box',
+  'Used',
+].map((v) => ({ value: v, label: v }));
+
+const PAYMENT_OPTIONS = [
+  'Cash',
+  'E-Transfer',
+  'Credit Card',
+  'PayPal',
+  'Debit',
+  'Crypto',
+  'Trade-In',
+].map((v) => ({ value: v, label: v }));
 
 export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, isOpen = true, onClose }) => {
   const { state, updateTransaction } = useInventory();
@@ -57,7 +86,6 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     }
     const parsedAmount = parseFloat(val);
     if (editItems.length > 0 && !isNaN(parsedAmount) && parsedAmount >= 0) {
-      // Use the initial uncorrupted baseline items so typing/backspacing doesn't degrade or zero-out prices
       const baseline = initialItemsRef.current.length === editItems.length
         ? initialItemsRef.current
         : editItems;
@@ -80,6 +108,80 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
         );
       }
     }
+  };
+
+  const handleTopLevelSellerChange = (val: string) => {
+    setEditSeller(val);
+    setEditItems((prev) =>
+      prev.map((it) => ({
+        ...it,
+        seller: val,
+      }))
+    );
+  };
+
+  const handleTopLevelPaymentChange = (val: string) => {
+    setEditPaymentMethod(val);
+    setEditItems((prev) =>
+      prev.map((it) => ({
+        ...it,
+        paymentMethod: val as PaymentMethod,
+      }))
+    );
+  };
+
+  const handleItemNameChange = (index: number, newName: string) => {
+    setEditItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], name: newName };
+      return updated;
+    });
+  };
+
+  const handleItemSpecsChange = (index: number, newSpecs: string) => {
+    setEditItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], specifications: newSpecs };
+      return updated;
+    });
+  };
+
+  const handleItemConditionChange = (index: number, newCondition: Condition) => {
+    setEditItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], condition: newCondition };
+      return updated;
+    });
+  };
+
+  const handleItemSellerChange = (index: number, newSeller: string) => {
+    setEditItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], seller: newSeller };
+      const nonEmpties = updated.map((it) => it.seller.trim()).filter(Boolean);
+      const unique = [...new Set(nonEmpties.map((s) => s.toLowerCase()))];
+      if (unique.length === 1) {
+        setEditSeller(nonEmpties[0]);
+      } else if (unique.length > 1) {
+        setEditSeller('MIXED');
+      }
+      return updated;
+    });
+  };
+
+  const handleItemPaymentChange = (index: number, newPayment: PaymentMethod) => {
+    setEditItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], paymentMethod: newPayment };
+      const nonEmpties = updated.map((it) => it.paymentMethod.trim()).filter(Boolean);
+      const unique = [...new Set(nonEmpties)];
+      if (unique.length === 1) {
+        setEditPaymentMethod(nonEmpties[0]);
+      } else if (unique.length > 1) {
+        setEditPaymentMethod('MIXED');
+      }
+      return updated;
+    });
   };
 
   const handleItemQuantityChange = (index: number, newQtyStr: string) => {
@@ -121,7 +223,6 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       item.subtotal = roundToCents(item.quantity * item.unitPrice);
       updated[index] = item;
 
-      // When the user explicitly edits an individual item price, update baseline weights
       initialItemsRef.current = updated.map((it) => ({
         name: it.name,
         quantity: it.quantity,
@@ -196,45 +297,34 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
         setEditProfit(tx.profitMargin !== undefined ? String(roundToCents(tx.profitMargin)) : '');
       }
       setEditSeller(tx.seller || tx.platform || '');
-      setEditPaymentMethod(tx.paymentMethod || '');
+      setEditPaymentMethod(tx.paymentMethod || 'Cash');
       setEditDate(tx.dateSortable || '');
 
       if (tx.type === 'PURCHASE') {
-        let rawParsed: ParsedBatchItem[] = [];
-        if (tx.detailsList && tx.detailsList.length > 0) {
-          rawParsed = tx.detailsList.map((detail) => parseBatchItem(detail, state.components, tx));
-        } else {
-          const q = tx.quantity || tx.relatedComponentQty || tx.originalPurchaseEntrySnapshot?.quantity || 1;
-          const u = roundToCents((tx.totalAmount || 0) / q);
-          const name = tx.itemNameOrSummary || 'Purchased Part';
-          rawParsed = [{
-            itemName: name,
-            quantity: q,
-            unitPrice: u,
-            totalPrice: roundToCents(tx.totalAmount || 0),
-            category: inferCategory(name),
-            tags: [],
-            condition: tx.originalPurchaseEntrySnapshot?.condition || '',
-            platform: tx.platform || '',
-            paymentMethod: tx.paymentMethod || '',
-            comp: tx.relatedComponentId ? state.components.find((c) => c.id === tx.relatedComponentId) : undefined,
-            entry: tx.originalPurchaseEntrySnapshot,
-          }];
-        }
-
-        const rawSum = rawParsed.reduce((s, it) => s + ((it.quantity || 1) * it.unitPrice), 0);
+        const resolvedLineItems = resolvePurchaseLineItems(tx, state.components);
+        const rawSum = resolvedLineItems.reduce((s, it) => s + ((it.quantity || 1) * it.unitPrice), 0);
         const currentTotal = typeof tx.totalAmount === 'number' && tx.totalAmount > 0 ? tx.totalAmount : rawSum;
         const ratio = rawSum > 0 ? currentTotal / rawSum : 1;
-        const items: EditablePurchaseItem[] = rawParsed.map((it) => {
+
+        const items: EditablePurchaseItem[] = resolvedLineItems.map((it) => {
           const q = it.quantity || 1;
           const u = (rawSum > 0 && Math.abs(rawSum - currentTotal) >= 0.02) ? roundToCents(it.unitPrice * ratio) : it.unitPrice;
           const sub = roundToCents(q * u);
           return {
-            name: it.itemName,
+            id: it.id,
+            componentId: it.componentId,
+            purchaseEntryId: it.purchaseEntryId,
+            name: it.name,
+            specifications: it.specifications || '',
+            category: it.category,
+            condition: it.condition || 'New Open Box',
+            seller: it.seller || tx.seller || tx.platform || '',
+            paymentMethod: it.paymentMethod || (tx.paymentMethod as PaymentMethod) || 'Cash',
             quantity: q,
             unitPrice: u,
             unitPriceStr: String(u),
             subtotal: sub,
+            healthPercent: it.healthPercent,
           };
         });
         setEditItems(items);
@@ -256,27 +346,68 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
     e.preventDefault();
     const cleanInitialTitle = getCleanTransactionTitle(tx, state.components, state.builds);
 
-    const updatedDetailsList = editItems.length > 0
-      ? editItems.map((it) => `${it.quantity}x ${it.name} (${formatCurrency(it.unitPrice)}/ea)`)
+    const updatedLineItems: PurchaseLineItem[] = editItems.map((it) => ({
+      id: it.id,
+      componentId: it.componentId,
+      purchaseEntryId: it.purchaseEntryId,
+      name: it.name.trim(),
+      specifications: it.specifications.trim(),
+      category: it.category,
+      condition: it.condition,
+      seller: it.seller.trim(),
+      platform: it.seller.trim(),
+      paymentMethod: it.paymentMethod,
+      quantity: it.quantity,
+      unitPrice: it.unitPrice,
+      totalPrice: it.subtotal,
+      healthPercent: it.healthPercent,
+    }));
+
+    const updatedDetailsList = updatedLineItems.length > 0
+      ? updatedLineItems.map((it) => `${it.quantity}x ${it.name} (${formatCurrency(it.unitPrice)}/ea)`)
       : undefined;
 
-    const totalCalculatedQty = editItems.length > 0
-      ? editItems.reduce((sum, it) => sum + (it.quantity || 1), 0)
+    const totalCalculatedQty = updatedLineItems.length > 0
+      ? updatedLineItems.reduce((sum, it) => sum + (it.quantity || 1), 0)
       : undefined;
+
+    const totalCalculatedAmount = updatedLineItems.length > 0
+      ? roundToCents(updatedLineItems.reduce((sum, it) => sum + (it.totalPrice || 0), 0))
+      : undefined;
+
+    // Recalculate rollup seller and payment
+    const sellers = updatedLineItems.map((it) => it.seller.trim()).filter(Boolean);
+    const uniqueSellers = [...new Set(sellers.map((s) => s.toLowerCase()))];
+    let finalSeller = editSeller.trim();
+    if (uniqueSellers.length === 1) {
+      finalSeller = sellers[0];
+    } else if (uniqueSellers.length > 1) {
+      finalSeller = 'MIXED';
+    }
+
+    const payments = updatedLineItems.map((it) => it.paymentMethod.trim()).filter(Boolean);
+    const uniquePayments = [...new Set(payments)];
+    let finalPayment = editPaymentMethod;
+    if (uniquePayments.length === 1) {
+      finalPayment = uniquePayments[0];
+    } else if (uniquePayments.length > 1) {
+      finalPayment = 'MIXED';
+    }
 
     let dynamicPurchaseTitle: string | undefined;
-    if (tx.type === 'PURCHASE' && editItems.length > 0) {
-      if (editItems.length === 1) {
-        const singleName = editItems[0].name.replace(/^\d+x\s+/i, '');
+    if (tx.type === 'PURCHASE' && updatedLineItems.length > 0) {
+      if (updatedLineItems.length === 1) {
+        const singleName = updatedLineItems[0].name.replace(/^\d+x\s+/i, '');
         dynamicPurchaseTitle = (totalCalculatedQty || 1) > 1
           ? `Purchased ${totalCalculatedQty}x ${singleName}`
           : `Purchased ${singleName}`;
       } else {
-        const itemNames = Array.from(new Set(editItems.map((it) => it.name.replace(/^\d+x\s+/i, ''))));
-        if (itemNames.length === 1) {
-          dynamicPurchaseTitle = (totalCalculatedQty || 1) > 1
-            ? `Purchased ${totalCalculatedQty}x ${itemNames[0]}`
-            : `Purchased ${itemNames[0]}`;
+        if (finalSeller && finalSeller !== 'MIXED') {
+          dynamicPurchaseTitle = `Bulk Purchase: ${finalSeller}`;
+        } else if (finalSeller === 'MIXED') {
+          dynamicPurchaseTitle = `Bulk Purchase: MIXED`;
+        } else {
+          dynamicPurchaseTitle = `Bulk Purchase`;
         }
       }
     }
@@ -287,12 +418,21 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       ? dynamicPurchaseTitle
       : editTitle.trim();
 
-    const finalSummary = isMasked && !summaryEdited ? tx.itemNameOrSummary : editItemSummary.trim();
+    let finalSummary = editItemSummary.trim();
+    if (!summaryEdited) {
+      if (updatedLineItems.length === 1) {
+        finalSummary = updatedLineItems[0].name;
+      } else if (updatedLineItems.length > 1) {
+        finalSummary = `Purchased Mixed Parts (${totalCalculatedQty} ${totalCalculatedQty === 1 ? 'Part' : 'Parts'})`;
+      }
+    }
+
     const overrideTitle = titleEdited
       ? finalTitle
       : summaryEdited
       ? finalSummary
       : undefined;
+
     let finalProfit = editProfit;
     if (hasStoredUnitCost) {
       const parsedAmount = parseFloat(editAmount);
@@ -306,14 +446,15 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       title: finalTitle,
       customTitleOverride: overrideTitle,
       itemNameOrSummary: finalSummary,
-      totalAmount: editAmount,
+      totalAmount: totalCalculatedAmount !== undefined ? String(totalCalculatedAmount) : editAmount,
       quantity: totalCalculatedQty,
       profitMargin: finalProfit,
-      seller: editSeller,
-      platform: editSeller,
-      paymentMethod: editPaymentMethod,
+      seller: finalSeller,
+      platform: finalSeller,
+      paymentMethod: finalPayment,
       dateSortable: editDate,
       detailsList: updatedDetailsList,
+      purchaseLineItems: updatedLineItems,
     });
 
     if (!prepared.success) {
@@ -335,7 +476,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
       isOpen={isOpen}
       onClose={onClose}
       layout="content"
-      className="stock-modal max-w-lg"
+      className="stock-modal max-w-xl"
     >
       <div className="transaction-edit-modal w-full space-y-3.5">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-2.5 shrink-0">
@@ -453,9 +594,9 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                   type={isMasked ? "password" : "text"}
                   autoComplete="off"
                   value={editSeller}
-                  onChange={(e) => setEditSeller(e.target.value)}
+                  onChange={(e) => handleTopLevelSellerChange(e.target.value)}
                   className="app-field h-9 min-h-9 px-3 text-xs placeholder:text-zinc-500 font-sans"
-                  placeholder={isMasked ? "••••••••" : "e.g. Memory Express / Amazon / Roop"}
+                  placeholder={isMasked ? "••••••••" : "e.g. Memory Express / Amazon / Harsh"}
                 />
               </div>
 
@@ -463,9 +604,9 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                 <label className="block text-zinc-300 mb-1 font-medium text-xs font-sans">Payment Method</label>
                 <CustomSelect
                   value={editPaymentMethod}
-                  onChange={(val) => setEditPaymentMethod(val)}
+                  onChange={(val) => handleTopLevelPaymentChange(val)}
                   options={(() => {
-                    const baseOpts = ['Cash', 'E-Transfer', 'Credit Card', 'Trade-In'];
+                    const baseOpts = ['Cash', 'E-Transfer', 'Credit Card', 'PayPal', 'Trade-In'];
                     const opts = editPaymentMethod && !baseOpts.includes(editPaymentMethod)
                       ? [...baseOpts, editPaymentMethod]
                       : baseOpts;
@@ -477,34 +618,42 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
           </div>
 
           {editItems.length > 0 && (
-            <div className="pt-2 border-t border-white/[0.08] space-y-1.5">
+            <div className="pt-2 border-t border-white/[0.08] space-y-2">
               <div className="flex items-center justify-between shrink-0">
-                <label className="text-zinc-300 font-medium text-xs font-sans">
-                  {editItems.length === 1 ? 'Purchased Part' : `Purchased Parts (${editItems.length})`}
+                <label className="text-zinc-200 font-medium text-xs font-sans">
+                  {editItems.length === 1 ? 'Purchased Part Line Item' : `Purchased Part Line Items (${editItems.length})`}
                 </label>
                 <span className="text-[10.5px] text-zinc-400 font-mono">
-                  Edit quantity, unit price, or Total Amount
+                  Edit model, specs, condition, seller, payment, qty & price
                 </span>
               </div>
               <div
-                className="overflow-y-scroll pr-[3px] flex flex-col max-h-56 sm:max-h-60"
-                style={{ gap: '5px' }}
+                className="overflow-y-auto pr-1 flex flex-col max-h-72 sm:max-h-80 gap-2.5"
               >
                 {editItems.map((item, idx) => (
                   <div
-                    key={idx}
-                    className="bg-[#101719] px-2.5 py-1.5 rounded-lg border border-white/[0.06] space-y-1 hover:border-white/[0.1] transition-colors"
+                    key={item.id || idx}
+                    className="bg-[#101719] p-2.5 rounded-lg border border-white/[0.08] space-y-2 hover:border-white/[0.12] transition-colors"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-xs font-semibold text-zinc-100 break-words leading-tight">
-                        {item.name}
+                    {/* Row 1: Part Name & Remove button */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <label className="block text-[10px] text-zinc-400 font-medium mb-0.5">Part Model / Name</label>
+                        <input
+                          type="text"
+                          required
+                          value={item.name}
+                          onChange={(e) => handleItemNameChange(idx, e.target.value)}
+                          placeholder="e.g. Gigabyte GP-UD750GM 80P Black"
+                          className="app-field h-7 px-2 text-xs font-semibold text-zinc-100 font-sans w-full"
+                        />
                       </div>
                       {editItems.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(idx)}
                           aria-label={`Remove ${item.name}`}
-                          className="text-zinc-500 hover:text-rose-400 p-0.5 rounded transition-colors shrink-0"
+                          className="text-zinc-500 hover:text-rose-400 p-1.5 rounded transition-colors shrink-0 mt-3"
                           title="Remove item"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -512,40 +661,82 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ tx, 
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 h-5">
-                      <div className="flex items-center gap-1 shrink-0">
-                        <span className="text-[11px] font-medium text-zinc-400 font-sans leading-none flex items-center">Qty:</span>
+                    {/* Row 2: Specifications & Condition */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] text-zinc-400 font-medium mb-0.5">Specifications</label>
+                        <input
+                          type="text"
+                          value={item.specifications}
+                          onChange={(e) => handleItemSpecsChange(idx, e.target.value)}
+                          placeholder="e.g. 750W 80+ Gold / Black"
+                          className="app-field h-7 px-2 text-[11px] placeholder:text-zinc-600 font-sans w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-zinc-400 font-medium mb-0.5">Condition</label>
+                        <CustomSelect
+                          value={item.condition}
+                          onChange={(val) => handleItemConditionChange(idx, val as Condition)}
+                          options={CONDITION_OPTIONS}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 3: Seller & Payment Method */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] text-zinc-400 font-medium mb-0.5">Seller</label>
+                        <input
+                          type={isMasked ? "password" : "text"}
+                          autoComplete="off"
+                          value={item.seller}
+                          onChange={(e) => handleItemSellerChange(idx, e.target.value)}
+                          placeholder={isMasked ? "••••••••" : "Seller (e.g. Harsh)"}
+                          className="app-field h-7 px-2 text-[11px] placeholder:text-zinc-600 font-sans w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-zinc-400 font-medium mb-0.5">Payment Method</label>
+                        <CustomSelect
+                          value={item.paymentMethod}
+                          onChange={(val) => handleItemPaymentChange(idx, val as PaymentMethod)}
+                          options={PAYMENT_OPTIONS}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 4: Qty, Unit Price, Subtotal */}
+                    <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-white/[0.04]">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[11px] font-medium text-zinc-400 font-sans">Qty:</span>
                         <input
                           type="number"
                           min="1"
                           step="1"
                           value={item.quantity}
                           onChange={(e) => handleItemQuantityChange(idx, e.target.value)}
-                          style={{ height: '20px', minHeight: '20px', maxHeight: '20px', lineHeight: '18px', paddingTop: 0, paddingBottom: 0 }}
-                          className="transaction-edit-item-input w-11 px-1 text-[11px] font-mono font-bold bg-[#101719] border border-white/[0.12] rounded-md text-zinc-100 text-center focus:outline-none focus:border-[#83E5DF] transition-colors"
+                          className="w-12 h-6 px-1 text-[11px] font-mono font-bold bg-[#0c1214] border border-white/[0.12] rounded text-zinc-100 text-center focus:outline-none focus:border-[#83E5DF]"
                         />
                       </div>
 
-                      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-                        <div className="flex items-center gap-1 shrink-0">
-                          <span className="text-[11px] font-medium text-zinc-400 font-sans leading-none flex items-center">Cost:</span>
-                          <div className="transaction-edit-cost-box relative flex items-center">
-                            <span className="cost-currency-symbol absolute left-1.5 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px] font-mono pointer-events-none select-none flex items-center leading-none z-10">$</span>
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={item.unitPriceStr}
-                              onChange={(e) => handleItemPriceChange(idx, e.target.value)}
-                              style={{ height: '20px', minHeight: '20px', maxHeight: '20px', lineHeight: '18px', paddingTop: 0, paddingBottom: 0 }}
-                              className="transaction-edit-cost-input transaction-edit-item-input w-16 pl-3.5 pr-1.5 text-[11px] font-mono font-bold bg-[#101719] border border-white/[0.12] rounded-md text-zinc-100 text-left focus:outline-none focus:border-[#83E5DF] transition-colors"
-                            />
-                          </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[11px] font-medium text-zinc-400 font-sans">Unit Price:</span>
+                        <div className="relative flex items-center">
+                          <span className="absolute left-1.5 text-zinc-500 text-[10px] font-mono pointer-events-none select-none">$</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={item.unitPriceStr}
+                            onChange={(e) => handleItemPriceChange(idx, e.target.value)}
+                            className="w-20 h-6 pl-4 pr-1.5 text-[11px] font-mono font-bold bg-[#0c1214] border border-white/[0.12] rounded text-zinc-100 text-left focus:outline-none focus:border-[#83E5DF]"
+                          />
                         </div>
+                      </div>
 
-                        <div className="flex items-center gap-1 text-xs whitespace-nowrap shrink-0">
-                          <span className="text-[11px] font-medium text-zinc-400 font-sans leading-none flex items-center">Total Price:</span>
-                          <span className="font-bold text-zinc-100 font-mono text-xs leading-none flex items-center">${item.subtotal.toFixed(2)}</span>
-                        </div>
+                      <div className="flex items-center gap-1 text-xs whitespace-nowrap shrink-0">
+                        <span className="text-[11px] font-medium text-zinc-400 font-sans">Total:</span>
+                        <span className="font-bold text-zinc-100 font-mono text-xs">${item.subtotal.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>

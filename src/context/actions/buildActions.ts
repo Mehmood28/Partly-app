@@ -257,7 +257,8 @@ export const handlePurchasePC = (
 export const handleUpdateBuildStatus = (
   prev: AppState,
   buildId: string,
-  status: PCBuild['status']
+  status: PCBuild['status'],
+  metadata?: { pendingDate?: string }
 ): AppState => {
   const targetBuild = prev.builds.find((b) => b.id === buildId);
   if (!targetBuild) return prev;
@@ -289,11 +290,17 @@ export const handleUpdateBuildStatus = (
       ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
       : targetBuild.builtDate;
 
+  const newPendingDate =
+    status === 'Pending'
+      ? (metadata?.pendingDate || targetBuild.pendingDate || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }))
+      : undefined;
+
   const updatedTarget: PCBuild = {
     ...targetBuild,
     status,
     completionDate: newCompletionDate,
     builtDate: newBuiltDate,
+    pendingDate: newPendingDate,
     sourceSaleTransactionId: newSourceSaleTransactionId,
     ...(status !== 'Sold'
       ? {

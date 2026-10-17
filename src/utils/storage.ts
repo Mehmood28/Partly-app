@@ -2,6 +2,7 @@ import localforage from 'localforage';
 import { AppState, InventoryComponent, PCBuild, PurchaseEntry, TransactionLogItem } from '../types';
 import { normalizeTags, roundToCents, formatCurrency } from './helpers';
 import { maybeRegenerateBuildTitle } from './buildTitle';
+import { reconcileAllPurchaseTransactions } from './purchaseSync';
 
 export const STORAGE_KEY = 'pc_inventory_tracker_v2';
 export const DB_NAME = 'PartlyPCInventoryDB';
@@ -207,6 +208,8 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
       })
     : [];
 
+  const reconciledTransactions = reconcileAllPurchaseTransactions(transactions, components);
+
   let resolvedGoal = 10000;
   if (isValidMonthlyGoal(parsedObj.monthlyGoal)) {
     resolvedGoal = parsedObj.monthlyGoal;
@@ -216,7 +219,7 @@ export const sanitizeAppState = (parsed: unknown): AppState => {
     ...(cloneStoredValue(parsedWithoutSheetStats) as Record<string, unknown>),
     components,
     builds,
-    transactions,
+    transactions: reconciledTransactions,
     monthlyGoal: resolvedGoal,
   };
 };

@@ -114,6 +114,7 @@ export interface PCBuild {
   createdDate: string;
   builtDate?: string; // Date when the PC was physically built
   completionDate?: string; // Date when rig was marked Available or Completed
+  pendingDate?: string; // Date when the rig was marked pending sale
   daysOnMarket?: number; // Days between completion and sale
   estimatedCost?: number;
   notes?: string;
@@ -138,6 +139,23 @@ export interface PCBuild {
 
 export type TransactionType = 'SALE' | 'PURCHASE' | 'BUILD_ALLOCATION' | 'EXCHANGE';
 
+export interface PurchaseLineItem {
+  id?: string;
+  componentId?: string;
+  purchaseEntryId?: string;
+  name: string;
+  category?: ComponentCategory;
+  specifications?: string;
+  condition?: Condition;
+  quantity: number;
+  unitPrice: number;
+  totalPrice?: number;
+  seller?: Platform;
+  platform?: Platform;
+  paymentMethod?: PaymentMethod;
+  healthPercent?: number;
+}
+
 export interface TransactionLogItem {
   id: string;
   warrantyDaysAtSale?: number;
@@ -156,6 +174,7 @@ export interface TransactionLogItem {
   itemNameOrSummary: string; // e.g. "1 TB Lexar NQ780" or "Gigabyte Windforce RTX 5070 Ti"
   customTitleOverride?: string; // User-defined custom display title override
   detailsList?: string[]; // e.g. ["MSI MAG A850GN", "2 TB Lexar NQ780", "32 GB Teamgroup T-FORCE VULCAN"]
+  purchaseLineItems?: PurchaseLineItem[];
   relatedComponentId?: string;
   relatedComponentQty?: number;
   cashPortion?: number;

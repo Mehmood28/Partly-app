@@ -39,7 +39,7 @@ interface BuildCardProps {
   onItemize?: (build: PCBuild) => void;
   onSell: (build: PCBuild) => void;
   onAllocate: (build: PCBuild) => void;
-  updateStatus: (id: string, status: BuildStatus) => void;
+  updateStatus: (id: string, status: BuildStatus, metadata?: { pendingDate?: string }) => void;
   removePart: (
     buildId: string,
     partId: string,
@@ -100,6 +100,8 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
   const [copied, setCopied] = useState(false);
   const [copiedSpecs, setCopiedSpecs] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isPendingConfirmOpen, setIsPendingConfirmOpen] = useState(false);
+  const [pendingDateInput, setPendingDateInput] = useState<string>('');
 
   useEffect(() => {
     if (!isLightboxOpen) return;
@@ -309,6 +311,9 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
             <div className="build-collapsed-title-row">
               <h3>{build.name}</h3>
               {isSold && <time>{formattedSoldDate || 'Date N/A'}</time>}
+              {build.status === 'Pending' && (
+                <time>{(build.pendingDate && formatReadableDate(build.pendingDate)) || build.pendingDate || 'Date N/A'}</time>
+              )}
             </div>
             <div className="build-summary build-summary-columns">
               <span><em>Cost</em><strong>{formatCurrency(partsCost)}</strong></span>
@@ -329,7 +334,7 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                 </span>
                 <ChevronUp />
               </button>
-              <div className={`build-finances !mb-0 ${isSold ? 'build-finances-sold' : ''}`}>
+              <div className={`build-finances ${isSold ? 'build-finances-sold' : '!mb-0'}`}>
                 <div><span>Cost</span><strong>{formatCurrency(partsCost)}</strong></div>
                 <div><span>{isSold ? 'Sold' : 'Target'}</span><strong>{displayedPrice !== undefined ? formatCurrency(displayedPrice) : '—'}</strong></div>
                 <div><span>Profit</span><strong className={getProfitTextColor(profit)}>{displayedPrice !== undefined ? formatSignedCurrency(profit) : '—'}</strong></div>
@@ -886,8 +891,18 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      updateStatus(build.id, 'Available');
-                      showToast(`Marked "${build.name}" as Available!`, 'success');
+                      setConfirmModalConfig({
+                        isOpen: true,
+                        title: 'Mark Build Available?',
+                        message: `Mark "${build.name}" as available for sale?`,
+                        confirmText: 'Mark Available',
+                        variant: 'violet',
+                        onConfirm: () => {
+                          setConfirmModalConfig(null);
+                          updateStatus(build.id, 'Available');
+                          showToast(`Marked "${build.name}" as Available!`, 'success');
+                        },
+                      });
                     }}
                     className="app-button mark-available-action flex items-center justify-center gap-1 px-3"
                     title="Mark build as Available"
@@ -899,17 +914,9 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setConfirmModalConfig({
-                        isOpen: true,
-                        title: 'Mark as Pending Sale?',
-                        message: `Mark "${build.name}" as pending sale?`,
-                        confirmText: 'Mark Pending',
-                        variant: 'violet',
-                        onConfirm: () => {
-                          setConfirmModalConfig(null);
-                          updateStatus(build.id, 'Pending');
-                        },
-                      });
+                      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+                      setPendingDateInput(build.pendingDate || today);
+                      setIsPendingConfirmOpen(true);
                     }}
                     className="app-button flex items-center justify-center gap-1 px-3 text-[#9FF8F4]"
                     title="Mark build as Pending Sale"
@@ -1018,6 +1025,37 @@ export const BuildCard: React.FC<BuildCardProps> = React.memo(({
           onConfirm={confirmModalConfig.onConfirm}
           onCancel={() => setConfirmModalConfig(null)}
         />
+      )}
+
+      {/* Mark Pending Confirmation Modal with Date Input */}
+      {isPendingConfirmOpen && (
+        <ConfirmModal
+          isOpen={isPendingConfirmOpen && isActive}
+          title="Mark as Pending Sale?"
+          message={`Mark "${build.name}" as pending sale?`}
+          confirmText="Mark Pending"
+          variant="violet"
+          onConfirm={() => {
+            setIsPendingConfirmOpen(false);
+            const resolvedDate = pendingDateInput || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+            updateStatus(build.id, 'Pending', { pendingDate: resolvedDate });
+            showToast(`Marked "${build.name}" as Pending Sale!`, 'success');
+          }}
+          onCancel={() => setIsPendingConfirmOpen(false)}
+        >
+          <div className="mt-3">
+            <label className="block text-zinc-300 font-medium mb-1.5 text-xs">
+              Pending Date
+            </label>
+            <input
+              type="date"
+              required
+              value={pendingDateInput}
+              onChange={(e) => setPendingDateInput(e.target.value)}
+              className="app-field h-10 px-3 py-2 text-xs placeholder:text-zinc-500 sm:text-sm [color-scheme:dark]"
+            />
+          </div>
+        </ConfirmModal>
       )}
 
       {/* Copy Ad Warranty Modal */}
